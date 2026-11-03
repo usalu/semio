@@ -1,0 +1,11 @@
+import { readFileSync } from "node:fs";
+import { CatalogStore } from "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/📚️catalog/🟦️.ts";
+const walker = JSON.parse(readFileSync("C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🚶️reference-walker/🔣️.json", "utf8"));
+const manifest: any = { $schema: "", version: "semio.staffage/v2", categories: [{ id: "humans", emoji: "", title: { en: "Humans", de: "Menschen" }, description: { en: "h", de: "h" }, folder: "humans" }], collections: [], entries: [{ id: walker.id, category: "humans", title: walker.title, heightM: walker.dimensions.heightM, widthM: walker.dimensions.widthM, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: ["thermal", "structural"], exports: [], distinction: walker.summary, completion: "authored" }] };
+const store = new CatalogStore({ manifest: async () => manifest, category: async () => ({ assets: [walker] }) as any });
+await store.loadManifest();
+await store.loadCategory?.("humans");
+await new Promise((r) => setTimeout(r, 500));
+const snap: any = (store as any).getSnapshot?.() ?? store;
+console.log(Object.keys(snap));
+console.log(JSON.stringify(snap.rows ?? snap, null, 1).slice(0, 1500));

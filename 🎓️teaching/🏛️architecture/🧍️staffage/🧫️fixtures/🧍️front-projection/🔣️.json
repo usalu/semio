@@ -1,0 +1,135 @@
+{
+  "description": "Language-agnostic vectors of the front elevation. A front shape keeps its authored front coordinates (x across the width from the centre, y up from the floor, both in metres) and follows its bone only by the bone's y travel from the rest pose. The figure is the rig of the sample figure (pelvis up, thigh 0.45 m); the shank origin is the thigh tip, whose y travel at a thigh angle of 22 degrees is 0.45 · (sin(-68°) - sin(-90°)) = +0.032767 m relative to the thigh origin (hand-computed; the pose lifts the whole figure onto the ground, which cancels in the difference), at the rest pose 0.",
+  "asset": "sample-figure",
+  "scale": 100,
+  "shapes": [
+    {
+      "id": "follower",
+      "kind": "rect",
+      "bone": "shank-l",
+      "role": "body",
+      "z": 1,
+      "filled": true,
+      "tone": 0.5,
+      "x": -0.1,
+      "y": 0.2,
+      "w": 0.2,
+      "h": 0.1
+    },
+    {
+      "id": "fixed",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "body",
+      "z": 1,
+      "filled": true,
+      "tone": 0.5,
+      "x": 0.3,
+      "y": 0.2,
+      "w": 0.2,
+      "h": 0.1
+    }
+  ],
+  "cases": [
+    {
+      "name": "the rest pose keeps the front shapes in their authored relation",
+      "pose": "stand",
+      "shankOriginRelativeTravelYM": 0,
+      "followerMinusFixedMinX": -0.4,
+      "followerMinusFixedMinY": 0
+    },
+    {
+      "name": "a stride carries the rigid shape of the child bone by the full transform of its bone: its height relative to the thigh shape changes by 0.011917 m (0.945519 * 0.65 - 0.927184 * 0.2 - 0.417233, the shank tilting to -71 degrees) and it never moves sideways",
+      "pose": "stride-left-forward",
+      "shankOriginRelativeTravelYM": 0.032767,
+      "followerMinusFixedMinX": -0.4,
+      "followerMinusFixedMinY": 0.011917
+    }
+  ],
+  "catalog": {
+    "assets": {
+      "panel-radiator": "🧱️components",
+      "split-ac-indoor-unit": "🔌️appliances"
+    },
+    "scales": [
+      200,
+      100,
+      50
+    ],
+    "outline": {
+      "asset": "panel-radiator",
+      "shape": "radiator-outline",
+      "scale": 50,
+      "xM": {
+        "min": -0.5,
+        "max": 0.5
+      },
+      "yM": {
+        "min": 0.11,
+        "max": 0.71
+      }
+    },
+    "bands": {
+      "asset": "panel-radiator",
+      "pose": "rated",
+      "regions": [
+        "panel-front-upper",
+        "panel-front-mid",
+        "panel-front-lower"
+      ],
+      "minSpreadK": 5
+    }
+  },
+  "casts": {
+    "manifest": {
+      "version": 1,
+      "casts": {
+        "radiator-front": {
+          "asset": "panel-radiator",
+          "pose": "rated",
+          "view": "dark-line",
+          "viewpoint": "front",
+          "theme": "dark",
+          "scale": 50
+        },
+        "radiator-side": {
+          "asset": "panel-radiator",
+          "pose": "rated",
+          "view": "dark-line",
+          "viewpoint": "elevation",
+          "theme": "dark",
+          "scale": 50
+        },
+        "radiator-front-thermal": {
+          "asset": "panel-radiator",
+          "pose": "rated",
+          "view": "thermal",
+          "environment": "indoor-heated-winter",
+          "viewpoint": "front",
+          "theme": "dark",
+          "scale": 50
+        }
+      }
+    },
+    "widthM": {
+      "radiator-front": {
+        "min": 1.0,
+        "max": 1.2
+      },
+      "radiator-side": {
+        "min": 0.3,
+        "max": 0.45
+      }
+    },
+    "heightM": {
+      "radiator-front": {
+        "min": 0.69,
+        "max": 0.73
+      },
+      "radiator-side": {
+        "min": 0.69,
+        "max": 0.73
+      }
+    }
+  }
+}

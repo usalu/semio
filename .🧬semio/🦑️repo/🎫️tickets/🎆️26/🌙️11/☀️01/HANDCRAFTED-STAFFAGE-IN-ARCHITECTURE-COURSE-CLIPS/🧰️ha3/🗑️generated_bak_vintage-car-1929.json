@@ -1,0 +1,5846 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "vintage-car-1929",
+    "category": "vehicles",
+    "title": {
+      "en": "Vintage Saloon 1929",
+      "de": "Salonwagen von 1929"
+    },
+    "summary": {
+      "en": "A late-1920s European saloon of the Voisin C7/C11 family (4.4 m, 1.7 m wide, 1.7 m high, about 1.3 t) as parked at the Villa Savoye: separate crescent fenders, running boards, side-mounted spare wheels, a long louvred bonnet, a fabric-covered cabin and rolling spoked wheels, in elevation and in plan, with exhaust, tyre, drum and engine thermal regions.",
+      "de": "Ein europäischer Salonwagen der späten 1920er aus der Familie Voisin C7/C11 (4,4 m, 1,7 m breit, 1,7 m hoch, rund 1,3 t), wie er an der Villa Savoye stand: getrennte Sichelkotflügel, Trittbretter, seitlich montierte Reserveräder, eine lange Haube mit Luftschlitzen, eine stoffbespannte Kabine und rollende Speichenräder, in Ansicht und Grundriss, mit thermischen Regionen für Abgas, Reifen, Trommeln und Motor."
+    },
+    "tags": [
+      "vehicle",
+      "car",
+      "saloon",
+      "vintage",
+      "1929",
+      "petrol",
+      "villa-savoye",
+      "wheeled"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker (vehicles, vintage)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "voisin-c7-c11-class-data",
+          "citation": "Class data of the Voisin C7 and C11 saloons (1927 to 1930): about 4.3 to 4.6 m long, 1.7 m wide, 1.7 m high, wheelbase about 3.0 m, track about 1.4 m, 5.00-19 balloon tyres, four-cylinder engines of 1.2 to 2.3 litres, a mass of 1.2 to 1.4 t. Quoted as orders of magnitude from the general literature of the model family, not retrieved for this asset; every number derived from it is tagged authored-estimate."
+        },
+        {
+          "id": "villa-savoye-photographs",
+          "citation": "Contemporary photographs of the Villa Savoye, Poissy (Le Corbusier and Pierre Jeanneret, 1928 to 1931), which show period saloons of this kind on the entrance drive. Context only; no dimension is taken from them."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer, convection and radiation properties of painted and plated surfaces."
+        },
+        {
+          "id": "incropera-2011",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, nickel)."
+        },
+        {
+          "id": "heywood-2018",
+          "citation": "Heywood, J. B. (2018). Internal Combustion Engine Fundamentals, 2nd ed., McGraw-Hill. Ch. 4 and 13: exhaust gas temperature and mass flow of spark-ignition engines."
+        },
+        {
+          "id": "wong-2008",
+          "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Ch. 1 and 3: tyre contact patch, rolling radius, rolling resistance heat."
+        },
+        {
+          "id": "limpert-1999",
+          "citation": "Limpert, R. (1999). Brake Design and Safety, 2nd ed., SAE International. Ch. 5: brake drum and disc temperature rise."
+        }
+      ],
+      "notes": {
+        "en": "Outer dimensions, wheelbase (3.0 m), track (1.4 m) and tyre size (5.00-19, overall radius 0.37 m) follow the class data of the Voisin C7/C11 saloons; the body lines are an original drawing of that type, not a copy of a particular car. Wheels roll consistently: the clip poses satisfy theta = -x / r with r = 0.37 m. The plan view has no wheels because fenders and running boards cover them from above. Thermal numbers are scaled-down authored estimates of a 40 kW petrol engine, tagged authored-estimate.",
+        "de": "Außenmaße, Radstand (3,0 m), Spurweite (1,4 m) und Reifengröße (5.00-19, Außenradius 0,37 m) folgen den Klassendaten der Voisin-C7/C11-Salonwagen; die Karosserielinien sind eine eigene Zeichnung dieses Typs, keine Kopie eines bestimmten Wagens. Die Räder rollen stimmig: die Clip-Posen erfüllen theta = -x / r mit r = 0,37 m. Der Grundriss zeigt keine Räder, da Kotflügel und Trittbretter sie von oben verdecken. Die thermischen Zahlen sind verkleinerte Schätzungen eines Benzinmotors von 40 kW und als authored-estimate gekennzeichnet."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.7,
+      "widthM": 4.38,
+      "depthM": 1.7,
+      "massKg": 1300
+    },
+    "materials": [
+      {
+        "id": "paint",
+        "title": {
+          "en": "Painted sheet steel",
+          "de": "Lackiertes Stahlblech"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "fabric-roof",
+        "title": {
+          "en": "Fabric-covered wooden roof",
+          "de": "Stoffbespanntes Holzdach"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 600,
+        "conductivityWmK": 0.15,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "Toughened and laminated glass",
+          "de": "Einscheiben- und Verbundsicherheitsglas"
+        },
+        "emissivity": 0.84,
+        "solarAbsorptivity": 0.15,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "rubber",
+        "title": {
+          "en": "Balloon tyre rubber",
+          "de": "Ballonreifengummi"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.92,
+        "densityKgM3": 1150,
+        "conductivityWmK": 0.2,
+        "source": "literature",
+        "reference": "wong-2008"
+      },
+      {
+        "id": "steel-rim",
+        "title": {
+          "en": "Painted steel rim and spokes",
+          "de": "Lackierte Stahlfelge und Speichen"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "source": "authored-estimate",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "nickel-plate",
+        "title": {
+          "en": "Nickel-plated brass",
+          "de": "Vernickeltes Messing"
+        },
+        "emissivity": 0.1,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 8500,
+        "conductivityWmK": 110,
+        "source": "literature",
+        "reference": "incropera-2011"
+      },
+      {
+        "id": "cast-iron",
+        "title": {
+          "en": "Grey cast iron brake drum",
+          "de": "Graugussbremstrommel"
+        },
+        "emissivity": 0.65,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 7200,
+        "conductivityWmK": 46,
+        "source": "literature",
+        "reference": "limpert-1999"
+      },
+      {
+        "id": "exhaust-steel",
+        "title": {
+          "en": "Oxidised exhaust steel",
+          "de": "Oxidierter Abgasstahl"
+        },
+        "emissivity": 0.7,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7800,
+        "conductivityWmK": 25,
+        "source": "literature",
+        "reference": "heywood-2018"
+      },
+      {
+        "id": "engine-metal",
+        "title": {
+          "en": "Engine casting and manifold",
+          "de": "Motorguss und Krümmer"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7200,
+        "conductivityWmK": 46,
+        "source": "authored-estimate",
+        "reference": "heywood-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "chassis",
+      "bones": [
+        {
+          "id": "chassis",
+          "parent": null,
+          "title": {
+            "en": "Body, frame, fenders and spare wheels",
+            "de": "Aufbau, Rahmen, Kotflügel und Reserveräder"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 4.39,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1196,
+            "comX": -0.1,
+            "comY": 0.72,
+            "source": "authored-estimate",
+            "reference": "voisin-c7-c11-class-data",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "axle-f",
+          "parent": "chassis",
+          "title": {
+            "en": "Front axle",
+            "de": "Vorderachse"
+          },
+          "x": 1.5,
+          "y": 0.37,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0,
+            "comX": 0,
+            "comY": 0,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "axle-r",
+          "parent": "chassis",
+          "title": {
+            "en": "Rear axle",
+            "de": "Hinterachse"
+          },
+          "x": -1.5,
+          "y": 0.37,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0,
+            "comX": 0,
+            "comY": 0,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "wheel-f",
+          "parent": "axle-f",
+          "title": {
+            "en": "Front wheels",
+            "de": "Vorderräder"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.37,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 52,
+            "comX": 0,
+            "comY": 0,
+            "source": "authored-estimate",
+            "reference": "wong-2008",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "wheel-r",
+          "parent": "axle-r",
+          "title": {
+            "en": "Rear wheels",
+            "de": "Hinterräder"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.37,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 52,
+            "comX": 0,
+            "comY": 0,
+            "source": "authored-estimate",
+            "reference": "wong-2008",
+            "distribution": "point"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-f",
+        "bone": "axle-f",
+        "x": 0,
+        "y": -0.37,
+        "kind": "contact",
+        "title": {
+          "en": "Front tyre patches",
+          "de": "Vorderreifenaufstandsflächen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.14,
+        "footprintWidthM": 0.26,
+        "frictionCoefficient": 0.7
+      },
+      {
+        "id": "contact-r",
+        "bone": "axle-r",
+        "x": 0,
+        "y": -0.37,
+        "kind": "contact",
+        "title": {
+          "en": "Rear tyre patches",
+          "de": "Hinterreifenaufstandsflächen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.14,
+        "footprintWidthM": 0.26,
+        "frictionCoefficient": 0.7
+      },
+      {
+        "id": "tailpipe",
+        "bone": "chassis",
+        "x": -2.08,
+        "y": 0.25,
+        "kind": "emitter",
+        "title": {
+          "en": "Tailpipe mouth",
+          "de": "Auspuffmündung"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.18,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "kind": "capsule",
+              "x0": -1.95,
+              "y0": 0.38,
+              "x1": 2.05,
+              "y1": 0.38,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "frame",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.18,
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "running-board",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.4,
+              "w": 2,
+              "h": 0.06,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "tub",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -1.90,0.52 L 0.60,0.52 L 0.60,1.14 L -1.86,1.14 C -1.95,1.14 -1.99,1.06 -1.99,0.96 L -1.99,0.62 C -1.99,0.56 -1.96,0.52 -1.90,0.52 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "cabin",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "d": "M 0.60,1.14 L 0.50,1.62 C 0.49,1.68 0.52,1.70 0.58,1.70 L -1.50,1.70 C -1.60,1.70 -1.66,1.66 -1.70,1.58 L -1.84,1.14 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "roof-slab",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.62,1.63 L 0.62,1.7 L -1.5,1.7 C -1.6,1.7 -1.66,1.66 -1.7,1.58 L -1.52,1.63 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            },
+            {
+              "id": "hood",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.62,0.58 L 0.62,1.17 C 0.95,1.215 1.45,1.215 1.74,1.18 C 1.77,1.175 1.78,1.16 1.78,1.14 L 1.78,0.58 Z",
+              "region": "hood",
+              "material": "paint"
+            },
+            {
+              "id": "fender-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,0.47 C 1.00,0.68 1.20,0.85 1.50,0.85 C 1.84,0.85 2.04,0.72 2.14,0.52 L 2.11,0.47 C 2.02,0.64 1.80,0.80 1.50,0.80 C 1.22,0.80 1.05,0.64 1.01,0.45 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "fender-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,0.47 C -0.96,0.70 -1.15,0.85 -1.50,0.85 C -1.80,0.85 -1.98,0.72 -2.03,0.52 L -2.00,0.47 C -1.96,0.62 -1.78,0.80 -1.50,0.80 C -1.22,0.80 -1.03,0.64 -1.01,0.45 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "radiator-shell",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 1.78,
+              "y": 0.56,
+              "w": 0.1,
+              "h": 0.7,
+              "r": 0.03,
+              "region": "radiator",
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.83,
+              "y0": 1.26,
+              "x1": 1.83,
+              "y1": 1.3,
+              "r0": 0.018,
+              "r1": 0.018,
+              "id": "radiator-neck",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.78,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "radiator-cap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "ellipse",
+              "cx": 1.83,
+              "cy": 1.335,
+              "rx": 0.05,
+              "ry": 0.032,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.92,
+              "y0": 0.97,
+              "x1": 0.92,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-1",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.99,
+              "y0": 0.97,
+              "x1": 0.99,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-2",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.06,
+              "y0": 0.97,
+              "x1": 1.06,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-3",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.1300000000000001,
+              "y0": 0.97,
+              "x1": 1.1300000000000001,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-4",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.2000000000000002,
+              "y0": 0.97,
+              "x1": 1.2000000000000002,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-5",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.27,
+              "y0": 0.97,
+              "x1": 1.27,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-6",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.34,
+              "y0": 0.97,
+              "x1": 1.34,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-7",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.4100000000000001,
+              "y0": 0.97,
+              "x1": 1.4100000000000001,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-8",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.48,
+              "y0": 0.97,
+              "x1": 1.48,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-9",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.5500000000000003,
+              "y0": 0.97,
+              "x1": 1.5500000000000003,
+              "y1": 1.12,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "louvre-10",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "id": "headlamp-bowl",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": 0.99,
+              "rx": 0.105,
+              "ry": 0.11,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "headlamp-lens",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "ellipse",
+              "cx": 1.866,
+              "cy": 0.99,
+              "rx": 0.018,
+              "ry": 0.085,
+              "material": "glass"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.76,
+              "y0": 0.8,
+              "x1": 1.76,
+              "y1": 0.9,
+              "r0": 0.015,
+              "r1": 0.015,
+              "id": "lamp-stalk",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "window-front",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.51,1.21 L 0.44,1.58 L -0.27,1.58 L -0.27,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "window-rear",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.41,1.21 L -0.41,1.58 L -1.07,1.58 L -1.07,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "window-quarter",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -1.17,1.21 L -1.17,1.58 L -1.62,1.58 L -1.74,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "windscreen",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6.1,
+              "filled": false,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.575,1.17 L 0.47,1.6",
+              "region": "glazing",
+              "material": "glass",
+              "penMm": 0.3
+            },
+            {
+              "id": "door-hinge-gap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.57,1.14 L 0.57,0.56"
+            },
+            {
+              "id": "door-gap-b",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.34,1.14 L -0.34,0.56"
+            },
+            {
+              "id": "door-gap-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -1.12,1.14 L -1.12,0.56"
+            },
+            {
+              "id": "belt-line",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -1.86,1.14 L 0.6,1.14"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.2,
+              "y0": 1.04,
+              "x1": -0.1,
+              "y1": 1.04,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "handle-front",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7.2,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.5,
+              "y0": 1.04,
+              "x1": -0.4,
+              "y1": 1.04,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "handle-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7.2,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "seat-front",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 6.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.02,1.21 L 0.0,1.44 L 0.04,1.5 L 0.12,1.5 L 0.16,1.44 L 0.18,1.21 Z"
+            },
+            {
+              "id": "seat-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 6.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.97,1.21 L -0.95,1.44 L -0.91,1.5 L -0.83,1.5 L -0.79,1.44 L -0.77,1.21 Z"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": 1.24,
+              "x1": 0.33,
+              "y1": 1.36,
+              "r0": 0.01,
+              "r1": 0.01,
+              "id": "steering-column",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 6.5,
+              "filled": true,
+              "tone": 0.3,
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "steering-wheel",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 6.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.31,
+              "cy": 1.39,
+              "rx": 0.016,
+              "ry": 0.1,
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "number-plate",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -2.015,
+              "y": 0.58,
+              "w": 0.03,
+              "h": 0.12,
+              "material": "paint"
+            },
+            {
+              "kind": "capsule",
+              "x0": 2,
+              "y0": 0.66,
+              "x1": 2.1,
+              "y1": 0.58,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "fender-lamp",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": true,
+              "tone": 0.85,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "tail-lamp",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -2.03,
+              "y": 0.9,
+              "w": 0.05,
+              "h": 0.1,
+              "material": "paint"
+            },
+            {
+              "kind": "capsule",
+              "x0": 2.22,
+              "y0": 0.66,
+              "x1": 2.22,
+              "y1": 0.4,
+              "r0": 0.022,
+              "r1": 0.022,
+              "id": "bumper-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": -2.12,
+              "y0": 0.66,
+              "x1": -2.12,
+              "y1": 0.4,
+              "r0": 0.022,
+              "r1": 0.022,
+              "id": "bumper-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 2.2,
+              "y0": 0.5,
+              "x1": 2.05,
+              "y1": 0.43,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "bracket-front",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -2.1,
+              "y0": 0.5,
+              "x1": -1.95,
+              "y1": 0.43,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "bracket-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.9,
+              "y0": 0.27,
+              "x1": -1.05,
+              "y1": 0.27,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "exhaust-pipe",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -1.1,
+              "y0": 0.27,
+              "x1": -1.75,
+              "y1": 0.27,
+              "r0": 0.075,
+              "r1": 0.075,
+              "id": "silencer",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.9,
+              "filled": true,
+              "tone": 0.4,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -1.75,
+              "y0": 0.27,
+              "x1": -2.08,
+              "y1": 0.25,
+              "r0": 0.03,
+              "r1": 0.025,
+              "id": "tail-pipe",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "spare-tyre",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "spare-cover",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.23,
+              "ry": 0.23,
+              "material": "paint"
+            },
+            {
+              "id": "spare-ring",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.65,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.27,
+              "ry": 0.27,
+              "material": "rubber"
+            },
+            {
+              "id": "spare-boss",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.04,
+              "ry": 0.04,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "tyre-f",
+              "bone": "wheel-f",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "bead-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.3,
+              "ry": 0.3,
+              "material": "rubber"
+            },
+            {
+              "id": "rim-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25,
+              "material": "steel-rim"
+            },
+            {
+              "id": "drum-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.17,
+              "ry": 0.17,
+              "region": "brakes",
+              "material": "cast-iron"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.075,
+              "x1": 0,
+              "y1": 0.245,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-1",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0375,
+              "y0": 0.065,
+              "x1": -0.1225,
+              "y1": 0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-2",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.065,
+              "y0": 0.0375,
+              "x1": -0.2122,
+              "y1": 0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-3",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.075,
+              "y0": 0,
+              "x1": -0.245,
+              "y1": 0,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-4",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.065,
+              "y0": -0.0375,
+              "x1": -0.2122,
+              "y1": -0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-5",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0375,
+              "y0": -0.065,
+              "x1": -0.1225,
+              "y1": -0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-6",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.075,
+              "x1": 0,
+              "y1": -0.245,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-7",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0375,
+              "y0": -0.065,
+              "x1": 0.1225,
+              "y1": -0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-8",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.065,
+              "y0": -0.0375,
+              "x1": 0.2122,
+              "y1": -0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-9",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.075,
+              "y0": 0,
+              "x1": 0.245,
+              "y1": 0,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-10",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.065,
+              "y0": 0.0375,
+              "x1": 0.2122,
+              "y1": 0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-11",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0375,
+              "y0": 0.065,
+              "x1": 0.1225,
+              "y1": 0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-f-12",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "id": "hub-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.065,
+              "ry": 0.065,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.2188,
+              "y0": 0.0884,
+              "x1": 0.2782,
+              "y1": 0.1124,
+              "r0": 0.009,
+              "r1": 0.009,
+              "id": "valve-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.9,
+              "material": "steel-rim"
+            },
+            {
+              "id": "tyre-r",
+              "bone": "wheel-r",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "bead-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.3,
+              "ry": 0.3,
+              "material": "rubber"
+            },
+            {
+              "id": "rim-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25,
+              "material": "steel-rim"
+            },
+            {
+              "id": "drum-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.17,
+              "ry": 0.17,
+              "region": "brakes",
+              "material": "cast-iron"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.075,
+              "x1": 0,
+              "y1": 0.245,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-1",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0375,
+              "y0": 0.065,
+              "x1": -0.1225,
+              "y1": 0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-2",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.065,
+              "y0": 0.0375,
+              "x1": -0.2122,
+              "y1": 0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-3",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.075,
+              "y0": 0,
+              "x1": -0.245,
+              "y1": 0,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-4",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.065,
+              "y0": -0.0375,
+              "x1": -0.2122,
+              "y1": -0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-5",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0375,
+              "y0": -0.065,
+              "x1": -0.1225,
+              "y1": -0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-6",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.075,
+              "x1": 0,
+              "y1": -0.245,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-7",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0375,
+              "y0": -0.065,
+              "x1": 0.1225,
+              "y1": -0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-8",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.065,
+              "y0": -0.0375,
+              "x1": 0.2122,
+              "y1": -0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-9",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.075,
+              "y0": 0,
+              "x1": 0.245,
+              "y1": 0,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-10",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.065,
+              "y0": 0.0375,
+              "x1": 0.2122,
+              "y1": 0.1225,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-11",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0375,
+              "y0": 0.065,
+              "x1": 0.1225,
+              "y1": 0.2122,
+              "r0": 0.011,
+              "r1": 0.011,
+              "id": "spoke-r-12",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "id": "hub-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.065,
+              "ry": 0.065,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.2188,
+              "y0": 0.0884,
+              "x1": 0.2782,
+              "y1": 0.1124,
+              "r0": 0.009,
+              "r1": 0.009,
+              "id": "valve-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.9,
+              "material": "steel-rim"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-tub",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -1.90,-0.74 L 0.60,-0.74 L 0.60,0.74 L -1.90,0.74 C -1.96,0.74 -1.99,0.70 -1.99,0.64 L -1.99,-0.64 C -1.99,-0.70 -1.96,-0.74 -1.90,-0.74 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "plan-roof",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.50,-0.62 L -1.58,-0.62 C -1.66,-0.62 -1.70,-0.56 -1.70,-0.48 L -1.70,0.48 C -1.70,0.56 -1.66,0.62 -1.58,0.62 L 0.50,0.62 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            },
+            {
+              "id": "plan-windscreen",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": 0.5,
+              "y": -0.58,
+              "w": 0.1,
+              "h": 1.16,
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "plan-rear-glass",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -1.82,
+              "y": -0.46,
+              "w": 0.12,
+              "h": 0.92,
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "plan-hood",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.64,-0.44 C 1.0,-0.43 1.5,-0.38 1.77,-0.3 L 1.77,0.3 C 1.5,0.38 1.0,0.43 0.64,0.44 Z",
+              "region": "hood",
+              "material": "paint"
+            },
+            {
+              "id": "plan-hood-ridge",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.64,0 L 1.77,0"
+            },
+            {
+              "id": "plan-board-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0.74,
+              "w": 1.94,
+              "h": 0.11,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,0.52 L 0.96,0.80 C 1.05,0.85 1.30,0.86 1.55,0.86 C 1.85,0.86 2.05,0.78 2.12,0.68 C 2.15,0.62 2.15,0.55 2.13,0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-rear-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,0.52 L -0.98,0.78 C -1.05,0.84 -1.25,0.85 -1.50,0.85 C -1.80,0.85 -1.96,0.80 -2.02,0.70 L -2.03,0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-spare-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.55,
+              "y": 0.68,
+              "w": 0.62,
+              "h": 0.14,
+              "r": 0.06,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "plan-lamp-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": 0.55,
+              "rx": 0.105,
+              "ry": 0.105,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.78,
+              "y0": 0.3,
+              "x1": 1.78,
+              "y1": 0.46,
+              "r0": 0.014,
+              "r1": 0.014,
+              "id": "plan-lamp-bar-l",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-board-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.98,
+              "y": -0.85,
+              "w": 1.94,
+              "h": 0.11,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,-0.52 L 0.96,-0.8 C 1.05,-0.85 1.30,-0.86 1.55,-0.86 C 1.85,-0.86 2.05,-0.78 2.12,-0.68 C 2.15,-0.62 2.15,-0.55 2.13,-0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-rear-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,-0.52 L -0.98,-0.78 C -1.05,-0.84 -1.25,-0.85 -1.50,-0.85 C -1.80,-0.85 -1.96,-0.8 -2.02,-0.7 L -2.03,-0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-spare-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.55,
+              "y": -0.82,
+              "w": 0.62,
+              "h": 0.14,
+              "r": 0.06,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "plan-lamp-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": -0.55,
+              "rx": 0.105,
+              "ry": 0.105,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.78,
+              "y0": -0.3,
+              "x1": 1.78,
+              "y1": -0.46,
+              "r0": 0.014,
+              "r1": 0.014,
+              "id": "plan-lamp-bar-r",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-radiator",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 1.77,
+              "y": -0.27,
+              "w": 0.11,
+              "h": 0.54,
+              "r": 0.03,
+              "region": "radiator",
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-radiator-cap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "ellipse",
+              "cx": 1.825,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-bumper-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 2.2,
+              "y": -0.74,
+              "w": 0.045,
+              "h": 1.48,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-bumper-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -2.145,
+              "y": -0.74,
+              "w": 0.045,
+              "h": 1.48,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-door-gap-b",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.34,-0.74 L -0.34,-0.62 M -0.34,0.62 L -0.34,0.74"
+            },
+            {
+              "id": "plan-roof-seam",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.5,0 L -1.7,0"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Late-1920s saloon in side view: separate crescent fenders with 0.05 m gap over each tyre, running board, long bonnet with louvres, upright cabin with visor and fabric roof slab, nickel radiator with cap.",
+            "de": "Salonwagen der späten 1920er in der Seitenansicht: getrennte Sichelkotflügel mit 0,05 m Abstand über jedem Reifen, Trittbrett, lange Haube mit Luftschlitzen, aufrechte Kabine mit Sonnenblende und Stoffdachplatte, vernickelter Kühler mit Verschluss."
+          },
+          "retained": {
+            "en": "Door gaps, handles, three side windows, seats and steering column through the glass, headlamp bowl with stalk, tail lamp, plate, bumper brackets, exhaust pipe, silencer and tail pipe, spare wheel with cover ring, 12 wire spokes, hub cap, brake drum and tyre valve per wheel.",
+            "de": "Türfugen, Griffe, drei Seitenfenster, Sitze und Lenksäule hinter dem Glas, Scheinwerfertopf mit Stütze, Rücklicht, Nummernschild, Stoßstangenhalter, Abgasrohr, Schalldämpfer und Endrohr, Reserverad mit Abdeckring, 12 Drahtspeichen, Radkappe, Bremstrommel und Reifenventil je Rad."
+          },
+          "merged": {
+            "en": "Sill, belt and window frames merge into the tub and cabin outlines; wheel arches merge into the fender crescents.",
+            "de": "Schweller, Gürtellinie und Fensterrahmen gehen in den Kontur von Wanne und Kabine auf; Radläufe in den Kotflügelsicheln."
+          },
+          "omitted": {
+            "en": "Door hinges, hood latches, mascot, tyre tread, wire-wheel nipples and the rear-axle housing (below 0.02 m = 0.4 mm).",
+            "de": "Türscharniere, Haubenverschlüsse, Kühlerfigur, Reifenprofil, Speichennippel und Hinterachsgehäuse (unter 0,02 m = 0,4 mm)."
+          },
+          "thinElements": {
+            "en": "Spokes are 0.022 m wide (0.44 mm) at real width; the windscreen edge is a 0.3 mm line; crescent fenders 0.05 m (real 0.002 m sheet).",
+            "de": "Speichen sind 0,022 m breit (0,44 mm) in Realbreite; die Windschutzscheibenkante ist eine 0,3-mm-Linie; Sichelkotflügel 0,05 m (real 0,002 m Blech)."
+          },
+          "hatching": {
+            "en": "None; materials are shown by tone only: tyres near black, glass lightest, nickel parts light, fabric roof lighter than the painted body.",
+            "de": "Keine; Materialien zeigen sich nur über den Ton: Reifen fast schwarz, Glas am hellsten, vernickelte Teile hell, Stoffdach heller als der lackierte Aufbau."
+          },
+          "styles": {
+            "en": "Body mid-tone, fenders darker, outlines 0.25 mm, detail 0.18 mm, glazing 0.13 mm; plan view uses the same pens.",
+            "de": "Aufbau mittlerer Ton, Kotflügel dunkler, Konturen 0,25 mm, Details 0,18 mm, Verglasung 0,13 mm; der Grundriss nutzt dieselben Stifte."
+          },
+          "overlays": {
+            "en": "Regions map one to one onto shapes; the valve and the asymmetric spoke pattern make the rolling wheel legible in clips.",
+            "de": "Regionen bilden sich eins zu eins auf Formen ab; Ventil und unsymmetrisches Speichenbild machen das rollende Rad in Clips lesbar."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "kind": "capsule",
+              "x0": -1.95,
+              "y0": 0.38,
+              "x1": 2.05,
+              "y1": 0.38,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "frame",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.18,
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "running-board",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.4,
+              "w": 2,
+              "h": 0.06,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "tub",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -1.90,0.52 L 0.60,0.52 L 0.60,1.14 L -1.86,1.14 C -1.95,1.14 -1.99,1.06 -1.99,0.96 L -1.99,0.62 C -1.99,0.56 -1.96,0.52 -1.90,0.52 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "cabin",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "d": "M 0.60,1.14 L 0.50,1.62 C 0.49,1.68 0.52,1.70 0.58,1.70 L -1.50,1.70 C -1.60,1.70 -1.66,1.66 -1.70,1.58 L -1.84,1.14 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "roof-slab",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.62,1.63 L 0.62,1.7 L -1.5,1.7 C -1.6,1.7 -1.66,1.66 -1.7,1.58 L -1.52,1.63 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            },
+            {
+              "id": "hood",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.62,0.58 L 0.62,1.17 C 0.95,1.215 1.45,1.215 1.74,1.18 C 1.77,1.175 1.78,1.16 1.78,1.14 L 1.78,0.58 Z",
+              "region": "hood",
+              "material": "paint"
+            },
+            {
+              "id": "fender-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,0.47 C 1.00,0.68 1.20,0.85 1.50,0.85 C 1.84,0.85 2.04,0.72 2.14,0.52 L 2.11,0.47 C 2.02,0.64 1.80,0.80 1.50,0.80 C 1.22,0.80 1.05,0.64 1.01,0.45 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "fender-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,0.47 C -0.96,0.70 -1.15,0.85 -1.50,0.85 C -1.80,0.85 -1.98,0.72 -2.03,0.52 L -2.00,0.47 C -1.96,0.62 -1.78,0.80 -1.50,0.80 C -1.22,0.80 -1.03,0.64 -1.01,0.45 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "radiator-shell",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 1.78,
+              "y": 0.56,
+              "w": 0.1,
+              "h": 0.7,
+              "r": 0.03,
+              "region": "radiator",
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.83,
+              "y0": 1.26,
+              "x1": 1.83,
+              "y1": 1.3,
+              "r0": 0.018,
+              "r1": 0.018,
+              "id": "radiator-neck",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.78,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "radiator-cap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "ellipse",
+              "cx": 1.83,
+              "cy": 1.335,
+              "rx": 0.05,
+              "ry": 0.032,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.95,
+              "y0": 0.97,
+              "x1": 0.95,
+              "y1": 1.12,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "louvre-1",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.0699999999999998,
+              "y0": 0.97,
+              "x1": 1.0699999999999998,
+              "y1": 1.12,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "louvre-2",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.19,
+              "y0": 0.97,
+              "x1": 1.19,
+              "y1": 1.12,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "louvre-3",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.31,
+              "y0": 0.97,
+              "x1": 1.31,
+              "y1": 1.12,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "louvre-4",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.43,
+              "y0": 0.97,
+              "x1": 1.43,
+              "y1": 1.12,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "louvre-5",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.5499999999999998,
+              "y0": 0.97,
+              "x1": 1.5499999999999998,
+              "y1": 1.12,
+              "r0": 0.02,
+              "r1": 0.02,
+              "id": "louvre-6",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "id": "headlamp-bowl",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": 0.99,
+              "rx": 0.105,
+              "ry": 0.11,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "headlamp-lens",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "ellipse",
+              "cx": 1.866,
+              "cy": 0.99,
+              "rx": 0.018,
+              "ry": 0.085,
+              "material": "glass"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.76,
+              "y0": 0.8,
+              "x1": 1.76,
+              "y1": 0.9,
+              "r0": 0.015,
+              "r1": 0.015,
+              "id": "lamp-stalk",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "window-front",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.51,1.21 L 0.44,1.58 L -0.27,1.58 L -0.27,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "window-rear",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.41,1.21 L -0.41,1.58 L -1.07,1.58 L -1.07,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "window-quarter",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -1.17,1.21 L -1.17,1.58 L -1.62,1.58 L -1.74,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "windscreen",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6.1,
+              "filled": false,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.575,1.17 L 0.47,1.6",
+              "region": "glazing",
+              "material": "glass",
+              "penMm": 0.3
+            },
+            {
+              "id": "door-hinge-gap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.57,1.14 L 0.57,0.56"
+            },
+            {
+              "id": "door-gap-b",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.34,1.14 L -0.34,0.56"
+            },
+            {
+              "id": "door-gap-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -1.12,1.14 L -1.12,0.56"
+            },
+            {
+              "id": "belt-line",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -1.86,1.14 L 0.6,1.14"
+            },
+            {
+              "id": "tail-lamp",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -2.03,
+              "y": 0.9,
+              "w": 0.05,
+              "h": 0.1,
+              "material": "paint"
+            },
+            {
+              "kind": "capsule",
+              "x0": 2.22,
+              "y0": 0.66,
+              "x1": 2.22,
+              "y1": 0.4,
+              "r0": 0.022,
+              "r1": 0.022,
+              "id": "bumper-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": -2.12,
+              "y0": 0.66,
+              "x1": -2.12,
+              "y1": 0.4,
+              "r0": 0.022,
+              "r1": 0.022,
+              "id": "bumper-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 2.2,
+              "y0": 0.5,
+              "x1": 2.05,
+              "y1": 0.43,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "bracket-front",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -2.1,
+              "y0": 0.5,
+              "x1": -1.95,
+              "y1": 0.43,
+              "r0": 0.012,
+              "r1": 0.012,
+              "id": "bracket-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.9,
+              "y0": 0.27,
+              "x1": -1.05,
+              "y1": 0.27,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "exhaust-pipe",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -1.1,
+              "y0": 0.27,
+              "x1": -1.75,
+              "y1": 0.27,
+              "r0": 0.075,
+              "r1": 0.075,
+              "id": "silencer",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.9,
+              "filled": true,
+              "tone": 0.4,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -1.75,
+              "y0": 0.27,
+              "x1": -2.08,
+              "y1": 0.25,
+              "r0": 0.03,
+              "r1": 0.025,
+              "id": "tail-pipe",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "spare-tyre",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "spare-cover",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.23,
+              "ry": 0.23,
+              "material": "paint"
+            },
+            {
+              "id": "spare-ring",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.65,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.27,
+              "ry": 0.27,
+              "material": "rubber"
+            },
+            {
+              "id": "spare-boss",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.04,
+              "ry": 0.04,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "tyre-f",
+              "bone": "wheel-f",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "rim-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25,
+              "material": "steel-rim"
+            },
+            {
+              "id": "drum-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.17,
+              "ry": 0.17,
+              "region": "brakes",
+              "material": "cast-iron"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.075,
+              "x1": 0,
+              "y1": 0.245,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-1",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.053,
+              "y0": 0.053,
+              "x1": -0.1732,
+              "y1": 0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-2",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.075,
+              "y0": 0,
+              "x1": -0.245,
+              "y1": 0,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-3",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.053,
+              "y0": -0.053,
+              "x1": -0.1732,
+              "y1": -0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-4",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.075,
+              "x1": 0,
+              "y1": -0.245,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-5",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.053,
+              "y0": -0.053,
+              "x1": 0.1732,
+              "y1": -0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-6",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.075,
+              "y0": 0,
+              "x1": 0.245,
+              "y1": 0,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-7",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.053,
+              "y0": 0.053,
+              "x1": 0.1732,
+              "y1": 0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-f-8",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "id": "hub-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.065,
+              "ry": 0.065,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.2188,
+              "y0": 0.0884,
+              "x1": 0.2782,
+              "y1": 0.1124,
+              "r0": 0.009,
+              "r1": 0.009,
+              "id": "valve-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.9,
+              "material": "steel-rim"
+            },
+            {
+              "id": "tyre-r",
+              "bone": "wheel-r",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "rim-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25,
+              "material": "steel-rim"
+            },
+            {
+              "id": "drum-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.17,
+              "ry": 0.17,
+              "region": "brakes",
+              "material": "cast-iron"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.075,
+              "x1": 0,
+              "y1": 0.245,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-1",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.053,
+              "y0": 0.053,
+              "x1": -0.1732,
+              "y1": 0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-2",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.075,
+              "y0": 0,
+              "x1": -0.245,
+              "y1": 0,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-3",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.053,
+              "y0": -0.053,
+              "x1": -0.1732,
+              "y1": -0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-4",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.075,
+              "x1": 0,
+              "y1": -0.245,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-5",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.053,
+              "y0": -0.053,
+              "x1": 0.1732,
+              "y1": -0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-6",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.075,
+              "y0": 0,
+              "x1": 0.245,
+              "y1": 0,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-7",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.053,
+              "y0": 0.053,
+              "x1": 0.1732,
+              "y1": 0.1732,
+              "r0": 0.016,
+              "r1": 0.016,
+              "id": "spoke-r-8",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "id": "hub-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.065,
+              "ry": 0.065,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.2188,
+              "y0": 0.0884,
+              "x1": 0.2782,
+              "y1": 0.1124,
+              "r0": 0.009,
+              "r1": 0.009,
+              "id": "valve-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.9,
+              "material": "steel-rim"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-tub",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -1.90,-0.74 L 0.60,-0.74 L 0.60,0.74 L -1.90,0.74 C -1.96,0.74 -1.99,0.70 -1.99,0.64 L -1.99,-0.64 C -1.99,-0.70 -1.96,-0.74 -1.90,-0.74 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "plan-roof",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.50,-0.62 L -1.58,-0.62 C -1.66,-0.62 -1.70,-0.56 -1.70,-0.48 L -1.70,0.48 C -1.70,0.56 -1.66,0.62 -1.58,0.62 L 0.50,0.62 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            },
+            {
+              "id": "plan-windscreen",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": 0.5,
+              "y": -0.58,
+              "w": 0.1,
+              "h": 1.16,
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "plan-rear-glass",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -1.82,
+              "y": -0.46,
+              "w": 0.12,
+              "h": 0.92,
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "plan-hood",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.64,-0.44 C 1.0,-0.43 1.5,-0.38 1.77,-0.3 L 1.77,0.3 C 1.5,0.38 1.0,0.43 0.64,0.44 Z",
+              "region": "hood",
+              "material": "paint"
+            },
+            {
+              "id": "plan-hood-ridge",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.64,0 L 1.77,0"
+            },
+            {
+              "id": "plan-board-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0.74,
+              "w": 1.94,
+              "h": 0.11,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,0.52 L 0.96,0.80 C 1.05,0.85 1.30,0.86 1.55,0.86 C 1.85,0.86 2.05,0.78 2.12,0.68 C 2.15,0.62 2.15,0.55 2.13,0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-rear-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,0.52 L -0.98,0.78 C -1.05,0.84 -1.25,0.85 -1.50,0.85 C -1.80,0.85 -1.96,0.80 -2.02,0.70 L -2.03,0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-spare-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.55,
+              "y": 0.68,
+              "w": 0.62,
+              "h": 0.14,
+              "r": 0.06,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "plan-lamp-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": 0.55,
+              "rx": 0.105,
+              "ry": 0.105,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.78,
+              "y0": 0.3,
+              "x1": 1.78,
+              "y1": 0.46,
+              "r0": 0.014,
+              "r1": 0.014,
+              "id": "plan-lamp-bar-l",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-board-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.98,
+              "y": -0.85,
+              "w": 1.94,
+              "h": 0.11,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,-0.52 L 0.96,-0.8 C 1.05,-0.85 1.30,-0.86 1.55,-0.86 C 1.85,-0.86 2.05,-0.78 2.12,-0.68 C 2.15,-0.62 2.15,-0.55 2.13,-0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-rear-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,-0.52 L -0.98,-0.78 C -1.05,-0.84 -1.25,-0.85 -1.50,-0.85 C -1.80,-0.85 -1.96,-0.8 -2.02,-0.7 L -2.03,-0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-spare-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.55,
+              "y": -0.82,
+              "w": 0.62,
+              "h": 0.14,
+              "r": 0.06,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "plan-lamp-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": -0.55,
+              "rx": 0.105,
+              "ry": 0.105,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.78,
+              "y0": -0.3,
+              "x1": 1.78,
+              "y1": -0.46,
+              "r0": 0.014,
+              "r1": 0.014,
+              "id": "plan-lamp-bar-r",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-radiator",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 1.77,
+              "y": -0.27,
+              "w": 0.11,
+              "h": 0.54,
+              "r": 0.03,
+              "region": "radiator",
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-radiator-cap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "ellipse",
+              "cx": 1.825,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-bumper-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 2.2,
+              "y": -0.74,
+              "w": 0.045,
+              "h": 1.48,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-bumper-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -2.145,
+              "y": -0.74,
+              "w": 0.045,
+              "h": 1.48,
+              "material": "nickel-plate"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The same saloon with the fenders as separate crescents at 0.06 m (0.6 mm) clearance, running board, bonnet, cabin with roof slab and three windows.",
+            "de": "Derselbe Salonwagen mit den Kotflügeln als getrennte Sicheln bei 0,06 m (0,6 mm) Abstand, Trittbrett, Haube, Kabine mit Dachplatte und drei Fenstern."
+          },
+          "retained": {
+            "en": "Three door gaps, belt line, six bonnet louvres, headlamp bowl and stalk, bumpers and brackets, exhaust pipe, silencer and tail pipe, spare with ring, eight spokes, hub and valve per wheel.",
+            "de": "Drei Türfugen, Gürtellinie, sechs Haubenschlitze, Scheinwerfertopf und Stütze, Stoßstangen und Halter, Abgasrohr, Schalldämpfer und Endrohr, Reserverad mit Ring, acht Speichen, Nabe und Ventil je Rad."
+          },
+          "merged": {
+            "en": "Handles, seats, plate and fender lamp are dropped into the body tone; the tyre bead ring merges into the rim.",
+            "de": "Griffe, Sitze, Nummernschild und Kotflügellampe gehen im Aufbauton auf; der Reifenwulstring in der Felge."
+          },
+          "omitted": {
+            "en": "Interior, steering column, tyre bead line, wheel nuts and brackets below 0.03 m (0.3 mm).",
+            "de": "Innenraum, Lenksäule, Reifenwulstlinie, Radmuttern und Halter unter 0,03 m (0,3 mm)."
+          },
+          "thinElements": {
+            "en": "Spokes 0.032 m (0.32 mm) at real width; louvres 0.04 m; windscreen edge 0.3 mm line.",
+            "de": "Speichen 0,032 m (0,32 mm) in Realbreite; Luftschlitze 0,04 m; Windschutzscheibenkante als 0,3-mm-Linie."
+          },
+          "hatching": {
+            "en": "None; tone only.",
+            "de": "Keine; nur Ton."
+          },
+          "styles": {
+            "en": "Outlines 0.18 mm, detail 0.13 mm, glazing 0.10 mm.",
+            "de": "Konturen 0,18 mm, Details 0,13 mm, Verglasung 0,10 mm."
+          },
+          "overlays": {
+            "en": "Regions map onto shapes; the eight spokes and the valve keep the rolling readable.",
+            "de": "Regionen bilden sich auf Formen ab; acht Speichen und das Ventil halten das Rollen lesbar."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "kind": "capsule",
+              "x0": -1.95,
+              "y0": 0.38,
+              "x1": 2.05,
+              "y1": 0.38,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "frame",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.18,
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "running-board",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.4,
+              "w": 2,
+              "h": 0.06,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "tub",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -1.90,0.52 L 0.60,0.52 L 0.60,1.14 L -1.86,1.14 C -1.95,1.14 -1.99,1.06 -1.99,0.96 L -1.99,0.62 C -1.99,0.56 -1.96,0.52 -1.90,0.52 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "cabin",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "d": "M 0.60,1.14 L 0.50,1.62 C 0.49,1.68 0.52,1.70 0.58,1.70 L -1.50,1.70 C -1.60,1.70 -1.66,1.66 -1.70,1.58 L -1.84,1.14 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "roof-slab",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.62,1.63 L 0.62,1.7 L -1.5,1.7 C -1.6,1.7 -1.66,1.66 -1.7,1.58 L -1.52,1.63 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            },
+            {
+              "id": "hood",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.62,0.58 L 0.62,1.17 C 0.95,1.215 1.45,1.215 1.74,1.18 C 1.77,1.175 1.78,1.16 1.78,1.14 L 1.78,0.58 Z",
+              "region": "hood",
+              "material": "paint"
+            },
+            {
+              "id": "fender-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,0.47 C 1.00,0.68 1.20,0.85 1.50,0.85 C 1.84,0.85 2.04,0.72 2.14,0.52 L 2.11,0.47 C 2.02,0.64 1.80,0.80 1.50,0.80 C 1.22,0.80 1.05,0.64 1.01,0.45 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "fender-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,0.47 C -0.96,0.70 -1.15,0.85 -1.50,0.85 C -1.80,0.85 -1.98,0.72 -2.03,0.52 L -2.00,0.47 C -1.96,0.62 -1.78,0.80 -1.50,0.80 C -1.22,0.80 -1.03,0.64 -1.01,0.45 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "radiator-shell",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 1.78,
+              "y": 0.56,
+              "w": 0.1,
+              "h": 0.7,
+              "r": 0.03,
+              "region": "radiator",
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 1.83,
+              "y0": 1.26,
+              "x1": 1.83,
+              "y1": 1.3,
+              "r0": 0.018,
+              "r1": 0.018,
+              "id": "radiator-neck",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.78,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "radiator-cap",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "ellipse",
+              "cx": 1.83,
+              "cy": 1.335,
+              "rx": 0.05,
+              "ry": 0.032,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "louvre-band",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "rect",
+              "x": 0.95,
+              "y": 0.97,
+              "w": 0.7,
+              "h": 0.15,
+              "region": "engine-bay",
+              "material": "engine-metal"
+            },
+            {
+              "id": "headlamp-bowl",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": 0.99,
+              "rx": 0.105,
+              "ry": 0.11,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "headlamp-lens",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "ellipse",
+              "cx": 1.866,
+              "cy": 0.99,
+              "rx": 0.018,
+              "ry": 0.085,
+              "material": "glass"
+            },
+            {
+              "id": "window-front",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.51,1.21 L 0.44,1.58 L -0.27,1.58 L -0.27,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "window-rear",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.41,1.21 L -0.41,1.58 L -1.07,1.58 L -1.07,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "window-quarter",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -1.17,1.21 L -1.17,1.58 L -1.62,1.58 L -1.74,1.21 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "windscreen",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6.1,
+              "filled": false,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.575,1.17 L 0.47,1.6",
+              "region": "glazing",
+              "material": "glass",
+              "penMm": 0.25
+            },
+            {
+              "id": "tail-lamp",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -2.03,
+              "y": 0.9,
+              "w": 0.05,
+              "h": 0.1,
+              "material": "paint"
+            },
+            {
+              "kind": "capsule",
+              "x0": 2.22,
+              "y0": 0.66,
+              "x1": 2.22,
+              "y1": 0.4,
+              "r0": 0.022,
+              "r1": 0.022,
+              "id": "bumper-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": -2.12,
+              "y0": 0.66,
+              "x1": -2.12,
+              "y1": 0.4,
+              "r0": 0.022,
+              "r1": 0.022,
+              "id": "bumper-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "material": "nickel-plate"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.9,
+              "y0": 0.27,
+              "x1": -1.05,
+              "y1": 0.27,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "exhaust-pipe",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -1.1,
+              "y0": 0.27,
+              "x1": -1.75,
+              "y1": 0.27,
+              "r0": 0.075,
+              "r1": 0.075,
+              "id": "silencer",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.9,
+              "filled": true,
+              "tone": 0.4,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "kind": "capsule",
+              "x0": -1.75,
+              "y0": 0.27,
+              "x1": -2.08,
+              "y1": 0.25,
+              "r0": 0.03,
+              "r1": 0.025,
+              "id": "tail-pipe",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 0.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "exhaust-system",
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "spare-tyre",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "spare-cover",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.23,
+              "ry": 0.23,
+              "material": "paint"
+            },
+            {
+              "id": "spare-boss",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0.86,
+              "cy": 0.78,
+              "rx": 0.04,
+              "ry": 0.04,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "tyre-f",
+              "bone": "wheel-f",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "rim-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25,
+              "regions": [
+                "brakes"
+              ],
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.2,
+              "y0": 0,
+              "x1": 0.2,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "spoke-f-0",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.2,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2,
+              "x1": 0,
+              "y1": 0.2,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "spoke-f-90",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.2,
+              "material": "steel-rim"
+            },
+            {
+              "id": "hub-f",
+              "bone": "wheel-f",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.07,
+              "ry": 0.07,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "tyre-r",
+              "bone": "wheel-r",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "rim-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25,
+              "regions": [
+                "brakes"
+              ],
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.2,
+              "y0": 0,
+              "x1": 0.2,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "spoke-r-0",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.2,
+              "material": "steel-rim"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2,
+              "x1": 0,
+              "y1": 0.2,
+              "r0": 0.03,
+              "r1": 0.03,
+              "id": "spoke-r-90",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.2,
+              "material": "steel-rim"
+            },
+            {
+              "id": "hub-r",
+              "bone": "wheel-r",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.07,
+              "ry": 0.07,
+              "material": "nickel-plate"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-tub",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -1.90,-0.74 L 0.60,-0.74 L 0.60,0.74 L -1.90,0.74 C -1.96,0.74 -1.99,0.70 -1.99,0.64 L -1.99,-0.64 C -1.99,-0.70 -1.96,-0.74 -1.90,-0.74 Z",
+              "region": "body-panels",
+              "material": "paint"
+            },
+            {
+              "id": "plan-roof",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.50,-0.62 L -1.58,-0.62 C -1.66,-0.62 -1.70,-0.56 -1.70,-0.48 L -1.70,0.48 C -1.70,0.56 -1.66,0.62 -1.58,0.62 L 0.50,0.62 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            },
+            {
+              "id": "plan-windscreen",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": 0.5,
+              "y": -0.58,
+              "w": 0.1,
+              "h": 1.16,
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "plan-rear-glass",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -1.82,
+              "y": -0.46,
+              "w": 0.12,
+              "h": 0.92,
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "plan-hood",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.64,-0.44 C 1.0,-0.43 1.5,-0.38 1.77,-0.3 L 1.77,0.3 C 1.5,0.38 1.0,0.43 0.64,0.44 Z",
+              "region": "hood",
+              "material": "paint"
+            },
+            {
+              "id": "plan-board-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0.74,
+              "w": 1.94,
+              "h": 0.11,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,0.52 L 0.96,0.80 C 1.05,0.85 1.30,0.86 1.55,0.86 C 1.85,0.86 2.05,0.78 2.12,0.68 C 2.15,0.62 2.15,0.55 2.13,0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-rear-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,0.52 L -0.98,0.78 C -1.05,0.84 -1.25,0.85 -1.50,0.85 C -1.80,0.85 -1.96,0.80 -2.02,0.70 L -2.03,0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-spare-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.55,
+              "y": 0.68,
+              "w": 0.62,
+              "h": 0.14,
+              "r": 0.06,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "plan-lamp-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": 0.55,
+              "rx": 0.105,
+              "ry": 0.105,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-board-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.98,
+              "y": -0.85,
+              "w": 1.94,
+              "h": 0.11,
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.96,-0.52 L 0.96,-0.8 C 1.05,-0.85 1.30,-0.86 1.55,-0.86 C 1.85,-0.86 2.05,-0.78 2.12,-0.68 C 2.15,-0.62 2.15,-0.55 2.13,-0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-fender-rear-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.98,-0.52 L -0.98,-0.78 C -1.05,-0.84 -1.25,-0.85 -1.50,-0.85 C -1.80,-0.85 -1.96,-0.8 -2.02,-0.7 L -2.03,-0.52 Z",
+              "region": "fenders",
+              "material": "paint"
+            },
+            {
+              "id": "plan-spare-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.55,
+              "y": -0.82,
+              "w": 0.62,
+              "h": 0.14,
+              "r": 0.06,
+              "region": "tyres",
+              "material": "rubber"
+            },
+            {
+              "id": "plan-lamp-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.74,
+              "kind": "ellipse",
+              "cx": 1.78,
+              "cy": -0.55,
+              "rx": 0.105,
+              "ry": 0.105,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-radiator",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 1.77,
+              "y": -0.27,
+              "w": 0.11,
+              "h": 0.54,
+              "r": 0.03,
+              "region": "radiator",
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-bumper-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 2.2,
+              "y": -0.74,
+              "w": 0.045,
+              "h": 1.48,
+              "material": "nickel-plate"
+            },
+            {
+              "id": "plan-bumper-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -2.145,
+              "y": -0.74,
+              "w": 0.045,
+              "h": 1.48,
+              "material": "nickel-plate"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Main masses separated: tub and cabin, bonnet, two fenders, roof slab, three windows, bumpers, wheels as tyre disc with rim.",
+            "de": "Hauptmassen getrennt: Wanne und Kabine, Haube, zwei Kotflügel, Dachplatte, drei Fenster, Stoßstangen, Räder als Reifenscheibe mit Felge."
+          },
+          "retained": {
+            "en": "Radiator shell and cap, headlamp bowl, spare wheel, silencer and tail pipe, a two-bar spoke cross and a hub per wheel.",
+            "de": "Kühlerschale und Verschluss, Scheinwerfertopf, Reserverad, Schalldämpfer und Endrohr, ein Speichenkreuz aus zwei Balken und eine Nabe je Rad."
+          },
+          "merged": {
+            "en": "The louvres merge into one dark band, the exhaust pipe into the silencer line, the brake drum into the rim disc.",
+            "de": "Die Luftschlitze verschmelzen zu einem dunklen Band, das Abgasrohr zur Schalldämpferlinie, die Bremstrommel zur Felgenscheibe."
+          },
+          "omitted": {
+            "en": "Door gaps, belt line, handles, seats, brackets, spokes beyond the cross and the valve (below 0.06 m = 0.3 mm).",
+            "de": "Türfugen, Gürtellinie, Griffe, Sitze, Halter, Speichen jenseits des Kreuzes und das Ventil (unter 0,06 m = 0,3 mm)."
+          },
+          "thinElements": {
+            "en": "The spoke cross is 0.06 m wide (0.3 mm) instead of 0.022 m; the exhaust pipe is merged because 0.06 m would be 0.3 mm.",
+            "de": "Das Speichenkreuz ist 0,06 m breit (0,3 mm) statt 0,022 m; das Abgasrohr ist verschmolzen, da 0,06 m 0,3 mm ergäben."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Outlines 0.18 mm, detail 0.13 mm, glazing 0.13 mm.",
+            "de": "Konturen 0,18 mm, Details 0,13 mm, Verglasung 0,13 mm."
+          },
+          "overlays": {
+            "en": "Regions map onto shapes; the cross shows the rotation.",
+            "de": "Regionen bilden sich auf Formen ab; das Kreuz zeigt die Drehung."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.15,
+          "detail": null,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "underbody",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -2.145,0.62 L -2.145,0.4 L 2.245,0.4 L 2.245,0.62 Z",
+              "regions": [
+                "exhaust-system"
+              ],
+              "material": "exhaust-steel"
+            },
+            {
+              "id": "silhouette",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -1.99,0.5 L -1.99,1.1 L -1.82,1.14 L -1.7,1.58 C -1.6,1.68 -1.5,1.7 -1.4,1.7 L 0.58,1.7 L 0.5,1.58 L 0.62,1.18 C 1.0,1.22 1.5,1.22 1.88,1.2 L 1.9,0.5 L 2.15,0.5 L 2.15,0.62 C 2.0,0.88 1.8,0.88 1.5,0.88 C 1.2,0.88 1.05,0.85 0.96,0.5 Z",
+              "regions": [
+                "body-panels",
+                "hood",
+                "fenders",
+                "radiator",
+                "engine-bay",
+                "roof"
+              ],
+              "material": "paint"
+            },
+            {
+              "id": "windows",
+              "bone": "chassis",
+              "role": "glazing",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -1.62,1.22 L -1.62,1.55 L 0.42,1.55 L 0.5,1.22 Z",
+              "region": "glazing",
+              "material": "glass"
+            },
+            {
+              "id": "tyre-f",
+              "bone": "wheel-f",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "regions": [
+                "tyres",
+                "brakes"
+              ],
+              "material": "rubber"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.2,
+              "y0": 0,
+              "x1": 0.2,
+              "y1": 0,
+              "r0": 0.09,
+              "r1": 0.09,
+              "id": "bar-f",
+              "bone": "wheel-f",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            },
+            {
+              "id": "tyre-r",
+              "bone": "wheel-r",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "regions": [
+                "tyres",
+                "brakes"
+              ],
+              "material": "rubber"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.2,
+              "y0": 0,
+              "x1": 0.2,
+              "y1": 0,
+              "r0": 0.09,
+              "r1": 0.09,
+              "id": "bar-r",
+              "bone": "wheel-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "material": "steel-rim"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-silhouette",
+              "bone": "chassis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -2.1,-0.74 L -2.1,0.74 L -1.99,0.85 L 0.9,0.85 L 1.5,0.86 L 2.12,0.7 L 2.25,0.74 L 2.25,-0.74 L 2.12,-0.7 L 1.5,-0.86 L 0.9,-0.85 L -1.99,-0.85 Z",
+              "regions": [
+                "body-panels",
+                "hood",
+                "fenders",
+                "radiator"
+              ],
+              "material": "paint"
+            },
+            {
+              "id": "plan-roof",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.5,-0.55 L -1.7,-0.55 L -1.7,0.55 L 0.5,0.55 Z",
+              "region": "roof",
+              "material": "fabric-roof"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One composed silhouette of the saloon (body, fenders, bonnet, radiator, roof), one window band, an underbody bar and two wheel discs.",
+            "de": "Eine zusammengesetzte Silhouette des Salonwagens (Aufbau, Kotflügel, Haube, Kühler, Dach), ein Fensterband, ein Unterbalken und zwei Radscheiben."
+          },
+          "retained": {
+            "en": "The long bonnet, upright cabin and the two wheels with a single bar for rotation.",
+            "de": "Die lange Haube, die aufrechte Kabine und die zwei Räder mit einem einzigen Balken für die Drehung."
+          },
+          "merged": {
+            "en": "Fenders, bonnet, radiator, tub, cabin and roof into one outline; exhaust and underbody into one bar; the brake drum into the tyre disc.",
+            "de": "Kotflügel, Haube, Kühler, Wanne, Kabine und Dach zu einer Kontur; Abgasanlage und Unterboden zu einem Balken; die Bremstrommel in die Reifenscheibe."
+          },
+          "omitted": {
+            "en": "Spare wheel, lamps, bumpers, louvres, door gaps, windows beyond the band (below 0.1 m = 0.2 mm).",
+            "de": "Reserverad, Lampen, Stoßstangen, Luftschlitze, Türfugen, Fenster jenseits des Bandes (unter 0,1 m = 0,2 mm)."
+          },
+          "thinElements": {
+            "en": "The wheel bar is 0.18 m wide (0.36 mm); the window band 0.33 m tall (0.66 mm).",
+            "de": "Der Radbalken ist 0,18 m breit (0,36 mm); das Fensterband 0,33 m hoch (0,66 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Outlines 0.15 mm, glazing 0.13 mm.",
+            "de": "Konturen 0,15 mm, Verglasung 0,13 mm."
+          },
+          "overlays": {
+            "en": "Merged shapes carry the regions they merge, painted with area-weighted values.",
+            "de": "Verschmolzene Formen tragen die Regionen, die sie vereinen, mit flächengewichteten Werten."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "parked",
+        "title": {
+          "en": "Parked",
+          "de": "Geparkt"
+        },
+        "description": {
+          "en": "Engine off and cold, standing on level ground as at the Villa Savoye.",
+          "de": "Motor aus und kalt, auf ebenem Grund abgestellt wie an der Villa Savoye."
+        },
+        "bones": {},
+        "root": {
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0,
+            "rolling": 0,
+            "braking": 0
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "driving",
+        "title": {
+          "en": "Driving",
+          "de": "Fahrt"
+        },
+        "description": {
+          "en": "Cruising at about 30 km/h: the engine at part load, the tyres warm, the exhaust jet on.",
+          "de": "Reisefahrt mit etwa 30 km/h: Motor in Teillast, Reifen warm, Abgasstrahl an."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.5,
+            "rolling": 0.8,
+            "braking": 0
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "braking",
+        "title": {
+          "en": "Braking",
+          "de": "Bremsen"
+        },
+        "description": {
+          "en": "Light drum braking at walking pace into the parking space, engine idling.",
+          "de": "Leichte Trommelbremsung im Schritttempo beim Einparken, Motor im Leerlauf."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.2,
+            "rolling": 0.4,
+            "braking": 0.05
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lane-start",
+        "key": true,
+        "title": {
+          "en": "Start of the lane",
+          "de": "Spuranfang"
+        },
+        "description": {
+          "en": "Key pose: idling 12 m before the origin.",
+          "de": "Zwischenpose: Leerlauf 12 m vor dem Ursprung."
+        },
+        "bones": {
+          "wheel-f": {
+            "angleDeg": 1858.241
+          },
+          "wheel-r": {
+            "angleDeg": 1858.241
+          }
+        },
+        "root": {
+          "x": -12,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.2,
+            "rolling": 0,
+            "braking": 0
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lane-cruise-entry",
+        "key": true,
+        "title": {
+          "en": "Cruise entry",
+          "de": "Beginn der Reisefahrt"
+        },
+        "description": {
+          "en": "Key pose: end of the acceleration, 4 m before the origin at 8 m/s.",
+          "de": "Zwischenpose: Ende der Beschleunigung, 4 m vor dem Ursprung bei 8 m/s."
+        },
+        "bones": {
+          "wheel-f": {
+            "angleDeg": 619.414
+          },
+          "wheel-r": {
+            "angleDeg": 619.414
+          }
+        },
+        "root": {
+          "x": -4,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.6,
+            "rolling": 0.8,
+            "braking": 0
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lane-exit",
+        "key": true,
+        "title": {
+          "en": "End of the lane",
+          "de": "Spurende"
+        },
+        "description": {
+          "en": "Key pose: cruising 12 m behind the origin.",
+          "de": "Zwischenpose: Reisefahrt 12 m hinter dem Ursprung."
+        },
+        "bones": {
+          "wheel-f": {
+            "angleDeg": -1858.241
+          },
+          "wheel-r": {
+            "angleDeg": -1858.241
+          }
+        },
+        "root": {
+          "x": 12,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.5,
+            "rolling": 0.8,
+            "braking": 0
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "crawl-in",
+        "key": true,
+        "title": {
+          "en": "Crawl-in",
+          "de": "Einfahrt im Schritttempo"
+        },
+        "description": {
+          "en": "Key pose: 3 m/s, 6 m before the parking space, light braking.",
+          "de": "Zwischenpose: 3 m/s, 6 m vor dem Parkplatz, leichte Bremsung."
+        },
+        "bones": {
+          "wheel-f": {
+            "angleDeg": 929.121
+          },
+          "wheel-r": {
+            "angleDeg": 929.121
+          }
+        },
+        "root": {
+          "x": -6,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-f",
+          "contact-r"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.2,
+            "rolling": 0.2,
+            "braking": 0.3
+          },
+          "regions": {
+            "body-panels": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "roof": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "hood": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            },
+            "fenders": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7
+            },
+            "glazing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "radiator": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "engine-bay": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            },
+            "exhaust-system": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "tyres": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "brakes": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "tailpipe": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "drive-by",
+        "title": {
+          "en": "Drive-by from standstill",
+          "de": "Vorbeifahrt aus dem Stand"
+        },
+        "description": {
+          "en": "The engine is started and idles, the saloon accelerates uniformly over 8 m to 8 m/s (29 km/h) and cruises past the origin; the 0.37 m wheels roll with theta = -x / r.",
+          "de": "Der Motor wird gestartet und läuft im Leerlauf, der Wagen beschleunigt gleichmäßig auf 8 m Strecke auf 8 m/s (29 km/h) und fährt am Ursprung vorbei; die Räder von 0,37 m Radius rollen mit theta = -x / r."
+        },
+        "durationS": 4.8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "lane-start",
+            "ease": "linear"
+          },
+          {
+            "t": 0.8,
+            "pose": "lane-start",
+            "ease": "in"
+          },
+          {
+            "t": 2.8,
+            "pose": "lane-cruise-entry",
+            "ease": "linear"
+          },
+          {
+            "t": 4.8,
+            "pose": "lane-exit",
+            "ease": "linear"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-f",
+            "fromS": 0,
+            "toS": 4.8
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 4.8
+          }
+        ],
+        "phases": [
+          {
+            "id": "idle",
+            "fromS": 0,
+            "toS": 0.8,
+            "title": {
+              "en": "Start and idle",
+              "de": "Start und Leerlauf"
+            }
+          },
+          {
+            "id": "accelerate",
+            "fromS": 0.8,
+            "toS": 2.8,
+            "title": {
+              "en": "Uniform acceleration",
+              "de": "Gleichmäßige Beschleunigung"
+            }
+          },
+          {
+            "id": "cruise",
+            "fromS": 2.8,
+            "toS": 4.8,
+            "title": {
+              "en": "Cruise",
+              "de": "Reisefahrt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.3,
+            "kind": "ignition",
+            "title": {
+              "en": "Ignition",
+              "de": "Zündung"
+            },
+            "target": "tailpipe"
+          },
+          {
+            "t": 0.8,
+            "kind": "motion",
+            "title": {
+              "en": "Pulls away",
+              "de": "Anfahren"
+            }
+          },
+          {
+            "t": 2.8,
+            "kind": "thermal",
+            "title": {
+              "en": "Cruise speed 8 m/s",
+              "de": "Reisegeschwindigkeit 8 m/s"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:engine-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.3,
+                "v": 0.45
+              },
+              {
+                "t": 0.6,
+                "v": 0.2
+              },
+              {
+                "t": 0.8,
+                "v": 0.2
+              },
+              {
+                "t": 2,
+                "v": 0.95
+              },
+              {
+                "t": 2.8,
+                "v": 0.6
+              },
+              {
+                "t": 4.8,
+                "v": 0.5
+              }
+            ]
+          },
+          {
+            "target": "operating:rolling",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.8,
+                "v": 0
+              },
+              {
+                "t": 2.8,
+                "v": 0.8
+              },
+              {
+                "t": 4.8,
+                "v": 0.8
+              }
+            ]
+          },
+          {
+            "target": "emitter:tailpipe",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.3,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "arrive-and-park",
+        "title": {
+          "en": "Arrive and park",
+          "de": "Ankommen und parken"
+        },
+        "description": {
+          "en": "The saloon brakes uniformly from 3 m/s to rest in 4 s (6 m), the engine is switched off and the drums cool.",
+          "de": "Der Wagen bremst gleichmäßig in 4 s von 3 m/s bis zum Stillstand (6 m), der Motor wird abgestellt und die Trommeln kühlen aus."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "crawl-in",
+            "ease": "out"
+          },
+          {
+            "t": 4,
+            "pose": "parked",
+            "ease": "linear"
+          },
+          {
+            "t": 8,
+            "pose": "parked",
+            "ease": "linear"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-f",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "brake",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Braking to rest",
+              "de": "Bremsen bis zum Stillstand"
+            }
+          },
+          {
+            "id": "shutdown",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Engine off",
+              "de": "Motor aus"
+            }
+          },
+          {
+            "id": "cool",
+            "fromS": 5,
+            "toS": 8,
+            "title": {
+              "en": "Standing, cooling",
+              "de": "Stehend, kühlt aus"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "motion",
+            "title": {
+              "en": "Standstill",
+              "de": "Stillstand"
+            }
+          },
+          {
+            "t": 4.4,
+            "kind": "shutdown",
+            "title": {
+              "en": "Ignition off",
+              "de": "Zündung aus"
+            },
+            "target": "tailpipe"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:engine-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.2
+              },
+              {
+                "t": 4.4,
+                "v": 0.2
+              },
+              {
+                "t": 4.7,
+                "v": 0
+              },
+              {
+                "t": 8,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:braking",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 4,
+                "v": 0.6
+              },
+              {
+                "t": 8,
+                "v": 0.1
+              }
+            ]
+          },
+          {
+            "target": "emitter:tailpipe",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4.4,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "skyTempC": 8,
+        "groundTempC": 28,
+        "relativeHumidity": 0.5,
+        "windMS": 0.5,
+        "windDirectionDeg": 180,
+        "solarWM2": 400,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "engine-load",
+          "title": {
+            "en": "Engine load",
+            "de": "Motorlast"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Engine off",
+                "de": "Motor aus"
+              }
+            },
+            {
+              "v": 0.2,
+              "title": {
+                "en": "Idle",
+                "de": "Leerlauf"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Part load (cruising)",
+                "de": "Teillast (Reisefahrt)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full load",
+                "de": "Volllast"
+              }
+            }
+          ]
+        },
+        {
+          "id": "rolling",
+          "title": {
+            "en": "Rolling speed",
+            "de": "Rollgeschwindigkeit"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Standstill",
+                "de": "Stillstand"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "About 20 km/h",
+                "de": "Etwa 20 km/h"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "About 40 km/h",
+                "de": "Etwa 40 km/h"
+              }
+            }
+          ]
+        },
+        {
+          "id": "braking",
+          "title": {
+            "en": "Drum braking",
+            "de": "Trommelbremsen"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Not braking",
+                "de": "Nicht gebremst"
+              }
+            },
+            {
+              "v": 0.3,
+              "title": {
+                "en": "Light braking",
+                "de": "Leichte Bremsung"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full braking from 40 km/h",
+                "de": "Vollbremsung aus 40 km/h"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "body-panels",
+          "title": {
+            "en": "Painted side and end panels",
+            "de": "Lackierte Seiten- und Endbleche"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "paint",
+          "areaM2": 6.4,
+          "characteristicLengthM": 1.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Steel sheet 1.0 mm",
+                "de": "Stahlblech 1,0 mm"
+              },
+              "kind": "metal",
+              "material": "paint",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3900,
+              "source": "literature",
+              "reference": "incropera-2011"
+            },
+            {
+              "id": "paint",
+              "title": {
+                "en": "Paint film",
+                "de": "Lackschicht"
+              },
+              "kind": "polymer",
+              "material": "paint",
+              "thicknessM": 0.00008,
+              "resistanceM2KW": 0.00027,
+              "heatCapacityJM2K": 150,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 6000,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "roof",
+          "title": {
+            "en": "Fabric-covered roof",
+            "de": "Stoffbespanntes Dach"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "fabric-roof",
+          "areaM2": 2.2,
+          "characteristicLengthM": 1.4,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.95,
+          "layers": [
+            {
+              "id": "fabric",
+              "title": {
+                "en": "Fabric on wooden frame 6 mm",
+                "de": "Stoff auf Holzgerippe 6 mm"
+              },
+              "kind": "timber",
+              "material": "fabric-roof",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.04,
+              "heatCapacityJM2K": 2200,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 2200,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "hood",
+          "title": {
+            "en": "Bonnet, warmed from below",
+            "de": "Motorhaube, von unten erwärmt"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "paint",
+          "areaM2": 1.5,
+          "characteristicLengthM": 1,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.9,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Steel sheet 1.0 mm",
+                "de": "Stahlblech 1,0 mm"
+              },
+              "kind": "metal",
+              "material": "paint",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3900,
+              "source": "literature",
+              "reference": "incropera-2011"
+            },
+            {
+              "id": "paint",
+              "title": {
+                "en": "Paint film",
+                "de": "Lackschicht"
+              },
+              "kind": "polymer",
+              "material": "paint",
+              "thicknessM": 0.00008,
+              "resistanceM2KW": 0.00027,
+              "heatCapacityJM2K": 150,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 6500,
+          "operating": {
+            "key": "engine-load",
+            "heatW": 160
+          },
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        },
+        {
+          "id": "fenders",
+          "title": {
+            "en": "Fenders and running boards",
+            "de": "Kotflügel und Trittbretter"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "paint",
+          "areaM2": 2.6,
+          "characteristicLengthM": 0.9,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.7,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Steel sheet 1.0 mm",
+                "de": "Stahlblech 1,0 mm"
+              },
+              "kind": "metal",
+              "material": "paint",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3900,
+              "source": "literature",
+              "reference": "incropera-2011"
+            },
+            {
+              "id": "paint",
+              "title": {
+                "en": "Paint film",
+                "de": "Lackschicht"
+              },
+              "kind": "polymer",
+              "material": "paint",
+              "thicknessM": 0.00008,
+              "resistanceM2KW": 0.00027,
+              "heatCapacityJM2K": 150,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 6000,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "glazing",
+          "title": {
+            "en": "Windscreen and side glass",
+            "de": "Windschutz- und Seitenscheiben"
+          },
+          "kind": "glazing",
+          "model": "passive",
+          "material": "glass",
+          "areaM2": 1.6,
+          "characteristicLengthM": 0.8,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "glass",
+              "title": {
+                "en": "Toughened glass 5 mm",
+                "de": "Einscheibensicherheitsglas 5 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.005,
+              "heatCapacityJM2K": 9400,
+              "source": "literature",
+              "reference": "incropera-2011"
+            }
+          ],
+          "heatCapacityJM2K": 9400,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "radiator",
+          "title": {
+            "en": "Radiator shell",
+            "de": "Kühlerschale"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "nickel-plate",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.7,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [],
+          "heatCapacityJM2K": 3500,
+          "operating": {
+            "key": "engine-load",
+            "heatW": 380
+          },
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        },
+        {
+          "id": "engine-bay",
+          "title": {
+            "en": "Engine casting seen through the louvres",
+            "de": "Motorguss hinter den Luftschlitzen"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "engine-metal",
+          "areaM2": 0.8,
+          "characteristicLengthM": 0.45,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.1,
+          "layers": [],
+          "heatCapacityJM2K": 9000,
+          "operating": {
+            "key": "engine-load",
+            "heatW": 900
+          },
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        },
+        {
+          "id": "exhaust-system",
+          "title": {
+            "en": "Exhaust pipe and silencer",
+            "de": "Abgasrohr und Schalldämpfer"
+          },
+          "kind": "exhaust",
+          "model": "operating",
+          "material": "exhaust-steel",
+          "areaM2": 0.4,
+          "characteristicLengthM": 0.08,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.2,
+          "layers": [
+            {
+              "id": "pipe",
+              "title": {
+                "en": "Steel pipe 1.5 mm",
+                "de": "Stahlrohr 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "exhaust-steel",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.000033,
+              "heatCapacityJM2K": 8500,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 8500,
+          "operating": {
+            "key": "engine-load",
+            "heatW": 1800
+          },
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        },
+        {
+          "id": "tyres",
+          "title": {
+            "en": "Balloon tyres and spare tyres",
+            "de": "Ballonreifen und Reservereifen"
+          },
+          "kind": "tyre",
+          "model": "operating",
+          "material": "rubber",
+          "areaM2": 2.4,
+          "characteristicLengthM": 0.74,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tread",
+              "title": {
+                "en": "Rubber tread and carcass",
+                "de": "Gummilauffläche und Karkasse"
+              },
+              "kind": "polymer",
+              "material": "rubber",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.05,
+              "heatCapacityJM2K": 34000,
+              "source": "authored-estimate",
+              "reference": "wong-2008"
+            }
+          ],
+          "heatCapacityJM2K": 34000,
+          "operating": {
+            "key": "rolling",
+            "heatW": 380
+          },
+          "source": "authored-estimate",
+          "reference": "wong-2008"
+        },
+        {
+          "id": "brakes",
+          "title": {
+            "en": "Brake drums",
+            "de": "Bremstrommeln"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "cast-iron",
+          "areaM2": 0.5,
+          "characteristicLengthM": 0.34,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.2,
+          "layers": [],
+          "heatCapacityJM2K": 31000,
+          "operating": {
+            "key": "braking",
+            "heatW": 1100
+          },
+          "source": "authored-estimate",
+          "reference": "limpert-1999"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "tailpipe",
+          "kind": "exhaust",
+          "title": {
+            "en": "Exhaust jet",
+            "de": "Abgasstrahl"
+          },
+          "anchor": "tailpipe",
+          "directionDeg": 190,
+          "diameterM": 0.045,
+          "operatingKey": "engine-load",
+          "volumeFlowM3S": 0.06,
+          "temperatureRiseK": 260,
+          "vapourKgPerKg": 0.075,
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Heat release at level 1 is the part of the waste heat that leaves through the visible surface: engine louvres 0.9 kW, radiator shell 0.38 kW, exhaust system 1.8 kW, bonnet 0.16 kW, tyres 0.38 kW (about 40 km/h) and brake drums 1.1 kW (a stop from 40 km/h is about 60 kJ in 2.2 s on four drums, named poses use level 0.05). Heat capacities are the thermally active shell masses on a minutes timescale.",
+          "de": "Die Wärmefreisetzung bei Stufe 1 ist der Teil der Abwärme, der durch die sichtbare Oberfläche austritt: Motorluftschlitze 0,9 kW, Kühlerschale 0,38 kW, Abgasanlage 1,8 kW, Motorhaube 0,16 kW, Reifen 0,38 kW (etwa 40 km/h) und Bremstrommeln 1,1 kW (ein Halt aus 40 km/h sind rund 60 kJ in 2,2 s auf vier Trommeln; die benannten Posen nutzen Stufe 0,05). Die Wärmekapazitäten sind die thermisch wirksamen Hüllmassen auf der Minutenskala."
+        },
+        {
+          "en": "The small four-cylinder engine (about 40 kW) idles with a low exhaust volume flow (0.06 m3/s at full load, +260 K at the mouth); the 1929 saloon has no catalyst, so the exhaust jet is hot and humid (0.075 kg/kg).",
+          "de": "Der kleine Vierzylindermotor (etwa 40 kW) hat einen geringen Abgasvolumenstrom (0,06 m3/s bei Volllast, +260 K an der Mündung); der Wagen von 1929 hat keinen Katalysator, der Abgasstrahl ist daher heiß und feucht (0,075 kg/kg)."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Frame, body, fenders and spare wheels are one rigid point mass; the two axles carry it through four tyre patches (static front share about 48 %). No suspension is modelled.",
+          "de": "Rahmen, Aufbau, Kotflügel und Reserveräder sind eine starre Punktmasse; die zwei Achsen tragen sie über vier Reifenaufstandsflächen (statischer Vorderachsanteil etwa 48 %). Eine Federung ist nicht modelliert."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "parked",
+      "defaultClip": "drive-by",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation",
+        "plan"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

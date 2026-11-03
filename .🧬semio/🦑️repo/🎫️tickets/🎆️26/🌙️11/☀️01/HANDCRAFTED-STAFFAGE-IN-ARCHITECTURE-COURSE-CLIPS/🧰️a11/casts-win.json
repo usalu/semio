@@ -1,0 +1,8 @@
+{ "version": 1, "casts": {
+  "a-closed": { "asset": "tilt-window", "pose": "closed", "view": "dark-line", "viewpoint": "front", "theme": "dark" },
+  "b-tilted": { "asset": "tilt-window", "pose": "tilted-open", "view": "dark-line", "viewpoint": "front", "theme": "dark" },
+  "c-fully": { "asset": "tilt-window", "pose": "fully-tilted", "view": "dark-line", "viewpoint": "front", "theme": "dark" },
+  "d-fully-100": { "asset": "tilt-window", "pose": "fully-tilted", "view": "dark-line", "viewpoint": "front", "theme": "dark", "scale": 100 },
+  "e-fully-200": { "asset": "tilt-window", "pose": "fully-tilted", "view": "dark-line", "viewpoint": "front", "theme": "dark", "scale": 200 },
+  "f-fully-thermal": { "asset": "tilt-window", "pose": "fully-tilted", "view": "thermal", "environment": "indoor-heated-winter", "viewpoint": "front", "theme": "dark" }
+} }

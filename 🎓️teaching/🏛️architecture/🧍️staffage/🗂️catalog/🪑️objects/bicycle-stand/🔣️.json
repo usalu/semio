@@ -242,12 +242,45 @@
               "region": "crossbar-galv",
               "material": "galv-steel"
             }
+          ],
+          "front": [
+            {
+              "id": "hoop-end-on",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.8 0 0.8 C 0.01334 0.8 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "hoop-top",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "capsule",
+              "x0": -0.3508,
+              "y0": 0,
+              "x1": 0.3508,
+              "y1": 0,
+              "r0": 0.02415,
+              "r1": 0.02415,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "One closed U band (1.5 x 1.6 mm on paper) with the cross rail as a bar; the 0.75 x 0.80 m outer size is kept exactly.",
-            "de": "Ein geschlossenes U-Band (1,5 x 1,6 mm auf dem Papier) mit dem Querholm als Balken; das Außenmaß 0,75 x 0,80 m bleibt exakt."
+            "en": "One closed U band (1.5 x 1.6 mm on paper) with the cross rail as a bar; the 0.75 x 0.80 m outer size is kept exactly. Front and plan are one bar of 0.068 m, the hoop seen end-on and from above, widened by 0.02 m from the true 0.048 m tube so it stays printable and inside the dimension tolerance.",
+            "de": "Ein geschlossenes U-Band (1,5 x 1,6 mm auf dem Papier) mit dem Querholm als Balken; das Außenmaß 0,75 x 0,80 m bleibt exakt. Vorder- und Draufsicht sind je ein Balken von 0,068 m, der Bügel von vorn und von oben, gegenüber dem wahren Rohr von 0,048 m um 0,02 m verbreitert, damit er druckbar bleibt und in der Maßtoleranz liegt."
           },
           "retained": {
             "en": "Outer width 0.75 m, height 0.80 m, the cross rail at 0.40 m.",
@@ -258,8 +291,8 @@
             "de": "Rohrwand und Schweißkragen gehen im vollen Band auf."
           },
           "omitted": {
-            "en": "Weld lines, bend tangents, embedded leg stubs.",
-            "de": "Schweißnähte, Biegetangenten, einbetonierte Beinstummel."
+            "en": "Weld lines, bend tangents, embedded leg stubs. Crossbar, welds and leg rings are dropped in front and plan; the crossbar hides behind the near leg and below the top tube.",
+            "de": "Schweißnähte, Biegetangenten, einbetonierte Beinstummel. Querholm, Schweißnähte und Beinringe entfallen in Vorder- und Draufsicht; der Querholm verschwindet hinter dem nahen Bein und unter dem oberen Rohr."
           },
           "thinElements": {
             "en": "The 0.0483 m tube would be 0.097 mm on paper, below the feature width: the band is thickened to 0.16 m (0.32 mm) inward from the real outer edge, so the outer size stays exact and the inner opening shrinks by 0.11 m per side; the bend radius is tightened to 0.15 m.",
@@ -323,12 +356,104 @@
               "region": "crossbar-galv",
               "material": "galv-steel"
             }
+          ],
+          "front": [
+            {
+              "id": "hoop-end-on",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.80000 0 0.80000 C 0.01334 0.80000 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar-end-on",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.02415,
+              "y": 0.37585,
+              "w": 0.0483,
+              "h": 0.0483,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "hoop-top",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "capsule",
+              "x0": -0.35085,
+              "y0": 0,
+              "x1": 0.35085,
+              "y1": 0,
+              "r0": 0.02415,
+              "r1": 0.02415,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top-0",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1708,
+                  -0.02415
+                ],
+                [
+                  -0.1708,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top-1",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1708,
+                  -0.02415
+                ],
+                [
+                  0.1708,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Inverted U of true tube size (0.24 mm wide) with a straight cross rail between the legs.",
-            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) mit geradem Querholm zwischen den Beinen."
+            "en": "Inverted U of true tube size (0.24 mm wide) with a straight cross rail between the legs. Front: the hoop tube end-on at its true 48.3 mm with the cross rail as a square joint on it; plan: one capsule of true tube width with the two bend tangents.",
+            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) mit geradem Querholm zwischen den Beinen. Vorderansicht: das Bügelrohr von vorn in wahrer Stärke von 48,3 mm mit dem Querholm als quadratischem Stoß; Draufsicht: eine Kapsel in wahrer Rohrstärke mit den beiden Biegetangenten."
           },
           "retained": {
             "en": "Real tube diameter 0.0483 m, cross rail at 0.40 m.",
@@ -339,8 +464,8 @@
             "de": "Die beiden Bögen sind zu je einer quadratischen Kurve vereinfacht; Schweißkragen an den Holmenden gehen in den Beinen auf."
           },
           "omitted": {
-            "en": "Weld lines and bend tangents.",
-            "de": "Schweißnähte und Biegetangenten."
+            "en": "Weld lines and bend tangents. Leg rings and ground collars in front and plan.",
+            "de": "Schweißnähte und Biegetangenten. Beinringe und Bodenmanschetten in Vorder- und Draufsicht."
           },
           "thinElements": {
             "en": "Tube is 0.24 mm wide, just above the 0.2 mm feature width; outline 0.18 mm.",
@@ -446,16 +571,182 @@
               "closed": false,
               "region": "crossbar-galv"
             }
+          ],
+          "front": [
+            {
+              "id": "hoop-end-on",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.80000 0 0.80000 C 0.01334 0.80000 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar-end-on",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.02415,
+              "y": 0.37585,
+              "w": 0.0483,
+              "h": 0.0483,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-low",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.59585
+                ],
+                [
+                  0.02415,
+                  0.59585
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "ground-collar",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.004
+                ],
+                [
+                  0.02415,
+                  0.004
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "hoop-top",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "capsule",
+              "x0": -0.35085,
+              "y0": 0,
+              "x1": 0.35085,
+              "y1": 0,
+              "r0": 0.02415,
+              "r1": 0.02415,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top-0",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4.05,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1708,
+                  -0.02415
+                ],
+                [
+                  -0.1708,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top-1",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4.05,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1708,
+                  -0.02415
+                ],
+                [
+                  0.1708,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-dot-0",
+              "bone": "hoop",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.35085,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-dot-1",
+              "bone": "hoop",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.35085,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Hoop band 0.48 mm wide at true tube size, cross rail with its two weld lines.",
-            "de": "Bügelband in wahrer Rohrstärke 0,48 mm breit, Querholm mit seinen zwei Schweißnähten."
+            "en": "Hoop band 0.48 mm wide at true tube size, cross rail with its two weld lines. Front: the end-on tube with cross rail joint, bend tangent and ground collar; plan: the bar with the two bend tangents and the two leg dots.",
+            "de": "Bügelband in wahrer Rohrstärke 0,48 mm breit, Querholm mit seinen zwei Schweißnähten. Vorderansicht: das Rohr von vorn mit Querholmstoß, Biegetangente und Bodenmanschette; Draufsicht: der Balken mit den beiden Biegetangenten und den zwei Beinpunkten."
           },
           "retained": {
-            "en": "True tube size and bend radius, cross rail, both weld joints.",
-            "de": "Wahre Rohrstärke und Biegeradius, Querholm, beide Schweißstöße."
+            "en": "True tube size and bend radius, cross rail, both weld joints. The leg dots mark the two legs set into the footing.",
+            "de": "Wahre Rohrstärke und Biegeradius, Querholm, beide Schweißstöße. Die Beinpunkte markieren die beiden einbetonierten Beine."
           },
           "merged": {
             "en": "Bend tangents merge into the continuous band.",
@@ -695,16 +986,337 @@
               "closed": false,
               "region": "hoop-galv"
             }
+          ],
+          "front": [
+            {
+              "id": "hoop-end-on",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.80000 0 0.80000 C 0.01334 0.80000 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar-end-on",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.02415,
+              "y": 0.37585,
+              "w": 0.0483,
+              "h": 0.0483,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-low",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.59585
+                ],
+                [
+                  0.02415,
+                  0.59585
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.7517
+                ],
+                [
+                  0.02415,
+                  0.7517
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "ground-collar",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.004
+                ],
+                [
+                  0.02415,
+                  0.004
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "weld-collar-low",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.38085
+                ],
+                [
+                  0.02415,
+                  0.38085
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "weld-collar-high",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02415,
+                  0.41915
+                ],
+                [
+                  0.02415,
+                  0.41915
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar-bore",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.4,
+              "rx": 0.0138,
+              "ry": 0.0138,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "hoop-top",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "capsule",
+              "x0": -0.35085,
+              "y0": 0,
+              "x1": 0.35085,
+              "y1": 0,
+              "r0": 0.02415,
+              "r1": 0.02415,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top-0",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1708,
+                  -0.02415
+                ],
+                [
+                  -0.1708,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-top-1",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1708,
+                  -0.02415
+                ],
+                [
+                  0.1708,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-low-0",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32665,
+                  -0.02415
+                ],
+                [
+                  -0.32665,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-tangent-low-1",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.32665,
+                  -0.02415
+                ],
+                [
+                  0.32665,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-ring-0",
+              "bone": "hoop",
+              "role": "body",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.35085,
+              "cy": 0,
+              "rx": 0.0138,
+              "ry": 0.0138,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-ring-1",
+              "bone": "hoop",
+              "role": "body",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.35085,
+              "cy": 0,
+              "rx": 0.0138,
+              "ry": 0.0138,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-dot-0",
+              "bone": "hoop",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.35085,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-dot-1",
+              "bone": "hoop",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.35085,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Hoop band 0.97 mm wide at true size with bend tangent lines, the cross rail with weld collars at both joints and ground-level collar lines where the legs enter the footing.",
-            "de": "Bügelband in wahrer Größe 0,97 mm breit mit Biegetangentenlinien, Querholm mit Schweißkragen an beiden Stößen und Bodenkragenlinien, wo die Beine ins Fundament eintreten."
+            "en": "Hoop band 0.97 mm wide at true size with bend tangent lines, the cross rail with weld collars at both joints and ground-level collar lines where the legs enter the footing. Front: the end-on tube with bend tangents, ground collar and the cross rail with both weld collars and its open bore; plan: the capsule bar with all four bend tangents and the two leg rings with their centre dots.",
+            "de": "Bügelband in wahrer Größe 0,97 mm breit mit Biegetangentenlinien, Querholm mit Schweißkragen an beiden Stößen und Bodenkragenlinien, wo die Beine ins Fundament eintreten. Vorderansicht: das Rohr von vorn mit Biegetangenten, Bodenmanschette und dem Querholm mit beiden Schweißmanschetten und seiner offenen Bohrung; Draufsicht: der Kapselbalken mit allen vier Biegetangenten und den zwei Beinringen mit ihren Mittelpunkten."
           },
           "retained": {
-            "en": "Real tube 48.3 mm, bend radius 0.18 m, cross rail 0.40 m, weld collars, bend tangents, ground collars.",
-            "de": "Reales Rohr 48,3 mm, Biegeradius 0,18 m, Querholm 0,40 m, Schweißkragen, Biegetangenten, Bodenkragen."
+            "en": "Real tube 48.3 mm, bend radius 0.18 m, cross rail 0.40 m, weld collars, bend tangents, ground collars. True 48.3 mm tube width in both views.",
+            "de": "Reales Rohr 48,3 mm, Biegeradius 0,18 m, Querholm 0,40 m, Schweißkragen, Biegetangenten, Bodenkragen. Wahre Rohrstärke von 48,3 mm in beiden Ansichten."
           },
           "merged": {
             "en": "Weld collar and tube wall form one region each.",
@@ -735,14 +1347,14 @@
     },
     "symbols": [
       {
-        "id": "plan-true",
+        "id": "bicycle-stand-symbol-true-extent",
         "title": {
-          "en": "Plan, true extent",
-          "de": "Grundriss, wahre Ausdehnung"
+          "en": "Hoop symbol, true extent",
+          "de": "Bügelsymbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "The hoop seen from above: a 0.75 x 0.0483 m bar with the two leg centres marked; the bikes park along the long side of this bar.",
-          "de": "Der Bügel von oben: ein Balken 0,75 x 0,0483 m mit den zwei markierten Beinmitten; die Räder parken entlang der Längsseite des Balkens."
+          "en": "The Sheffield hoop in all three views at real size: a 0.75 m wide, 0.80 m high round-bar hoop of 48.3 mm tube with its cross bar; seen from above a 0.75 x 0.0483 m bar with the two leg centres marked; the bikes park along the long side.",
+          "de": "Der Sheffield-Bügel in allen drei Ansichten in wahrer Größe: ein 0,75 m breiter, 0,80 m hoher Rohrbügel aus 48,3-mm-Rohr mit Querstange; von oben ein Balken 0,75 x 0,0483 m mit den zwei markierten Beinmitten; die Räder parken entlang der Längsseite."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -760,7 +1372,77 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
+          "elevation": [
+            {
+              "id": "hoop-outer",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.375 0 L -0.375 0.55 C -0.375 0.72 -0.25 0.8 0 0.8 C 0.25 0.8 0.375 0.72 0.375 0.55 L 0.375 0"
+            },
+            {
+              "id": "hoop-inner",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.3267 0 L -0.3267 0.55 C -0.3267 0.69 -0.22 0.7517 0 0.7517 C 0.22 0.7517 0.3267 0.69 0.3267 0.55 L 0.3267 0"
+            },
+            {
+              "id": "cross-bar",
+              "bone": "stand",
+              "role": "detail",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3267,
+              "y": 0.37,
+              "w": 0.6534,
+              "h": 0.0483
+            }
+          ],
+          "front": [
+            {
+              "id": "hoop-tube",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.0242,
+              "y": 0,
+              "w": 0.0483,
+              "h": 0.8,
+              "r": 0.02415
+            },
+            {
+              "id": "cross-bar",
+              "bone": "stand",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0242,
+                  0.37
+                ],
+                [
+                  0.0242,
+                  0.37
+                ]
+              ],
+              "closed": false
+            }
+          ],
           "plan": [
             {
               "id": "hoop-plan",
@@ -768,14 +1450,12 @@
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.6,
+              "tone": 0.85,
               "kind": "rect",
               "x": -0.375,
-              "y": -0.02415,
+              "y": -0.0242,
               "w": 0.75,
-              "h": 0.0483,
-              "region": "hoop-galv",
-              "material": "galv-steel"
+              "h": 0.0483
             },
             {
               "id": "leg-plan-l",
@@ -783,13 +1463,12 @@
               "role": "body",
               "z": 4,
               "filled": true,
-              "tone": 0.2,
+              "tone": 0.85,
               "kind": "ellipse",
               "cx": -0.3508,
-              "cy": 0.0,
-              "rx": 0.013283,
-              "ry": 0.013283,
-              "region": "hoop-galv"
+              "cy": 0,
+              "rx": 0.0133,
+              "ry": 0.0133
             },
             {
               "id": "leg-plan-r",
@@ -797,30 +1476,29 @@
               "role": "body",
               "z": 4,
               "filled": true,
-              "tone": 0.2,
+              "tone": 0.85,
               "kind": "ellipse",
               "cx": 0.3508,
-              "cy": 0.0,
-              "rx": 0.013283,
-              "ry": 0.013283,
-              "region": "hoop-galv"
+              "cy": 0,
+              "rx": 0.0133,
+              "ry": 0.0133
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size: the bar length 0.75 m and width 0.0483 m are true; pen widths are paper millimetres.",
-          "de": "Modellmeter in wahrer Größe: Balkenlänge 0,75 m und Breite 0,0483 m sind wahr; Stiftbreiten sind Papiermillimeter."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. Tube diameter 0.0483 m; pen widths are paper millimetres.",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Rohrdurchmesser 0,0483 m; Stiftbreiten sind Papiermillimeter."
         }
       },
       {
-        "id": "plan-mark",
+        "id": "bicycle-stand-symbol-conventional",
         "title": {
-          "en": "Plan mark",
-          "de": "Planzeichen"
+          "en": "Hoop sign",
+          "de": "Bügelzeichen"
         },
         "description": {
-          "en": "A 4.4 mm bar with a dot at each end marks one stand on a small-scale site plan; the row of marks shows the parking capacity.",
-          "de": "Ein 4,4-mm-Balken mit einem Punkt an jedem Ende markiert einen Bügel auf einem Lageplan; die Zeichenreihe zeigt die Stellplatzzahl."
+          "en": "A conventional sign for one stand at small scale: in the top view a 4.4 mm bar with a dot at each end, in the side view an inverted U of 4.4 mm, in the front view a 3.5 mm post; the row of marks shows the parking capacity.",
+          "de": "Ein Planzeichen für einen Bügel im kleinen Maßstab: in der Draufsicht ein 4,4-mm-Balken mit einem Punkt an jedem Ende, in der Seitenansicht ein umgekehrtes U von 4,4 mm, in der Vorderansicht ein 3,5-mm-Pfosten; die Zeichenreihe zeigt die Stellplatzzahl."
         },
         "semantics": "nominal",
         "units": "paper-mm",
@@ -837,24 +1515,39 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
-          "plan": [
+          "elevation": [
             {
-              "id": "bar",
+              "id": "hoop-sign",
               "bone": "stand",
               "role": "body",
               "z": 3,
               "filled": false,
-              "tone": 0.3,
+              "tone": 0.5,
               "kind": "poly",
               "points": [
                 [
                   -2.2,
-                  0.0
+                  0
+                ],
+                [
+                  -2.2,
+                  2.6
+                ],
+                [
+                  -1.5,
+                  3.5
+                ],
+                [
+                  1.5,
+                  3.5
                 ],
                 [
                   2.2,
-                  0.0
+                  2.6
+                ],
+                [
+                  2.2,
+                  0
                 ]
               ],
               "closed": false
@@ -865,10 +1558,10 @@
               "role": "body",
               "z": 4,
               "filled": true,
-              "tone": 1.0,
+              "tone": 0.85,
               "kind": "ellipse",
               "cx": -2.2,
-              "cy": 0.0,
+              "cy": 0,
               "rx": 0.45,
               "ry": 0.45
             },
@@ -878,18 +1571,101 @@
               "role": "body",
               "z": 4,
               "filled": true,
-              "tone": 1.0,
+              "tone": 0.85,
               "kind": "ellipse",
               "cx": 2.2,
-              "cy": 0.0,
+              "cy": 0,
+              "rx": 0.45,
+              "ry": 0.45
+            }
+          ],
+          "front": [
+            {
+              "id": "post-sign",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  3.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "foot",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.45,
+              "ry": 0.45
+            }
+          ],
+          "plan": [
+            {
+              "id": "bar",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -2.2,
+                  0
+                ],
+                [
+                  2.2,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "foot-l",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": -2.2,
+              "cy": 0,
+              "rx": 0.45,
+              "ry": 0.45
+            },
+            {
+              "id": "foot-r",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": 2.2,
+              "cy": 0,
               "rx": 0.45,
               "ry": 0.45
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Nominal paper sign: its 4.4 mm length carries no dimension (the real hoop is 0.75 m = 1.5 mm at 1:500); insertion point at the bar centre.",
-          "de": "Nominelles Papierzeichen: seine Länge von 4,4 mm trägt kein Maß (der reale Bügel ist 0,75 m = 1,5 mm bei 1:500); Einfügepunkt in der Balkenmitte."
+          "en": "Conventional symbol, not to scale: nominal paper sign in paper millimetres, its 4.4 mm length carries no dimension (the real hoop is 0.75 m = 1.5 mm at 1:500); insertion point at the bar centre on the ground.",
+          "de": "Konventionelles Zeichen, nicht maßstäblich: nominelles Papierzeichen in Papiermillimetern, seine Länge von 4,4 mm trägt kein Maß (der reale Bügel ist 0,75 m = 1,5 mm bei 1:500); Einfügepunkt in der Balkenmitte am Boden."
         }
       }
     ],
@@ -1415,10 +2191,7 @@
     "presentation": {
       "defaultPose": "empty-sun",
       "defaultClip": "bike-parked",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

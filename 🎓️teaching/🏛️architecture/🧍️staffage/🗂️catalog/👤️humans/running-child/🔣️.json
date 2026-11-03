@@ -150,7 +150,7 @@
         "id": "cotton-underwear",
         "title": {
           "en": "Cotton briefs",
-          "de": "Baumwollslip"
+          "de": "Baumwollunterhose"
         },
         "emissivity": 0.93,
         "solarAbsorptivity": 0.5,
@@ -331,7 +331,8 @@
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "jensen-1986"
-          }
+          },
+          "z": 0.105
         },
         {
           "id": "forearm-l",
@@ -363,7 +364,7 @@
           "parent": "forearm-l",
           "title": {
             "en": "Left hand",
-            "de": "Linker Hand"
+            "de": "Linke Hand"
           },
           "x": 0.1456,
           "y": 0,
@@ -406,7 +407,8 @@
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "jensen-1986"
-          }
+          },
+          "z": 0.055
         },
         {
           "id": "shank-l",
@@ -506,7 +508,8 @@
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "jensen-1986"
-          }
+          },
+          "z": -0.105
         },
         {
           "id": "forearm-r",
@@ -538,7 +541,7 @@
           "parent": "forearm-r",
           "title": {
             "en": "Right hand",
-            "de": "Rechter Hand"
+            "de": "Rechte Hand"
           },
           "x": 0.1456,
           "y": 0,
@@ -581,7 +584,8 @@
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "jensen-1986"
-          }
+          },
+          "z": -0.055
         },
         {
           "id": "shank-r",
@@ -669,7 +673,7 @@
         "kind": "contact",
         "title": {
           "en": "Left heel",
-          "de": "Linker Ferse"
+          "de": "Linke Ferse"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -701,7 +705,7 @@
         "kind": "contact",
         "title": {
           "en": "Right heel",
-          "de": "Rechter Ferse"
+          "de": "Rechte Ferse"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -744,7 +748,7 @@
         "kind": "emitter",
         "title": {
           "en": "Nostrils",
-          "de": "Nasenöffnungen"
+          "de": "Nasenlöcher"
         }
       },
       {
@@ -1507,12 +1511,1783 @@
               "region": "face-skin",
               "material": "skin"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.038
+                ],
+                [
+                  0.2371,
+                  0.038
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.011,
+                "z1": 0.099
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.2725,
+              "rx": 0.0388,
+              "ry": 0.0361,
+              "id": "knee-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.036
+                ],
+                [
+                  0.2316,
+                  -0.026
+                ],
+                [
+                  0.2316,
+                  0.026
+                ],
+                [
+                  0,
+                  0.036
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.76,
+              "region": "leg-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.024,
+                "z1": 0.086
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0269,
+                  0.0409
+                ],
+                [
+                  0.023,
+                  0.0184
+                ],
+                [
+                  0.0243,
+                  0.006
+                ],
+                [
+                  0.0857,
+                  0.006
+                ],
+                [
+                  0.087,
+                  0.0184
+                ],
+                [
+                  0.0831,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.02,
+              "rx": 0.0314,
+              "ry": 0.021,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.12,
+              "filled": true,
+              "tone": 0.8200000000000001,
+              "region": "shoes",
+              "material": "canvas-sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0243,
+                  0.004
+                ],
+                [
+                  0.0857,
+                  0.004
+                ]
+              ],
+              "closed": false,
+              "id": "shoe-sole-l",
+              "bone": "toe-l",
+              "role": "detail",
+              "z": 1.15,
+              "filled": false,
+              "tone": 0.9
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.038
+                ],
+                [
+                  0.2371,
+                  0.038
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.099,
+                "z1": -0.011
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.2725,
+              "rx": 0.0388,
+              "ry": 0.0361,
+              "id": "knee-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.036
+                ],
+                [
+                  0.2316,
+                  -0.026
+                ],
+                [
+                  0.2316,
+                  0.026
+                ],
+                [
+                  0,
+                  0.036
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.84,
+              "region": "leg-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.086,
+                "z1": -0.024
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0831,
+                  0.0409
+                ],
+                [
+                  -0.087,
+                  0.0184
+                ],
+                [
+                  -0.0857,
+                  0.006
+                ],
+                [
+                  -0.0243,
+                  0.006
+                ],
+                [
+                  -0.023,
+                  0.0184
+                ],
+                [
+                  -0.0269,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.02,
+              "rx": 0.0314,
+              "ry": 0.021,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.12,
+              "filled": true,
+              "tone": 0.9,
+              "region": "shoes",
+              "material": "canvas-sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0857,
+                  0.004
+                ],
+                [
+                  -0.0243,
+                  0.004
+                ]
+              ],
+              "closed": false,
+              "id": "shoe-sole-r",
+              "bone": "toe-r",
+              "role": "detail",
+              "z": 1.15,
+              "filled": false,
+              "tone": 0.9
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  0.4996
+                ],
+                [
+                  -0.104,
+                  0.5696
+                ],
+                [
+                  -0.095,
+                  0.5846
+                ],
+                [
+                  0.095,
+                  0.5846
+                ],
+                [
+                  0.104,
+                  0.5696
+                ],
+                [
+                  0.104,
+                  0.4996
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "shorts",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  0.5796
+                ],
+                [
+                  -0.105,
+                  0.7424
+                ],
+                [
+                  -0.1115,
+                  0.8426
+                ],
+                [
+                  -0.0897,
+                  0.8726
+                ],
+                [
+                  -0.042,
+                  0.9011
+                ],
+                [
+                  0.042,
+                  0.9011
+                ],
+                [
+                  0.0897,
+                  0.8726
+                ],
+                [
+                  0.1115,
+                  0.8426
+                ],
+                [
+                  0.105,
+                  0.7424
+                ],
+                [
+                  0.095,
+                  0.5796
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "tshirt",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.028,
+                  0.8931
+                ],
+                [
+                  -0.0273,
+                  0.9437
+                ],
+                [
+                  -0.0266,
+                  0.9943
+                ],
+                [
+                  0.0266,
+                  0.9943
+                ],
+                [
+                  0.0273,
+                  0.9437
+                ],
+                [
+                  0.028,
+                  0.8931
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.84,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.0366,
+              "rx": 0.052,
+              "ry": 0.0964,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0546,
+                  1.0217
+                ],
+                [
+                  -0.054,
+                  1.058
+                ],
+                [
+                  -0.0471,
+                  1.0918
+                ],
+                [
+                  -0.0348,
+                  1.1192
+                ],
+                [
+                  -0.0185,
+                  1.137
+                ],
+                [
+                  0,
+                  1.1432
+                ],
+                [
+                  0.0185,
+                  1.137
+                ],
+                [
+                  0.0348,
+                  1.1192
+                ],
+                [
+                  0.0471,
+                  1.0918
+                ],
+                [
+                  0.054,
+                  1.058
+                ],
+                [
+                  0.0546,
+                  1.0217
+                ],
+                [
+                  0.052,
+                  1.0703
+                ],
+                [
+                  0.026,
+                  1.0896
+                ],
+                [
+                  0,
+                  1.08
+                ],
+                [
+                  -0.026,
+                  1.0896
+                ],
+                [
+                  -0.052,
+                  1.0703
+                ]
+              ],
+              "closed": true,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hair",
+              "material": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.056,
+              "cy": 1.0317,
+              "rx": 0.011,
+              "ry": 0.027,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.056,
+              "cy": 1.0317,
+              "rx": 0.011,
+              "ry": 0.027,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0218,
+              "cy": 1.0481,
+              "rx": 0.0075,
+              "ry": 0.0045,
+              "id": "eye-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": true,
+              "tone": 0.9,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0104,
+                  1.0626
+                ],
+                [
+                  0.0322,
+                  1.0655
+                ]
+              ],
+              "closed": false,
+              "id": "brow-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.0218,
+              "cy": 1.0481,
+              "rx": 0.0075,
+              "ry": 0.0045,
+              "id": "eye-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": true,
+              "tone": 0.9,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0104,
+                  1.0626
+                ],
+                [
+                  -0.0322,
+                  1.0655
+                ]
+              ],
+              "closed": false,
+              "id": "brow-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  1.0414
+                ],
+                [
+                  0,
+                  1.0096
+                ]
+              ],
+              "closed": false,
+              "id": "nose",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.25
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0156,
+                  0.9864
+                ],
+                [
+                  0.0156,
+                  0.9864
+                ]
+              ],
+              "closed": false,
+              "id": "mouth",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": 0.8736,
+              "rx": 0.033,
+              "ry": 0.033,
+              "id": "shoulder-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.74,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.033
+                ],
+                [
+                  0.1848,
+                  -0.028
+                ],
+                [
+                  0.1848,
+                  0.028
+                ],
+                [
+                  0,
+                  0.033
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.74,
+              "region": "arm-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0745,
+                "z1": 0.1355
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": 0.6888,
+              "rx": 0.028,
+              "ry": 0.028,
+              "id": "elbow-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.65,
+              "filled": true,
+              "tone": 0.74,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.027
+                ],
+                [
+                  0.1456,
+                  -0.022
+                ],
+                [
+                  0.1456,
+                  0.022
+                ],
+                [
+                  0,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.74,
+              "region": "arm-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0805,
+                "z1": 0.1295
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.1064,
+                  -0.0164
+                ],
+                [
+                  0.1064,
+                  0.0164
+                ],
+                [
+                  0,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.76,
+              "region": "arm-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0868,
+                "z1": 0.1232
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": 0.5432,
+              "rx": 0.0204,
+              "ry": 0.02,
+              "id": "fist-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.76,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.105,
+              "cy": 0.8736,
+              "rx": 0.033,
+              "ry": 0.033,
+              "id": "shoulder-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.82,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.033
+                ],
+                [
+                  0.1848,
+                  -0.028
+                ],
+                [
+                  0.1848,
+                  0.028
+                ],
+                [
+                  0,
+                  0.033
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.82,
+              "region": "arm-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1355,
+                "z1": -0.0745
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.105,
+              "cy": 0.6888,
+              "rx": 0.028,
+              "ry": 0.028,
+              "id": "elbow-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.65,
+              "filled": true,
+              "tone": 0.82,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.027
+                ],
+                [
+                  0.1456,
+                  -0.022
+                ],
+                [
+                  0.1456,
+                  0.022
+                ],
+                [
+                  0,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.82,
+              "region": "arm-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1295,
+                "z1": -0.0805
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.1064,
+                  -0.0164
+                ],
+                [
+                  0.1064,
+                  0.0164
+                ],
+                [
+                  0,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.84,
+              "region": "arm-skin",
+              "material": "skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1232,
+                "z1": -0.0868
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.105,
+              "cy": 0.5432,
+              "rx": 0.0204,
+              "ry": 0.02,
+              "id": "fist-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.84,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.003,
+                  0.5096
+                ],
+                [
+                  -0.001,
+                  0.4496
+                ],
+                [
+                  0.001,
+                  0.3896
+                ],
+                [
+                  0.109,
+                  0.3896
+                ],
+                [
+                  0.111,
+                  0.4496
+                ],
+                [
+                  0.113,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.26,
+              "region": "shorts",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.113,
+                  0.5096
+                ],
+                [
+                  -0.111,
+                  0.4496
+                ],
+                [
+                  -0.109,
+                  0.3896
+                ],
+                [
+                  -0.001,
+                  0.3896
+                ],
+                [
+                  0.001,
+                  0.4496
+                ],
+                [
+                  0.003,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.34,
+              "region": "shorts",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.6296
+                ],
+                [
+                  -0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.6296
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "backpack",
+              "material": "nylon-pack"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.07,
+                  0.8951
+                ],
+                [
+                  0.06,
+                  0.6396
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-l",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.8951
+                ],
+                [
+                  -0.06,
+                  0.6396
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-r",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.7296,
+              "w": 0.08,
+              "h": 0.06,
+              "id": "tshirt-print",
+              "bone": "torso",
+              "role": "body",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.25,
+              "region": "tshirt",
+              "material": "cotton-jersey"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": 0.055,
+              "x1": 0.0926,
+              "y1": 0.055,
+              "r0": 0.0272,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "shoe-heel-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": 0.055,
+              "x1": 0.1085,
+              "y1": 0.055,
+              "r0": 0.032,
+              "r1": 0.0256,
+              "followTip": true,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.8200000000000001,
+              "region": "shoes",
+              "material": "canvas-sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.039
+                ],
+                [
+                  0.0626,
+                  0.0406
+                ]
+              ],
+              "closed": false,
+              "id": "shoe-laces-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 1.4,
+              "filled": false,
+              "tone": 0.6
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.036,
+              "r1": 0.026,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.76,
+              "region": "leg-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.05,
+              "r1": 0.038,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": -0.055,
+              "x1": 0.0926,
+              "y1": -0.055,
+              "r0": 0.0272,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "shoe-heel-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": -0.055,
+              "x1": 0.1085,
+              "y1": -0.055,
+              "r0": 0.032,
+              "r1": 0.0256,
+              "followTip": true,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.9,
+              "region": "shoes",
+              "material": "canvas-sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  -0.071
+                ],
+                [
+                  0.0626,
+                  -0.0694
+                ]
+              ],
+              "closed": false,
+              "id": "shoe-laces-r",
+              "bone": "foot-r",
+              "role": "detail",
+              "z": 1.4,
+              "filled": false,
+              "tone": 0.6
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.036,
+              "r1": 0.026,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.84,
+              "region": "leg-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.05,
+              "r1": 0.038,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.105,
+              "x1": 0,
+              "y1": 0.105,
+              "r0": 0.033,
+              "r1": 0.028,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.74,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.105,
+              "x1": 0,
+              "y1": 0.105,
+              "r0": 0.027,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.74,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.105,
+              "x1": -0.004,
+              "y1": 0.105,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.76,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.105,
+              "x1": 0,
+              "y1": -0.105,
+              "r0": 0.033,
+              "r1": 0.028,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.105,
+              "x1": 0,
+              "y1": -0.105,
+              "r0": 0.027,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.82,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.105,
+              "x1": -0.004,
+              "y1": -0.105,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.84,
+              "region": "arm-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.0969,
+              "id": "waist",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.34,
+              "region": "shorts",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.04,
+              "x1": 0,
+              "y1": 0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-l",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.7,
+              "region": "tshirt",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.04,
+              "x1": 0,
+              "y1": -0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-r",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.7,
+              "region": "tshirt",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.06,
+              "ry": 0.115,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "tshirt",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.046
+                ],
+                [
+                  -0.005,
+                  0.0943
+                ]
+              ],
+              "closed": false,
+              "id": "shoulder-seam-l",
+              "bone": "neck",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.55
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.046
+                ],
+                [
+                  -0.005,
+                  -0.0943
+                ]
+              ],
+              "closed": false,
+              "id": "shoulder-seam-r",
+              "bone": "neck",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.55
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.005,
+              "cy": 0,
+              "rx": 0.035,
+              "ry": 0.0364,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.84,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0053,
+              "cy": 0,
+              "rx": 0.0978,
+              "ry": 0.052,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hair",
+              "material": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0737,
+              "cy": 0,
+              "rx": 0.0293,
+              "ry": 0.0364,
+              "id": "face",
+              "bone": "head",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.099,
+              "y0": 0,
+              "x1": 0.117,
+              "y1": 0,
+              "r0": 0.011,
+              "r1": 0.008,
+              "id": "nose",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.0045,
+              "cy": 0.054,
+              "rx": 0.012,
+              "ry": 0.007,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.0045,
+              "cy": -0.054,
+              "rx": 0.012,
+              "ry": 0.007,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.87,
+              "region": "face-skin",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0436,
+                  -0.03
+                ],
+                [
+                  -0.0045,
+                  0.012
+                ],
+                [
+                  0.0151,
+                  0.03
+                ]
+              ],
+              "closed": false,
+              "id": "hair-parting",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": false,
+              "tone": 0.5
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.26,
+              "region": "shorts",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": -0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.34,
+              "region": "shorts",
+              "material": "cotton-jersey"
+            },
+            {
+              "kind": "rect",
+              "x": -0.1505,
+              "y": -0.1,
+              "w": 0.07,
+              "h": 0.2,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.3,
+              "region": "backpack",
+              "material": "nylon-pack"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  0.07
+                ],
+                [
+                  0.02,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-l",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  -0.07
+                ],
+                [
+                  0.02,
+                  -0.075
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-r",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1305,
+                  -0.05
+                ],
+                [
+                  -0.1305,
+                  0.05
+                ]
+              ],
+              "closed": false,
+              "id": "pack-pocket",
+              "bone": "pack",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.1
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Fully articulated child with every v1 detail: three finger separations and thumb, ear, eye, mouth line, hair fringe, T-shirt print and hem, sock line, shoe stripe and sole; 23 mm tall.",
-            "de": "Voll gegliedertes Kind mit allen v1-Details: drei Fingertrennungen und Daumen, Ohr, Auge, Mundlinie, Haarfransen, T-Shirt-Aufdruck und Saum, Sockenlinie, Schuhstreifen und Sohle; 23 mm hoch."
+            "en": "Fully articulated child with every v1 detail: three finger separations and thumb, ear, eye, mouth line, hair fringe, T-shirt print and hem, sock line, shoe stripe and sole; 23 mm tall. Front view: eyes, brows, nose and mouth, ears, hair with fringe, soles, hems and cuffs besides everything of 1:100 (plan: nose, ears, parting, shoulder seams and laces besides everything of 1:100); limbs follow the pose by the bone travel, so strides, bent knees, lean and raised arms change both views. Backpack with straps and pocket line, T-shirt print on the front.",
+            "de": "Voll gegliedertes Kind mit allen v1-Details: drei Fingertrennungen und Daumen, Ohr, Auge, Mundlinie, Haarfransen, T-Shirt-Aufdruck und Saum, Sockenlinie, Schuhstreifen und Sohle; 23 mm hoch. Vorderansicht: Augen, Brauen, Nase und Mund, Ohren, Haar mit Pony, Sohlen, Säume und Bündchen zusätzlich zu allem aus 1:100 (Grundriss: Nase, Ohren, Scheitel, Schulternähte und Schnürung zusätzlich zu allem aus 1:100); die Glieder folgen der Pose über den Knochenweg, sodass Schritte, gebeugte Knie, Neigung und erhobene Arme beide Ansichten verändern. Rucksack mit Trägern und Taschenlinie, Aufdruck auf dem T-Shirt vorn."
           },
           "retained": {
             "en": "All 47 v1 shapes, re-bound to v2 regions (arm skin and leg skin are now separate regions).",
@@ -2098,12 +3873,1401 @@
               "closed": true,
               "region": "tshirt"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.038
+                ],
+                [
+                  0.2371,
+                  0.038
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.011,
+                "z1": 0.099
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.2725,
+              "rx": 0.0388,
+              "ry": 0.0361,
+              "id": "knee-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.036
+                ],
+                [
+                  0.2316,
+                  -0.026
+                ],
+                [
+                  0.2316,
+                  0.026
+                ],
+                [
+                  0,
+                  0.036
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.024,
+                "z1": 0.086
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0269,
+                  0.0409
+                ],
+                [
+                  0.023,
+                  0.0184
+                ],
+                [
+                  0.0243,
+                  0.006
+                ],
+                [
+                  0.0857,
+                  0.006
+                ],
+                [
+                  0.087,
+                  0.0184
+                ],
+                [
+                  0.0831,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.02,
+              "rx": 0.0314,
+              "ry": 0.021,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.12,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.038
+                ],
+                [
+                  0.2371,
+                  0.038
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.099,
+                "z1": -0.011
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.2725,
+              "rx": 0.0388,
+              "ry": 0.0361,
+              "id": "knee-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.036
+                ],
+                [
+                  0.2316,
+                  -0.026
+                ],
+                [
+                  0.2316,
+                  0.026
+                ],
+                [
+                  0,
+                  0.036
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.086,
+                "z1": -0.024
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0831,
+                  0.0409
+                ],
+                [
+                  -0.087,
+                  0.0184
+                ],
+                [
+                  -0.0857,
+                  0.006
+                ],
+                [
+                  -0.0243,
+                  0.006
+                ],
+                [
+                  -0.023,
+                  0.0184
+                ],
+                [
+                  -0.0269,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.02,
+              "rx": 0.0314,
+              "ry": 0.021,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.12,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  0.4996
+                ],
+                [
+                  -0.104,
+                  0.5696
+                ],
+                [
+                  -0.095,
+                  0.5846
+                ],
+                [
+                  0.095,
+                  0.5846
+                ],
+                [
+                  0.104,
+                  0.5696
+                ],
+                [
+                  0.104,
+                  0.4996
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  0.5796
+                ],
+                [
+                  -0.105,
+                  0.7424
+                ],
+                [
+                  -0.1115,
+                  0.8426
+                ],
+                [
+                  -0.0897,
+                  0.8726
+                ],
+                [
+                  -0.042,
+                  0.9011
+                ],
+                [
+                  0.042,
+                  0.9011
+                ],
+                [
+                  0.0897,
+                  0.8726
+                ],
+                [
+                  0.1115,
+                  0.8426
+                ],
+                [
+                  0.105,
+                  0.7424
+                ],
+                [
+                  0.095,
+                  0.5796
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.028,
+                  0.8931
+                ],
+                [
+                  -0.0273,
+                  0.9437
+                ],
+                [
+                  -0.0266,
+                  0.9943
+                ],
+                [
+                  0.0266,
+                  0.9943
+                ],
+                [
+                  0.0273,
+                  0.9437
+                ],
+                [
+                  0.028,
+                  0.8931
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.0371,
+              "rx": 0.052,
+              "ry": 0.0958,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0546,
+                  1.0223
+                ],
+                [
+                  -0.054,
+                  1.0584
+                ],
+                [
+                  -0.0471,
+                  1.0921
+                ],
+                [
+                  -0.0348,
+                  1.1194
+                ],
+                [
+                  -0.0185,
+                  1.1372
+                ],
+                [
+                  0,
+                  1.1433
+                ],
+                [
+                  0.0185,
+                  1.1372
+                ],
+                [
+                  0.0348,
+                  1.1194
+                ],
+                [
+                  0.0471,
+                  1.0921
+                ],
+                [
+                  0.054,
+                  1.0584
+                ],
+                [
+                  0.0546,
+                  1.0223
+                ],
+                [
+                  0.052,
+                  1.0706
+                ],
+                [
+                  0.026,
+                  1.0898
+                ],
+                [
+                  0,
+                  1.0802
+                ],
+                [
+                  -0.026,
+                  1.0898
+                ],
+                [
+                  -0.052,
+                  1.0706
+                ]
+              ],
+              "closed": true,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.75,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.056,
+              "cy": 1.0323,
+              "rx": 0.011,
+              "ry": 0.027,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.056,
+              "cy": 1.0323,
+              "rx": 0.011,
+              "ry": 0.027,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": 0.8736,
+              "rx": 0.033,
+              "ry": 0.033,
+              "id": "shoulder-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.033
+                ],
+                [
+                  0.1848,
+                  -0.028
+                ],
+                [
+                  0.1848,
+                  0.028
+                ],
+                [
+                  0,
+                  0.033
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0745,
+                "z1": 0.1355
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": 0.6888,
+              "rx": 0.028,
+              "ry": 0.028,
+              "id": "elbow-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.65,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.027
+                ],
+                [
+                  0.1456,
+                  -0.022
+                ],
+                [
+                  0.1456,
+                  0.022
+                ],
+                [
+                  0,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0805,
+                "z1": 0.1295
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.1064,
+                  -0.0164
+                ],
+                [
+                  0.1064,
+                  0.0164
+                ],
+                [
+                  0,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0868,
+                "z1": 0.1232
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": 0.5432,
+              "rx": 0.0204,
+              "ry": 0.02,
+              "id": "fist-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.105,
+              "cy": 0.8736,
+              "rx": 0.033,
+              "ry": 0.033,
+              "id": "shoulder-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.033
+                ],
+                [
+                  0.1848,
+                  -0.028
+                ],
+                [
+                  0.1848,
+                  0.028
+                ],
+                [
+                  0,
+                  0.033
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1355,
+                "z1": -0.0745
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.105,
+              "cy": 0.6888,
+              "rx": 0.028,
+              "ry": 0.028,
+              "id": "elbow-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.65,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.027
+                ],
+                [
+                  0.1456,
+                  -0.022
+                ],
+                [
+                  0.1456,
+                  0.022
+                ],
+                [
+                  0,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1295,
+                "z1": -0.0805
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.1064,
+                  -0.0164
+                ],
+                [
+                  0.1064,
+                  0.0164
+                ],
+                [
+                  0,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1232,
+                "z1": -0.0868
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.105,
+              "cy": 0.5432,
+              "rx": 0.0204,
+              "ry": 0.02,
+              "id": "fist-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.003,
+                  0.5096
+                ],
+                [
+                  -0.001,
+                  0.4496
+                ],
+                [
+                  0.001,
+                  0.3896
+                ],
+                [
+                  0.109,
+                  0.3896
+                ],
+                [
+                  0.111,
+                  0.4496
+                ],
+                [
+                  0.113,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.113,
+                  0.5096
+                ],
+                [
+                  -0.111,
+                  0.4496
+                ],
+                [
+                  -0.109,
+                  0.3896
+                ],
+                [
+                  -0.001,
+                  0.3896
+                ],
+                [
+                  0.001,
+                  0.4496
+                ],
+                [
+                  0.003,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.6296
+                ],
+                [
+                  -0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.6296
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "backpack"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.07,
+                  0.8951
+                ],
+                [
+                  0.06,
+                  0.6396
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-l",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.8951
+                ],
+                [
+                  -0.06,
+                  0.6396
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-r",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": 0.055,
+              "x1": 0.0926,
+              "y1": 0.055,
+              "r0": 0.0272,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "shoe-heel-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": 0.055,
+              "x1": 0.109,
+              "y1": 0.055,
+              "r0": 0.032,
+              "r1": 0.0256,
+              "followTip": true,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.036,
+              "r1": 0.026,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.05,
+              "r1": 0.038,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": -0.055,
+              "x1": 0.0926,
+              "y1": -0.055,
+              "r0": 0.0272,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "shoe-heel-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": -0.055,
+              "x1": 0.109,
+              "y1": -0.055,
+              "r0": 0.032,
+              "r1": 0.0256,
+              "followTip": true,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.036,
+              "r1": 0.026,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.05,
+              "r1": 0.038,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.105,
+              "x1": 0,
+              "y1": 0.105,
+              "r0": 0.033,
+              "r1": 0.028,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.105,
+              "x1": 0,
+              "y1": 0.105,
+              "r0": 0.027,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.105,
+              "x1": -0.004,
+              "y1": 0.105,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.105,
+              "x1": 0,
+              "y1": -0.105,
+              "r0": 0.033,
+              "r1": 0.028,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.105,
+              "x1": 0,
+              "y1": -0.105,
+              "r0": 0.027,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.105,
+              "x1": -0.004,
+              "y1": -0.105,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.0969,
+              "id": "waist",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.04,
+              "x1": 0,
+              "y1": 0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-l",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.04,
+              "x1": 0,
+              "y1": -0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-r",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.06,
+              "ry": 0.115,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.005,
+              "cy": 0,
+              "rx": 0.035,
+              "ry": 0.0364,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0036,
+              "cy": 0,
+              "rx": 0.0986,
+              "ry": 0.052,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.75,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0726,
+              "cy": 0,
+              "rx": 0.0296,
+              "ry": 0.0364,
+              "id": "face",
+              "bone": "head",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": -0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "rect",
+              "x": -0.1517,
+              "y": -0.1,
+              "w": 0.0712,
+              "h": 0.2,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.65,
+              "region": "backpack"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  0.07
+                ],
+                [
+                  0.02,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-l",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  -0.07
+                ],
+                [
+                  0.02,
+                  -0.075
+                ]
+              ],
+              "closed": false,
+              "id": "pack-strap-r",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.4,
+              "filled": false,
+              "tone": 0.2
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Articulated child: short sleeves over bare arms with mitten hands and thumb, T-shirt with print and hem line, shorts, bare knees, socks and sneakers with stripe and sole line, backpack with strap and pocket line, short hair with fringe and ear; 11.5 mm tall.",
-            "de": "Gegliedertes Kind: kurze Ärmel über nackten Armen mit Fäustlingshänden und Daumen, T-Shirt mit Aufdruck und Saumlinie, Shorts, nackte Knie, Socken und Turnschuhe mit Streifen und Sohlenlinie, Rucksack mit Riemen und Taschenlinie, kurzes Haar mit Ohr; 11,5 mm hoch."
+            "en": "Articulated child: short sleeves over bare arms with mitten hands and thumb, T-shirt with print and hem line, shorts, bare knees, socks and sneakers with stripe and sole line, backpack with strap and pocket line, short hair with fringe and ear; 11.5 mm tall. Front view: head with hair, ears and face, neck, body with hip line, joint balls at shoulders, elbows and knees, hands with fists, shoes with toe caps (plan: head with face, shoulders, trunk, arms with hands, legs and shoes). Backpack with straps, shorts on the thighs.",
+            "de": "Gegliedertes Kind: kurze Ärmel über nackten Armen mit Fäustlingshänden und Daumen, T-Shirt mit Aufdruck und Saumlinie, Shorts, nackte Knie, Socken und Turnschuhe mit Streifen und Sohlenlinie, Rucksack mit Riemen und Taschenlinie, kurzes Haar mit Ohr; 11,5 mm hoch. Vorderansicht: Kopf mit Haar, Ohren und Gesicht, Hals, Körper mit Hüftlinie, Gelenkkugeln an Schultern, Ellbogen und Knien, Hände mit Fäusten, Schuhe mit Kappen (Grundriss: Kopf mit Gesicht, Schultern, Rumpf, Arme mit Händen, Beine und Schuhe). Rucksack mit Trägern, Shorts auf den Oberschenkeln."
           },
           "retained": {
             "en": "Face profile with nose and ear, T-shirt print block, sock cuff line, shoe stripe, both backpack strap and pocket.",
@@ -2515,12 +5679,1249 @@
               "closed": false,
               "region": "backpack"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.04
+                ],
+                [
+                  0.2371,
+                  0.04
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.01,
+                "z1": 0.1
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.2725,
+              "rx": 0.0408,
+              "ry": 0.038,
+              "id": "knee-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.2316,
+                  -0.04
+                ],
+                [
+                  0.2316,
+                  0.04
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.015,
+                "z1": 0.095
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0118,
+                  0.0409
+                ],
+                [
+                  0.015,
+                  0.0184
+                ],
+                [
+                  0.0166,
+                  0.006
+                ],
+                [
+                  0.0934,
+                  0.006
+                ],
+                [
+                  0.095,
+                  0.0184
+                ],
+                [
+                  0.0982,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.04
+                ],
+                [
+                  0.2371,
+                  0.04
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1,
+                "z1": -0.01
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.2725,
+              "rx": 0.0408,
+              "ry": 0.038,
+              "id": "knee-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.2316,
+                  -0.04
+                ],
+                [
+                  0.2316,
+                  0.04
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.095,
+                "z1": -0.015
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0982,
+                  0.0409
+                ],
+                [
+                  -0.095,
+                  0.0184
+                ],
+                [
+                  -0.0934,
+                  0.006
+                ],
+                [
+                  -0.0166,
+                  0.006
+                ],
+                [
+                  -0.015,
+                  0.0184
+                ],
+                [
+                  -0.0118,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  0.4996
+                ],
+                [
+                  -0.104,
+                  0.5696
+                ],
+                [
+                  -0.095,
+                  0.5846
+                ],
+                [
+                  0.095,
+                  0.5846
+                ],
+                [
+                  0.104,
+                  0.5696
+                ],
+                [
+                  0.104,
+                  0.4996
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  0.5796
+                ],
+                [
+                  -0.105,
+                  0.7424
+                ],
+                [
+                  -0.1115,
+                  0.8426
+                ],
+                [
+                  -0.0897,
+                  0.8726
+                ],
+                [
+                  -0.06,
+                  0.9011
+                ],
+                [
+                  0.06,
+                  0.9011
+                ],
+                [
+                  0.0897,
+                  0.8726
+                ],
+                [
+                  0.1115,
+                  0.8426
+                ],
+                [
+                  0.105,
+                  0.7424
+                ],
+                [
+                  0.095,
+                  0.5796
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.04,
+                  0.8931
+                ],
+                [
+                  -0.039,
+                  0.9437
+                ],
+                [
+                  -0.038,
+                  0.9943
+                ],
+                [
+                  0.038,
+                  0.9943
+                ],
+                [
+                  0.039,
+                  0.9437
+                ],
+                [
+                  0.04,
+                  0.8931
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.0381,
+              "rx": 0.052,
+              "ry": 0.0948,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0546,
+                  1.0245
+                ],
+                [
+                  -0.0501,
+                  1.0788
+                ],
+                [
+                  -0.0298,
+                  1.1203
+                ],
+                [
+                  0,
+                  1.1357
+                ],
+                [
+                  0.0298,
+                  1.1203
+                ],
+                [
+                  0.0501,
+                  1.0788
+                ],
+                [
+                  0.0546,
+                  1.0245
+                ],
+                [
+                  0.052,
+                  1.0713
+                ],
+                [
+                  0.026,
+                  1.0903
+                ],
+                [
+                  0,
+                  1.0808
+                ],
+                [
+                  -0.026,
+                  1.0903
+                ],
+                [
+                  -0.052,
+                  1.0713
+                ]
+              ],
+              "closed": true,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.75,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.098,
+              "cy": 0.8736,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "shoulder-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.1848,
+                  -0.04
+                ],
+                [
+                  0.1848,
+                  0.04
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.058,
+                "z1": 0.138
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.098,
+              "cy": 0.6888,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "elbow-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.65,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.1456,
+                  -0.04
+                ],
+                [
+                  0.1456,
+                  0.04
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.058,
+                "z1": 0.138
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.1064,
+                  -0.0328
+                ],
+                [
+                  0.1064,
+                  0.0328
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.0616,
+                "z1": 0.1344
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.098,
+              "cy": 0.5432,
+              "rx": 0.0408,
+              "ry": 0.04,
+              "id": "fist-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.098,
+              "cy": 0.8736,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "shoulder-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.1848,
+                  -0.04
+                ],
+                [
+                  0.1848,
+                  0.04
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.138,
+                "z1": -0.058
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.098,
+              "cy": 0.6888,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "elbow-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.65,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.1456,
+                  -0.04
+                ],
+                [
+                  0.1456,
+                  0.04
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.138,
+                "z1": -0.058
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0.1064,
+                  -0.0328
+                ],
+                [
+                  0.1064,
+                  0.0328
+                ],
+                [
+                  0,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1344,
+                "z1": -0.0616
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.098,
+              "cy": 0.5432,
+              "rx": 0.0408,
+              "ry": 0.04,
+              "id": "fist-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.003,
+                  0.5096
+                ],
+                [
+                  -0.001,
+                  0.4496
+                ],
+                [
+                  0.001,
+                  0.3896
+                ],
+                [
+                  0.109,
+                  0.3896
+                ],
+                [
+                  0.111,
+                  0.4496
+                ],
+                [
+                  0.113,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.113,
+                  0.5096
+                ],
+                [
+                  -0.111,
+                  0.4496
+                ],
+                [
+                  -0.109,
+                  0.3896
+                ],
+                [
+                  -0.001,
+                  0.3896
+                ],
+                [
+                  0.001,
+                  0.4496
+                ],
+                [
+                  0.003,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.6296
+                ],
+                [
+                  -0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.6296
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "backpack"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": 0.055,
+              "x1": 0.0926,
+              "y1": 0.055,
+              "r0": 0.034,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "shoe-heel-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": 0.055,
+              "x1": 0.1025,
+              "y1": 0.055,
+              "r0": 0.04,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.04,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.05,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": -0.055,
+              "x1": 0.0926,
+              "y1": -0.055,
+              "r0": 0.034,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "shoe-heel-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": -0.055,
+              "x1": 0.1025,
+              "y1": -0.055,
+              "r0": 0.04,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.04,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.05,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.098,
+              "x1": 0,
+              "y1": 0.098,
+              "r0": 0.04,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.098,
+              "x1": 0,
+              "y1": 0.098,
+              "r0": 0.04,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.01,
+              "y0": 0.098,
+              "x1": -0.02,
+              "y1": 0.098,
+              "r0": 0.04,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.098,
+              "x1": 0,
+              "y1": -0.098,
+              "r0": 0.04,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.098,
+              "x1": 0,
+              "y1": -0.098,
+              "r0": 0.04,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.01,
+              "y0": -0.098,
+              "x1": -0.02,
+              "y1": -0.098,
+              "r0": 0.04,
+              "r1": 0.032,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.0969,
+              "id": "waist",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.04,
+              "x1": 0,
+              "y1": 0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-l",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.04,
+              "x1": 0,
+              "y1": -0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-r",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.06,
+              "ry": 0.115,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.005,
+              "cy": 0,
+              "rx": 0.05,
+              "ry": 0.052,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0043,
+              "cy": 0,
+              "rx": 0.0983,
+              "ry": 0.052,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.75,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0732,
+              "cy": 0,
+              "rx": 0.0295,
+              "ry": 0.0364,
+              "id": "face",
+              "bone": "head",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": -0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "rect",
+              "x": -0.1517,
+              "y": -0.1,
+              "w": 0.0712,
+              "h": 0.2,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.65,
+              "region": "backpack"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Separated masses: hair, face, collar, T-shirt with hem, backpack with one strap line, both bare arms with sleeve caps, shorts, bare thighs and shins, shoes; 5.8 mm tall.",
-            "de": "Getrennte Massen: Haar, Gesicht, Kragen, T-Shirt mit Saum, Rucksack mit einer Riemenlinie, beide nackten Arme mit Ärmelkappen, Shorts, nackte Ober- und Unterschenkel, Schuhe; 5,8 mm hoch."
+            "en": "Separated masses: hair, face, collar, T-shirt with hem, backpack with one strap line, both bare arms with sleeve caps, shorts, bare thighs and shins, shoes; 5.8 mm tall. Front view: head with hair cap, neck, body, arms and legs with shoulder, elbow and knee joints, hands and shoes (plan: head with face, shoulders, trunk, limbs and shoes from above). The backpack sits behind the torso and shows beside it; shorts cover the upper thighs.",
+            "de": "Getrennte Massen: Haar, Gesicht, Kragen, T-Shirt mit Saum, Rucksack mit einer Riemenlinie, beide nackten Arme mit Ärmelkappen, Shorts, nackte Ober- und Unterschenkel, Schuhe; 5,8 mm hoch. Vorderansicht: Kopf mit Haarkappe, Hals, Körper, Arme und Beine mit Schulter-, Ellbogen- und Kniegelenken, Hände und Schuhe (Grundriss: Kopf mit Gesicht, Schultern, Rumpf, Glieder und Schuhe von oben). Der Rucksack sitzt hinter dem Rumpf und ragt seitlich heraus; Shorts bedecken die Oberschenkel."
           },
           "retained": {
             "en": "Elbow and knee flexion, hands as skin blobs (the running arm swing), sleeve caps and shorts as separate cloth masses, forefoot piece so the toe-off stays above ground.",
@@ -2586,48 +6987,36 @@
               ]
             },
             {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.1085,
+              "y1": 0,
+              "r0": 0.055,
+              "r1": 0.04675,
               "id": "sil-arm-r",
               "bone": "arm-r",
-              "role": "body",
               "z": 6,
-              "filled": false,
+              "role": "body",
+              "filled": true,
               "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.185,
-                  0
-                ]
-              ],
-              "closed": false,
-              "region": "arm-skin",
-              "penMm": 0.14
+              "region": "arm-skin"
             },
             {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.1735,
+              "y1": 0,
+              "r0": 0.055,
+              "r1": 0.04675,
               "id": "sil-forearm-r",
               "bone": "forearm-r",
-              "role": "body",
               "z": 6.1,
-              "filled": false,
+              "role": "body",
+              "filled": true,
               "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": false,
-              "region": "arm-skin",
-              "penMm": 0.14
+              "region": "arm-skin"
             },
             {
               "id": "sil-thigh-l",
@@ -2637,36 +7026,30 @@
               "filled": true,
               "tone": 0.4,
               "kind": "path",
-              "d": "M -0.0109 -0.057 C 0.009083 -0.0748 0.06948 -0.0561 0.109 -0.0528 C 0.1485 -0.0495 0.2035 -0.046 0.2262 -0.0372 C 0.2489 -0.0284 0.2453 -0.0128 0.2453 0 C 0.2453 0.0128 0.2489 0.0311 0.2262 0.0396 C 0.2035 0.0481 0.1485 0.0486 0.109 0.051 C 0.06948 0.0534 0.009083 0.072 -0.0109 0.054 C -0.03088 0.036 -0.03088 -0.0392 -0.0109 -0.057 Z",
+              "d": "M -0.0109 -0.03810 C 0.009083 -0.05000 0.06948 -0.03750 0.109 -0.03529 C 0.1485 -0.03309 0.2035 -0.03075 0.2262 -0.02487 C 0.2489 -0.01898 0.2453 -0.00856 0.2453 0.00000 C 0.2453 0.00856 0.2489 0.02079 0.2262 0.02647 C 0.2035 0.03215 0.1485 0.03249 0.109 0.03409 C 0.06948 0.03569 0.009083 0.04813 -0.0109 0.03609 C -0.03088 0.02406 -0.03088 -0.02621 -0.0109 -0.03810 Z",
               "regions": [
                 "shorts",
                 "leg-skin"
               ]
             },
             {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.164,
+              "y1": 0,
+              "r0": 0.05,
+              "r1": 0.0425,
               "id": "sil-shank-l",
               "bone": "shank-l",
-              "role": "body",
               "z": 1.02,
-              "filled": false,
+              "role": "body",
+              "filled": true,
               "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.232,
-                  0
-                ]
-              ],
-              "closed": false,
               "regions": [
                 "leg-skin",
                 "socks"
-              ],
-              "penMm": 0.14
+              ]
             },
             {
               "id": "sil-shoe-l",
@@ -2702,36 +7085,30 @@
               "filled": true,
               "tone": 0.4,
               "kind": "path",
-              "d": "M -0.0109 -0.057 C 0.009083 -0.0748 0.06948 -0.0561 0.109 -0.0528 C 0.1485 -0.0495 0.2035 -0.046 0.2262 -0.0372 C 0.2489 -0.0284 0.2453 -0.0128 0.2453 0 C 0.2453 0.0128 0.2489 0.0311 0.2262 0.0396 C 0.2035 0.0481 0.1485 0.0486 0.109 0.051 C 0.06948 0.0534 0.009083 0.072 -0.0109 0.054 C -0.03088 0.036 -0.03088 -0.0392 -0.0109 -0.057 Z",
+              "d": "M -0.0109 -0.03810 C 0.009083 -0.05000 0.06948 -0.03750 0.109 -0.03529 C 0.1485 -0.03309 0.2035 -0.03075 0.2262 -0.02487 C 0.2489 -0.01898 0.2453 -0.00856 0.2453 0.00000 C 0.2453 0.00856 0.2489 0.02079 0.2262 0.02647 C 0.2035 0.03215 0.1485 0.03249 0.109 0.03409 C 0.06948 0.03569 0.009083 0.04813 -0.0109 0.03609 C -0.03088 0.02406 -0.03088 -0.02621 -0.0109 -0.03810 Z",
               "regions": [
                 "shorts",
                 "leg-skin"
               ]
             },
             {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.164,
+              "y1": 0,
+              "r0": 0.05,
+              "r1": 0.0425,
               "id": "sil-shank-r",
               "bone": "shank-r",
-              "role": "body",
               "z": 3.02,
-              "filled": false,
+              "role": "body",
+              "filled": true,
               "tone": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.232,
-                  0
-                ]
-              ],
-              "closed": false,
               "regions": [
                 "leg-skin",
                 "socks"
-              ],
-              "penMm": 0.14
+              ]
             },
             {
               "id": "sil-shoe-r",
@@ -2759,12 +7136,1142 @@
               "region": "shoes",
               "penMm": 0.14
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  0.05
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.005,
+                "z1": 0.105
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2316,
+                  -0.05
+                ],
+                [
+                  0.2316,
+                  0.05
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.005,
+                "z1": 0.105
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.001,
+                  0.0409
+                ],
+                [
+                  0.005,
+                  0.0184
+                ],
+                [
+                  0.007,
+                  0.006
+                ],
+                [
+                  0.103,
+                  0.006
+                ],
+                [
+                  0.105,
+                  0.0184
+                ],
+                [
+                  0.109,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  -0.05
+                ],
+                [
+                  0.2371,
+                  0.05
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.105,
+                "z1": -0.005
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0.2316,
+                  -0.05
+                ],
+                [
+                  0.2316,
+                  0.05
+                ],
+                [
+                  0,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.105,
+                "z1": -0.005
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.109,
+                  0.0409
+                ],
+                [
+                  -0.105,
+                  0.0184
+                ],
+                [
+                  -0.103,
+                  0.006
+                ],
+                [
+                  -0.007,
+                  0.006
+                ],
+                [
+                  -0.005,
+                  0.0184
+                ],
+                [
+                  -0.001,
+                  0.0409
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  0.4996
+                ],
+                [
+                  -0.104,
+                  0.5696
+                ],
+                [
+                  -0.095,
+                  0.5846
+                ],
+                [
+                  0.095,
+                  0.5846
+                ],
+                [
+                  0.104,
+                  0.5696
+                ],
+                [
+                  0.104,
+                  0.4996
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  0.5796
+                ],
+                [
+                  -0.105,
+                  0.7424
+                ],
+                [
+                  -0.1115,
+                  0.8426
+                ],
+                [
+                  -0.0897,
+                  0.8726
+                ],
+                [
+                  -0.075,
+                  0.9011
+                ],
+                [
+                  0.075,
+                  0.9011
+                ],
+                [
+                  0.0897,
+                  0.8726
+                ],
+                [
+                  0.1115,
+                  0.8426
+                ],
+                [
+                  0.105,
+                  0.7424
+                ],
+                [
+                  0.095,
+                  0.5796
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.159,
+                  0.0028
+                ],
+                [
+                  0.1556,
+                  0.0272
+                ],
+                [
+                  0.1455,
+                  0.0498
+                ],
+                [
+                  0.1294,
+                  0.0692
+                ],
+                [
+                  0.1085,
+                  0.0842
+                ],
+                [
+                  0.0841,
+                  0.0936
+                ],
+                [
+                  0.058,
+                  0.0968
+                ],
+                [
+                  0.0318,
+                  0.0936
+                ],
+                [
+                  0.0074,
+                  0.0842
+                ],
+                [
+                  -0.0135,
+                  0.0692
+                ],
+                [
+                  -0.0295,
+                  0.0498
+                ],
+                [
+                  -0.0396,
+                  0.0272
+                ],
+                [
+                  -0.0431,
+                  0.0029
+                ],
+                [
+                  -0.0396,
+                  -0.0215
+                ],
+                [
+                  -0.0295,
+                  -0.0441
+                ],
+                [
+                  -0.0135,
+                  -0.0635
+                ],
+                [
+                  0.0074,
+                  -0.0785
+                ],
+                [
+                  0.0318,
+                  -0.0879
+                ],
+                [
+                  0.058,
+                  -0.0911
+                ],
+                [
+                  0.0841,
+                  -0.0879
+                ],
+                [
+                  0.1085,
+                  -0.0785
+                ],
+                [
+                  0.1294,
+                  -0.0635
+                ],
+                [
+                  0.1455,
+                  -0.0441
+                ],
+                [
+                  0.1556,
+                  -0.0215
+                ]
+              ],
+              "closed": true,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "face-skin",
+                "hair"
+              ],
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.052,
+                "z1": 0.052
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.055
+                ],
+                [
+                  0.1848,
+                  -0.055
+                ],
+                [
+                  0.1848,
+                  0.055
+                ],
+                [
+                  0,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.028,
+                "z1": 0.138
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.055
+                ],
+                [
+                  0.1456,
+                  -0.055
+                ],
+                [
+                  0.1456,
+                  0.055
+                ],
+                [
+                  0,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.028,
+                "z1": 0.138
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.055
+                ],
+                [
+                  0.1064,
+                  -0.0451
+                ],
+                [
+                  0.1064,
+                  0.0451
+                ],
+                [
+                  0,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.033,
+                "z1": 0.1331
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.083,
+              "cy": 0.5432,
+              "rx": 0.0561,
+              "ry": 0.055,
+              "id": "fist-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.055
+                ],
+                [
+                  0.1848,
+                  -0.055
+                ],
+                [
+                  0.1848,
+                  0.055
+                ],
+                [
+                  0,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.138,
+                "z1": -0.028
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.055
+                ],
+                [
+                  0.1456,
+                  -0.055
+                ],
+                [
+                  0.1456,
+                  0.055
+                ],
+                [
+                  0,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.64,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.138,
+                "z1": -0.028
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.055
+                ],
+                [
+                  0.1064,
+                  -0.0451
+                ],
+                [
+                  0.1064,
+                  0.0451
+                ],
+                [
+                  0,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1331,
+                "z1": -0.033
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.083,
+              "cy": 0.5432,
+              "rx": 0.0561,
+              "ry": 0.055,
+              "id": "fist-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.003,
+                  0.5096
+                ],
+                [
+                  -0.001,
+                  0.4496
+                ],
+                [
+                  0.001,
+                  0.3896
+                ],
+                [
+                  0.109,
+                  0.3896
+                ],
+                [
+                  0.111,
+                  0.4496
+                ],
+                [
+                  0.113,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.113,
+                  0.5096
+                ],
+                [
+                  -0.111,
+                  0.4496
+                ],
+                [
+                  -0.109,
+                  0.3896
+                ],
+                [
+                  -0.001,
+                  0.3896
+                ],
+                [
+                  0.001,
+                  0.4496
+                ],
+                [
+                  0.003,
+                  0.5096
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.03,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.6296
+                ],
+                [
+                  -0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.8796
+                ],
+                [
+                  0.11,
+                  0.6296
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "backpack"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": 0.055,
+              "x1": 0.0226,
+              "y1": 0.055,
+              "r0": 0.0425,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "shoe-heel-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": 0.055,
+              "x1": 0.0946,
+              "y1": 0.055,
+              "r0": 0.05,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.05,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.055,
+              "x1": 0,
+              "y1": 0.055,
+              "r0": 0.05,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": -0.055,
+              "x1": 0.0226,
+              "y1": -0.055,
+              "r0": 0.0425,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "shoe-heel-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0926,
+              "y0": -0.055,
+              "x1": 0.0946,
+              "y1": -0.055,
+              "r0": 0.05,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "shoes"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.05,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.055,
+              "x1": 0,
+              "y1": -0.055,
+              "r0": 0.05,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leg-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.083,
+              "x1": 0,
+              "y1": 0.083,
+              "r0": 0.055,
+              "r1": 0.055,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.083,
+              "x1": 0,
+              "y1": 0.083,
+              "r0": 0.055,
+              "r1": 0.055,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": 0.083,
+              "x1": -0.032,
+              "y1": 0.083,
+              "r0": 0.055,
+              "r1": 0.044,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.083,
+              "x1": 0,
+              "y1": -0.083,
+              "r0": 0.055,
+              "r1": 0.055,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.083,
+              "x1": 0,
+              "y1": -0.083,
+              "r0": 0.055,
+              "r1": 0.055,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.025,
+              "y0": -0.083,
+              "x1": -0.032,
+              "y1": -0.083,
+              "r0": 0.055,
+              "r1": 0.044,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "arm-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.0969,
+              "id": "waist",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.04,
+              "x1": 0,
+              "y1": 0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-l",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.04,
+              "x1": 0,
+              "y1": -0.04,
+              "r0": 0.075,
+              "r1": 0.075,
+              "followTip": true,
+              "id": "trunk-r",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.06,
+              "ry": 0.115,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "tshirt"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0036,
+              "cy": 0,
+              "rx": 0.0986,
+              "ry": 0.052,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.75,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": -0.055,
+              "rx": 0.053,
+              "ry": 0.053,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.06,
+              "filled": true,
+              "tone": 0.6,
+              "region": "shorts"
+            },
+            {
+              "kind": "rect",
+              "x": -0.1517,
+              "y": -0.1,
+              "w": 0.0712,
+              "h": 0.2,
+              "id": "pack-body",
+              "bone": "pack",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.65,
+              "region": "backpack"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "One composed mass: T-shirt, neck, head and backpack as a single torso silhouette with the pack bulge behind the shoulders, the near arm in two bars, plus two leg columns with shoes; 2.3 mm tall, 0.6 mm wide.",
-            "de": "Eine zusammengesetzte Masse: T-Shirt, Hals, Kopf und Rucksack als eine Rumpfsilhouette mit der Rucksackwölbung hinter den Schultern, der nahe Arm in zwei Balken, dazu zwei Beinsäulen mit Schuhen; 2,3 mm hoch, 0,6 mm breit."
+            "en": "One composed mass: T-shirt, neck, head and backpack as a single torso silhouette with the pack bulge behind the shoulders, the near arm in two bars, plus two leg columns with shoes; 2.3 mm tall, 0.6 mm wide. Front view: head, body, arms and legs as flat masses on the ground line (plan: the same masses seen from above). The backpack shows as a small block behind the body.",
+            "de": "Eine zusammengesetzte Masse: T-Shirt, Hals, Kopf und Rucksack als eine Rumpfsilhouette mit der Rucksackwölbung hinter den Schultern, der nahe Arm in zwei Balken, dazu zwei Beinsäulen mit Schuhen; 2,3 mm hoch, 0,6 mm breit. Vorderansicht: Kopf, Körper, Arme und Beine als flache Massen auf der Standlinie (Grundriss: dieselben Massen von oben). Der Rucksack erscheint als kleiner Block hinter dem Körper."
           },
           "retained": {
             "en": "The big child head (5.8 heads to the body), the backpack bulge, shorts and bare legs as two columns, shoes at true size, exact 1.15 m height; the legs carry the sprint rhythm.",
@@ -2802,10 +8309,10 @@
         "id": "running-direction-marker",
         "title": {
           "en": "Running child marker",
-          "de": "Position dot with a direction arrow for crowded overview plans at 1:500 and smaller."
+          "de": "Rennendes Kind als Marke"
         },
         "description": {
-          "en": "Rennendes Kind als Marke",
+          "en": "Position dot with a direction arrow for crowded overview plans at 1:500 and smaller.",
           "de": "Positionspunkt mit Richtungspfeil für belebte Übersichtspläne ab 1:500."
         },
         "semantics": "true-position",
@@ -2880,11 +8387,98 @@
               ],
               "closed": true
             }
+          ],
+          "plan": [
+            {
+              "id": "plan-dot",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.45,
+              "ry": 0.45
+            },
+            {
+              "id": "plan-arrow",
+              "bone": "pelvis",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0,
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0
+                ],
+                [
+                  2.6,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plan-arrow-head",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  2.9,
+                  0
+                ],
+                [
+                  2.1,
+                  0.35
+                ],
+                [
+                  2.1,
+                  -0.35
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "front-dot",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.45,
+              "ry": 0.45
+            },
+            {
+              "id": "front-heading-ring",
+              "bone": "pelvis",
+              "role": "detail",
+              "z": 1.1,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.855,
+              "ry": 0.855
+            }
           ]
         },
         "dimensionalNote": {
-          "en": "The dot marks the true standing position; its 0.9 mm diameter and the arrow are paper sizes and carry no body dimension.",
-          "de": "Der Punkt markiert die wahre Standposition; sein Durchmesser von 0,9 mm und der Pfeil sind Papiergrößen und tragen kein Körpermaß."
+          "en": "The dot marks the true standing position; its 0.9 mm diameter and the arrow are paper sizes and carry no body dimension. Conventional symbol: it is not drawn to scale and carries no body dimension in the side, front or top view; the top view repeats the side view because a position mark looks the same from above, the front view shows the heading as a ring around the dot (the arrow points at the viewer).",
+          "de": "Der Punkt markiert die wahre Standposition; sein Durchmesser von 0,9 mm und der Pfeil sind Papiergrößen und tragen kein Körpermaß. Konventionelles Symbol: Es ist nicht massstäblich gezeichnet und trägt weder in der Seiten-, Vorder- noch Draufsicht ein Körpermaß; die Draufsicht wiederholt die Seitenansicht, da eine Positionsmarke von oben gleich aussieht, die Vorderansicht zeigt die Richtung als Ring um den Punkt (der Pfeil zeigt auf die Betrachtenden)."
         }
       }
     ],
@@ -10253,7 +15847,7 @@
               "id": "briefs",
               "title": {
                 "en": "Cotton briefs",
-                "de": "Baumwollslip"
+                "de": "Baumwollunterhose"
               },
               "kind": "clothing",
               "material": "cotton-underwear",
@@ -10371,7 +15965,7 @@
           "id": "shoes",
           "title": {
             "en": "Sneakers",
-            "de": "Turnschuhe"
+            "de": "Sneaker"
           },
           "kind": "surface",
           "model": "body",
@@ -10431,7 +16025,7 @@
           "kind": "breath",
           "title": {
             "en": "Breath from the nostrils",
-            "de": "Atem aus den Nasenöffnungen"
+            "de": "Atem aus den Nasenlöchern"
           },
           "anchor": "nostrils",
           "directionDeg": -130,
@@ -10505,10 +16099,7 @@
     "presentation": {
       "defaultPose": "standing-ready",
       "defaultClip": "sprint-cycle",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

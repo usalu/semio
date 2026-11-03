@@ -1,0 +1,6 @@
+{ "version": 1, "casts": {
+  "walking-commuter-line": { "asset": "walking-commuter", "clip": "walk-cycle", "view": "dark-line", "scale": 50, "fps": 15, "mirror": true, "theme": "dark" },
+  "radiator-rated-solid": { "asset": "panel-radiator", "pose": "rated", "view": "dark-solid", "scale": 50, "theme": "dark" },
+  "human-thermal-walk": { "asset": "walking-commuter", "clip": "walk-cycle", "view": "thermal", "scale": 50, "fps": 10, "environment": "winter-overcast", "theme": "dark" },
+  "radiator-heatup-thermal": { "asset": "panel-radiator", "pose": "comfort", "view": "thermal", "scale": 50, "fps": 2, "timeline": [ { "t": 0, "environment": "office-neutral" }, { "t": 4, "environment": "summer-hot-sun" } ], "theme": "dark" }
+} }

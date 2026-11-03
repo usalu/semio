@@ -26,6 +26,29 @@
       "reference": "iso-7730"
     },
     {
+      "id": "office-still",
+      "title": {
+        "en": "Office, still air",
+        "de": "Büro, ruhige Luft"
+      },
+      "description": {
+        "en": "The neutral office of 22 °C and 50 % relative humidity with room air at rest (0.02 m/s, below the ISO 7730 draught limits), so breathing jets and body plumes rise and mix by themselves instead of leaning with a draught.",
+        "de": "Das neutrale Büro mit 22 °C und 50 % relativer Feuchte bei ruhender Raumluft (0,02 m/s, unter den Zuggrenzen der ISO 7730), damit Atemstrahlen und Körperfahnen von selbst aufsteigen und sich mischen, statt mit einem Luftzug zu kippen."
+      },
+      "environment": {
+        "airTempC": 22,
+        "meanRadiantTempC": 22,
+        "relativeHumidity": 0.5,
+        "windMS": 0.02,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "iso-7730"
+    },
+    {
       "id": "indoor-heated-winter",
       "title": {
         "en": "Heated interior, winter",
@@ -47,6 +70,29 @@
       },
       "source": "authored-estimate",
       "reference": "iso-7730"
+    },
+    {
+      "id": "indoor-warm-summer",
+      "title": {
+        "en": "Interior, warm summer",
+        "de": "Innenraum, warmer Sommer"
+      },
+      "description": {
+        "en": "Warm room in summer, the rated indoor condition of room air conditioners (ISO 5151, EN 14511): air 27 °C, slightly warmer walls and ceiling at 28 °C mean radiant temperature, 50 % relative humidity, still air, no sun.",
+        "de": "Warmer Raum im Sommer, die Rating-Innenbedingung von Raumklimageräten (ISO 5151, EN 14511): Luft 27 °C, etwas wärmere Wände und Decke mit 28 °C mittlerer Strahlungstemperatur, 50 % relative Feuchte, ruhige Luft, keine Sonne."
+      },
+      "environment": {
+        "airTempC": 27,
+        "meanRadiantTempC": 28,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "iso-5151"
     },
     {
       "id": "winter-overcast",
@@ -254,6 +300,10 @@
     {
       "id": "iso-7730",
       "citation": "ISO 7730:2005. Ergonomics of the thermal environment - Analytical determination and interpretation of thermal comfort using calculation of the PMV and PPD indices and local thermal comfort criteria."
+    },
+    {
+      "id": "iso-5151",
+      "citation": "ISO 5151:2017. Non-ducted air conditioners and heat pumps - Testing and rating for performance."
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "casts": {
+    "balcony-tip-forces": { "asset": "cantilever-balcony", "pose": "point-load-tip", "view": "forces", "theme": "light", "viewpoint": "elevation", "scale": 50 },
+    "balcony-tip-moments": { "asset": "cantilever-balcony", "pose": "point-load-tip", "view": "moments", "theme": "light", "viewpoint": "elevation", "scale": 50 },
+    "balcony-tip-moments-mirror": { "asset": "cantilever-balcony", "pose": "point-load-tip", "view": "moments", "theme": "light", "viewpoint": "elevation", "scale": 50, "mirror": true },
+    "beam-ramp-forces": { "asset": "glulam-beam", "clip": "loading-ramp", "view": "forces", "theme": "light", "viewpoint": "elevation", "scale": 50, "fps": 5 }
+  }
+}

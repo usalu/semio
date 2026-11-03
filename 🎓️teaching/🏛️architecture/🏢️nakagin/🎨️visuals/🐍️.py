@@ -5,10 +5,17 @@ Related: [Kisho Kurokawa, Nakagin Capsule Tower](https://en.wikipedia.org/wiki/N
 
 from __future__ import annotations
 
+import copy
 import importlib
+import io
 import hashlib
 import heapq
+import json
+import os
+import pickle
+import tempfile
 from collections import OrderedDict
+from collections.abc import Sequence
 import math
 import sys
 from dataclasses import replace
@@ -42,11 +49,14 @@ LIGHT = np.array([-0.3, 0.45, 0.85]) / math.sqrt(0.09 + 0.2025 + 0.7225)
 
 _TEXTS: dict = {}
 _TOWERS: dict = {}
+_TOWER_CACHE = 2
 _OCCLUSION_ORDERS: OrderedDict = OrderedDict()
+_ORDER_MEMORY_ROWS = 50_000
+_FROZEN_SHAPES = 200_000
 
 
 def P(point) -> np.ndarray:
-    """🧭 Drawing point as a float 3-vector, padded with zeros, so projections and offsets work on it directly."""
+    """📏 Drawing point as a float 3-vector, padded with zeros, so projections and offsets work on it directly."""
     return np.array([*(float(value) for value in tuple(point)[:3]), 0.0, 0.0, 0.0][:3])
 
 
@@ -161,7 +171,7 @@ def _polygon_facets(vertices):
 
 
 def _material_facing(item,towards):
-    """🧭 Keep uncertain source material when any canonical facet winding faces the camera."""
+    """🔦 Keep uncertain source material when any canonical facet winding faces the camera."""
     for polygon in item.polygons or (item.verts,):
         for facet in _polygon_facets(polygon):
             local=facet-facet[0]
@@ -197,7 +207,7 @@ def _original_boundary_segments(original, fragment, normal):
 
 
 def _paint_normal(item,polygon):
-    """🧭 Preserve validated fragment planes; derive only unsplit source winding geometrically."""
+    """🪞 Preserve validated fragment planes; derive only unsplit source winding geometrically."""
     if item.origin is not None:
         return tuple(map(float,item.normal))
     points=np.asarray(polygon,float)
@@ -207,12 +217,13 @@ def _paint_normal(item,polygon):
 
 
 def _fragment_item(items, face):
-    """🎨 Paint only actual fragment polygons with current source styling and semantic owners."""
+    """🌈 Paint only actual fragment polygons with current source styling and semantic owners."""
     current=items[face.source]
     origin=_source_item(current)
     polygons=tuple(np.asarray(polygon,float) for polygon in face.polygons)
     vertices=np.vstack(polygons)
-    normal=np.asarray(face.normal,float)
+    normal=np.array(face.normal,float)
+    normal.flags.writeable=False
     boundary=(origin.polygons or (origin.verts,))[face.polygon]
     @wraps(current.draw)
     def draw(view,polygons=polygons):
@@ -223,28 +234,111 @@ def _fragment_item(items, face):
         opacity=float(shape.get_stroke_opacity())
         shape.remove(*shape.submobjects)
         shape.set_stroke(width=0)
-        shape.world_vertices=vertices.copy()
-        shape.world_normal=normal.copy()
+        shape.world_vertices=_frozen(vertices)
+        shape.world_normal=normal
         shape.world_depth=_order(view,vertices.mean(axis=0))
         shape.source_polygon=face.polygon
         segments=tuple(segment for polygon in polygons for segment in _original_boundary_segments(np.asarray(boundary),polygon,normal)) if width else ()
         if segments:
-            lines=_d.segments([tuple(_screen(view,np.asarray(segment))) for segment in segments],color,width,opacity)
-            lines.world_vertices=np.vstack(segments)
-            lines.world_normal=normal.copy()
+            lines=_lean(_d.segments([tuple(_screen(view,np.asarray(segment))) for segment in segments],color,width,opacity))
+            lines.world_vertices=_frozen(np.vstack(segments))
+            lines.world_normal=normal
             lines.world_depth=_order(view,lines.world_vertices.mean(axis=0))
             shape.add(lines)
         return shape
     return current._replace(centre=vertices.mean(axis=0),verts=vertices,draw=draw,normal=normal,polygons=polygons,geometry_key=None,origin=origin,polygon=face.polygon)
 
 
+def _order_directory():
+    """📂 The occlusion-order cache beside the other teaching caches."""
+    base = os.environ.get("SEMIO_TEACHING_CACHE_ROOT")
+    return (_WORKSPACE_ROOT / base if base else _WORKSPACE_ROOT / ".🧬semio/🎓️teaching/⚡️cache") / "nakagin-orders"
+
+
+@lru_cache(maxsize=1)
+def _source_digest():
+    """🧬 Digest of every source file that decides an ordering, so a code change invalidates all stored orders."""
+    digest = hashlib.blake2b(digest_size=20)
+    for path in source_files():
+        digest.update(Path(path).read_bytes())
+    return digest.hexdigest()
+
+
+def _order_path(key):
+    """🔑 The file of one ordering, named by a digest of the geometry key and the sources."""
+    return _order_directory() / f"{hashlib.blake2b(key + _source_digest().encode(), digest_size=20).hexdigest()}.json"
+
+
+def _order_rows(order):
+    """📤 JSON rows of a recipe tuple: source indices stay integers, fragments become objects."""
+    return [row if isinstance(row, int) else {"source": row.source, "polygon": row.polygon, "polygons": [[[float(c) for c in p] for p in polygon] for polygon in row.polygons], "normal": [float(c) for c in row.normal]} for row in order]
+
+
+def _order_recipes(rows):
+    """📥 Recipe tuple from JSON rows."""
+    return tuple(row if isinstance(row, int) else _FragmentRecipe(row["source"], row["polygon"], tuple(np.array(polygon, float) for polygon in row["polygons"]), np.array(row["normal"], float)) for row in rows)
+
+
+def _store_order(key, order):
+    """💾 Persist one ordering atomically; any failure leaves the cache untouched."""
+    path = _order_path(key)
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary.write_text(json.dumps({"key": path.stem, "sources": _source_digest(), "order": _order_rows(order)}), encoding="utf-8")
+        os.replace(temporary, path)
+    except OSError:
+        temporary.unlink(missing_ok=True)
+
+
+def _load_order(key):
+    """📖 Load a stored ordering only when its recorded key and sources match; anything else rebuilds."""
+    path = _order_path(key)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data["key"] != path.stem or data["sources"] != _source_digest():
+            return None
+        return _order_recipes(data["order"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def _remember_order(key, order):
+    """🧠 Keep small orders in memory; an order of a whole building stays on disk only, because its recipes cost about a gigabyte."""
+    if len(order) > _ORDER_MEMORY_ROWS:
+        return
+    _OCCLUSION_ORDERS[key] = order
+    while len(_OCCLUSION_ORDERS) > 24:
+        _OCCLUSION_ORDERS.popitem(last=False)
+
+
+class _Restored(Sequence):
+    """🔂 Painter-ordered items bound afresh from geometry recipes, built on demand so a whole building never holds all its fragment items at once."""
+
+    def __init__(self, items, recipes):
+        self.items, self.recipes = items, recipes
+
+    def __len__(self):
+        return len(self.recipes)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self[position] for position in range(*index.indices(len(self)))]
+        row = self.recipes[index]
+        return self.items[row] if isinstance(row, int) else _fragment_item(self.items, row)
+
+    def __iter__(self):
+        for row in self.recipes:
+            yield self.items[row] if isinstance(row, int) else _fragment_item(self.items, row)
+
+
 def _restore_order(items, recipes):
-    """🧩 Reuse only geometry recipes, binding every current style and owner afresh."""
-    return [items[row] if isinstance(row,int) else _fragment_item(items,row) for row in recipes]
+    """🔁 Reuse only geometry recipes, binding every current style and owner afresh."""
+    return _Restored(items, recipes)
 
 
 class NakaginDrawing3D(_engine.VGroup):
-    """🏢 A Nakagin drawing: ``view``, named ``parts``, ``anchors`` and ``at(x, y, z)`` back to screen space."""
+    """🏗️ A Nakagin drawing: ``view``, named ``parts``, ``anchors`` and ``at(x, y, z)`` back to screen space."""
 
     def __init__(self, view=None):
         super().__init__()
@@ -268,7 +362,7 @@ def make_view(view, at, scale: float, centre) -> _d.View:
 
 
 def project(point, view: _d.View) -> np.ndarray:
-    """📍 Screen position of a model point in a view."""
+    """🌐 Screen position of a model point in a view."""
     return view(*P(point))
 
 
@@ -306,12 +400,99 @@ def _poly_points(polys) -> np.ndarray:
     return np.vstack(chunks)
 
 
+class _Facet(_engine.VMobject):
+    """🪶 A VMobject keeping its unchanged defaults on the class, so a drawing of many faces costs about a third of the memory per face; copies share the read-only world data."""
+
+    def __deepcopy__(self, memo):
+        clone = object.__new__(type(self))
+        memo[id(self)] = clone
+        state = {}
+        for name, value in self.__dict__.items():
+            if name in _WORLD:
+                state[name] = value
+            elif isinstance(value, np.ndarray):
+                state[name] = value.copy()
+            elif name == "submobjects":
+                state[name] = [copy.deepcopy(child, memo) for child in value]
+            else:
+                state[name] = copy.deepcopy(value, memo)
+        return _adopt(clone, state)
+
+    def __getattr__(self, name):
+        if name in _LAZY:
+            try:
+                source = object.__getattribute__(self, "_source")
+            except AttributeError:
+                raise AttributeError(name) from None
+            world = source[0].world(source[1])
+            if name in world:
+                return world[name]
+        raise AttributeError(name)
+
+
+_LAZY = ("world_vertices", "world_normal", "world_depth", "world_facets")
+_WORLD = frozenset((*_LAZY, "_source", "paint", "semantic_role", "semantic_key", "semantic_sources", "source_polygon"))
+
+
+_OWN = frozenset(("points", "submobjects", "updaters", "fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"))
+_DEFAULTS = {name: value for name, value in vars(_engine.VMobject()).items() if name not in _OWN}
+for _name, _value in _DEFAULTS.items():
+    if isinstance(_value, np.ndarray):
+        _value.flags.writeable = False
+    setattr(_Facet, _name, _value)
+
+
+def _lean(shape):
+    """🧹 Drop every instance attribute equal to the class default of a ``_Facet``, leaving the drawing unchanged."""
+    return _adopt(object.__new__(_Facet), {name: value for name, value in shape.__dict__.items() if name not in _DEFAULTS or not _default(value, _DEFAULTS[name])})
+
+
+def _interned(value):
+    """🧵 One shared string object per distinct text."""
+    return sys.intern(value) if isinstance(value, str) else value
+
+
+def _adopt(shape, state):
+    """🧲 Give a face its attributes one by one, so faces of the same make share one key table instead of each holding a dictionary."""
+    for name, value in state.items():
+        setattr(shape, name, value)
+    return shape
+
+
+def _default(value, default):
+    """🟰 Whether an instance attribute equals the class default of the same type."""
+    if type(value) is not type(default):
+        return False
+    return bool(np.array_equal(value, default)) if isinstance(value, np.ndarray) else bool(value == default)
+
+
+def _share_style(drawing):
+    """🫧 Let the faces of a cached drawing share one read-only colour array per distinct colour; clones copy them again before any change."""
+    table = {}
+    for shape in drawing.get_family():
+        if isinstance(shape, _Facet):
+            for name in ("fill_rgbas", "stroke_rgbas", "background_stroke_rgbas"):
+                array = shape.__dict__.get(name)
+                if array is not None and array.flags.writeable:
+                    key = (name, array.tobytes())
+                    if key not in table:
+                        table[key] = _frozen(array.copy())
+                    shape.__dict__[name] = table[key]
+    return drawing
+
+
+def _frozen(array):
+    """🥶 Make an array read-only so drawings may share it."""
+    array.flags.writeable = False
+    return array
+
+
 def _shape(polys, fill, opacity: float = 1.0, stroke=None, width: float = 0.0, stroke_opacity: float = 1.0):
     shape = _engine.VMobject()
     shape.set_points(_poly_points(polys))
     shape.set_fill(fill, opacity)
     shape.set_stroke(stroke or fill, width, stroke_opacity)
-    return shape
+    return _lean(shape)
 
 
 def _circle(centre, u, v, radius: float, count: int = 28, start: float = 0.0, stop: float = 360.0) -> np.ndarray:
@@ -352,7 +533,7 @@ def box_mesh(x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -
 
 
 def solid_mesh(solid) -> Mesh:
-    """🧊 A mesh from a model ``Solid`` (outward-wound vertex loops)."""
+    """🔷 A mesh from a model ``Solid`` (outward-wound vertex loops)."""
     V = np.array(solid.vertices, float)
     faces, normals = [], []
     for loop in solid.faces:
@@ -523,6 +704,39 @@ def _material(material, base):
             "fabric": _blend(base, BACKGROUND, 0.35), "paper": "#E4D9BA", "brass": "#A8893B", "rubber": "#262A29", "diffuser": "#F4ECD6", "dark": _blend(BACKGROUND, INK, 0.22)}.get(material, base)
 
 
+def _slot_look(slot, *, lit, tint, types, base):
+    """🖌 Colour and lit state of one tower slot: base or type blend, the tint override, dimmed when not lit."""
+    key = (slot.building, slot.tower, slot.storey, slot.facade, slot.item)
+    color = _blend(base, type_color(slot.type), 0.5) if types else base
+    color = _match(tint, key) or color
+    on = lit is None or _match(lit, key, True)
+    return (color if on else _blend(BACKGROUND, color, 0.4)), on
+
+
+def _recolour(group, colour, outlined):
+    """🖍️ Recolour a drawn capsule in place from the paint of its shapes, equal to drawing it afresh in ``colour``."""
+    for shape in list(group.get_family()):
+        paint = getattr(shape, "paint", None)
+        if paint is None:
+            continue
+        material, tone, hairline, cover = paint
+        fill = shade_of(_material(material, colour), tone)
+        stroke = fill if cover else (DATA if outlined else shade_of(_material(material, colour), 0.42))
+        width = 1.2 if outlined else hairline
+        shape.set_fill(fill, family=False)
+        if cover:
+            shape.set_stroke(stroke, family=False)
+        elif hasattr(shape, "source_polygon"):
+            shape.set_stroke(stroke, family=False)
+            for line in list(shape.submobjects):
+                if width:
+                    line.set_stroke(stroke, width)
+                else:
+                    shape.remove(line)
+        else:
+            shape.set_stroke(stroke, width, family=False)
+
+
 @lru_cache(maxsize=256)
 def _capsule_parts(parameters, detail, layout="Slash", interior="reference", program=None):
     parameters = {name: value for name, value in zip(_CAP_NAMES, parameters) if value is not None}
@@ -585,13 +799,16 @@ def _assembly_items(parts, *, base, groups, plane=None, highlight=None, window=T
             color = _material(part.material, base)
             if isinstance(highlight, dict) and part.role.startswith("shell"):
                 color = highlight.get(name, color)
-            def draw(v, polygons=tuple(row[1] for row in polygons), normal=normal, lighting_normal=lighting_normal, color=color, group=group, role=part.role, name=name, part_key=part.key, opacity=glass_opacity if part.material == "glass" else 1.0):
+            def draw(v, polygons=tuple(row[1] for row in polygons), normal=normal, lighting_normal=lighting_normal, color=color, group=group, role=part.role, name=name, part_key=part.key, opacity=glass_opacity if part.material == "glass" else 1.0, material=part.material):
                 vertices=np.vstack(polygons)
-                fill = shade_of(color, tone_of(lighting_normal))
-                shape = _shape([_screen(v, polygon) for polygon in polygons], fill, opacity, outline or shade_of(color, 0.42), 1.2 if outline else (0 if role in ("shell", "window_rim", "window_frame", "glazing") else 0.45))
+                tone = tone_of(lighting_normal)
+                fill = shade_of(color, tone)
+                hairline = 0 if role in ("shell", "window_rim", "window_frame", "glazing") else 0.45
+                shape = _shape([_screen(v, polygon) for polygon in polygons], fill, opacity, outline or shade_of(color, 0.42), 1.2 if outline else hairline)
+                shape.paint = (material, tone, hairline, False)
                 shape.world_depth = _order(v, vertices.mean(axis=0))
-                shape.world_vertices = vertices.copy()
-                shape.world_normal = normal.copy()
+                shape.world_vertices = _frozen(vertices.copy())
+                shape.world_normal = _frozen(normal.copy())
                 shape.semantic_role, shape.semantic_key = role, part_key
                 group.add(shape)
                 if face_groups is not None and role in ("shell", "shell_back"):
@@ -615,7 +832,7 @@ def _capsule_lite(cap, plane, view, base, *, window=True, highlight=None, layout
 
 
 class _ProjectedPolygon(NamedTuple):
-    """📐 Cached projected boundaries, support intervals and interior probes for one physical face."""
+    """⬜ Cached projected boundaries, support intervals and interior probes for one physical face."""
     points: np.ndarray
     lower: np.ndarray
     upper: np.ndarray
@@ -749,7 +966,7 @@ _OPAQUE_VISIBILITY = OrderedDict()
 
 
 def _convex_difference(subject, cover):
-    """✂️ Subtract one convex opaque projection, preserving disjoint visible convex fragments."""
+    """🪓 Subtract one convex opaque projection, preserving disjoint visible convex fragments."""
     if _cross2(cover, np.roll(cover, -1, axis=0)).sum() < 0:
         cover = cover[::-1]
     remaining, inside = [], subject
@@ -774,7 +991,7 @@ def _convex_difference(subject, cover):
 
 
 def _single_cover_bounds(cover):
-    """📦 Bound the actual expanded convex half-planes, retaining uncertain acute geometry."""
+    """🗳️ Bound the actual expanded convex half-planes, retaining uncertain acute geometry."""
     lengths=np.linalg.norm(cover.edges,axis=1)
     if not cover.convex or not np.isfinite(lengths).all() or np.any(lengths==0):
         return np.full(2,-np.inf),np.full(2,np.inf)
@@ -814,13 +1031,13 @@ def _coverage_samples_possible(footprint, covers):
 
 
 def _raster_footprint(scale, stroke_width):
-    """🖌️ Bound Cairo half-stroke plus two antialias pixels in physical projected units."""
+    """🔬 Bound Cairo half-stroke plus two antialias pixels in physical projected units."""
     pixel = max(float(_engine.config.frame_width) / _engine.config.pixel_width, float(_engine.config.frame_height) / _engine.config.pixel_height)
     return (stroke_width * .005 + 2 * pixel) / scale
 
 
 def _opaque_visible(items, view, padding=0.0):
-    """🛡️ Retain uncertain faces; remove only projections covered by physically nearer opaque convex polygons."""
+    """🧿 Retain uncertain faces; remove only projections covered by physically nearer opaque convex polygons."""
     if not items:
         return []
     basis, towards = _basis(view)
@@ -920,38 +1137,38 @@ def _opaque_visible(items, view, padding=0.0):
 
 
 def _paint_ordered(items, view):
-    """🎨 Paint actual opaque material unions before their shaded facets, retaining source holes and physical ordering."""
+    """🖼️ Paint actual opaque material unions before their shaded facets, retaining source holes and physical ordering."""
     bundles = {}
     for item in items:
         if item.paint_owner is not None and item.paint_color is not None and item.opacity == 1 and item.normal is not None:
-            key = (id(item.paint_owner), item.material, str(item.paint_color))
-            bundles.setdefault(key, []).append(item)
-    painted, emitted = [], set()
+            polygons, facets, vertices, parts = bundles.setdefault((id(item.paint_owner), item.material, str(item.paint_color)), ([], [], [], []))
+            normal = _frozen(np.array(item.normal))
+            for polygon in item.polygons or (item.verts,):
+                screen = _screen(view, polygon)
+                polygons.append(screen if _cross2(screen[:, :2], np.roll(screen[:, :2], -1, axis=0)).sum() >= 0 else screen[::-1])
+                facets.append((_frozen(np.array(polygon)), normal))
+            vertices.append(item.verts)
+            parts.append(item.part_key)
+    painted = []
     for item in items:
-        key = (id(item.paint_owner), item.material, str(item.paint_color))
-        if key in bundles and key not in emitted:
-            rows = bundles[key]
-            polygons, facets = [], []
-            for row in rows:
-                for polygon in row.polygons or (row.verts,):
-                    screen = _screen(view, polygon)
-                    polygons.append(screen if _cross2(screen[:, :2], np.roll(screen[:, :2], -1, axis=0)).sum() >= 0 else screen[::-1])
-                    facets.append((np.asarray(polygon).copy(), np.asarray(row.normal).copy()))
+        bundle = bundles.pop((id(item.paint_owner), item.material, str(item.paint_color)), None)
+        if bundle is not None:
+            polygons, facets, vertices, parts = bundle
             coverage = _shape(polygons, shade_of(item.paint_color, .85), 1)
-            coverage.world_vertices = np.vstack([row.verts for row in rows])
+            coverage.world_vertices = _frozen(np.vstack(vertices))
             coverage.world_depth = _order(view, coverage.world_vertices.mean(axis=0))
             coverage.world_facets, coverage.world_normal = tuple(facets), None
             coverage.semantic_role, coverage.semantic_key = "material_coverage", None
-            coverage.semantic_sources = tuple(dict.fromkeys(row.part_key for row in rows if row.part_key is not None))
+            coverage.paint = (item.material, .85, 0, True)
+            coverage.semantic_sources = tuple(dict.fromkeys(part for part in parts if part is not None))
             item.paint_owner.add(coverage)
             painted.append(coverage)
-            emitted.add(key)
         painted.append(item.draw(view))
     return painted
 
 
 def _item_plane(item):
-    """📐 Return one actual common geometric plane only when every boundary vertex shares it."""
+    """🪛 Return one actual common geometric plane only when every boundary vertex shares it."""
     if item.normal is None:
         return None
     polygon=(item.polygons or (item.verts,))[0]
@@ -963,7 +1180,7 @@ def _item_plane(item):
 
 
 def _overlap_plane_order(first, second, projected_first, projected_second, basis, towards, planes=None):
-    """📐 Order actual overlapping convex surface regions only when their full ray-depth sign agrees."""
+    """⛰️ Order actual overlapping convex surface regions only when their full ray-depth sign agrees."""
     planes=(_item_plane(first),_item_plane(second)) if planes is None else planes
     if any(plane is None for plane in planes):
         return 2 if _projected_overlap(projected_first,projected_second) else 0
@@ -1026,7 +1243,7 @@ def _candidate_support(vertices, starts, lengths, candidates, other_vertices, no
 
 
 def _dependency_order(edges, depths):
-    """🪢 Respect condensation dependencies and refine residual cycles before local depth choices."""
+    """🔀 Respect condensation dependencies and refine residual cycles before local depth choices."""
     ordered, pending = [], [list(range(len(edges)))] if edges else []
     while pending:
         nodes = pending.pop()
@@ -1100,6 +1317,10 @@ def _section_order(items, view, progress=None, cancelled=None):
     if key in _OCCLUSION_ORDERS:
         _OCCLUSION_ORDERS.move_to_end(key)
         return _restore_order(items,_OCCLUSION_ORDERS[key])
+    stored=_load_order(key)
+    if stored is not None:
+        _remember_order(key,stored)
+        return _restore_order(items,stored)
     source_planes=[]
     for completed,item in enumerate(items):
         if checking and completed%128==0:
@@ -1135,15 +1356,20 @@ def _section_order(items, view, progress=None, cancelled=None):
     own_minimum = np.minimum.reduceat(projection, starts)
     own_maximum = np.maximum.reduceat(projection, starts)
     edges = [set() for _ in visible]
-    active = []
-    for completed,b in enumerate(sorted(range(len(visible)),key=lambda index:bounds[index,0,0])):
+    count=len(visible)
+    pool_index,pool_x,pool_low,pool_high=np.empty(count,int),np.empty(count),np.empty(count),np.empty(count)
+    size=0
+    for completed,b in enumerate(sorted(range(count),key=lambda index:bounds[index,0,0])):
         if checking and completed%128==0:
-            _order_checkpoint(progress,cancelled,'occlusion-overlap',completed,len(visible))
-        active = [a for a in active if bounds[a, 1, 0] >= bounds[b, 0, 0]]
+            _order_checkpoint(progress,cancelled,'occlusion-overlap',completed,count)
+        if completed%256==0 and size:
+            alive=pool_x[:size]>=bounds[b,0,0]
+            size=int(alive.sum())
+            pool_index[:size],pool_x[:size],pool_low[:size],pool_high[:size]=(pool[:len(alive)][alive] for pool in (pool_index,pool_x,pool_low,pool_high))
         second = visible[b]
-        if second.normal is not None and active:
-            candidates = np.asarray(active, int)
-            candidates = candidates[(bounds[candidates, 1, 1] >= bounds[b, 0, 1]) & (bounds[candidates, 0, 1] <= bounds[b, 1, 1])]
+        if second.normal is not None and size:
+            near=(pool_x[:size]>=bounds[b,0,0])&(pool_high[:size]>=bounds[b,0,1])&(pool_low[:size]<=bounds[b,1,1])
+            candidates=pool_index[:size][near]
             low, high, other_low, other_high = _candidate_support(vertices, starts, lengths, candidates, second.verts, support_normals, support_normals[b])
             forward = (other_low > own_maximum[candidates] + separation) | (high < own_minimum[b] - separation)
             backward = (other_high < own_minimum[candidates] - separation) | (low > own_maximum[b] + separation)
@@ -1165,7 +1391,8 @@ def _section_order(items, view, progress=None, cancelled=None):
                 else:
                     source,target=(int(a),b) if ahead else (b,int(a))
                 edges[source].add(target)
-        active.append(b)
+        pool_index[size],pool_x[size],pool_low[size],pool_high[size]=b,bounds[b,1,0],bounds[b,0,1],bounds[b,1,1]
+        size+=1
     if checking:
         _order_checkpoint(progress,cancelled,'occlusion-overlap',len(visible),len(visible))
     cyclic=list(_cyclic_components(edges))
@@ -1222,9 +1449,8 @@ def _section_order(items, view, progress=None, cancelled=None):
         if progress is not None:
             progress({'phase':'occlusion-components','completed':completed+1,'total':len(components)})
     order=_coalesce_fragments(recipes)
-    _OCCLUSION_ORDERS[key]=order
-    while len(_OCCLUSION_ORDERS)>24:
-        _OCCLUSION_ORDERS.popitem(last=False)
+    _store_order(key,order)
+    _remember_order(key,order)
     return _restore_order(items,order)
 
 
@@ -1260,8 +1486,105 @@ def _bridge_parts():
     return tuple(item for level in _model.load()["detail"]["bridge_storeys"] for item in _parts(_model.bridge_assembly(level)))
 
 
+class _Saver(pickle.Pickler):
+    """🥡 Pickles a drawing with every face replaced by its number, numbering faces as they appear."""
+
+    def __init__(self, file, ids, order):
+        super().__init__(file, protocol=pickle.HIGHEST_PROTOCOL)
+        self.ids, self.order = ids, order
+
+    def persistent_id(self, value):
+        if not isinstance(value, _Facet):
+            return None
+        index = self.ids.get(id(value))
+        if index is None:
+            index = self.ids[id(value)] = len(self.order)
+            self.order.append(value)
+        return index
+
+
+class _Loader(pickle.Unpickler):
+    """🍳 Unpickles a drawing, asking ``build`` for the face of every number."""
+
+    def __init__(self, file, build):
+        super().__init__(file)
+        self.build = build
+
+    def persistent_load(self, index):
+        return self.build(index)
+
+
+class _Frozen:
+    """❄️ A cached whole-building drawing resting in a temporary file: only the group skeleton and the byte offset of every face stay in memory, so a clone is the only live copy of the faces."""
+
+    def __init__(self, drawing):
+        ids, order, skeletons = {}, [], []
+        for value in (drawing, *drawing.capsules.values()):
+            buffer = io.BytesIO()
+            _Saver(buffer, ids, order).dump(value)
+            skeletons.append(buffer.getvalue())
+        self.skeleton, self.capsule_skeletons = skeletons[0], dict(zip(drawing.capsules, skeletons[1:]))
+        self.coverage_padding, self.outlined, self.view = drawing.coverage_padding, drawing.outlined, drawing.view
+        directory = _order_directory().with_name("nakagin-shapes")
+        directory.mkdir(parents=True, exist_ok=True)
+        self.file = tempfile.TemporaryFile(dir=directory)
+        offsets, index = [0], 0
+        while index < len(order):
+            core, world = {}, {}
+            for name, value in order[index].__dict__.items():
+                (world if name in _LAZY else core)[name] = value
+            for part in (core, world):
+                buffer = io.BytesIO()
+                _Saver(buffer, ids, order).dump(part)
+                self.file.write(buffer.getbuffer())
+                offsets.append(offsets[-1] + buffer.tell())
+            index += 1
+        self.file.flush()
+        self.offsets, self.count = np.asarray(offsets, np.int64), len(order)
+
+    def _record(self, record):
+        self.file.seek(int(self.offsets[record]))
+        return io.BytesIO(self.file.read(int(self.offsets[record + 1] - self.offsets[record])))
+
+    def world(self, index):
+        """🌍 The world-space data of one face, read only when somebody asks for it."""
+        return pickle.load(self._record(2 * index + 1))
+
+    def _build(self, made, index, scale, offset):
+        shape = made.get(index)
+        if shape is None:
+            shape = made[index] = object.__new__(_Facet)
+            state = _Loader(self._record(2 * index), lambda other: self._build(made, other, scale, offset)).load()
+            state["_source"] = (self, index)
+            if scale is not None:
+                state["points"] = state["points"] * scale + offset
+            if "paint" in state:
+                state["paint"] = (_interned(state["paint"][0]), *state["paint"][1:])
+            for name in ("semantic_role", "semantic_key"):
+                if name in state:
+                    state[name] = _interned(state[name])
+            _adopt(shape, state)
+        return shape
+
+    def thaw(self, scale, offset):
+        """♨️ A fresh live drawing at ``points * scale + offset``, read from the file face by face."""
+        made = {}
+        for index in range(self.count):
+            self._build(made, index, scale, offset)
+        drawing = _Loader(io.BytesIO(self.skeleton), lambda index: made[index]).load()
+        for member in drawing.get_family():
+            if not isinstance(member, _Facet) and len(member.points):
+                member.points = member.points * scale + offset
+        return drawing
+
+    def capsule(self, key):
+        """🧸 A fresh copy of one capsule group at template scale."""
+        made = {}
+        return _Loader(io.BytesIO(self.capsule_skeletons[key]), lambda index: self._build(made, index, None, None)).load()
+
+
 class NakaginDrawing:
-    """🏢 Scene mixin: Nakagin capsule, views, axes, core, capital, podium and tower drawings. Combine with ``Drafting`` for text and dimensions."""
+    """🎞️ Scene mixin: Nakagin capsule, views, axes, core, capital, podium and tower drawings. Combine with ``Drafting`` for text and dimensions."""
 
     def _text(self, string: str, point=(0, 0, 0), *, size: float = S_SMALL, color=DATA, anchor: str = "c"):
         key = (string, size, color)
@@ -1324,7 +1647,7 @@ class NakaginDrawing:
 
     def capsule_axon(self, t, *, at=(0, 0, 0), scale: float = 0.62, view="axon", window: bool = True, bolts: bool = True, dims=(),
                      highlight=(), hatch=(), base: str = CAPSULE, segments: int | None = None, dim_offset: float = 0.42, cutaway: bool = False, interior: str = "reference", layout: str = "Slash", glass_opacity: float = .25):
-        """💊 One shaded capsule in axonometric with its round window, physical bolts enabled by default, dimension lines and hatched faces.
+        """🧴 One shaded capsule in axonometric with its round window, physical bolts enabled by default, dimension lines and hatched faces.
 
         ``t`` is a ``CapsuleType`` or a dict of parameters (e.g. live width/length/height/window_diameter); ``at`` is the screen position of the capsule centre.
         ``dims`` picks from ``width length height window``; ``hatch`` picks ``exposed``, ``attached`` or face names (front back top bottom left right);
@@ -1443,7 +1766,7 @@ class NakaginDrawing:
         return drawing
 
     def capsule_views(self, t, *, at=(0, 0, 0), scale: float = 0.58, dims: bool = True, base: str = CAPSULE, gap: float = 1.0, interior: str = "reference", layout: str = "Slash", glass_opacity: float = .25):
-        """📐 Plan and orthographic elevations measure the physical casing and finished interior; nominal program parameters remain separate."""
+        """📃 Plan and orthographic elevations measure the physical casing and finished interior; nominal program parameters remain separate."""
         cap = _cap(t)
         parameters = _cap_parameters(cap)
         casing, usable = _model.capsule_casing(parameters), _model.capsule_interior(parameters)
@@ -1657,11 +1980,7 @@ class NakaginDrawing:
             cap = dict(types_by_key[slot.type], seg=segments)
             if storeys is not None and slot.storey >= limits[slot.tower]:
                 continue
-            color = _blend(base, type_color(slot.type), 0.5) if types else base
-            chosen = _match(tint, key)
-            color = chosen if chosen else color
-            on = lit is None or _match(lit, key, True)
-            colour = color if on else _blend(BACKGROUND, color, 0.4)
+            colour, on = _slot_look(slot, lit=lit, tint=tint, types=types, base=base)
             groups = {}
             parts = _slot_parts(slot, segments)
             local_items = _assembly_items(parts, base=colour, groups=groups, plane=slot.plane, lod=True, outline=DATA if lit is not None and on else None, glass_opacity=1)
@@ -1679,33 +1998,70 @@ class NakaginDrawing:
             items.append(Item(-1, np.array([(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, 0.0]), np.array([(lo[0], lo[1], 0), (hi[0], hi[1], 0)]), draw_ground))
         return items
 
-    def tower_axon(self, *, at=(0, 0, 0), scale: float = 0.1, view="axon", lit=None, tint=None, types: bool = False, capital: bool = True, podium: bool = True,
-                   core: bool = True, ground: bool = False, where=None, towers=(0, 1), storeys: int | None = None, segments: int = 2, base: str = CAPSULE):
-        """🗂 Clone a cached, globally sorted building drawing for live position, scale and semantic selections."""
-        paths = [(slot.building, slot.tower, slot.storey, slot.facade, slot.item) for slot in _model.slots()]
-        selected = tuple(key for key in paths if lit is None or _match(lit, key, True))
-        colours = tuple((key, str(_match(tint, key))) for key in paths) if tint is not None else ()
-        included = tuple(key for key, slot in zip(paths, _model.slots()) if where is None or where(slot))
-        viewpoint = (view.kind, view.azimuth, view.elevation, view.face) if isinstance(view, _d.View) else (tuple(view) if isinstance(view, (tuple, list)) else view)
-        key = (viewpoint, lit is None, selected, colours, included, types, capital, podium, core, ground, tuple(towers), storeys, segments, base)
+    def _tower_template(self, *, scale, view, lit, capital, podium, core, ground, where, towers, storeys, segments):
+        """🗼 The cached whole-building drawing for one geometry in neutral paint; colour, tint and lighting are applied to clones, so the key holds geometry only."""
         if scale <= 0:
             raise ValueError("Drawing scale must be positive")
+        included = tuple((slot.building, slot.tower, slot.storey, slot.facade, slot.item) for slot in _model.slots() if where is None or where(slot))
+        viewpoint = (view.kind, view.azimuth, view.elevation, view.face) if isinstance(view, _d.View) else (tuple(view) if isinstance(view, (tuple, list)) else view)
+        key = (viewpoint, lit is None, included, capital, podium, core, ground, tuple(towers), storeys, segments)
         coverage_padding = _raster_footprint(scale, 1.2 if lit is not None else .45)
-        if key not in _TOWERS or _TOWERS[key].coverage_padding < coverage_padding:
-            if len(_TOWERS) >= 8:
+        template = _TOWERS.pop(key, None)
+        if template is None or template.coverage_padding < coverage_padding:
+            while len(_TOWERS) >= _TOWER_CACHE:
                 _TOWERS.pop(next(iter(_TOWERS)))
-            _TOWERS[key] = self._tower_drawing(at=(0, 0, 0), scale=1, view=view, lit=lit, tint=tint, types=types, capital=capital, podium=podium,
-                                              core=core, ground=ground, where=where, towers=towers, storeys=storeys, segments=segments, base=base, coverage_padding=coverage_padding)
-        template = _TOWERS[key]
-        drawing = template.copy()
+            template = self._tower_drawing(at=(0, 0, 0), scale=1, view=view, lit=None if lit is None else (lambda path: True), tint=None, types=False, capital=capital, podium=podium,
+                                           core=core, ground=ground, where=where, towers=towers, storeys=storeys, segments=segments, base=CAPSULE, coverage_padding=coverage_padding)
+            template.outlined = lit is not None
+            if sum(isinstance(member, _Facet) for member in template.get_family()) >= _FROZEN_SHAPES:
+                template = _Frozen(template)
+            else:
+                _share_style(template)
+        _TOWERS[key] = template
+        return template
+
+    def _tint_capsules(self, capsules, template, *, lit, tint, types, base):
+        """🖋️ Recolour the capsule groups of a template clone in place for the requested tint, types, base and lit selection."""
+        for slot in _model.slots():
+            path = (slot.building, slot.tower, slot.storey, slot.facade, slot.item)
+            if path not in capsules:
+                continue
+            colour, on = _slot_look(slot, lit=lit, tint=tint, types=types, base=base)
+            outlined = lit is not None and bool(on)
+            if colour != CAPSULE or outlined != template.outlined:
+                _recolour(capsules[path], colour, outlined)
+
+    def tower_axon(self, *, at=(0, 0, 0), scale: float = 0.1, view="axon", lit=None, tint=None, types: bool = False, capital: bool = True, podium: bool = True,
+                   core: bool = True, ground: bool = False, where=None, towers=(0, 1), storeys: int | None = None, segments: int = 2, base: str = CAPSULE):
+        """🛸 Clone the cached, globally sorted building drawing for live position and scale, recolouring its capsules in place for tint, types and lit selections."""
+        template = self._tower_template(scale=scale, view=view, lit=lit, capital=capital, podium=podium, core=core, ground=ground, where=where, towers=towers, storeys=storeys, segments=segments)
         offset = P(at)
-        drawing.apply_points_function_about_point(lambda points: points * scale + offset, about_point=np.zeros(3))
+        if isinstance(template, _Frozen):
+            drawing = template.thaw(scale, offset)
+        else:
+            drawing = template.copy()
+            drawing.apply_points_function_about_point(lambda points: points * scale + offset, about_point=np.zeros(3))
         drawing.view = make_view(view, at, scale, template.view.centre)
+        self._tint_capsules(drawing.capsules, template, lit=lit, tint=tint, types=types, base=base)
         return drawing
+
+    def tower_capsules(self, keys, color, *, at=(0, 0, 0), scale: float = 0.1, view="axon", capital: bool = True, podium: bool = True, core: bool = True,
+                       ground: bool = False, where=None, towers=(0, 1), storeys: int | None = None, segments: int = 2):
+        """🪆 Copies of single capsules of the tower in one flat ``color`` (the neutral paint when ``None``) at their place on the screen, taken from the cached drawing without cloning the building."""
+        template = self._tower_template(scale=scale, view=view, lit=None, capital=capital, podium=podium, core=core, ground=ground, where=where, towers=towers, storeys=storeys, segments=segments)
+        offset = P(at)
+        copies = []
+        for key in keys:
+            capsule = template.capsule(key) if isinstance(template, _Frozen) else template.capsules[key].copy()
+            capsule.apply_points_function_about_point(lambda points: points * scale + offset, about_point=np.zeros(3))
+            if color is not None:
+                _recolour(capsule, color, False)
+            copies.append(capsule)
+        return copies
 
     def _tower_drawing(self, *, at=(0, 0, 0), scale: float = 0.1, view="axon", lit=None, tint=None, types: bool = False, capital: bool = True, podium: bool = True,
                    core: bool = True, ground: bool = False, where=None, towers=(0, 1), storeys: int | None = None, segments: int = 2, base: str = CAPSULE, coverage_padding: float = 0.0):
-        """🗼 The whole building in axonometric: podium, both cores, 140 capsules, both capitals, depth-sorted by the painter's algorithm.
+        """🌆 The whole building in axonometric: podium, both cores, 140 capsules, both capitals, depth-sorted by the painter's algorithm.
 
         ``lit`` (None, a collection of paths or a predicate) lights those capsules and dims the others; a path is a prefix of ``(b, t, s, f, i)`` so ``(0, 1, 4, 2)`` lights a facade branch.
         ``tint`` maps paths (or a predicate) to colours; ``types`` colours capsules by type; ``where`` filters slots, ``towers`` picks tower indices, ``storeys`` caps the core height. ``at`` is the screen position of the bounding-box centre.

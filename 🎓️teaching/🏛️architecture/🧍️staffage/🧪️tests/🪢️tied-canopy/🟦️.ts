@@ -26,7 +26,7 @@ describe("tied canopy against anastruct", () => {
   });
   it("is in equilibrium", () => {
     expect(Math.hypot(result.residual.fxN, result.residual.fyN)).toBeLessThan(1e-9 * 3000);
-    expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * 3000);
+    expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * 3000);
   });
   it("compresses the canopy by the horizontal rod component", () => {
     const interior = result.members["canopy"]!.stations.filter((s) => s.s > 1e-9 && s.s < 2 - 1e-9);

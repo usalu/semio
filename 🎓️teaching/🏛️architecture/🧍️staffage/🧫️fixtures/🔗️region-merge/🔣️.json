@@ -1,0 +1,101 @@
+{
+  "description": "Language-agnostic vectors of the same-region merge. Filled shapes of one region on one bone hide each other's inner outlines so they read as one silhouette; unfilled strokes take no part in that merge and survive unless a filled shape with a higher z covers them. Rectangles in the local frame of the left thigh of the sample figure, 1:100 (10 paper mm per metre, lengths are rotation invariant). body-a is 0.4 by 0.1 m, body-b 0.4 by 0.16 m overlapping it by 0.1 m: the visible outline of a is its left edge and its top and bottom up to body-b (0.1 + 0.3 + 0.3 = 0.7 m, 7.0 mm), that of b everything but its left edge inside a (1.12 - 0.1 = 1.02 m, 10.2 mm), together the 1.72 m of the union. detail-ring is a 0.2 by 0.06 m unfilled rectangle inside body-a (0.52 m, 5.2 mm), ring-under-cover a 0.1 by 0.06 m unfilled rectangle below a covering filled shape of another region (0 mm), ring-over-cover the same rectangle above it (0.32 m, 3.2 mm).",
+  "asset": "sample-figure",
+  "scale": 100,
+  "paperMmPerM": 10,
+  "pose": "stand",
+  "toleranceMm": 0.05,
+  "shapes": [
+    {
+      "id": "body-a",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "body",
+      "z": 1,
+      "filled": true,
+      "tone": 0.5,
+      "x": 0,
+      "y": -0.05,
+      "w": 0.4,
+      "h": 0.1,
+      "region": "legs"
+    },
+    {
+      "id": "body-b",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "body",
+      "z": 2,
+      "filled": true,
+      "tone": 0.5,
+      "x": 0.3,
+      "y": -0.08,
+      "w": 0.4,
+      "h": 0.16,
+      "region": "legs"
+    },
+    {
+      "id": "detail-ring",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.5,
+      "x": 0.05,
+      "y": -0.03,
+      "w": 0.2,
+      "h": 0.06,
+      "region": "legs"
+    },
+    {
+      "id": "cover",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "body",
+      "z": 5,
+      "filled": true,
+      "tone": 0.5,
+      "x": 0.85,
+      "y": -0.05,
+      "w": 0.2,
+      "h": 0.1,
+      "region": "arms"
+    },
+    {
+      "id": "ring-under-cover",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.5,
+      "x": 0.9,
+      "y": -0.03,
+      "w": 0.1,
+      "h": 0.06,
+      "region": "legs"
+    },
+    {
+      "id": "ring-over-cover",
+      "kind": "rect",
+      "bone": "thigh-l",
+      "role": "detail",
+      "z": 6,
+      "filled": false,
+      "tone": 0.5,
+      "x": 0.9,
+      "y": -0.03,
+      "w": 0.1,
+      "h": 0.06,
+      "region": "legs"
+    }
+  ],
+  "expectedMm": {
+    "body-a": 7.0,
+    "body-b": 10.2,
+    "detail-ring": 5.2,
+    "ring-under-cover": 0,
+    "ring-over-cover": 3.2
+  }
+}

@@ -8,7 +8,7 @@
   "directories": {"video_dir": "v", "partial_movie_dir": "p/{scene_name}", "images_dir": "i", "text_dir": "t", "tex_dir": "x", "log_dir": "logs"},
   "text": "Clip output – Wärme ²",
   "speech": {"directory": "speech", "identity_length": 10},
-  "narration": {"scene": "Beat1_Output", "key": "first", "english": "Output", "german": "Ausgabe", "file": "beat_1_clauses/clause_00.wav"},
+  "narration": {"scene": "Beat1_Output", "key": "first", "english": "Output", "german": "Ausgabe", "language": "en", "file": "beat_1_clauses/clause_00.wav"},
   "ignored": ["media/texts/00d073c42770ab53.svg", ".🧬semio/🎓️teaching/⚡️cache/videos/m/t/example.svg"],
   "authored": ["🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/authored.svg"]
 }

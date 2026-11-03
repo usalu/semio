@@ -36,7 +36,22 @@ export function tool(command: string, args: readonly string[]): string {
   return `${result.stdout}${result.stderr}`;
 }
 
-/** 🔧️ Runs an external tool and returns stdout bytes. */
+const availability = new Map<string, boolean>();
+
+/** 🔍️ Requires an external tool: probes `-version`/`--version` (registered repo tools such as `ffmpeg` through `repo tools exec`, system tools from PATH), caches the answer per process and THROWS with the tool named and the way to provision it when it is missing, so a missing tool is a failing test and never a silent skip. Returns `true` so it can stand where a capability flag stood. */
+export function requireTool(name: string): true {
+  let answered = availability.get(name);
+  if (answered === undefined) {
+    const [command, args] = name === "ffmpeg" ? ["repo", ["tools", "exec", "--light", "ffmpeg", "--", "-version"]] : [name, [name === "ffprobe" ? "-version" : "--version"]];
+    const result = spawnSync(command!, args as string[], { encoding: "utf8", timeout: 120_000 });
+    answered = !result.error && result.status === 0;
+    availability.set(name, answered);
+  }
+  if (!answered) throw new Error(`required tool "${name}" is not available: provision registered tools with \`repo tools setup all\` (ffmpeg, uv) or install the system tool (rsvg-convert from librsvg, qpdf, ffprobe with ffmpeg); these tests never skip silently`);
+  return true;
+}
+
+/** 🔩️ Runs an external tool and returns stdout bytes. */
 export const toolBytes = (command: string, args: readonly string[]): Buffer => execFileSync(command, [...args], { maxBuffer: 1 << 28 });
 
 /** 🐍️ Runs a python oracle through uv with the given third-party packages, returns its stdout. */
@@ -47,7 +62,7 @@ export function python(script: string, packages: readonly string[], args: readon
 /** 🖼️ A decoded binary PPM (P6). */
 export type Ppm = { readonly width: number; readonly height: number; readonly data: Uint8Array };
 
-/** 🖼️ Parses `pdftoppm -ppm` output. */
+/** 🧾️ Parses `pdftoppm -ppm` output. */
 export function parsePpm(bytes: Uint8Array): Ppm {
   const header = Buffer.from(bytes.subarray(0, 64)).toString("latin1");
   const match = /^P6\s+(\d+)\s+(\d+)\s+255\s/u.exec(header);

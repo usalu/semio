@@ -1,0 +1,6 @@
+sleeping-person supine 50 thermal plan
+seated-office-worker typing 50 thermal plan
+standing-adult relaxed 50 thermal plan
+standing-adult relaxed 100 thermal front
+walking-commuter standing 100 thermal plan
+sleeping-person supine 100 thermal front

@@ -116,7 +116,7 @@ class FloorPlanSurfaceContract(unittest.TestCase):
         faces=[face for _,group in primitives._wall_solids(geometry,{}) for face in group]
         painted=[face for face in faces if isinstance(face[3],dict)]
         self.assertTrue(painted)
-        backend=api._surface_finishes()
+        backend=api.surface_finishes()
         self.assertAlmostEqual(sum(backend.face_area(face[1][0]) for face in painted),model.CASE['expected']['face_area'],places=12)
         self.assertTrue(all(backend.face_matches(face[1][0],next(p['surface_finish'] for p in geometry['parts'] if 'surface_finish' in p)) for face in painted))
         painter=axon._Painter(None,None,False)

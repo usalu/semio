@@ -25,10 +25,9 @@ describe("🌡️ catalog physics", () => {
     }
   });
 
-  it.each(ids)("keeps the body of %s at its species core temperature in the default pose", (id) => {
+  it.each(ids.filter((id) => catalogAsset(id).thermal.body))("keeps the body of %s at its species core temperature in the default pose", (id) => {
     const asset = catalogAsset(id);
-    const body = asset.thermal.body;
-    if (!body) return;
+    const body = asset.thermal.body!;
     const field = solveThermal(evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }));
     const [lo, hi] = CORE[body.species]!;
     expect(field.body!.coreTempC).toBeGreaterThan(lo);

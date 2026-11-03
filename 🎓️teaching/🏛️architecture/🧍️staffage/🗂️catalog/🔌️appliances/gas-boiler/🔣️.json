@@ -1,0 +1,3248 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "gas-boiler",
+    "category": "appliances",
+    "title": {
+      "en": "Wall-Hung Condensing Gas Boiler",
+      "de": "Wandhängender Gas-Brennwertkessel"
+    },
+    "summary": {
+      "en": "A wall-hung condensing gas boiler of 20 kW in front elevation: white casing with a burner sight glass, control panel with display and mode knob, concentric flue collar on top and five connections below; the casing releases 55 to 85 W, the flue gas carries about 430 W (2.1 % of the input) at 46 K above the room.",
+      "de": "Ein wandhängender Gas-Brennwertkessel von 20 kW in der Vorderansicht: weißes Gehäuse mit Brenner-Schauglas, Bedienfeld mit Display und Betriebsartenknopf, oben ein konzentrischer Abgasstutzen und unten fünf Anschlüsse; das Gehäuse gibt 55 bis 85 W ab, das Abgas führt etwa 430 W (2,1 % der Zufuhr) mit 46 K über der Raumtemperatur ab."
+    },
+    "tags": [
+      "gas-boiler",
+      "condensing-boiler",
+      "boiler",
+      "heating",
+      "hydronic",
+      "wall-hung",
+      "burner",
+      "flue",
+      "appliance",
+      "heating-plant"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A9)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-15502-1-2015",
+          "citation": "EN 15502-1:2012+A1:2015 Gas-fired heating boilers - Part 1: General requirements and tests (casing temperature, flue gas, modulation range of wall-hung condensing boilers)."
+        },
+        {
+          "id": "turns-2012",
+          "citation": "Turns, S. R. (2012). An Introduction to Combustion: Concepts and Applications, 3rd ed., McGraw-Hill (stoichiometric air, flue gas amount and water vapour of natural-gas combustion)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Front elevation of a wall-hung condensing boiler of the 20 kW class (product family of EN 15502-1): casing 0.44 m wide and 0.62 m high, 0.35 m deep, a concentric flue collar of 125 mm on top reaching a total height of 0.72 m, five connection stubs of 0.052 m below (flow, hot water out, gas, cold water in, return) and a mass of about 30 kg are rounded from this product class (authored estimate). The origin is the lowest point of the stubs at the casing centre; the boiler hangs by a wall bracket at the upper edge. The burner takes 20 kW at full output (hot water) and 14 kW when modulated for space heating; this fuel heat does not appear in the room but in the heating water and in the flue gas. Only the losses of the surfaces are released as heat in the room: casing 55 W, flue collar 10 W, connections 12 W, burner window 3 W, glass bezel 2 W and display 3 W, together about 85 W at full output (authored estimate, 0.4 % of the input). The flue gas of a condensing boiler at full output with hot-water return leaves at about 67 degrees C (46 K above the room): 0.0077 m3/s at 20 kW with a water vapour excess of 0.07 kg/kg after condensation, estimated from the natural-gas combustion with excess air 1.2 (Turns). Its sensible heat is about 430 W, 2.1 % of the 20 kW input, inside the 2 to 3 % stack loss of condensing boilers (the temperature rise and the flow both scale with the burner level, so the loss falls faster than the input when modulated). The flame behind the sight glass is drawn by hand: a small inner flame in the heating state and an additional outer flame at full output.",
+        "de": "Vorderansicht eines wandhängenden Brennwertkessels der 20-kW-Klasse (Produktfamilie nach EN 15502-1): Gehäuse 0,44 m breit und 0,62 m hoch, 0,35 m tief, oben ein konzentrischer Abgasstutzen von 125 mm bis zu einer Gesamthöhe von 0,72 m, unten fünf Anschlussstutzen von 0,052 m (Vorlauf, Warmwasser aus, Gas, Kaltwasser ein, Rücklauf) und eine Masse von etwa 30 kg sind aus dieser Produktklasse gerundet (Schätzwert). Der Ursprung ist der tiefste Punkt der Stutzen in der Gehäusemitte; der Kessel hängt an einer Wandhalterung am oberen Rand. Der Brenner nimmt 20 kW bei voller Leistung (Warmwasser) und 14 kW im modulierten Heizbetrieb auf; diese Brennstoffwärme erscheint nicht im Raum, sondern im Heizwasser und im Abgas. Nur die Verluste der Oberflächen werden als Wärme im Raum frei: Gehäuse 55 W, Abgasstutzen 10 W, Anschlüsse 12 W, Brennerfenster 3 W, Glasblende 2 W und Display 3 W, zusammen etwa 85 W bei voller Leistung (Schätzwert, 0,4 % der Zufuhr). Das Abgas eines Brennwertkessels bei voller Leistung mit Warmwasser-Rücklauf tritt mit etwa 67 Grad C (46 K über dem Raum) aus: 0,0077 m3/s bei 20 kW mit einem Wasserdampf-Überschuss von 0,07 kg/kg nach der Kondensation, geschätzt aus der Erdgasverbrennung mit Luftüberschuss 1,2 (Turns). Seine fühlbare Wärme beträgt etwa 430 W, 2,1 % der Zufuhr von 20 kW, innerhalb der Abgasverluste von 2 bis 3 % bei Brennwertkesseln (Temperaturerhöhung und Volumenstrom skalieren beide mit der Brennerstufe, daher fällt der Verlust bei Modulation schneller als die Zufuhr). Die Flamme hinter dem Schauglas ist von Hand gezeichnet: eine kleine innere Flamme im Heizbetrieb und zusätzlich eine äußere Flamme bei voller Leistung."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.72,
+      "widthM": 0.44,
+      "depthM": 0.35,
+      "massKg": 29.75
+    },
+    "materials": [
+      {
+        "id": "painted-steel",
+        "title": {
+          "en": "White painted steel sheet",
+          "de": "Weiß lackiertes Stahlblech"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 460,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "polycarbonate",
+        "title": {
+          "en": "Polycarbonate panel",
+          "de": "Polycarbonatfeld"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "sight-glass",
+        "title": {
+          "en": "Borosilicate sight glass",
+          "de": "Borosilikat-Schauglas"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 2230,
+        "conductivityWmK": 1.1,
+        "specificHeatJKgK": 830,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "burner-mesh",
+        "title": {
+          "en": "Stainless steel burner mesh",
+          "de": "Edelstahl-Brennergewebe"
+        },
+        "emissivity": 0.5,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7900,
+        "conductivityWmK": 15,
+        "specificHeatJKgK": 500,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "flue-pipe",
+        "title": {
+          "en": "Polypropylene flue pipe",
+          "de": "Abgasrohr aus Polypropylen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 900,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "brass",
+        "title": {
+          "en": "Brass connection stub",
+          "de": "Anschlussstutzen aus Messing"
+        },
+        "emissivity": 0.5,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 8500,
+        "conductivityWmK": 120,
+        "specificHeatJKgK": 380,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "casing",
+      "bones": [
+        {
+          "id": "casing",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Casing with heat exchanger, burner and hydraulics",
+            "de": "Gehäuse mit Wärmeübertrager, Brenner und Hydraulik"
+          },
+          "lengthM": 0.67,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 27.5,
+            "comX": 0,
+            "comY": 0.4,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "connections",
+          "parent": "casing",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Connection stubs below",
+            "de": "Anschlussstutzen unten"
+          },
+          "lengthM": 0.052,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "collar",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.67,
+          "angleDeg": 0,
+          "title": {
+            "en": "Concentric flue collar",
+            "de": "Konzentrischer Abgasstutzen"
+          },
+          "lengthM": 0.05,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.9,
+            "comX": 0,
+            "comY": 0.025,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "mode-knob",
+          "parent": "casing",
+          "x": 0.04,
+          "y": 0.14,
+          "angleDeg": 0,
+          "title": {
+            "en": "Mode knob",
+            "de": "Betriebsartenknopf"
+          },
+          "lengthM": 0.026,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -135,
+            "maxDeg": 135
+          },
+          "mass": {
+            "kg": 0.05,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "flame-tall",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.441,
+          "angleDeg": 0,
+          "title": {
+            "en": "Outer flame at high output",
+            "de": "Äußere Flamme bei hoher Leistung"
+          },
+          "lengthM": 0.03,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.12,
+            "maxM": 0
+          }
+        },
+        {
+          "id": "flame",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.441,
+          "angleDeg": 0,
+          "title": {
+            "en": "Inner flame",
+            "de": "Innere Flamme"
+          },
+          "lengthM": 0.016,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.12,
+            "maxM": 0
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-bracket",
+        "bone": "casing",
+        "x": 0,
+        "y": 0.64,
+        "kind": "support",
+        "title": {
+          "en": "Wall bracket at the upper edge",
+          "de": "Wandhalter am oberen Rand"
+        },
+        "support": "pin",
+        "normalDeg": 90,
+        "footprintLengthM": 0.2,
+        "footprintWidthM": 0.02
+      },
+      {
+        "id": "flue-outlet",
+        "bone": "collar",
+        "x": 0,
+        "y": 0.05,
+        "kind": "emitter",
+        "title": {
+          "en": "Flue gas outlet on top of the collar",
+          "de": "Abgasaustritt oben am Stutzen"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M 0.22 0.656 L 0.21952 0.65962 L 0.21812 0.663 L 0.2159 0.6659 L 0.213 0.66812 L 0.20962 0.66952 L 0.206 0.67 L -0.206 0.67 L -0.20962 0.66952 L -0.213 0.66812 L -0.2159 0.6659 L -0.21812 0.663 L -0.21952 0.65962 L -0.22 0.656 L -0.22 0.064 L -0.21952 0.06038 L -0.21812 0.057 L -0.2159 0.0541 L -0.213 0.05188 L -0.20962 0.05048 L -0.206 0.05 L 0.206 0.05 L 0.20962 0.05048 L 0.213 0.05188 L 0.2159 0.0541 L 0.21812 0.057 L 0.21952 0.06038 L 0.22 0.064 Z M 0.0365 0.46 L 0.0358 0.46712 L 0.03372 0.47397 L 0.03035 0.48028 L 0.02581 0.48581 L 0.02028 0.49035 L 0.01397 0.49372 L 0.00712 0.4958 L 0 0.4965 L -0.00712 0.4958 L -0.01397 0.49372 L -0.02028 0.49035 L -0.02581 0.48581 L -0.03035 0.48028 L -0.03372 0.47397 L -0.0358 0.46712 L -0.0365 0.46 L -0.0358 0.45288 L -0.03372 0.44603 L -0.03035 0.43972 L -0.02581 0.43419 L -0.02028 0.42965 L -0.01397 0.42628 L -0.00712 0.4242 L 0 0.4235 L 0.00712 0.4242 L 0.01397 0.42628 L 0.02028 0.42965 L 0.02581 0.43419 L 0.03035 0.43972 L 0.03372 0.44603 L 0.0358 0.45288 Z",
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "slit-0",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.05,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.09,
+                  0.628
+                ],
+                [
+                  -0.09,
+                  0.652
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slit-1",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.05,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.628
+                ],
+                [
+                  -0.03,
+                  0.652
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slit-2",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.05,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.628
+                ],
+                [
+                  0.03,
+                  0.652
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slit-3",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.05,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.09,
+                  0.628
+                ],
+                [
+                  0.09,
+                  0.652
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "door",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.06,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.205,
+                  0.643
+                ],
+                [
+                  0.20459,
+                  0.64611
+                ],
+                [
+                  0.20339,
+                  0.649
+                ],
+                [
+                  0.20149,
+                  0.65149
+                ],
+                [
+                  0.199,
+                  0.65339
+                ],
+                [
+                  0.19611,
+                  0.65459
+                ],
+                [
+                  0.193,
+                  0.655
+                ],
+                [
+                  -0.193,
+                  0.655
+                ],
+                [
+                  -0.19611,
+                  0.65459
+                ],
+                [
+                  -0.199,
+                  0.65339
+                ],
+                [
+                  -0.20149,
+                  0.65149
+                ],
+                [
+                  -0.20339,
+                  0.649
+                ],
+                [
+                  -0.20459,
+                  0.64611
+                ],
+                [
+                  -0.205,
+                  0.643
+                ],
+                [
+                  -0.205,
+                  0.237
+                ],
+                [
+                  -0.20459,
+                  0.23389
+                ],
+                [
+                  -0.20339,
+                  0.231
+                ],
+                [
+                  -0.20149,
+                  0.22851
+                ],
+                [
+                  -0.199,
+                  0.22661
+                ],
+                [
+                  -0.19611,
+                  0.22541
+                ],
+                [
+                  -0.193,
+                  0.225
+                ],
+                [
+                  0.193,
+                  0.225
+                ],
+                [
+                  0.19611,
+                  0.22541
+                ],
+                [
+                  0.199,
+                  0.22661
+                ],
+                [
+                  0.20149,
+                  0.22851
+                ],
+                [
+                  0.20339,
+                  0.231
+                ],
+                [
+                  0.20459,
+                  0.23389
+                ],
+                [
+                  0.205,
+                  0.237
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "logo-1",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.07,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.06,
+                  0.59
+                ],
+                [
+                  0.06,
+                  0.59
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "logo-2",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.07,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.04,
+                  0.575
+                ],
+                [
+                  0.04,
+                  0.575
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "led",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.07,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "ellipse",
+              "cx": 0.17,
+              "cy": 0.245,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "bezel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M 0.0445 0.46 L 0.04364 0.46868 L 0.04111 0.47703 L 0.037 0.48472 L 0.03147 0.49147 L 0.02472 0.497 L 0.01703 0.50111 L 0.00868 0.50364 L 0 0.5045 L -0.00868 0.50364 L -0.01703 0.50111 L -0.02472 0.497 L -0.03147 0.49147 L -0.037 0.48472 L -0.04111 0.47703 L -0.04364 0.46868 L -0.0445 0.46 L -0.04364 0.45132 L -0.04111 0.44297 L -0.037 0.43528 L -0.03147 0.42853 L -0.02472 0.423 L -0.01703 0.41889 L -0.00868 0.41636 L 0 0.4155 L 0.00868 0.41636 L 0.01703 0.41889 L 0.02472 0.423 L 0.03147 0.42853 L 0.037 0.43528 L 0.04111 0.44297 L 0.04364 0.45132 Z M 0.0365 0.46 L 0.0358 0.46712 L 0.03372 0.47397 L 0.03035 0.48028 L 0.02581 0.48581 L 0.02028 0.49035 L 0.01397 0.49372 L 0.00712 0.4958 L 0 0.4965 L -0.00712 0.4958 L -0.01397 0.49372 L -0.02028 0.49035 L -0.02581 0.48581 L -0.03035 0.48028 L -0.03372 0.47397 L -0.0358 0.46712 L -0.0365 0.46 L -0.0358 0.45288 L -0.03372 0.44603 L -0.03035 0.43972 L -0.02581 0.43419 L -0.02028 0.42965 L -0.01397 0.42628 L -0.00712 0.4242 L 0 0.4235 L 0.00712 0.4242 L 0.01397 0.42628 L 0.02028 0.42965 L 0.02581 0.43419 L 0.03035 0.43972 L 0.03372 0.44603 L 0.0358 0.45288 Z",
+              "region": "sight-glass",
+              "material": "sight-glass"
+            },
+            {
+              "id": "chamber",
+              "bone": "casing",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.46,
+              "rx": 0.0372,
+              "ry": 0.0372
+            },
+            {
+              "id": "burner-tube",
+              "bone": "casing",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.026,
+              "y": 0.43,
+              "w": 0.052,
+              "h": 0.011,
+              "region": "burner",
+              "material": "burner-mesh"
+            },
+            {
+              "id": "flame-tall",
+              "bone": "flame-tall",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.024,
+                  0
+                ],
+                [
+                  -0.022,
+                  0.011
+                ],
+                [
+                  -0.015,
+                  0.022
+                ],
+                [
+                  -0.009,
+                  0.011
+                ],
+                [
+                  0,
+                  0.032
+                ],
+                [
+                  0.009,
+                  0.011
+                ],
+                [
+                  0.015,
+                  0.022
+                ],
+                [
+                  0.022,
+                  0.011
+                ],
+                [
+                  0.024,
+                  0
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "burner-mesh"
+            },
+            {
+              "id": "flame",
+              "bone": "flame",
+              "role": "detail",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.018,
+                  0
+                ],
+                [
+                  -0.018,
+                  0.006
+                ],
+                [
+                  -0.012,
+                  0.014
+                ],
+                [
+                  -0.007,
+                  0.008
+                ],
+                [
+                  0,
+                  0.017
+                ],
+                [
+                  0.007,
+                  0.008
+                ],
+                [
+                  0.012,
+                  0.014
+                ],
+                [
+                  0.018,
+                  0.006
+                ],
+                [
+                  0.018,
+                  0
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "burner-mesh"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.205,
+              "y": 0.065,
+              "w": 0.41,
+              "h": 0.145,
+              "r": 0.008,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "display",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "rect",
+              "x": -0.17,
+              "y": 0.125,
+              "w": 0.11,
+              "h": 0.06,
+              "r": 0.004,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "text-1",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.25,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.155,
+                  0.168
+                ],
+                [
+                  -0.08,
+                  0.168
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "text-2",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.25,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.155,
+                  0.145
+                ],
+                [
+                  -0.11,
+                  0.145
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tick-off",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.00652,
+                  0.1341
+                ],
+                [
+                  -0.00136,
+                  0.13271
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tick-heat",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.174
+                ],
+                [
+                  0.04,
+                  0.182
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tick-water",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.074,
+                  0.14
+                ],
+                [
+                  0.082,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "knob",
+              "bone": "mode-knob",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.026,
+              "ry": 0.026,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "pointer",
+              "bone": "mode-knob",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.022
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "set-knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "ellipse",
+              "cx": 0.12,
+              "cy": 0.14,
+              "rx": 0.018,
+              "ry": 0.018,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "set-notch",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.12,
+                  0.14
+                ],
+                [
+                  0.12,
+                  0.154
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "gauge",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "ellipse",
+              "cx": 0.173,
+              "cy": 0.14,
+              "rx": 0.016,
+              "ry": 0.016,
+              "material": "sight-glass"
+            },
+            {
+              "id": "gauge-needle",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.173,
+                  0.14
+                ],
+                [
+                  0.181,
+                  0.149
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "collar-base",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.0625,
+              "y": 0,
+              "w": 0.125,
+              "h": 0.03,
+              "r": 0.004,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "collar-pipe",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.03,
+              "w": 0.08,
+              "h": 0.02,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "stub-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.171,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9499999999999997,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.177,
+              "y": 0.018,
+              "w": 0.034,
+              "h": 0.02,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-1",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.091,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-1",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9499999999999997,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.097,
+              "y": 0.018,
+              "w": 0.034,
+              "h": 0.02,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-2",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.011,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-2",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9499999999999997,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.017,
+              "y": 0.018,
+              "w": 0.034,
+              "h": 0.02,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.069,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9499999999999997,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.063,
+              "y": 0.018,
+              "w": 0.034,
+              "h": 0.02,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.149,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9499999999999997,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.143,
+              "y": 0.018,
+              "w": 0.034,
+              "h": 0.02,
+              "region": "connections",
+              "material": "brass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.22,
+              "y": -0.155,
+              "w": 0.44,
+              "h": 0.33,
+              "r": 0.02,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "top-edge",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.05,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.205,
+                  -0.14
+                ],
+                [
+                  0.205,
+                  -0.14
+                ],
+                [
+                  0.205,
+                  0.16
+                ],
+                [
+                  -0.205,
+                  0.16
+                ],
+                [
+                  -0.205,
+                  -0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.205,
+              "y": -0.165,
+              "w": 0.41,
+              "h": 0.01,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "bezel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.0445,
+              "y": -0.162,
+              "w": 0.089,
+              "h": 0.007,
+              "region": "sight-glass",
+              "material": "sight-glass"
+            },
+            {
+              "id": "knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "rect",
+              "x": 0.014,
+              "y": -0.175,
+              "w": 0.052,
+              "h": 0.01,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "set-knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "rect",
+              "x": 0.102,
+              "y": -0.17,
+              "w": 0.036,
+              "h": 0.005,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar-base",
+              "bone": "collar",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.04,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "collar-pipe",
+              "bone": "collar",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.04,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "flue-bore",
+              "bone": "collar",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.04,
+              "rx": 0.032,
+              "ry": 0.032
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.155,
+              "y": 0.05,
+              "w": 0.33,
+              "h": 0.62,
+              "r": 0.014,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "bezel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.162,
+              "y": 0.4155,
+              "w": 0.007,
+              "h": 0.089,
+              "region": "sight-glass",
+              "material": "sight-glass"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.165,
+              "y": 0.065,
+              "w": 0.01,
+              "h": 0.145,
+              "r": 0.004,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "rect",
+              "x": -0.175,
+              "y": 0.114,
+              "w": 0.01,
+              "h": 0.052,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "set-knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "rect",
+              "x": -0.17,
+              "y": 0.122,
+              "w": 0.005,
+              "h": 0.036,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "door",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.06,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.155,
+                  0.225
+                ],
+                [
+                  -0.155,
+                  0.643
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "collar-base",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.0225,
+              "y": 0.67,
+              "w": 0.125,
+              "h": 0.03,
+              "r": 0.004,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "collar-pipe",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.7,
+              "w": 0.08,
+              "h": 0.02,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "stub",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.059,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.95,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.053,
+              "y": 0.018,
+              "w": 0.034,
+              "h": 0.02,
+              "region": "connections",
+              "material": "brass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.44 m by 0.72 m front elevation, 8.8 mm by 14.4 mm on paper: a white rounded casing with a round burner sight glass in its upper half, a dark control panel with display and three dials in its lower part, a concentric flue collar on top and five connection stubs below. Front, side-on, 7 mm by 14.4 mm on paper: the casing in profile with the dark control panel, the knobs and the sight-glass bezel standing out of the face, the concentric flue collar on top and one connection stub with its nut below; the five stubs hide behind each other. Plan, 8.8 mm by 7 mm: the rounded casing top with its edge line, the control strip and the knobs on the front edge and the flue collar with its bore.",
+            "de": "Eine Vorderansicht von 0,44 m mal 0,72 m, auf Papier 8,8 mm mal 14,4 mm: ein weißes Gehäuse mit gerundeten Ecken und rundem Brennerschauglas in der oberen Hälfte, ein dunkles Bedienfeld mit Display und drei Rundinstrumenten im unteren Teil, oben ein konzentrischer Abgasstutzen und unten fünf Anschlussstutzen. Vorderansicht, von der Seite, 7 mm auf 14,4 mm: das Gehäuse im Profil mit dem dunklen Bedienfeld, den Knöpfen und dem Schauglasrahmen, die aus der Front treten, oben der konzentrische Abgaskragen und unten ein Anschlussstutzen mit Mutter; die fünf Stutzen verdecken sich gegenseitig. Grundriss, 8,8 mm auf 7 mm: die gerundete Gehäuseoberseite mit Kantenlinie, an der Vorderkante der Bedienstreifen und die Knöpfe, dazu der Abgaskragen mit Öffnung."
+          },
+          "retained": {
+            "en": "Casing with four vent slits, the door line, a logo bar and a status LED, sight glass with bezel and the burner behind it (tube, inner and outer flame), control panel with display, two text lines, mode knob with three marked positions, set-point knob and pressure gauge with needle, flue collar with pipe, and five stubs with union nuts.",
+            "de": "Gehäuse mit vier Lüftungsschlitzen, Türlinie, Logobalken und Statusleuchte, Schauglas mit Blende und dem Brenner dahinter (Rohr, innere und äußere Flamme), Bedienfeld mit Display, zwei Textzeilen, Betriebsartenknopf mit drei markierten Stellungen, Sollwertknopf und Manometer mit Zeiger, Abgasstutzen mit Rohr und fünf Stutzen mit Überwurfmuttern."
+          },
+          "merged": {
+            "en": "The wall bracket, the door seam and the casing fixings are part of the casing shape; stubs and nuts form one silhouette per connection.",
+            "de": "Wandhalter, Türfuge und Gehäusebefestigungen gehören zur Gehäuseform; Stutzen und Muttern bilden je Anschluss eine Silhouette."
+          },
+          "omitted": {
+            "en": "The heat exchanger, fan, pump and gas valve behind the casing, the labels and the condensate trap. Burner, flames, display and gauge lie behind the casing and are not seen from the side or from above.",
+            "de": "Wärmeübertrager, Gebläse, Pumpe und Gasarmatur hinter dem Gehäuse, die Beschriftungen und der Kondensatsiphon. Brenner, Flammen, Display und Manometer liegen hinter dem Gehäuse und sind von der Seite und von oben nicht zu sehen."
+          },
+          "thinElements": {
+            "en": "The slits, text lines, ticks, pointer, notch and needle are 0.13 mm detail strokes; the stubs are 22 mm wide (0.44 mm on paper).",
+            "de": "Schlitze, Textzeilen, Marken, Zeiger, Kerbe und Nadel sind 0,13-mm-Detailstriche; die Stutzen sind 22 mm breit (0,44 mm auf Papier)."
+          },
+          "hatching": {
+            "en": "None; the burner chamber is a dark tone behind the window cut-out in the casing.",
+            "de": "Keine; die Brennkammer ist ein dunkler Ton hinter dem Fensterausschnitt im Gehäuse."
+          },
+          "styles": {
+            "en": "Casing 0.88, panel 0.35, display 0.95, knobs 0.72, bezel 0.55, chamber 0.1, burner tube 0.45, outer flame 0.75, inner flame 0.95, collar 0.55 to 0.7, stubs 0.7 with nuts 0.45; body pen 0.18 mm, detail 0.13 mm, glazing 0.1 mm.",
+            "de": "Gehäuse 0,88, Bedienfeld 0,35, Display 0,95, Knöpfe 0,72, Blende 0,55, Kammer 0,1, Brennerrohr 0,45, äußere Flamme 0,75, innere Flamme 0,95, Stutzen 0,55 bis 0,7, Stutzen 0,7 mit Muttern 0,45; Körperstift 0,18 mm, Detail 0,13 mm, Verglasung 0,1 mm."
+          },
+          "overlays": {
+            "en": "Casing, controls, sight glass, burner, flue collar and connections are separate regions: in the thermal view the casing is slightly warm, the flue collar and stubs warmer, and the flame behind the glass the hottest; at standby and off nothing glows.",
+            "de": "Gehäuse, Regelung, Schauglas, Brenner, Abgasstutzen und Anschlüsse sind getrennte Regionen: in der Thermalansicht ist das Gehäuse leicht warm, Abgasstutzen und Anschlüsse wärmer und die Flamme hinter dem Glas am heißesten; im Aus-Zustand glüht nichts."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M 0.22 0.656 L 0.21952 0.65962 L 0.21812 0.663 L 0.2159 0.6659 L 0.213 0.66812 L 0.20962 0.66952 L 0.206 0.67 L -0.206 0.67 L -0.20962 0.66952 L -0.213 0.66812 L -0.2159 0.6659 L -0.21812 0.663 L -0.21952 0.65962 L -0.22 0.656 L -0.22 0.064 L -0.21952 0.06038 L -0.21812 0.057 L -0.2159 0.0541 L -0.213 0.05188 L -0.20962 0.05048 L -0.206 0.05 L 0.206 0.05 L 0.20962 0.05048 L 0.213 0.05188 L 0.2159 0.0541 L 0.21812 0.057 L 0.21952 0.06038 L 0.22 0.064 Z M 0.039 0.46 L 0.03825 0.46761 L 0.03603 0.47492 L 0.03243 0.48167 L 0.02758 0.48758 L 0.02167 0.49243 L 0.01492 0.49603 L 0.00761 0.49825 L 0 0.499 L -0.00761 0.49825 L -0.01492 0.49603 L -0.02167 0.49243 L -0.02758 0.48758 L -0.03243 0.48167 L -0.03603 0.47492 L -0.03825 0.46761 L -0.039 0.46 L -0.03825 0.45239 L -0.03603 0.44508 L -0.03243 0.43833 L -0.02758 0.43242 L -0.02167 0.42757 L -0.01492 0.42397 L -0.00761 0.42175 L 0 0.421 L 0.00761 0.42175 L 0.01492 0.42397 L 0.02167 0.42757 L 0.02758 0.43242 L 0.03243 0.43833 L 0.03603 0.44508 L 0.03825 0.45239 Z",
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "chamber",
+              "bone": "casing",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.46,
+              "rx": 0.04,
+              "ry": 0.04
+            },
+            {
+              "id": "flame-tall",
+              "bone": "flame-tall",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0264,
+                  0.0015
+                ],
+                [
+                  -0.0242,
+                  0.01415
+                ],
+                [
+                  -0.0165,
+                  0.0268
+                ],
+                [
+                  -0.0099,
+                  0.01415
+                ],
+                [
+                  0,
+                  0.0383
+                ],
+                [
+                  0.0099,
+                  0.01415
+                ],
+                [
+                  0.0165,
+                  0.0268
+                ],
+                [
+                  0.0242,
+                  0.01415
+                ],
+                [
+                  0.0264,
+                  0.0015
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "burner",
+                "sight-glass"
+              ],
+              "material": "burner-mesh"
+            },
+            {
+              "id": "flame",
+              "bone": "flame",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.018,
+                  0
+                ],
+                [
+                  -0.018,
+                  0.006
+                ],
+                [
+                  -0.012,
+                  0.014
+                ],
+                [
+                  -0.007,
+                  0.008
+                ],
+                [
+                  0,
+                  0.017
+                ],
+                [
+                  0.007,
+                  0.008
+                ],
+                [
+                  0.012,
+                  0.014
+                ],
+                [
+                  0.018,
+                  0.006
+                ],
+                [
+                  0.018,
+                  0
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "burner",
+                "sight-glass"
+              ],
+              "material": "burner-mesh"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.205,
+              "y": 0.065,
+              "w": 0.41,
+              "h": 0.145,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "knob",
+              "bone": "mode-knob",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.028,
+              "ry": 0.028,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar-base",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.0625,
+              "y": 0,
+              "w": 0.125,
+              "h": 0.03,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "collar-pipe",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.03,
+              "w": 0.08,
+              "h": 0.02,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "stub-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.173,
+              "y": 0,
+              "w": 0.026,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-1",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.093,
+              "y": 0,
+              "w": 0.026,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-2",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.013,
+              "y": 0,
+              "w": 0.026,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.067,
+              "y": 0,
+              "w": 0.026,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.147,
+              "y": 0,
+              "w": 0.026,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.22,
+              "y": -0.155,
+              "w": 0.44,
+              "h": 0.33,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.205,
+              "y": -0.165,
+              "w": 0.41,
+              "h": 0.01,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "rect",
+              "x": 0.012,
+              "y": -0.175,
+              "w": 0.056,
+              "h": 0.01,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar-base",
+              "bone": "collar",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.04,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "collar-pipe",
+              "bone": "collar",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.04,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.155,
+              "y": 0.05,
+              "w": 0.33,
+              "h": 0.62,
+              "r": 0.014,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.165,
+              "y": 0.065,
+              "w": 0.01,
+              "h": 0.145,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "knob",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "rect",
+              "x": -0.175,
+              "y": 0.112,
+              "w": 0.01,
+              "h": 0.056,
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar-base",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.0225,
+              "y": 0.67,
+              "w": 0.125,
+              "h": 0.03,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "collar-pipe",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.7,
+              "w": 0.08,
+              "h": 0.02,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "stub",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.057,
+              "y": 0,
+              "w": 0.026,
+              "h": 0.052,
+              "region": "connections",
+              "material": "brass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 4.4 mm by 7.2 mm front elevation: a rounded white box with a round window, a dark band across its lower part, a double-stepped collar on top and five short stubs below. Front, 3.5 mm by 7.2 mm: casing, panel strip, knob, collar in two steps and one stub. Plan, 4.4 mm by 3.5 mm: casing, panel strip, knob and the collar rings.",
+            "de": "Eine Vorderansicht von 4,4 mm mal 7,2 mm: ein weißer Kasten mit gerundeten Ecken und rundem Fenster, ein dunkles Band quer im unteren Teil, oben ein zweifach abgesetzter Stutzen und unten fünf kurze Stutzen. Vorderansicht, 3,5 mm auf 7,2 mm: Gehäuse, Bedienstreifen, Knopf, Kragen in zwei Stufen und ein Stutzen. Grundriss, 4,4 mm auf 3,5 mm: Gehäuse, Bedienstreifen, Knopf und die Kragenringe."
+          },
+          "retained": {
+            "en": "The casing with the burner window and its two flames, the dark control band with the mode knob, the flue collar with its pipe and the five stubs.",
+            "de": "Das Gehäuse mit dem Brennerfenster und seinen zwei Flammen, das dunkle Bedienband mit dem Betriebsartenknopf, der Abgasstutzen mit seinem Rohr und die fünf Stutzen."
+          },
+          "merged": {
+            "en": "Bezel, burner tube and flames merge into the flames (regions burner and sight glass); the panel carries the display (region controls) without a separate display shape.",
+            "de": "Blende, Brennerrohr und Flammen gehen in den Flammen auf (Regionen Brenner und Schauglas); das Bedienfeld trägt das Display (Region Regelung) ohne eigene Displayform."
+          },
+          "omitted": {
+            "en": "Vent slits, text lines, ticks, pointer, set-point knob, gauge, needle and the union nuts. Sight-glass bezel, set knob, nut, door line, edge line and flue bore.",
+            "de": "Lüftungsschlitze, Textzeilen, Marken, Zeiger, Sollwertknopf, Manometer, Nadel und die Überwurfmuttern. Schauglasrahmen, Einstellknopf, Mutter, Türlinie, Kantenlinie und Abgasöffnung."
+          },
+          "thinElements": {
+            "en": "The stubs are thickened from 22 to 26 mm (0.26 mm on paper).",
+            "de": "Die Stutzen sind von 22 auf 26 mm (0,26 mm auf Papier) verdickt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Casing 0.88, chamber 0.1, flames 0.75 and 0.95, panel 0.35, knob 0.72, collar 0.55 to 0.7, stubs 0.7; one body pen of 0.18 mm.",
+            "de": "Gehäuse 0,88, Kammer 0,1, Flammen 0,75 und 0,95, Bedienfeld 0,35, Knopf 0,72, Stutzen 0,55 bis 0,7, Stutzen 0,7; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The flames list burner and sight glass as merged regions, so the flame heat still shows; the panel lists the controls.",
+            "de": "Die Flammen führen Brenner und Schauglas als zusammengeführte Regionen, sodass die Flammenwärme sichtbar bleibt; das Bedienfeld führt die Regelung."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.05,
+              "w": 0.44,
+              "h": 0.62,
+              "r": 0.014,
+              "regions": [
+                "casing",
+                "sight-glass",
+                "burner"
+              ],
+              "material": "painted-steel"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.065,
+              "w": 0.4,
+              "h": 0.145,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.0625,
+              "y": 0,
+              "w": 0.125,
+              "h": 0.05,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "stubs",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.17,
+              "y": 0,
+              "w": 0.34,
+              "h": 0.05,
+              "region": "connections",
+              "material": "brass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.22,
+              "y": -0.15,
+              "w": 0.44,
+              "h": 0.325,
+              "r": 0.014,
+              "regions": [
+                "casing",
+                "sight-glass",
+                "burner"
+              ],
+              "material": "painted-steel"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.165,
+              "w": 0.4,
+              "h": 0.015,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar",
+              "bone": "collar",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.04,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.05,
+              "w": 0.325,
+              "h": 0.62,
+              "r": 0.014,
+              "regions": [
+                "casing",
+                "sight-glass",
+                "burner"
+              ],
+              "material": "painted-steel"
+            },
+            {
+              "id": "panel",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.165,
+              "y": 0.065,
+              "w": 0.015,
+              "h": 0.145,
+              "region": "controls",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "collar",
+              "bone": "collar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.0225,
+              "y": 0.67,
+              "w": 0.125,
+              "h": 0.05,
+              "region": "flue-collar",
+              "material": "flue-pipe"
+            },
+            {
+              "id": "stubs",
+              "bone": "connections",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.05,
+              "region": "connections",
+              "material": "brass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.2 mm by 3.6 mm mark: a white block with a dark band across its lower third, a short collar on top and a bar below. Front, 1.75 mm by 3.6 mm: one casing block, the control strip, a collar and a stub bar. Plan, 2.2 mm by 1.75 mm: the casing, the control strip and one collar disc.",
+            "de": "Ein Zeichen von 2,2 mm mal 3,6 mm: ein weißer Block mit einem dunklen Band im unteren Drittel, oben ein kurzer Stutzen und unten ein Balken. Vorderansicht, 1,75 mm auf 3,6 mm: ein Gehäuseblock, der Bedienstreifen, ein Kragen und ein Stutzenbalken. Grundriss, 2,2 mm auf 1,75 mm: das Gehäuse, der Bedienstreifen und eine Kragenscheibe."
+          },
+          "retained": {
+            "en": "The 0.44 m by 0.62 m casing, the 0.4 m control band, the 0.125 m flue collar and the connection row of 0.34 m.",
+            "de": "Das Gehäuse von 0,44 m mal 0,62 m, das 0,4 m breite Bedienband, der 0,125 m breite Abgasstutzen und die Anschlussreihe von 0,34 m."
+          },
+          "merged": {
+            "en": "Casing, sight glass and burner share one block (three regions merged); the five stubs form one bar.",
+            "de": "Gehäuse, Schauglas und Brenner teilen einen Block (drei Regionen zusammengeführt); die fünf Stutzen bilden einen Balken."
+          },
+          "omitted": {
+            "en": "Window, flames, knobs, display, slits, nuts and the collar pipe. Knobs and collar steps.",
+            "de": "Fenster, Flammen, Knöpfe, Display, Schlitze, Muttern und das Stutzenrohr. Knöpfe und Kragenstufen."
+          },
+          "thinElements": {
+            "en": "The stub row is 50 mm high (0.25 mm on paper) and replaces five stubs of 22 mm.",
+            "de": "Die Anschlussreihe ist 50 mm hoch (0,25 mm auf Papier) und ersetzt fünf Stutzen von 22 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Casing 0.88, band 0.35, collar and bar 0.6; one body pen of 0.13 mm.",
+            "de": "Gehäuse 0,88, Band 0,35, Stutzen und Balken 0,6; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "The block lists casing, sight glass and burner as merged regions; band, collar and bar stay separate.",
+            "de": "Der Block führt Gehäuse, Schauglas und Brenner als zusammengeführte Regionen; Band, Stutzen und Balken bleiben getrennt."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the boiler is 0.88 mm by 1.44 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the control knobs of 10 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist der Kessel 0,88 mm mal 1,44 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, die Reglerknöpfe von 10 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Control knobs of 10 mm",
+          "de": "Reglerknöpfe von 10 mm"
+        },
+        "limitingSizeM": 0.01,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The boiler is switched off: no flame, the display is dark and the casing is at room temperature.",
+          "de": "Der Kessel ist ausgeschaltet: keine Flamme, das Display ist dunkel und das Gehäuse hat Raumtemperatur."
+        },
+        "bones": {
+          "mode-knob": {
+            "angleDeg": 100
+          },
+          "flame": {
+            "dy": -0.12
+          },
+          "flame-tall": {
+            "dy": -0.12
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-bracket"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "controls": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sight-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "burner": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "flue-collar": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "connections": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "flue-gas": 0
+          },
+          "operating": {
+            "burner": 0,
+            "controls": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "Space heating",
+          "de": "Heizbetrieb"
+        },
+        "description": {
+          "en": "The mode knob stands on heating and the burner is modulated to 14 kW: a small flame burns behind the sight glass, the casing releases 39 W and the flue gas leaves at the top.",
+          "de": "Der Betriebsartenknopf steht auf Heizen und der Brenner ist auf 14 kW moduliert: hinter dem Schauglas brennt eine kleine Flamme, das Gehäuse gibt 39 W ab und das Abgas tritt oben aus."
+        },
+        "bones": {
+          "mode-knob": {
+            "angleDeg": 0
+          },
+          "flame": {
+            "dy": 0
+          },
+          "flame-tall": {
+            "dy": -0.12
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-bracket"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "controls": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sight-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "burner": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "flue-collar": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "connections": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "flue-gas": 1
+          },
+          "operating": {
+            "burner": 0.7,
+            "controls": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "hot-water",
+        "title": {
+          "en": "Hot water",
+          "de": "Warmwasserbereitung"
+        },
+        "description": {
+          "en": "The mode knob stands on hot water and the burner runs at its full 20 kW: a tall flame burns behind the sight glass, the casing releases 55 W and the warm flue gas rises at the top.",
+          "de": "Der Betriebsartenknopf steht auf Warmwasser und der Brenner läuft mit seinen vollen 20 kW: hinter dem Schauglas brennt eine große Flamme, das Gehäuse gibt 55 W ab und das warme Abgas steigt oben auf."
+        },
+        "bones": {
+          "mode-knob": {
+            "angleDeg": -90
+          },
+          "flame": {
+            "dy": 0
+          },
+          "flame-tall": {
+            "dy": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-bracket"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "controls": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sight-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "burner": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "flue-collar": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "connections": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "flue-gas": 1
+          },
+          "operating": {
+            "burner": 1,
+            "controls": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "heating-cycle",
+        "title": {
+          "en": "Burner start and heating cycle",
+          "de": "Brennerstart und Heizzyklus"
+        },
+        "description": {
+          "en": "The boiler is switched to heating after five seconds: the burner lights at 14 kW, the casing warms and the flue gas leaves; after ten minutes the burner switches off and the boiler cools down.",
+          "de": "Der Kessel wird nach fünf Sekunden auf Heizen geschaltet: der Brenner zündet mit 14 kW, das Gehäuse erwärmt sich und das Abgas tritt aus; nach zehn Minuten schaltet der Brenner ab und der Kessel kühlt aus."
+        },
+        "durationS": 900,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "heating",
+            "ease": "step"
+          },
+          {
+            "t": 605,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 900,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-bracket",
+            "fromS": 0,
+            "toS": 900
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "burn",
+            "fromS": 5,
+            "toS": 605,
+            "title": {
+              "en": "Heating",
+              "de": "Heizbetrieb"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 605,
+            "toS": 900,
+            "title": {
+              "en": "Cooling down",
+              "de": "Auskühlen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "ignition",
+            "title": {
+              "en": "Burner lights",
+              "de": "Brenner zündet"
+            },
+            "target": "burner"
+          },
+          {
+            "t": 605,
+            "kind": "shutdown",
+            "title": {
+              "en": "Burner off",
+              "de": "Brenner aus"
+            },
+            "target": "burner"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.7
+              },
+              {
+                "t": 605,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:controls",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              },
+              {
+                "t": 605,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:flue-gas",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              },
+              {
+                "t": 605,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "hot-water-priority",
+        "title": {
+          "en": "Hot-water priority",
+          "de": "Warmwasservorrang"
+        },
+        "description": {
+          "en": "While the boiler heats at 14 kW, a hot-water demand switches it to its full 20 kW after half a minute; after five more minutes it returns to heating and after seven minutes it switches off.",
+          "de": "Während der Kessel mit 14 kW heizt, schaltet ihn ein Warmwasserbedarf nach einer halben Minute auf seine vollen 20 kW; nach fünf weiteren Minuten kehrt er zum Heizen zurück und schaltet nach sieben Minuten aus."
+        },
+        "durationS": 480,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "heating",
+            "ease": "step"
+          },
+          {
+            "t": 30,
+            "pose": "hot-water",
+            "ease": "step"
+          },
+          {
+            "t": 330,
+            "pose": "heating",
+            "ease": "step"
+          },
+          {
+            "t": 420,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 480,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-bracket",
+            "fromS": 0,
+            "toS": 480
+          }
+        ],
+        "phases": [
+          {
+            "id": "heating",
+            "fromS": 0,
+            "toS": 30,
+            "title": {
+              "en": "Heating",
+              "de": "Heizbetrieb"
+            }
+          },
+          {
+            "id": "hot-water",
+            "fromS": 30,
+            "toS": 330,
+            "title": {
+              "en": "Hot water at full output",
+              "de": "Warmwasser mit voller Leistung"
+            }
+          },
+          {
+            "id": "heating-again",
+            "fromS": 330,
+            "toS": 420,
+            "title": {
+              "en": "Heating again",
+              "de": "Wieder Heizbetrieb"
+            }
+          },
+          {
+            "id": "off",
+            "fromS": 420,
+            "toS": 480,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 30,
+            "kind": "operating",
+            "title": {
+              "en": "Burner to full output",
+              "de": "Brenner auf volle Leistung"
+            },
+            "target": "burner"
+          },
+          {
+            "t": 420,
+            "kind": "shutdown",
+            "title": {
+              "en": "Burner off",
+              "de": "Brenner aus"
+            },
+            "target": "burner"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 30,
+                "v": 1
+              },
+              {
+                "t": 330,
+                "v": 0.7
+              },
+              {
+                "t": 420,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:controls",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 420,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:flue-gas",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 420,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "steady-burn",
+        "title": {
+          "en": "Steady burn",
+          "de": "Dauerbrand"
+        },
+        "description": {
+          "en": "The boiler heats at 14 kW and the flame in the sight window ripples every 4 seconds; the clip returns to its first pose and loops.",
+          "de": "Der Kessel heizt mit 14 kW und die Flamme im Schauglas wellt sich alle 4 Sekunden; der Clip kehrt in seine erste Pose zurück und läuft in einer Schleife."
+        },
+        "durationS": 4,
+        "fps": 15,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "heating",
+            "ease": "smooth"
+          },
+          {
+            "t": 1,
+            "pose": "heating",
+            "ease": "smooth",
+            "bones": {
+              "flame": {
+                "dy": -0.012
+              }
+            }
+          },
+          {
+            "t": 2,
+            "pose": "heating",
+            "ease": "smooth",
+            "bones": {
+              "flame": {
+                "dy": -0.004
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "heating",
+            "ease": "smooth",
+            "bones": {
+              "flame": {
+                "dy": -0.01
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "heating",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-bracket",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "burn",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Burning",
+              "de": "Brennt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1,
+            "kind": "thermal",
+            "title": {
+              "en": "Flame dip",
+              "de": "Flammenabsenkung"
+            },
+            "target": "burner"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 4,
+                "v": 0.7
+              }
+            ]
+          },
+          {
+            "target": "operating:controls",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:flue-gas",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "burner",
+          "title": {
+            "en": "Burner output",
+            "de": "Brennerleistung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.7,
+              "title": {
+                "en": "Space heating (14 kW)",
+                "de": "Heizbetrieb (14 kW)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot water (20 kW)",
+                "de": "Warmwasser (20 kW)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "controls",
+          "title": {
+            "en": "Controls and display",
+            "de": "Regelung und Display"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "On (3 W)",
+                "de": "An (3 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Casing",
+            "de": "Gehäuse"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "painted-steel",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.7,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Painted steel sheet 0.8 mm",
+                "de": "Lackiertes Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "painted-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000016,
+              "heatCapacityJM2K": 3700,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3700,
+          "operating": {
+            "key": "burner",
+            "heatW": 55
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "controls",
+          "title": {
+            "en": "Control panel with display",
+            "de": "Bedienfeld mit Display"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "polycarbonate",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "panel",
+              "title": {
+                "en": "Polycarbonate panel 2 mm",
+                "de": "Polycarbonatfeld 2 mm"
+              },
+              "kind": "polymer",
+              "material": "polycarbonate",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "operating": {
+            "key": "controls",
+            "heatW": 3
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "sight-glass",
+          "title": {
+            "en": "Sight glass bezel",
+            "de": "Schauglasblende"
+          },
+          "kind": "glazing",
+          "model": "operating",
+          "material": "sight-glass",
+          "areaM2": 0.005,
+          "characteristicLengthM": 0.08,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "glass",
+              "title": {
+                "en": "Borosilicate glass 4 mm",
+                "de": "Borosilikatglas 4 mm"
+              },
+              "kind": "glass",
+              "material": "sight-glass",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.004,
+              "heatCapacityJM2K": 3300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3300,
+          "operating": {
+            "key": "burner",
+            "heatW": 2
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "burner",
+          "title": {
+            "en": "Burner with flame",
+            "de": "Brenner mit Flamme"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "burner-mesh",
+          "areaM2": 0.01,
+          "characteristicLengthM": 0.05,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "mesh",
+              "title": {
+                "en": "Stainless steel mesh 1 mm",
+                "de": "Edelstahlgewebe 1 mm"
+              },
+              "kind": "metal",
+              "material": "burner-mesh",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00007,
+              "heatCapacityJM2K": 800,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 800,
+          "operating": {
+            "key": "burner",
+            "heatW": 3
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "flue-collar",
+          "title": {
+            "en": "Concentric flue collar",
+            "de": "Konzentrischer Abgasstutzen"
+          },
+          "kind": "exhaust",
+          "model": "operating",
+          "material": "flue-pipe",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.07,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "pipe",
+              "title": {
+                "en": "Polypropylene flue pipe 3 mm",
+                "de": "Abgasrohr aus Polypropylen 3 mm"
+              },
+              "kind": "polymer",
+              "material": "flue-pipe",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.014,
+              "heatCapacityJM2K": 2700,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2700,
+          "operating": {
+            "key": "burner",
+            "heatW": 10
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "connections",
+          "title": {
+            "en": "Connection stubs",
+            "de": "Anschlussstutzen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "brass",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.05,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Brass tube 1.5 mm",
+                "de": "Messingrohr 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "brass",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.000013,
+              "heatCapacityJM2K": 1300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1300,
+          "operating": {
+            "key": "burner",
+            "heatW": 12
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "flue-gas",
+          "kind": "flue",
+          "title": {
+            "en": "Flue gas leaving at the top of the collar",
+            "de": "Abgas am oberen Ende des Stutzens"
+          },
+          "anchor": "flue-outlet",
+          "directionDeg": 90,
+          "diameterM": 0.06,
+          "operatingKey": "burner",
+          "volumeFlowM3S": 0.0077,
+          "temperatureRiseK": 46,
+          "vapourKgPerKg": 0.07,
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Only the surface losses (about 85 W at full output) heat the room; the 20 kW of fuel go into the heating water and the flue gas (about 430 W, 2.1 %, up the flue). The flue gas is shown at the collar although a room-sealed boiler leads it outside: switch the emitter off with strength 0 where the flue is not part of the picture.",
+          "de": "Nur die Oberflächenverluste (etwa 85 W bei voller Leistung) heizen den Raum; die 20 kW Brennstoff gehen in das Heizwasser und das Abgas (etwa 430 W, 2,1 %, über den Abzug). Das Abgas ist am Stutzen gezeigt, obwohl ein raumluftunabhängiger Kessel es nach außen führt: wo das Abgas nicht zum Bild gehört, den Emitter mit Stärke 0 abschalten."
+        },
+        {
+          "en": "The flame is a drawing detail behind the sight glass: it follows the burner level through the two flame bones (inner flame at heating, outer flame in addition at full output).",
+          "de": "Die Flamme ist ein Zeichnungsdetail hinter dem Schauglas: sie folgt der Brennerstufe über die beiden Flammenknochen (innere Flamme im Heizbetrieb, zusätzlich äußere Flamme bei voller Leistung)."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-bracket"
+      ],
+      "assumptions": [
+        {
+          "en": "The 30 kg boiler hangs on one wall bracket above its centre of mass (pin): the bracket carries the full weight; the lateral stability of the real boiler is given by the lower fixings, which are out of the plane of this view.",
+          "de": "Der 30 kg schwere Kessel hängt an einem Wandhalter über seinem Schwerpunkt (Festlager): der Halter trägt das ganze Gewicht; die seitliche Stabilität des echten Kessels geben die unteren Befestigungen, die außerhalb der Ebene dieser Ansicht liegen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "hot-water",
+      "defaultClip": "heating-cycle",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

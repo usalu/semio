@@ -1,0 +1,700 @@
+{
+  "description": "Language-agnostic vectors of the minimum feature width measured on the VISIBLE part of a filled shape (paper millimetres, minFeature 0.2 mm). `covers` are the closed filled shapes painted over the shape (higher in depth order), each with the pen of its outline; the visible part is the shape minus the union of the covers grown by half their pen (the outline inks that much paper). `widthMm: null` means nothing is visible, so the shape contributes nothing to the print check. Hand-computed: a 1.0 by 0.1 mm bar completely inside a body is hidden (null); a 2 by 1 mm rectangle whose left 1.9 mm are covered keeps a 0.1 mm wide visible strip (width 0.1, area 0.1 mm2 above the tolerance 0.01 mm2); a 2 by 0.1 mm bar covered over x 0..1 keeps a 1 by 0.1 mm strip (0.1); a 2 by 1 mm rectangle covered over x 0..1 keeps a 1 by 1 mm square (1.0); two bodies at x 0..0.44 and 0.56..1.0 leave a 0.12 mm wide channel of a 1 mm square (0.12); with a 0.1 mm pen a 1.0 by 0.1 mm bar covered up to x = 0.95 leaves 0.05 mm of paper, exactly the half pen inked by the outline of the cover, so nothing is visible (null); a 2 by 1 mm rectangle covered up to x = 1.7 with a 0.1 mm pen keeps the strip x 1.75..2.0 (0.25). A 1.0 by 0.1 mm bar covered up to x = 0.995 leaves a 0.005 by 0.1 mm piece of 0.0005 mm2, below the tolerance (minFeature/2)2 = 0.01 mm2: residue of coincident edges, not a drawn part (null). Without covers the measure equals the plain feature width. Widening a shape widens its visible width: bars of 0.06, 0.09, 0.15, 0.18 and 0.3 mm width, their left half covered by a body drawn with a 0.1 mm pen, measure exactly their own width and grow strictly.",
+  "minFeatureMm": 0.2,
+  "relativeTolerance": 0.03,
+  "absoluteToleranceMm": 0.004,
+  "cases": [
+    {
+      "name": "a thin bar completely behind a body",
+      "rings": [
+        [
+          {
+            "x": 0.5,
+            "y": 0.5
+          },
+          {
+            "x": 1.5,
+            "y": 0.5
+          },
+          {
+            "x": 1.5,
+            "y": 0.6
+          },
+          {
+            "x": 0.5,
+            "y": 0.6
+          }
+        ]
+      ],
+      "widthMm": null,
+      "covers": [
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 2
+              },
+              {
+                "x": 0,
+                "y": 2
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a rectangle with a 0.1 mm visible strip",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      ],
+      "widthMm": 0.1,
+      "covers": [
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 1.9,
+                "y": -1
+              },
+              {
+                "x": 1.9,
+                "y": 2
+              },
+              {
+                "x": -1,
+                "y": 2
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a thin bar half covered",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0.1
+          },
+          {
+            "x": 0,
+            "y": 0.1
+          }
+        ]
+      ],
+      "widthMm": 0.1,
+      "covers": [
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 1,
+                "y": -1
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a wide rectangle half covered stays wide",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      ],
+      "widthMm": 1,
+      "covers": [
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 1,
+                "y": -1
+              },
+              {
+                "x": 1,
+                "y": 2
+              },
+              {
+                "x": -1,
+                "y": 2
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a 0.12 mm channel between two bodies",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      ],
+      "widthMm": 0.12,
+      "covers": [
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.44,
+                "y": -1
+              },
+              {
+                "x": 0.44,
+                "y": 2
+              },
+              {
+                "x": -1,
+                "y": 2
+              }
+            ]
+          ]
+        },
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": 0.56,
+                "y": -1
+              },
+              {
+                "x": 2,
+                "y": -1
+              },
+              {
+                "x": 2,
+                "y": 2
+              },
+              {
+                "x": 0.56,
+                "y": 2
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the half pen of the cover inks the last 0.05 mm",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0.1
+          },
+          {
+            "x": 0,
+            "y": 0.1
+          }
+        ]
+      ],
+      "widthMm": null,
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.95,
+                "y": -1
+              },
+              {
+                "x": 0.95,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a strip beside a cover with a 0.1 mm pen",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 1
+          },
+          {
+            "x": 0,
+            "y": 1
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 1.7,
+                "y": -1
+              },
+              {
+                "x": 1.7,
+                "y": 2
+              },
+              {
+                "x": -1,
+                "y": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": 0.25
+    },
+    {
+      "name": "a speck of 0.0005 mm2 beside the cover",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0.1
+          },
+          {
+            "x": 0,
+            "y": 0.1
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.995,
+                "y": -1
+              },
+              {
+                "x": 0.995,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": null
+    },
+    {
+      "name": "a thin bar with no occluder",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0
+          },
+          {
+            "x": 1,
+            "y": 0.1
+          },
+          {
+            "x": 0,
+            "y": 0.1
+          }
+        ]
+      ],
+      "widthMm": 0.1,
+      "covers": []
+    },
+    {
+      "name": "a 0.06 mm wide bar covered over its left half",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0.06
+          },
+          {
+            "x": 0,
+            "y": 0.06
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": 0.06
+    },
+    {
+      "name": "a 0.09 mm wide bar covered over its left half",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0.09
+          },
+          {
+            "x": 0,
+            "y": 0.09
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": 0.09
+    },
+    {
+      "name": "a 0.15 mm wide bar covered over its left half",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0.15
+          },
+          {
+            "x": 0,
+            "y": 0.15
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": 0.15
+    },
+    {
+      "name": "a 0.18 mm wide bar covered over its left half",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0.18
+          },
+          {
+            "x": 0,
+            "y": 0.18
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": 0.18
+    },
+    {
+      "name": "a 0.3 mm wide bar covered over its left half",
+      "rings": [
+        [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0.3
+          },
+          {
+            "x": 0,
+            "y": 0.3
+          }
+        ]
+      ],
+      "covers": [
+        {
+          "penMm": 0.1,
+          "rings": [
+            [
+              {
+                "x": -1,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": -1
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              },
+              {
+                "x": -1,
+                "y": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "widthMm": 0.3
+    }
+  ],
+  "monotone": [
+    "a 0.06 mm wide bar covered over its left half",
+    "a 0.09 mm wide bar covered over its left half",
+    "a 0.15 mm wide bar covered over its left half",
+    "a 0.18 mm wide bar covered over its left half",
+    "a 0.3 mm wide bar covered over its left half"
+  ]
+}

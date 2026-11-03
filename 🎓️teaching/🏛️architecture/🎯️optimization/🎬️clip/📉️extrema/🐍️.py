@@ -436,8 +436,8 @@ class Beat1_LocalGlobalExtrema(_visuals.ClipScene):
 
     def _icons(self):
         """🔣 Radiator, cooling unit and lamp as the three meanings of the stack."""
-        lamp = _art.lamp_glyph((0, .25, 0), drop=.12, scale=1.5)
-        return [_art.radiator((0, 0, 0), HEAT, height=.6, width=.85), _room._cooler((0, 0, 0), .85, COOL), _mn.VGroup(lamp["cable"], lamp["shade"], lamp["bulb"])]
+        cast, cooler_cast, lamp_cast = "shared-radiator-front-winter", "optimization-extrema-cooler", "shared-lamp-neutral"
+        return [_art.staffage(name, unit=.6 / _art.staffage_height(name)) for name in (cast, cooler_cast, lamp_cast)]
 
     def _causes(self):
         """🔌 Three icon rows: each part of the electricity with the live derivation that produces it."""
@@ -781,7 +781,8 @@ class Beat1_LocalGlobalExtrema(_visuals.ClipScene):
         content = [item for item in self.mobjects if id(item) not in keep]
         for item in content:
             item.clear_updaters()
-        d, german = self.fixed, self._german()
+        d = self.fixed
+        self._german()
         rows = [(self.tr("Direction", "Richtung"), self.tr("minimize E in kWh/a", "E minimieren in kWh/a"), GOOD),
                 (self.tr("Domain", "Bereich"), f"{lo}° ≤ θ ≤ {hi}° · {self.tr('courtyard side', 'Hofseite')}", WARN),
                 (self.tr("Scope", "Geltung"), self.tr(f"window share {self.number(d['wwr'] * 100)} %, overhang {self.number(d['overhang'], 1)} m, insulation {self.number(d['insulation'] * 100)} cm",

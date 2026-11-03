@@ -7,7 +7,7 @@ import { exportCapabilities, exportFigure, exportFilename } from "@teaching/staf
 import type { ExportHost } from "@teaching/staffage-react";
 import { walker } from "../🧰️support/🧰️.ts";
 
-const options = { view: "dark-line", scale: { denominator: 100 }, language: "en" } as const;
+const options = { view: "dark-line", viewpoint: "elevation", scale: { denominator: 100 }, language: "en" } as const;
 const stand = { kind: "pose", pose: "stand" } as const;
 const text = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
 const ascii = (bytes: Uint8Array, n: number) => String.fromCharCode(...bytes.subarray(0, n));
@@ -29,7 +29,7 @@ describe("📤️ downloads", () => {
     expect(markup).toMatch(/^(<\?xml[^>]*>\s*)?<svg\b/u);
     expect(markup).toContain("reference-walker");
     expect(markup).toContain("<metadata");
-    expect(result.filename).toBe("reference-walker_stand_dark-line_1-100.svg");
+    expect(result.filename).toBe("reference-walker_stand_elevation_dark-line_1-100.svg");
     expect(result.mime).toBe("image/svg+xml");
   });
 
@@ -40,7 +40,7 @@ describe("📤️ downloads", () => {
     expect(ascii(single.bytes, 8)).toBe("%PDF-1.7");
     expect(single.details.pages).toBe(1);
     expect(sheet.details.pages).toBe(7);
-    expect(sheet.filename).toBe("reference-walker_stand_all-views_1-100.pdf");
+    expect(sheet.filename).toBe("reference-walker_stand_elevation_all-views_1-100.pdf");
     expect(text(sheet.bytes)).toContain("reference-walker");
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
     const document = await pdfjs.getDocument({ data: sheet.bytes.slice() }).promise;
@@ -82,7 +82,7 @@ describe("📤️ downloads", () => {
     expect(PNG.sync.read(Buffer.from(first)).width).toBe(2);
     expect(text(first)).toContain("reference-walker");
     expect(progress.at(-1)).toBe(10);
-    expect(result.filename).toBe("reference-walker_walk_dark-line_1-100.zip");
+    expect(result.filename).toBe("reference-walker_walk_elevation_dark-line_1-100.zip");
   });
 
   it("rejects poses for frame sequences and honours cancellation", async () => {
@@ -93,8 +93,8 @@ describe("📤️ downloads", () => {
     expect((await exportFigure(walker, stand, options, "svg", { signal: controller.signal })).status).toBe("cancelled");
   });
 
-  it("names files like asset_pose_view_1-denominator", () => {
-    expect(exportFilename(walker, { kind: "clip", clip: "walk", timeS: 0.5 }, { ...options, scale: { denominator: 50 } }, "svg")).toBe("reference-walker_walk-t0p50_dark-line_1-50.svg");
+  it("names files like asset_pose_viewpoint_representation_1-denominator", () => {
+    expect(exportFilename(walker, { kind: "clip", clip: "walk", timeS: 0.5 }, { ...options, scale: { denominator: 50 } }, "svg")).toBe("reference-walker_walk-t0p50_elevation_dark-line_1-50.svg");
   });
 
   it("probes real support: no canvas or recorder in jsdom, so videos are unavailable with reasons", async () => {

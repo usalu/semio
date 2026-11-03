@@ -1,0 +1,339 @@
+# 🧾️ Round 2 Changed Files v3
+
+Definitive list by agent cf3 (read-only). Script: `🧰️cf3/classify.py` (status via `git status --porcelain -uall -z` under `🎓️teaching`, content check via `git diff HEAD`, untracked by file content, deleted by `git show HEAD:`). Machine-readable: `🧰️cf3/files.json`, reasons per path: `🧰️cf3/why.json`.
+
+A changed file counts when: a report names it (v2 exact list, or the explicit directory attributions below); or it lies in the staffage archive, the visuals module, the python package pyproject/uv.lock; or its diff or content touches `staffage`, `fitted_staffage`, `staffage_motion`, `staffage_height`, `staffage_parts`, `person_glyph`, `object_silhouette`, `radiator(` or silhouettes.
+
+Counts: created 95, modified 194, deleted 11, excluded 11, still uncertain 1.
+
+## Created (95)
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🧪️tests/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️icons/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️icons.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️labels.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️staffage_only.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️icons.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️labels.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️staffage_only.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🧪️tests/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧭️cutter-winding.json`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧭️cutter-winding.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/🧪️tests/🧍️occupants/🐍️.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/🧪️tests/🧍️occupants/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/📏️range/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📏️range-span/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📏️range-span/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🧬️schema/🔣️.schema.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🧬️schema/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/evaporative-humidifier/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/expansion-valve/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/finned-heat-exchanger/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/oil-pumpjack/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/plate-heat-exchanger/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/scroll-compressor/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/solar-thermal-collector/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/sorption-wheel/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-cooking/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/seated-office-worker/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/sleeping-person/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/standing-adult/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/ceiling-diffuser/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/circulation-pump/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/decentralised-hrv-fan/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/desktop-monitor/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/duct-fan/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/electric-fan-heater/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/electric-kettle/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/electricity-meter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-boiler/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-hob/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-meter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/hot-water-cylinder/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/kitchen-extractor-hood/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/laptop/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/mvhr-unit/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/pendant-lamp/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/room-thermostat/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/server-rack/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/shower-head/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/split-ac-indoor-unit/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/thermostatic-radiator-valve/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/toaster/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/vacuum-cleaner/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/vintage-car-1929/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/operating-table/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/chalkboard/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/cooking-pot/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/storage-crate-stack/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/tealight/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️thermal-span/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️thermal-span/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌤️reference-environment/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌤️reference-environment/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎭️cast-export/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎭️cast-export/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️dimension-leader/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️dimension-leader/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️plan-dimension/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️plan-dimension/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🚀️export-performance/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🚀️export-performance/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🚀️export-performance/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🤐️textless-depiction/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🤐️textless-depiction/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️front-projection/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️front-projection/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️plan-projection/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️plan-projection/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫕️phase-change/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫕️phase-change/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫕️phase-change/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌡️thermal-span/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🎭️cast-cancellation/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🎭️cast-export/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🚀️export-performance/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🧍️front-projection/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🧍️plan-projection/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🫕️phase-change/🔣️.json`
+
+## Modified (194)
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️icons/🧬️schema/🔣️.schema.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️integration.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️scenes.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️scenes.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧬️schema/🔣️.schema.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/👥️audience/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧪️tests/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟨️render.mjs`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧰️tools.mjs`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/pyproject.toml`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/uv.lock`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/⚖️index/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎨️visuals/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎲️sampling/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🏆️pareto/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🧪️experiments/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📋️plan/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/📐️geometry.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🎨️finishes/🧱️layers/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🏗️facade/🔗️junctions.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏢️nakagin/🎨️visuals/🐍️.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🐍️.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/📋️program/🐍️.py`
+- `🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/README.md`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english/🎛️viewer.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english/📖️detail.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german/🎛️viewer.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german/📖️detail.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🏠️overview/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗺️routing/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🌡️thermal/⏳️transient/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🌡️thermal/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🌡️thermal/🧱️balance/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎞️animation/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🌡️thermal-view/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🏷️annotations/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/💨️transport-view/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🖍️palette/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🔥️sources/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🧮️parcels/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎬️cli/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖼️svg/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🔗️contracts/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/📐️measure/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/🪞️copies/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🩺️check/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌤️environments/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/apple-tree/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/bamboo-clump/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/date-palm/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/english-oak/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/hornbeam-hedge/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/ivy-on-trellis/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/japanese-maple/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/lombardy-poplar/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/london-plane-pollarded/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/miscanthus-grass/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/multi-stem-birch/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/scots-pine/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/small-leaved-lime/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/weeping-willow/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/dairy-cow/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/goat/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/hedgehog/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/herring-gull/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/horse/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/labrador-dog/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/pig/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/red-fox/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/red-squirrel/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/roe-deer/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/sheep/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/child-on-kick-scooter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/courier-with-hand-truck/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/cyclist/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/elderly-with-cane/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/jogger/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/kneeling-gardener/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/leaning-person/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/parent-carrying-toddler/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/parent-with-stroller/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-on-crutches/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-with-rollator/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-with-umbrella/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-with-white-cane/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/pregnant-person/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/runner-with-blade-prosthesis/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/running-child/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/seated-guitarist/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/seated-reader/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/skateboarder/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/standing-phone-user/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/tour-guide/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/walking-commuter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/wheelchair-user/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/worker-carrying-box/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-bicycle/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-bus/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-car/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/delivery-van/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/electric-kick-scooter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/motor-scooter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/tram/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/bar-stool/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/office-swivel-chair/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/glass-balustrade/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/panel-radiator/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/spiral-stair/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/stair-flight/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/tilt-window/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/shopping-trolley/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/⏳️thermal-transient/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/☁️condensation/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌀️parcel-jet/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️blackbody-exchange/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️catalog-physics/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🍃️leaf-transpiration/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🍃️penman-monteith/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎚️config/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️clip-sampling/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️clip-sampling/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️frame-timing/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💧️vapour-pressure/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-assets/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-field/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-view/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📕️pdf-reopen/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🗜️zip-reopen/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧬️schema-twin/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🧰️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫀️two-node-gagge/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫁️respiration/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/✅️asset-validation/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌡️thermal/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🟦️.ts`
+
+## Deleted (11)
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🏃️sprint/🖼️.svg`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/😴️sleep/🖼️.svg`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🚶️walk/🖼️.svg`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧬️schema/🔣️.schema.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️silhouettes.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️silhouettes.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/README.md`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/🔣️.json`
+
+## Excluded (foreign) (11)
+
+Rename-only call-site updates for the public `surface_finishes` / `geometry_producers` / `source_text` API (BIM model module), no staffage relation, no report names these paths:
+
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧊️axon/🧩️primitives.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧪️ortho-remodel/test_frustums.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/🧪️snapshot/🐍️.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/🧪️surfaces.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🎨️finishes/🛝️ramps.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🎨️finishes/🧪️tests/🐍️.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔌️exchange/🐍️.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧱️interfaces.py` (M): BIM API rename follow-through, no staffage calls
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪈️tubes.py` (M): BIM API rename follow-through, no staffage calls
+
+Nakagin persisted occlusion-order cache, new test and case file, no staffage calls and no report names them:
+
+- `🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/💾️order-cache/🔣️.json` (A): concurrent nakagin order-cache work
+- `🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/💾️order-cache/🐍️.py` (A): concurrent nakagin order-cache work
+
+## Still uncertain (1)
+
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py` (M): kept in Modified because `r2-br-report.md` names it (cutter winding fix), but the same diff also carries the foreign `surface_finishes` rename that the excluded call sites follow.

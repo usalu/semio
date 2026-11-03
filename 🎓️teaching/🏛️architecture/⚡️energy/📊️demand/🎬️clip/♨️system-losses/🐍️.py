@@ -14,7 +14,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -25,6 +24,7 @@ BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
 section_material = _manim_module.section_material
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -39,15 +39,18 @@ stacked_bar = _manim_module.stacked_bar
 dim_arrow = _manim_module.dim_arrow
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 caption_bar = _manim_module.caption_bar
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 room_section = _manim_module.room_section
-radiator = _manim_module.radiator
-person_glyph = _manim_module.person_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
+fitted_staffage = _manim_module.fitted_staffage
 ripples = _manim_module.ripples
 droplets = _manim_module.droplets
 
@@ -65,6 +68,8 @@ SPEI_YELLOW = semio_color("warning")
 ERZ_AMBER = semio_color("tertiary")
 END_RED = semio_color("danger")
 AMBIENT_GREEN = semio_color("success")
+BOILER_RATE = 60.0
+TANK_CHARGE_S = 900.0
 
 # The one worked example the rest of the series keeps quoting: 100 kWh/(m²·a)
 # of useful heat, delivered once by a gas boiler and once by a heat pump. Every
@@ -138,6 +143,7 @@ ROOM_C = np.array([-3.55, 0.97, 0.0])
 ROOM_W, ROOM_H = 5.4, 1.6
 GROUND_Y = -1.40
 PIPE_Y = -0.58
+APPLIANCE_Y = GROUND_Y + 0.5
 RAD_X, TANK_X, BOILER_X, METER_X, PERSON_X = -5.45, -3.9, -1.9, 0.30, -1.10
 WP_STROM = LEVELS[3] * E_ERZEUGUNG_WP
 WP_UMWELT = LEVELS[3] - WP_STROM
@@ -193,7 +199,7 @@ class _Stream:
             self._shape(i, ribbon)
 
     def edges(self, s: np.ndarray) -> np.ndarray:
-        """📊 Cumulative layer edges at path fractions ``s`` — row ``i`` is the lower edge of layer ``i``."""
+        """🧱 Cumulative layer edges at path fractions ``s`` — row ``i`` is the lower edge of layer ``i``."""
         widths = [max(tr.get_value(), 0.0) * FLOW_UNIT * ((1.0 - s) if taper else np.ones_like(s))
                   for tr, _c, taper in self.layers]
         return self.start + np.vstack([np.zeros_like(s), np.cumsum(widths, axis=0)])
@@ -224,7 +230,7 @@ class _Stream:
         mob.set_stroke(width=0)
 
     def advance(self, clock: float, holders) -> None:
-        """💨 Place every particle for stream time ``clock``; lanes beyond the current width shrink to nothing."""
+        """🏃 Place every particle for stream time ``clock``; lanes beyond the current width shrink to nothing."""
         t = ((self.phase + FLOW_PACE * clock / self.length) % 1.0).ravel()
         edges = self.edges(t)
         weight = np.clip((edges[-1] - self.offset) / LANE_PITCH + 0.5, 0.0, 1.0)
@@ -272,9 +278,11 @@ def _readout(fn, at, *, size: float | None = None, color: str = P_WHITE, edge: s
             return
         state["text"] = text
         place = np.array(at() if callable(at) else at, dtype=float)
-        mob.remove(*list(mob.submobjects))
-        if text is not None:
-            mob.add(math_label(text, place, size=size, color=color, edge=edge))
+        fresh = math_label(text, place, size=size, color=color, edge=edge) if text is not None else VGroup()
+        if mob.submobjects:
+            mob.submobjects[0].become(fresh)
+        else:
+            mob.add(fresh)
 
     holder.add_updater(refresh)
     refresh(holder)
@@ -289,81 +297,28 @@ def _still(mob):
     return frozen
 
 
-def _stand(room, x: float, color=P_ORANGE):
-    """🧍 Occupant at true scale — 70 % of the clear room height, feet on the floor slab's top edge."""
-    height = 0.7 * room["h"]
-    return person_glyph(np.array([x, room["y_f"] + height / 2, 0.0]), color=color, scale=height / 0.66)
+def _stand(room, x: float):
+    """🧍 Breathing thermal occupant at true scale — 70 % of the clear room height, feet on the floor slab's top edge."""
+    cast = "shared-person-winter"
+    return staffage_motion(cast, unit=0.7 * room["h"] / staffage_height(cast), anchor=np.array([x, room["y_f"], 0.0]))
 
 
-def _flame(center, color=P_ORANGE):
-    """🔥 A filled, forked burner tongue from the shared ink profile."""
-    profile = _manim_module.object_silhouette("flame", color=color, width=0.24)
-    profile.stretch_to_fit_height(0.46)
-    return profile.move_to(np.array(center, dtype=float) + UP * 0.03)
+def _boiler(center, w: float = 0.80, h: float = 1.0):
+    """♨️ Gas boiler in elevation, fitted into the ``w`` × ``h`` box around ``center``; its heating cycle plays through scene time."""
+    return fitted_staffage("shared-boiler-heating-cycle", width=w, height=h, rate=BOILER_RATE).move_to(np.array(center, dtype=float))
 
 
-def _boiler(center, color=ERZ_AMBER, w: float = 0.80, h: float = 1.0):
-    """♨️ Gas boiler in elevation — casing, burner plate and flame."""
-    c = np.array(center, dtype=float)
-    body = RoundedRectangle(corner_radius=0.12, width=w, height=h, color=P_WHITE, stroke_width=2.5).move_to(c)
-    plate = Line(c + LEFT * 0.22 + DOWN * 0.26, c + RIGHT * 0.22 + DOWN * 0.26, color=P_WHITE, stroke_width=1.8)
-    return VGroup(body, plate, _flame(c + UP * 0.02, color))
+def _heat_pump(center, w: float = 1.0, h: float = 1.0):
+    """🌬️ Air-source heat pump outdoor unit in winter air, fitted into the ``w`` × ``h`` box around ``center``; its clip plays through scene time at ``rate``."""
+    return fitted_staffage("shared-heat-pump-heating-sweep", width=w, height=h, rate=1.0).move_to(np.array(center, dtype=float))
 
 
-def _fan(center, color, radius: float = 0.26):
-    """🌀 Fan ring with three blades."""
-    c = np.array(center, dtype=float)
-    ring = Circle(radius=radius, color=color, stroke_width=2.2).move_to(c)
-    blades = VGroup(*[Line(c, c + radius * 0.78 * np.array([np.cos(a), np.sin(a), 0.0]), color=color, stroke_width=2.2)
-                      for a in (PI / 2, PI / 2 + TAU / 3, PI / 2 + 2 * TAU / 3)])
-    return VGroup(ring, blades)
-
-
-def _heat_pump(center, color=AMBIENT_GREEN, w: float = 1.0, h: float = 1.0, flip: bool = False):
-    """🌬️ Air-source heat pump — casing, fan on the outdoor side and a compressor ring; ``flip`` puts the outdoor side right."""
-    c = np.array(center, dtype=float)
-    d = -1.0 if flip else 1.0
-    body = RoundedRectangle(corner_radius=0.12, width=w, height=h, color=P_WHITE, stroke_width=2.5).move_to(c)
-    fan = _fan(c + np.array([-0.21 * d, 0.12, 0.0]), color)
-    compressor = Circle(radius=0.12, color=P_YELLOW, stroke_width=2.2).move_to(c + np.array([0.25 * d, -0.22, 0.0]))
-    fins = VGroup(*[Line(c + np.array([-0.42 * d, -(0.28 + 0.07 * k), 0.0]), c + np.array([-0.02 * d, -(0.28 + 0.07 * k), 0.0]),
-                         color=color, stroke_width=1.2) for k in range(3)])
-    return VGroup(body, fan, compressor, fins)
-
-
-def _meter(center, kind: str = "gas", color=ERZ_AMBER):
-    """🔢 Utility meter — dial face with a needle; the bolt marks the electricity meter."""
-    c = np.array(center, dtype=float)
-    face = Circle(radius=0.27, color=P_WHITE, stroke_width=2.4).move_to(c)
-    ticks = VGroup(*[Line(c + 0.2 * np.array([np.cos(a), np.sin(a), 0.0]), c + 0.25 * np.array([np.cos(a), np.sin(a), 0.0]),
-                          color=P_WHITE, stroke_width=1.4) for a in np.linspace(PI * 0.15, PI * 0.85, 5)])
-    needle = Line(c + DOWN * 0.04, c + 0.17 * np.array([np.cos(PI * 0.62), np.sin(PI * 0.62), 0.0]), color=color,
-                  stroke_width=2.6)
-    glyph = VGroup(face, ticks, needle)
-    if kind == "power":
-        bolt = Polygon(*[c + np.array([x, y, 0.0]) for x, y in
-                         [(0.02, -0.02), (-0.06, -0.15), (0.0, -0.15), (-0.03, -0.24), (0.07, -0.11), (0.01, -0.11)]],
-                       color=color, stroke_width=1.2).set_fill(color, opacity=0.9)
-        glyph.add(bolt)
-    return glyph
-
-
-def _tank(center, color=SPEI_YELLOW, w: float = 0.80, h: float = 1.0, level: float = 1.0):
-    """🛢️ Storage tank whose translucent fill is the heat still stored — ``level`` is a 0–1 tracker."""
-    c = np.array(center, dtype=float)
-    frame = RoundedRectangle(corner_radius=0.14, width=w, height=h, color=P_WHITE, stroke_width=2.5).move_to(c)
-    cap = RoundedRectangle(corner_radius=0.04, width=w * 0.4, height=0.1, color=P_WHITE, stroke_width=2.2,
-                           fill_color=P_WHITE, fill_opacity=0.6).next_to(frame, UP, buff=0)
+def _tank(center, w: float = 0.80, h: float = 1.0, level: float = 1.0):
+    """🛢️ Hot-water cylinder whose charge is the heat still stored — ``level`` is a 0–1 tracker that seeks the charge-up clip."""
     tracker = ValueTracker(level)
-    fill = Rectangle(width=w - 0.12, height=0.01, stroke_width=0, fill_color=color, fill_opacity=0.38)
-
-    def shape(_m=None):
-        height = max(0.01, (h - 0.12) * float(np.clip(tracker.get_value(), 0.0, 1.0)))
-        fill.stretch_to_fit_height(height).move_to(c + DOWN * (h / 2 - 0.06) + UP * height / 2)
-
-    shape()
-    fill.add_updater(shape)
-    return {"group": VGroup(frame, cap), "fill": fill, "level": tracker, "frame": frame}
+    group = fitted_staffage("shared-tank-charge-up", width=w, height=h, rate=0.0).move_to(np.array(center, dtype=float))
+    group.add_updater(lambda m: m.seek(float(np.clip(tracker.get_value(), 0.0, 1.0)) * TANK_CHARGE_S))
+    return {"group": group, "fill": VGroup(), "level": tracker}
 
 
 def _chimney(x: float, y0: float, y1: float):
@@ -414,7 +369,7 @@ def _ratio_row(name: str, symbol: str, color: str, y: float, *, out: float, valu
     if tick_label:
         group.add(math_label("1", np.array([left + unit, y + 0.33, 0.0]), size=LABEL_FONT_SIZE, color=P_WHITE))
     readout = _readout(
-        lambda: (rf"=\frac{{{de_num(round(value() * out))}}}{{{de_num(round(out))}}}={de_num(value(), 2)}"
+        lambda: (rf"=\frac{{{label_number(round(value() * out))}}}{{{label_number(round(out))}}}={label_number(value(), 2)}"
                  if shown() else None),
         np.array([left + length + 0.2, y, 0.0]), size=LABEL_FONT_SIZE, color=color, edge="left")
     return {"group": group, "label": label, "symbol": sym, "track": track, "readout": readout, "y": y,
@@ -468,7 +423,7 @@ def _product_row(name: str, symbol: str, y: float, factors, *, lift=lambda: 1.0,
     tick = Line(np.array([left + unit, y - 0.17, 0.0]), np.array([left + unit, y + 0.17, 0.0]), color=P_WHITE,
                 stroke_width=1.8)
     readout = _readout(
-        lambda: rf"=\frac{{{de_num(round(product() * out))}}}{{{de_num(round(out))}}}={de_num(product(), 2)}",
+        lambda: rf"=\frac{{{label_number(round(product() * out))}}}{{{label_number(round(out))}}}={label_number(product(), 2)}",
         np.array([left + length + 0.2, y, 0.0]), size=LABEL_FONT_SIZE, color=P_WHITE, edge="left")
     return {"group": VGroup(label, sym, track, base, parts, tick), "label": label, "symbol": sym, "readout": readout,
             "product": product, "y": y, "tick_x": left + unit}
@@ -504,13 +459,14 @@ def _plant(*, with_person: bool = True):
                             color=P_PRIMARY, stroke_width=1.1) for u in np.linspace(0.03, 0.97, 24)])
     shell = VGroup(room["group"], cellar_air, cellar_walls, ground, hatches)
 
-    metre = room["h"] / 2.5
+    metre = room_metre(room["h"])
     rad_c = np.array([RAD_X, room["y_f"] + (0.12 + 0.65 / 2) * metre, 0.0])
-    rad = radiator(rad_c, color=UEBER_RED, height=0.65 * metre, width=1.3 * metre)
+    rad = staffage("shared-radiator-winter", unit=metre, anchor=np.array([RAD_X, room["y_f"], 0.0]))
+    rad.add(_manim_module.radiator_wall(np.array([RAD_X, room["y_f"], 0.0]), metre))
     person = _stand(room, PERSON_X) if with_person else None
-    tank = _tank(np.array([TANK_X, PIPE_Y - 0.14, 0.0]))
-    boiler = _boiler(np.array([BOILER_X, PIPE_Y - 0.14, 0.0]))
-    meter = _meter(np.array([METER_X, PIPE_Y, 0.0]))
+    tank = _tank(np.array([TANK_X, APPLIANCE_Y, 0.0]))
+    boiler = _boiler(np.array([BOILER_X, APPLIANCE_Y, 0.0]))
+    meter = fitted_staffage("shared-gas-meter-run", width=0.54, height=0.6, rate=1.0, loop=True).move_to(np.array([METER_X, PIPE_Y, 0.0]))
     chimney = _chimney(-0.30, -0.34, 1.55)
 
     v = {name: ValueTracker(0.0) for name in
@@ -535,14 +491,13 @@ def _plant(*, with_person: bool = True):
                   (v["z4s"], cols[3], False), (v["z4e"], cols[4], False), (v["z4w"], P_YELLOW, False)],
                  start=-half, cap=LEVELS[4], seed=4)
     flue_y = under_slab - 0.12
-    flue = _Stream([np.array([BOILER_X + 0.15, PIPE_Y - 0.14 + 0.46, 0.0]), np.array([BOILER_X + 0.15, flue_y, 0.0]),
+    flue = _Stream([np.array([BOILER_X + 0.15, APPLIANCE_Y + 0.46, 0.0]), np.array([BOILER_X + 0.15, flue_y, 0.0]),
                     np.array([-0.30, flue_y, 0.0]), np.array([-0.30, 1.50, 0.0])],
                    [(v["flue"], P_RED, False)], start=-0.5 * LOSS[3] * FLOW_UNIT, cap=LOSS[3], seed=5, radius=0.3)
 
     env = _Stream([np.array([room["x_r"] + 0.30, PIPE_Y - 0.27, 0.0]), np.array([BOILER_X + 0.40, PIPE_Y - 0.27, 0.0])],
                   [(v["env"], AMBIENT_GREEN, False)], start=-0.5 * WP_UMWELT * FLOW_UNIT, cap=WP_UMWELT, seed=6)
-    heat_pump = _heat_pump(np.array([BOILER_X, PIPE_Y - 0.14, 0.0]), flip=True)
-    power_meter = _meter(np.array([METER_X, PIPE_Y, 0.0]), kind="power", color=P_YELLOW)
+    power_meter = fitted_staffage("shared-electricity-meter-run", width=0.54, height=0.6, rate=1.0, loop=True).move_to(np.array([METER_X, PIPE_Y, 0.0]))
 
     def heat(name: str, rt: float, r_max: float = 0.4):
         """🌡️ Ripples for the named warm place, cycling for ``rt`` seconds."""
@@ -554,7 +509,7 @@ def _plant(*, with_person: bool = True):
             "ve": ripples([np.array([-4.75, PIPE_Y - 0.43, 0.0])], down=True, r_max=0.30, color=VERT_ORANGE, cycles=cyc),
             "gain": ripples([np.array([RAD_X + 0.42, room["y_f"] + 0.02, 0.0])], facing=PI / 2, r_max=0.22,
                             color=VERT_ORANGE, cycles=cyc),
-            "sp": ripples([np.array([TANK_X, PIPE_Y - 0.14 + 0.5, 0.0])], r_max=0.30, color=SPEI_YELLOW, cycles=cyc),
+            "sp": ripples([np.array([TANK_X, APPLIANCE_Y + 0.5, 0.0])], r_max=0.30, color=SPEI_YELLOW, cycles=cyc),
         }
         if person is not None:
             spots["person"] = ripples([person.get_top() + UP * 0.05], r_max=0.36, color=P_ORANGE, cycles=cyc)
@@ -562,7 +517,7 @@ def _plant(*, with_person: bool = True):
 
     return {"room": room, "shell": shell, "radiator": rad, "person": person, "tank": tank, "boiler": boiler,
             "meter": meter, "chimney": chimney, "v": v, "target": target, "z0": z0, "z2": z2, "z3": z3, "z4": z4,
-            "flue": flue, "env": env, "heat_pump": heat_pump, "power_meter": power_meter,
+            "flue": flue, "env": env, "power_meter": power_meter,
             "streams": (z0, z2, z3, z4, flue, env), "heat": heat, "rad_c": rad_c, "under_slab": under_slab}
 
 
@@ -608,7 +563,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Übergabe, Verteilung, Speicherung")
+        subtitle = section_heading(tr("Emission, distribution, storage", "Übergabe, Verteilung, Speicherung"))
         din = _din_ref("DIN V 18599-5:2018-09 · -6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -629,16 +584,16 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         envelope = DashedVMobject(
             Rectangle(width=ROOM_W + 0.64, height=ROOM_H + 0.26 + 0.12 + 0.26, color=P_PRIMARY, stroke_width=2.4).move_to(
                 np.array([ROOM_C[0], P["under_slab"] + (ROOM_H + 0.64) / 2, 0.0])), num_dashes=70)
-        shell_tag = body_text("beheizte Hülle", font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY).move_to(
+        shell_tag = body_text(tr("heated envelope", "beheizte Hülle"), font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY).move_to(
             np.array([0.45, 1.80, 0.0]), aligned_edge=LEFT)
-        cellar_tag = body_text("unbeheizter Keller", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(
+        cellar_tag = body_text(tr("unheated basement", "unbeheizter Keller"), font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(
             np.array([ROOM_C[0], GROUND_Y - 0.30, 0.0]))
         cellar_tag.set_opacity(0.7)
 
         specs = {
-            "ue": ("Übergabe", r"e_{ü}", UEBER_RED, v["z2u"], LEVELS[0]),
-            "ve": ("Verteilung", r"e_{d}", VERT_ORANGE, v["z2v"], LEVELS[1]),
-            "sp": ("Speicherung", r"e_{s}", SPEI_YELLOW, v["z3s"], LEVELS[2]),
+            "ue": (tr("Emission", "Übergabe"), r"e_{ü}", UEBER_RED, v["z2u"], LEVELS[0]),
+            "ve": (tr("Distribution", "Verteilung"), r"e_{d}", VERT_ORANGE, v["z2v"], LEVELS[1]),
+            "sp": (tr("Storage", "Speicherung"), r"e_{s}", SPEI_YELLOW, v["z3s"], LEVELS[2]),
         }
         rows = {k: _stage_row(name, sym, colour, 0.95, loss, out, tick_label=True)
                 for k, (name, sym, colour, loss, out) in specs.items()}
@@ -668,12 +623,12 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         hold_for(self, self.NARRATION, "uebergabe", during=lambda rt: live(rt, "rad", "ue"))
 
         caption = step(caption, "flaeche", "rad", "ue")
-        rad_tag = math_label(r"\text{Heizkörper}\,\cdot\,55\,\mathrm{°C}", np.array([-4.95, 1.52, 0.0]),
+        rad_tag = math_label(tr(r"\text{Radiator}\,\cdot\,55\,\mathrm{°C}", r"\text{Heizkörper}\,\cdot\,55\,\mathrm{°C}"), np.array([-4.95, 1.52, 0.0]),
                              size=LABEL_FONT_SIZE, color=UEBER_RED)
         loop = _floor_loop(-2.95, -1.75, room["y_f"] - 0.07)
-        loop_tag = math_label(r"\text{Fußbodenheizung}\,\cdot\,35\,\mathrm{°C}", np.array([-3.00, 1.10, 0.0]),
+        loop_tag = math_label(tr(r"\text{Underfloor heating}\,\cdot\,35\,\mathrm{°C}", r"\text{Fußbodenheizung}\,\cdot\,35\,\mathrm{°C}"), np.array([-3.00, 1.10, 0.0]),
                               size=LABEL_FONT_SIZE, color=P_CYAN)
-        flow_note = note_line("niedrige Vorlauftemperatur → bessere Erzeugereffizienz", color=P_CYAN)
+        flow_note = note_line(tr("low flow temperature → better generator efficiency", "niedrige Vorlauftemperatur → bessere Erzeugereffizienz"), color=P_CYAN)
         extra[:] = [floor_heat]
         self.play(FadeIn(rad_tag), run_time=1.0)
         self.play(Create(loop), FadeIn(loop_tag), FadeIn(flow_note), *live(1.6, "rad", "ue"), run_time=1.6)
@@ -690,13 +645,13 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         hold_for(self, self.NARRATION, "verteilung", during=lambda rt: live(rt, "ve"))
 
         caption = step(caption, "huelle", "ve")
-        inside_note = note_line("Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben", color=VERT_ORANGE)
+        inside_note = note_line(tr("Losses inside the envelope are credited as gains", "Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben"), color=VERT_ORANGE)
         self.play(Create(envelope), FadeIn(shell_tag), FadeIn(cellar_tag), *live(1.6, "ve"), run_time=1.6)
         self.play(FadeIn(inside_note), *live(1.2, "ve", "gain"), run_time=1.2)
         hold_for(self, self.NARRATION, "huelle", during=lambda rt: live(rt, "ve", "gain"))
 
         caption = step(caption, "speicher", "ve", "gain")
-        tank_note = body_text("7 Tage ohne Zapfung", font_size=LABEL_FONT_SIZE - 3, color=SPEI_YELLOW).move_to(
+        tank_note = body_text(tr("7 days without draw-off", "7 Tage ohne Zapfung"), font_size=LABEL_FONT_SIZE - 3, color=SPEI_YELLOW).move_to(
             np.array([TANK_X, GROUND_Y - 0.62, 0.0]))
         self.add(P["z3"].ribbons, P["tank"]["fill"])
         active[:] = [P["z3"]]
@@ -726,11 +681,11 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         hold_for(self, self.NARRATION, "kennzahl")
 
         caption = step(caption, "einheit")
-        gt_note = note_line("alle Aufwandszahlen > 1", color=P_PRIMARY)
+        gt_note = note_line(tr("all expenditure factors > 1", "alle Aufwandszahlen > 1"), color=P_PRIMARY)
         eq, eq_box, items = math_panel([
-            ("eu", r"e_{ü}\approx 1{,}04", UEBER_RED), (None, r"\cdot", P_WHITE),
-            ("ed", r"e_{d}\approx 1{,}08", VERT_ORANGE), (None, r"\cdot", P_WHITE),
-            ("es", r"e_{s}\approx 1{,}06", SPEI_YELLOW),
+            ("eu", tr(r"e_{ü}\approx 1.04", r"e_{ü}\approx 1{,}04"), UEBER_RED), (None, r"\cdot", P_WHITE),
+            ("ed", tr(r"e_{d}\approx 1.08", r"e_{d}\approx 1{,}08"), VERT_ORANGE), (None, r"\cdot", P_WHITE),
+            ("es", tr(r"e_{s}\approx 1.06", r"e_{s}\approx 1{,}06"), SPEI_YELLOW),
         ])
         self.play(Create(eq_box), FadeIn(gt_note),
                   *[ReplacementTransform(final[k]["symbol"].copy(), items[i])
@@ -793,7 +748,7 @@ class Beat3_Erzeugung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Erzeugung: Wirkungsgrad oder Arbeitszahl")
+        subtitle = section_heading(tr("Generation: efficiency or coefficient of performance", "Erzeugung: Wirkungsgrad oder Arbeitszahl"))
         din = _din_ref("DIN V 18599-5 · VDI 4650-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -805,10 +760,14 @@ class Beat3_Erzeugung(Scene):
         at = lambda x, y: np.array([x, y, 0.0])
         boiler = _boiler(at(-3.2, Y), w=0.9, h=1.2)
         pump = _heat_pump(at(3.7, Y), w=1.0, h=1.2)
+        floor_line = Line(at(-4.6, Y - 0.6), at(4.6, Y - 0.6), color=P_PRIMARY, stroke_width=2.2)
+        floor_hatch = VGroup(*[Line(p := floor_line.point_from_proportion(u), p + at(-0.07, -0.1), color=P_PRIMARY,
+                                    stroke_width=1.1) for u in np.linspace(0.02, 0.98, 52)])
+        floor = VGroup(floor_line, floor_hatch)
         divider = DashedLine(at(0.0, -1.0), at(0.0, 1.4), color=P_WHITE, stroke_width=1.6, stroke_opacity=0.3)
-        stage_tag = body_text("Stufe 4 · Erzeugung", font_size=BODY_FONT_SIZE, color=ERZ_AMBER).move_to(at(0.0, 1.75))
-        boiler_name = body_text("Verbrennungskessel", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(at(-3.2, Y - 0.95))
-        pump_name = body_text("Wärmepumpe", font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(at(3.7, Y - 0.95))
+        stage_tag = body_text(tr("Stage 4 · Generation", "Stufe 4 · Erzeugung"), font_size=BODY_FONT_SIZE, color=ERZ_AMBER).move_to(at(0.0, 1.75))
+        boiler_name = body_text(tr("Combustion boiler", "Verbrennungskessel"), font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(at(-3.2, Y - 0.95))
+        pump_name = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(at(3.7, Y - 0.95))
         out_env = lambda: interpolate_color(ManimColor(NUTZ_BLUE), ManimColor(AMBIENT_GREEN), t["split"].get_value())
         out_el = lambda: interpolate_color(ManimColor(NUTZ_BLUE), ManimColor(P_YELLOW), t["split"].get_value())
 
@@ -829,8 +788,8 @@ class Beat3_Erzeugung(Scene):
         pump_on = [False]
 
         def live(rt):
-            fan = [Rotate(pump[1][1], angle=-TAU * rt / 0.9, about_point=pump[1][0].get_center(), rate_func=linear)]
-            return [_flow(active, rt), *(fan if pump_on[0] else [])]
+            pump.rate = 1.0 if pump_on[0] else 0.0
+            return [_flow(active, rt)]
 
         def step(caption, key):
             return _swap(self, caption, subtitle_text(self.NARRATION, key), live)
@@ -838,30 +797,30 @@ class Beat3_Erzeugung(Scene):
         def label(src, pos, color, edge="left"):
             return _readout(src, pos, size=LABEL_FONT_SIZE, color=color, edge=edge)
 
-        gas_lbl = label(lambda: rf"\text{{Erdgas}}\;{de_num(t['gas'].get_value() + t['loss'].get_value())}\,\mathrm{{kWh}}",
+        gas_lbl = label(lambda: tr(rf"\text{{Natural gas}}\;{label_number(t['gas'].get_value() + t['loss'].get_value())}\,\mathrm{{kWh}}", rf"\text{{Erdgas}}\;{label_number(t['gas'].get_value() + t['loss'].get_value())}\,\mathrm{{kWh}}"),
                         at(-3.1, Y + 0.75), ERZ_AMBER)
-        heat_lbl = label(lambda: rf"\text{{Wärme}}\;{de_num(t['heat'].get_value())}\,\mathrm{{kWh}}",
+        heat_lbl = label(lambda: tr(rf"\text{{Heat}}\;{label_number(t['heat'].get_value())}\,\mathrm{{kWh}}", rf"\text{{Wärme}}\;{label_number(t['heat'].get_value())}\,\mathrm{{kWh}}"),
                          at(2.6, Y + 0.50), NUTZ_BLUE, "right")
-        pump_lbl = label(lambda: rf"{de_num(t['out_env'].get_value() + t['out_el'].get_value())}\,\mathrm{{kWh}}",
+        pump_lbl = label(lambda: rf"{label_number(t['out_env'].get_value() + t['out_el'].get_value())}\,\mathrm{{kWh}}",
                          at(2.3, Y + 0.50), NUTZ_BLUE, "right")
-        el_lbl = label(lambda: rf"\text{{Strom}}\;{de_num(t['el'].get_value())}\,\mathrm{{kWh}}",
+        el_lbl = label(lambda: tr(rf"\text{{Electricity}}\;{label_number(t['el'].get_value())}\,\mathrm{{kWh}}", rf"\text{{Strom}}\;{label_number(t['el'].get_value())}\,\mathrm{{kWh}}"),
                        at(-2.8, Y + 0.75), P_YELLOW)
-        env_lbl = label(lambda: rf"\text{{Umwelt}}\;{de_num(t['env'].get_value())}\,\mathrm{{kWh}}",
+        env_lbl = label(lambda: tr(rf"\text{{Ambient}}\;{label_number(t['env'].get_value())}\,\mathrm{{kWh}}", rf"\text{{Umwelt}}\;{label_number(t['env'].get_value())}\,\mathrm{{kWh}}"),
                         at(-2.8, Y - 0.82), AMBIENT_GREEN)
 
-        gas_row = _ratio_row("Gaskessel", r"e_{g}", ERZ_AMBER, ROW_Y, out=Q_NUTZ,
+        gas_row = _ratio_row(tr("Gas boiler", "Gaskessel"), r"e_{g}", ERZ_AMBER, ROW_Y, out=Q_NUTZ,
                              value=lambda: (t["gas"].get_value() + t["loss"].get_value()) / Q_NUTZ,
                              shown=lambda: t["gas"].get_value() > 99.0 and t["heat"].get_value() > 99.0,
                              x0=-3.75, name_w=2.15, length=2.0)
-        wp_row = _ratio_row("Wärmepumpe", r"e_{g}", AMBIENT_GREEN, ROW_Y, out=Q_NUTZ,
+        wp_row = _ratio_row(tr("Heat pump", "Wärmepumpe"), r"e_{g}", AMBIENT_GREEN, ROW_Y, out=Q_NUTZ,
                             value=lambda: t["el"].get_value() / Q_NUTZ,
                             shown=lambda: t["el"].get_value() > 25.0, x0=-3.35, name_w=1.85, length=2.0)
-        cond_label = body_text("Brennwertkessel", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
+        cond_label = body_text(tr("Condensing boiler", "Brennwertkessel"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
             gas_row["label"].get_left(), aligned_edge=LEFT)
-        flue_lbl = body_text("Abgas", font_size=LABEL_FONT_SIZE - 3, color=P_RED).move_to(at(0.2, 1.95))
+        flue_lbl = body_text(tr("Flue gas", "Abgas"), font_size=LABEL_FONT_SIZE - 3, color=P_RED).move_to(at(0.2, 1.95))
         drops = droplets(at(0.08, 1.40), n=4, spread=(0.10, 0.08), color=P_CYAN)
 
-        self.play(FadeIn(stage_tag), FadeIn(boiler), FadeIn(pump), run_time=1.2)
+        self.play(FadeIn(stage_tag), FadeIn(floor), FadeIn(boiler), FadeIn(pump), run_time=1.2)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.2)
 
         pump_on[0] = True
@@ -894,7 +853,7 @@ class Beat3_Erzeugung(Scene):
         hold_for(self, self.NARRATION, "mehr", during=live)
 
         caption = step(caption, "brennwert")
-        cond_note = note_line("Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar", color=P_CYAN)
+        cond_note = note_line(tr("Condensing: water vapour in the flue gas condenses → latent heat becomes usable", "Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar"), color=P_CYAN)
         self.play(FadeIn(cond_note), FadeIn(drops), *live(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "brennwert", during=live)
 
@@ -922,8 +881,8 @@ class Beat3_Erzeugung(Scene):
         hold_for(self, self.NARRATION, "umwelt", during=live)
 
         caption = step(caption, "zukauf")
-        bought = body_text("zugekauft", font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW).move_to(at(1.25, 1.50))
-        free = body_text("nicht zugekauft", font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(at(1.5, 0.02))
+        bought = body_text(tr("purchased", "zugekauft"), font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW).move_to(at(1.25, 1.50))
+        free = body_text(tr("not purchased", "nicht zugekauft"), font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN).move_to(at(1.5, 0.02))
         bought_leader = Line(bought.get_bottom() + DOWN * 0.04, at(1.25, Y + 0.185), color=P_YELLOW, stroke_width=1.4,
                              stroke_opacity=0.6)
         free_leader = Line(at(1.25, free.get_top()[1] + 0.04), at(1.25, Y - 0.065), color=AMBIENT_GREEN,
@@ -939,10 +898,10 @@ class Beat3_Erzeugung(Scene):
         caption = step(caption, "jaz")
         eq, eq_box, items = math_panel([
             ("jaz", r"\mathrm{JAZ}", AMBIENT_GREEN), (None, "=", P_WHITE),
-            ("frac", rf"\frac{{\textcolor{{{NUTZ_BLUE}}}{{\text{{Wärme ab}}}}}}{{\textcolor{{{P_YELLOW}}}{{\text{{Strom zu}}}}}}",
+            ("frac", tr(rf"\frac{{\textcolor{{{NUTZ_BLUE}}}{{\text{{heat out}}}}}}{{\textcolor{{{P_YELLOW}}}{{\text{{power in}}}}}}", rf"\frac{{\textcolor{{{NUTZ_BLUE}}}{{\text{{Wärme ab}}}}}}{{\textcolor{{{P_YELLOW}}}{{\text{{Strom zu}}}}}}"),
              P_WHITE),
-            ("num", r"=\frac{100}{26}\approx 3{,}8", P_WHITE),
-            ("eg", r"\;\Rightarrow\;e_{g}=\frac{1}{\mathrm{JAZ}}", AMBIENT_GREEN),
+            ("num", tr(r"=\frac{100}{26}\approx 3.8", r"=\frac{100}{26}\approx 3{,}8"), P_WHITE),
+            ("eg", tr(r"\;\Rightarrow\;e_{g}=\frac{1}{\mathrm{SPF}}", r"\;\Rightarrow\;e_{g}=\frac{1}{\mathrm{JAZ}}"), AMBIENT_GREEN),
         ])
         pump_lbl.clear_updaters()
         el_lbl.clear_updaters()
@@ -1016,7 +975,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Die Anlagenaufwandszahl e_p")
+        subtitle = section_heading(tr("The system expenditure factor e_p", "Die Anlagenaufwandszahl e_p"))
         din = _din_ref("DIN V 18599-5:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1035,17 +994,17 @@ class Beat4_Anlagenaufwandszahl(Scene):
         def step(caption, key, during=None):
             return _swap(self, caption, subtitle_text(self.NARRATION, key), during or (lambda rt: []))
 
-        q_h = _readout(lambda: rf"Q_{{h}}={de_num(v['z0n'].get_value())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
+        q_h = _readout(lambda: rf"Q_{{h}}={label_number(v['z0n'].get_value())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
                        np.array([ROOM_C[0], 1.42, 0.0]), size=BODY_FONT_SIZE, color=NUTZ_BLUE, edge="center")
-        q_e = _readout(lambda: rf"Q_{{E}}={de_num(P['z4'].total())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
+        q_e = _readout(lambda: rf"Q_{{E}}={label_number(P['z4'].total())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
                        np.array([1.55, -1.22, 0.0]), size=BODY_FONT_SIZE, color=END_RED, edge="left")
 
         X0 = -4.4
         rows = {
-            "ue": _stage_row("Übergabe", r"e_{ü}", UEBER_RED, 1.50, v["z2u"], LEVELS[0], name_w=1.85, x0=X0,
+            "ue": _stage_row(tr("Emission", "Übergabe"), r"e_{ü}", UEBER_RED, 1.50, v["z2u"], LEVELS[0], name_w=1.85, x0=X0,
                              tick_label=True),
-            "ve": _stage_row("Verteilung", r"e_{d}", VERT_ORANGE, 0.95, v["z2v"], LEVELS[1], name_w=1.85, x0=X0),
-            "sp": _stage_row("Speicherung", r"e_{s}", SPEI_YELLOW, 0.40, v["z3s"], LEVELS[2], name_w=1.85, x0=X0),
+            "ve": _stage_row(tr("Distribution", "Verteilung"), r"e_{d}", VERT_ORANGE, 0.95, v["z2v"], LEVELS[1], name_w=1.85, x0=X0),
+            "sp": _stage_row(tr("Storage", "Speicherung"), r"e_{s}", SPEI_YELLOW, 0.40, v["z3s"], LEVELS[2], name_w=1.85, x0=X0),
         }
         eg_unit = ValueTracker(0.0)
 
@@ -1054,14 +1013,14 @@ class Beat4_Anlagenaufwandszahl(Scene):
             return ((1 - m) * (eg_unit.get_value() + v["z4e"].get_value() / LEVELS[3])
                     + m * v["z4w"].get_value() / LEVELS[3])
 
-        rows["eg"] = _ratio_row("Erzeugung", r"e_{g}", ERZ_AMBER, -0.15, out=LEVELS[3], value=eg_value, name_w=1.85,
+        rows["eg"] = _ratio_row(tr("Generation", "Erzeugung"), r"e_{g}", ERZ_AMBER, -0.15, out=LEVELS[3], value=eg_value, name_w=1.85,
                                 x0=X0, shown=lambda: eg_unit.get_value() > 0.999 and (v["z4e"].get_value() > 0.05
                                                                                       or v["z4w"].get_value() > 0.05))
         keys = ("ue", "ve", "sp", "eg")
         colours = (UEBER_RED, VERT_ORANGE, SPEI_YELLOW, ERZ_AMBER)
         units = {"ue": rows["ue"]["unit"], "ve": rows["ve"]["unit"], "sp": rows["sp"]["unit"], "eg": eg_unit}
         product = _product_row(
-            "Anlage", r"e_{p}", -0.90, name_w=1.85, x0=X0, factors=
+            tr("System", "Anlage"), r"e_{p}", -0.90, name_w=1.85, x0=X0, factors=
             [((lambda f=rows[k]["value"]: 1.0 + grow_p.get_value() * (f() - 1.0)), c) for k, c in zip(keys, colours)],
             lift=lambda: lift.get_value())
 
@@ -1086,7 +1045,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "faktoren")
 
         caption = step(caption, "produkt")
-        schematic_note = note_line("Schematische Darstellung — DIN/TS 18599-5 rechnet deutlich detaillierter",
+        schematic_note = note_line(tr("Schematic view — DIN/TS 18599-5 calculates in far more detail", "Schematische Darstellung — DIN/TS 18599-5 rechnet deutlich detaillierter"),
                                    color=P_PRIMARY)
         self.play(FadeIn(product["group"]), FadeIn(schematic_note), lift.animate(run_time=1.4).set_value(1.0),
                   run_time=1.4)
@@ -1117,14 +1076,14 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "einheit")
 
         caption = step(caption, "gas")
-        gas_label = body_text("Gaskessel", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(
+        gas_label = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(
             rows["eg"]["label"].get_left(), aligned_edge=LEFT)
         eq2, eq2_box, items2 = math_panel([
             ("ep", r"e_{p}", P_WHITE), (None, r"\approx", P_WHITE),
-            ("eu", r"1{,}04", UEBER_RED), (None, r"\cdot", P_WHITE),
-            ("ed", r"1{,}08", VERT_ORANGE), (None, r"\cdot", P_WHITE),
-            ("es", r"1{,}06", SPEI_YELLOW), (None, r"\cdot", P_WHITE),
-            ("eg", r"1{,}18", ERZ_AMBER), (None, r"\approx 1{,}40", P_WHITE),
+            ("eu", tr(r"1.04", r"1{,}04"), UEBER_RED), (None, r"\cdot", P_WHITE),
+            ("ed", tr(r"1.08", r"1{,}08"), VERT_ORANGE), (None, r"\cdot", P_WHITE),
+            ("es", tr(r"1.06", r"1{,}06"), SPEI_YELLOW), (None, r"\cdot", P_WHITE),
+            ("eg", tr(r"1.18", r"1{,}18"), ERZ_AMBER), (None, tr(r"\approx 1.40", r"\approx 1{,}40"), P_WHITE),
         ])
         self.play(FadeOut(schematic_note), ReplacementTransform(rows["eg"]["label"], gas_label),
                   ReplacementTransform(eq_box, eq2_box), ReplacementTransform(eq, eq2), run_time=1.8)
@@ -1132,13 +1091,13 @@ class Beat4_Anlagenaufwandszahl(Scene):
 
         caption = step(caption, "gas_kwh")
         unit_tex = r"\,\mathrm{kWh/(m^{2}\cdot a)}"
-        out_h = math_label(rf"Q_{{h}}={de_num(Q_NUTZ)}{unit_tex}", np.array([5.1, 1.5, 0.0]), size=LABEL_FONT_SIZE,
+        out_h = math_label(rf"Q_{{h}}={label_number(Q_NUTZ)}{unit_tex}", np.array([5.1, 1.5, 0.0]), size=LABEL_FONT_SIZE,
                            color=NUTZ_BLUE)
-        out_e = math_label(rf"Q_{{E}}\approx {de_num(round(Q_E_GAS))}{unit_tex}", np.array([5.1, 0.3, 0.0]),
+        out_e = math_label(rf"Q_{{E}}\approx {label_number(round(Q_E_GAS))}{unit_tex}", np.array([5.1, 0.3, 0.0]),
                            size=LABEL_FONT_SIZE, color=END_RED)
         out_arrow = Arrow(np.array([4.2, 1.2, 0.0]), np.array([4.2, 0.6, 0.0]), buff=0, color=P_WHITE, stroke_width=3,
                           max_tip_length_to_length_ratio=0.3)
-        out_x = math_label(r"\cdot\,e_{p}\approx 1{,}40", np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
+        out_x = math_label(tr(r"\cdot\,e_{p}\approx 1.40", r"\cdot\,e_{p}\approx 1{,}40"), np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
                            color=P_WHITE, edge="left")
         self.play(FadeIn(out_h), run_time=1.0)
         self.play(Create(out_arrow), FadeIn(out_x), run_time=1.2)
@@ -1146,18 +1105,18 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "gas_kwh")
 
         caption = step(caption, "wp")
-        pump_label = body_text("Wärmepumpe", font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
+        pump_label = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
             gas_label.get_left(), aligned_edge=LEFT)
         eq3, eq3_box, items3 = math_panel([
             ("ep", r"e_{p}", P_WHITE), (None, r"\approx", P_WHITE),
-            ("eu", r"1{,}04", UEBER_RED), (None, r"\cdot", P_WHITE),
-            ("ed", r"1{,}08", VERT_ORANGE), (None, r"\cdot", P_WHITE),
-            ("es", r"1{,}06", SPEI_YELLOW), (None, r"\cdot", P_WHITE),
-            ("eg", r"0{,}26", AMBIENT_GREEN), (None, r"\approx 0{,}31", P_WHITE),
+            ("eu", tr(r"1.04", r"1{,}04"), UEBER_RED), (None, r"\cdot", P_WHITE),
+            ("ed", tr(r"1.08", r"1{,}08"), VERT_ORANGE), (None, r"\cdot", P_WHITE),
+            ("es", tr(r"1.06", r"1{,}06"), SPEI_YELLOW), (None, r"\cdot", P_WHITE),
+            ("eg", tr(r"0.26", r"0{,}26"), AMBIENT_GREEN), (None, tr(r"\approx 0.31", r"\approx 0{,}31"), P_WHITE),
         ])
-        out_e_wp = math_label(rf"Q_{{E}}\approx {de_num(round(Q_E_WP))}{unit_tex}", np.array([5.1, 0.3, 0.0]),
+        out_e_wp = math_label(rf"Q_{{E}}\approx {label_number(round(Q_E_WP))}{unit_tex}", np.array([5.1, 0.3, 0.0]),
                               size=LABEL_FONT_SIZE, color=P_YELLOW)
-        out_x_wp = math_label(r"\cdot\,e_{p}\approx 0{,}31", np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
+        out_x_wp = math_label(tr(r"\cdot\,e_{p}\approx 0.31", r"\cdot\,e_{p}\approx 0{,}31"), np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
                               color=P_WHITE, edge="left")
         self.play(
             ReplacementTransform(gas_label, pump_label),
@@ -1169,12 +1128,12 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "wp")
 
         caption = step(caption, "umwelt")
-        why = note_line("e_p < 1 nur, weil Umweltwärme ohne zugekaufte Endenergie dazukommt", color=AMBIENT_GREEN)
-        gen = stacked_bar([("Umwelt", WP_UMWELT, AMBIENT_GREEN), ("Strom", WP_STROM, P_YELLOW)],
+        why = note_line(tr("e_p < 1 only because ambient heat comes in without purchased final energy", "e_p < 1 nur, weil Umweltwärme ohne zugekaufte Endenergie dazukommt"), color=AMBIENT_GREEN)
+        gen = stacked_bar([(tr("Ambient", "Umwelt"), WP_UMWELT, AMBIENT_GREEN), (tr("Electricity", "Strom"), WP_STROM, P_YELLOW)],
                           base=np.array([6.0, -1.0, 0.0]), width=0.8, unit=0.0165)
-        env_tag = body_text(f"Umwelt  {round(WP_UMWELT)} kWh", font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN
+        env_tag = body_text(tr(f"Ambient  {round(WP_UMWELT)} kWh", f"Umwelt  {round(WP_UMWELT)} kWh"), font_size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN
                             ).move_to(np.array([5.4, gen["anchors"][0][1], 0.0]), aligned_edge=RIGHT)
-        el_tag = body_text(f"Strom  {round(WP_STROM)} kWh", font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW
+        el_tag = body_text(tr(f"Electricity  {round(WP_STROM)} kWh", f"Strom  {round(WP_STROM)} kWh"), font_size=LABEL_FONT_SIZE - 2, color=P_YELLOW
                            ).move_to(np.array([5.4, gen["anchors"][1][1], 0.0]), aligned_edge=RIGHT)
         self.play(*[FadeOut(m) for m in (out_h, out_arrow, out_x_wp, out_e_wp)], run_time=0.8)
         self.play(FadeIn(why), GrowFromEdge(gen["bars"][0], DOWN), FadeIn(env_tag), run_time=1.8)
@@ -1188,17 +1147,17 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("ep", r"e_{p}", P_WHITE),
         ])
         gx, px = -2.4, 2.4
-        gas_meter = _meter(np.array([gx, 1.2, 0.0]), kind="gas", color=ERZ_AMBER).scale(1.5)
-        power_meter = _meter(np.array([px, 1.2, 0.0]), kind="power", color=P_YELLOW).scale(1.5)
-        gas_val = math_label(rf"{de_num(round(Q_E_GAS))}{unit_tex}", np.array([gx, 0.4, 0.0]), size=BODY_FONT_SIZE,
+        gas_meter = fitted_staffage("shared-gas-meter-run", width=0.8, height=0.9, rate=1.0, loop=True).move_to(np.array([gx, 1.2, 0.0]))
+        power_meter = fitted_staffage("shared-electricity-meter-run", width=0.8, height=0.9, rate=1.0, loop=True).move_to(np.array([px, 1.2, 0.0]))
+        gas_val = math_label(rf"{label_number(round(Q_E_GAS))}{unit_tex}", np.array([gx, 0.4, 0.0]), size=BODY_FONT_SIZE,
                              color=END_RED)
-        power_val = math_label(rf"{de_num(round(Q_E_WP))}{unit_tex}", np.array([px, 0.4, 0.0]), size=BODY_FONT_SIZE,
+        power_val = math_label(rf"{label_number(round(Q_E_WP))}{unit_tex}", np.array([px, 0.4, 0.0]), size=BODY_FONT_SIZE,
                                color=P_YELLOW)
         not_equal = VGroup(*[Line(np.array([-0.16, 1.2 + dy, 0.0]), np.array([0.16, 1.2 + dy, 0.0]), color=P_WHITE,
                                   stroke_width=3) for dy in (0.07, -0.07)],
                            Line(np.array([-0.1, 1.0, 0.0]), np.array([0.1, 1.4, 0.0]), color=P_WHITE, stroke_width=3))
         gas_name = body_text("Gas", font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(np.array([gx, 1.85, 0.0]))
-        power_name = body_text("Strom", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([px, 1.85, 0.0]))
+        power_name = body_text(tr("Electricity", "Strom"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([px, 1.85, 0.0]))
         gone = [*[rows[k]["group"] for k in keys], *[rows[k]["readout"] for k in keys], product["group"],
                 product["readout"], pump_label, why, gen["bars"], env_tag,
                 el_tag]
@@ -1209,7 +1168,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "brueck")
 
         caption = step(caption, "weiter")
-        bridge_note = note_line("1 kWh Strom ≠ 1 kWh Gas", color=P_PRIMARY)
+        bridge_note = note_line(tr("1 kWh electricity ≠ 1 kWh gas", "1 kWh Strom ≠ 1 kWh Gas"), color=P_PRIMARY)
         self.play(FadeIn(bridge_note), run_time=1.0)
         hold_for(self, self.NARRATION, "weiter")
 

@@ -1,0 +1,2222 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "gas-meter",
+    "category": "appliances",
+    "title": {
+      "en": "Bellows Gas Meter with Counter and Test Dial",
+      "de": "Balgengaszähler mit Zählwerk und Prüfrad"
+    },
+    "summary": {
+      "en": "A 0.24 m by 0.27 m G4 bellows gas meter seen from the front: a two-shell aluminium housing, two union-nut pipe stubs on top, an eight-digit counter and a test dial whose pointer turns with the gas flow.",
+      "de": "Ein Balgengaszähler G4 von 0,24 m mal 0,27 m in der Frontansicht: ein zweischaliges Aluminiumgehäuse, zwei Rohrstutzen mit Überwurfmuttern oben, ein achtstelliges Zählwerk und ein Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht."
+    },
+    "tags": [
+      "meter",
+      "gas-meter",
+      "bellows-meter",
+      "g4",
+      "final-energy",
+      "billing",
+      "wall-mounted",
+      "appliance",
+      "gas",
+      "rotating"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G4)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "din-en-1359-2017",
+          "citation": "DIN EN 1359:2017 Gas meters - Diaphragm gas meters (G4 size: maximum flow 6 cubic metres per hour, 110 mm connection spacing, cyclic volume of about 2 litres, index with roller counter and test element)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A domestic G4 diaphragm (bellows) meter seen from the front: a housing of 0.24 m width in two die-cast aluminium shells with a bead seam, two pipe stubs at a spacing of 110 mm with union nuts on top (overall height 0.27 m), an index head with an eight-digit roller counter (five whole cubic metres and three decimals) and a test dial with a pointer, and a data plate. The depth of 0.17 m and the mass of 1.95 kg are rounded from this product class (authored estimate). The origin is the centre of the housing front. The pointer is the pointer bone; one turn stands for 0.2 cubic metres, so at the rated 6 cubic metres per hour it needs 120 seconds, which the clip shows 60 times faster. Gas flowing through the pipes releases no heat of its own; the operating level only gives the pipe stubs 0.2 W of friction and ambient exchange.",
+        "de": "Ein häuslicher Balgengaszähler G4 in der Frontansicht: ein 0,24 m breites Gehäuse aus zwei Aluminium-Druckgussschalen mit Bördelnaht, zwei Rohrstutzen im Abstand von 110 mm mit Überwurfmuttern oben (Gesamthöhe 0,27 m), ein Zählwerkskopf mit achtstelligem Rollenzählwerk (fünf ganze Kubikmeter und drei Dezimalen) und einem Prüfrad mit Zeiger, und ein Datenschild. Die Tiefe von 0,17 m und die Masse von 1,95 kg sind aus dieser Produktklasse gerundet (Schätzwert). Der Ursprung ist die Mitte der Gehäusefront. Der Zeiger ist der Zeigerknochen; eine Umdrehung steht für 0,2 Kubikmeter, bei den Nenn-6 Kubikmetern je Stunde braucht er also 120 Sekunden, was der Clip 60-fach schneller zeigt. Das durchströmende Gas setzt keine eigene Wärme frei; die Betriebsstufe gibt den Stutzen nur 0,2 W aus Reibung und Umgebungsaustausch."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.27,
+      "widthM": 0.24,
+      "depthM": 0.17,
+      "massKg": 1.952
+    },
+    "materials": [
+      {
+        "id": "die-cast-aluminium",
+        "title": {
+          "en": "Die-cast aluminium, painted",
+          "de": "Aluminium-Druckguss, lackiert"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 150,
+        "specificHeatJKgK": 900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "abs-plastic",
+        "title": {
+          "en": "White ABS plastic",
+          "de": "Weißer ABS-Kunststoff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "steel-pipe",
+        "title": {
+          "en": "Steel pipe",
+          "de": "Stahlrohr"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "body",
+      "bones": [
+        {
+          "id": "body",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Meter housing",
+            "de": "Zählergehäuse"
+          },
+          "lengthM": 0.27,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.95,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "pointer",
+          "parent": "body",
+          "x": 0,
+          "y": 0.018,
+          "angleDeg": 0,
+          "title": {
+            "en": "Test dial pointer",
+            "de": "Zeiger des Prüfrades"
+          },
+          "lengthM": 0.025,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 0.002,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-bracket-top",
+        "bone": "body",
+        "x": 0,
+        "y": 0.1,
+        "kind": "support",
+        "title": {
+          "en": "Upper bracket on the wall",
+          "de": "Oberer Halter an der Wand"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016
+      },
+      {
+        "id": "wall-bracket-bottom",
+        "bone": "body",
+        "x": 0,
+        "y": -0.1,
+        "kind": "support",
+        "title": {
+          "en": "Lower bracket on the wall",
+          "de": "Unterer Halter an der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016,
+        "frictionCoefficient": 0.4
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stub-1",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.069,
+              "y": 0.11,
+              "w": 0.028,
+              "h": 0.044,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.118,
+              "w": 0.04,
+              "h": 0.018,
+              "r": 0.002,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "face-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.072,
+              "y": 0.154,
+              "w": 0.034,
+              "h": 0.006,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "stub-2",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.041,
+              "y": 0.11,
+              "w": 0.028,
+              "h": 0.044,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.035,
+              "y": 0.118,
+              "w": 0.04,
+              "h": 0.018,
+              "r": 0.002,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "face-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.038,
+              "y": 0.154,
+              "w": 0.034,
+              "h": 0.006,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "lower-shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.11,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "upper-shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0,
+              "w": 0.24,
+              "h": 0.11,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "seam",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.006,
+              "w": 0.24,
+              "h": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.095,
+              "y": 0,
+              "w": 0.19,
+              "h": 0.098,
+              "r": 0.006,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.0755,
+              "y": 0.058,
+              "w": 0.151,
+              "h": 0.029,
+              "r": 0.002,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.0715,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.0533,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.0351,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.0169,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-5",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": 0.0013,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-6",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0195,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-7",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0377,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "digit-8",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0559,
+              "y": 0.0615,
+              "w": 0.0155,
+              "h": 0.022,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dial",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.018,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "tick-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.021,
+                  0.018
+                ],
+                [
+                  0.027,
+                  0.018
+                ]
+              ],
+              "closed": false,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "tick-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.039
+                ],
+                [
+                  0,
+                  0.045
+                ]
+              ],
+              "closed": false,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "tick-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.021,
+                  0.018
+                ],
+                [
+                  -0.027,
+                  0.018
+                ]
+              ],
+              "closed": false,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "tick-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.003
+                ],
+                [
+                  0,
+                  -0.009
+                ]
+              ],
+              "closed": false,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "needle",
+              "bone": "pointer",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.006,
+                  -0.006
+                ],
+                [
+                  0.006,
+                  -0.006
+                ],
+                [
+                  0.0025,
+                  0.026
+                ],
+                [
+                  -0.0025,
+                  0.026
+                ]
+              ],
+              "closed": true,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "pivot",
+              "bone": "pointer",
+              "role": "detail",
+              "z": 3.55,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.07,
+              "y": -0.085,
+              "w": 0.14,
+              "h": 0.045,
+              "r": 0.003,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "plate-line-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.055,
+                  -0.1
+                ],
+                [
+                  0.055,
+                  -0.1
+                ]
+              ],
+              "closed": false,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "plate-line-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.055,
+                  -0.115
+                ],
+                [
+                  0.04,
+                  -0.115
+                ]
+              ],
+              "closed": false,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            }
+          ],
+          "plan": [
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.07,
+              "w": 0.24,
+              "h": 0.155,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "bead",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.108,
+                  -0.058
+                ],
+                [
+                  0.108,
+                  -0.058
+                ],
+                [
+                  0.108,
+                  0.073
+                ],
+                [
+                  -0.108,
+                  0.073
+                ]
+              ],
+              "closed": true,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.095,
+              "y": -0.085,
+              "w": 0.19,
+              "h": 0.015,
+              "r": 0.006,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "union-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.0075,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "stub-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.0075,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "bore-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.0075,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "union-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.0075,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "stub-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.0075,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "bore-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.0075,
+              "rx": 0.009,
+              "ry": 0.009
+            }
+          ],
+          "front": [
+            {
+              "id": "stub",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0065,
+              "y": 0.11,
+              "w": 0.028,
+              "h": 0.044,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.118,
+              "w": 0.04,
+              "h": 0.018,
+              "r": 0.002,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "face",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.0095,
+              "y": 0.154,
+              "w": 0.034,
+              "h": 0.006,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "lower-shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.07,
+              "y": -0.11,
+              "w": 0.155,
+              "h": 0.11,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "upper-shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0,
+              "w": 0.155,
+              "h": 0.11,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "seam",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.07,
+              "y": -0.006,
+              "w": 0.155,
+              "h": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0,
+              "w": 0.015,
+              "h": 0.098,
+              "r": 0.006,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "index-edge",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.078,
+                  0.058
+                ],
+                [
+                  -0.078,
+                  0.087
+                ]
+              ],
+              "closed": false,
+              "region": "index",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.24 m by 0.27 m bellows gas meter, 4.8 mm by 5.4 mm on paper: a two-shell aluminium housing with a bead seam, two union-nut pipe stubs on top, a pale index head with an eight-digit counter and a round test dial with a pointer, and a data plate below. Front, 3.4 mm by 5.4 mm on paper: the meter side-on, the two die-cast shells meeting at a bead seam, the pale index head standing out of the face, and the two pipe stubs with union nut on top, one behind the other. Plan, 4.8 mm by 3.4 mm: the housing with the seam bead running round it, the index strip on the front edge and the two union nuts with their stubs and dark bores. Front, 3.4 mm by 5.4 mm on paper: the meter side-on, the two die-cast shells meeting at a bead seam, the pale index head standing out of the face, and the two pipe stubs with union nut on top, one behind the other. Plan, 4.8 mm by 3.4 mm: the housing with the seam bead running round it, the index strip on the front edge and the two union nuts with their stubs and dark bores.",
+            "de": "Ein Balgengaszähler von 0,24 m mal 0,27 m, auf Papier 4,8 mm mal 5,4 mm: ein zweischaliges Aluminiumgehäuse mit Bördelnaht, zwei Rohrstutzen mit Überwurfmuttern oben, ein heller Zählwerkskopf mit achtstelligem Zählwerk und einem runden Prüfrad mit Zeiger, darunter ein Datenschild. Vorderansicht, 3,4 mm auf 5,4 mm: der Zähler von der Seite, die beiden Druckguss-Schalen mit der Wulstnaht, der helle Zählwerkkopf, der aus der Front tritt, und die beiden Rohrstutzen mit Überwurfmutter obenauf, einer hinter dem anderen. Grundriss, 4,8 mm auf 3,4 mm: das Gehäuse mit der umlaufenden Wulstnaht, der Zählwerkstreifen an der Vorderkante und die beiden Überwurfmuttern mit Stutzen und dunklen Bohrungen. Vorderansicht, 3,4 mm auf 5,4 mm: der Zähler von der Seite, die beiden Druckguss-Schalen mit der Wulstnaht, der helle Zählwerkkopf, der aus der Front tritt, und die beiden Rohrstutzen mit Überwurfmutter obenauf, einer hinter dem anderen. Grundriss, 4,8 mm auf 3,4 mm: das Gehäuse mit der umlaufenden Wulstnaht, der Zählwerkstreifen an der Vorderkante und die beiden Überwurfmuttern mit Stutzen und dunklen Bohrungen."
+          },
+          "retained": {
+            "en": "Both shells, the seam bead, the 28 mm stubs with unions and sealing faces at 110 mm spacing, index head, eight digits (the last three dimmer for the decimals), the 56 mm test dial with four ticks and its pointer, data plate with two text lines.",
+            "de": "Beide Schalen, der Nahtwulst, die 28 mm breiten Stutzen mit Überwurfmuttern und Dichtflächen im Abstand von 110 mm, der Zählwerkskopf, acht Ziffern (die letzten drei matter für die Dezimalen), das 56 mm große Prüfrad mit vier Strichen und seinem Zeiger, das Datenschild mit zwei Textzeilen."
+          },
+          "merged": {
+            "en": "Housing, seam and plate belong to one die-cast aluminium region; the glass of the index head is part of the index region.",
+            "de": "Gehäuse, Naht und Schild gehören zu einer Alu-Druckguss-Region; das Glas des Zählwerkskopfes gehört zur Zählwerksregion."
+          },
+          "omitted": {
+            "en": "The mounting bracket, the pulse transmitter, the seal wires and the printed scale numerals. Digits, dial, needle and data plate lie on the face and are not seen from the side or from above. Digits, dial, needle and data plate lie on the face and are not seen from the side or from above.",
+            "de": "Der Montagewinkel, der Impulsgeber, die Plombierdrähte und die gedruckten Skalenziffern. Ziffern, Zifferblatt, Zeiger und Typenschild liegen auf der Front und sind von der Seite und von oben nicht zu sehen. Ziffern, Zifferblatt, Zeiger und Typenschild liegen auf der Front und sind von der Seite und von oben nicht zu sehen."
+          },
+          "thinElements": {
+            "en": "The pointer is a tapered shape 12 mm wide at the pivot (0.24 mm); the ticks are 0.13 mm lines of 6 mm; digits are 15.5 mm wide (0.31 mm).",
+            "de": "Der Zeiger ist eine sich verjüngende Form, am Drehpunkt 12 mm (0,24 mm) breit; die Striche sind 0,13-mm-Linien von 6 mm; die Ziffern sind 15,5 mm breit (0,31 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Lower shell 0.55, upper shell 0.6, index 0.8, counter 0.1 with digits 0.92 and 0.5, dial 0.95, stubs 0.5, unions 0.35; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Untere Schale 0,55, obere Schale 0,6, Zählwerkskopf 0,8, Zählwerk 0,1 mit Ziffern 0,92 und 0,5, Prüfrad 0,95, Stutzen 0,5, Überwurfmuttern 0,35; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Shell, index and pipes are three regions; in the thermal view the pipes and the shell sit at room temperature and the pointer turns with the pointer bone.",
+            "de": "Schale, Zählwerkskopf und Rohre sind drei Regionen; in der Thermalansicht liegen Rohre und Schale auf Raumtemperatur, und der Zeiger dreht sich mit dem Zeigerknochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stub-1",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.069,
+              "y": 0.11,
+              "w": 0.028,
+              "h": 0.044,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.118,
+              "w": 0.04,
+              "h": 0.018,
+              "r": 0.002,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "stub-2",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.041,
+              "y": 0.11,
+              "w": 0.028,
+              "h": 0.044,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.035,
+              "y": 0.118,
+              "w": 0.04,
+              "h": 0.018,
+              "r": 0.002,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.22,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.095,
+              "y": 0,
+              "w": 0.19,
+              "h": 0.098,
+              "r": 0.006,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.0755,
+              "y": 0.058,
+              "w": 0.151,
+              "h": 0.03,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dial",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.018,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "needle",
+              "bone": "pointer",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.006,
+                  -0.006
+                ],
+                [
+                  0.006,
+                  -0.006
+                ],
+                [
+                  0.0025,
+                  0.026
+                ],
+                [
+                  -0.0025,
+                  0.026
+                ]
+              ],
+              "closed": true,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.07,
+              "y": -0.085,
+              "w": 0.14,
+              "h": 0.045,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            }
+          ],
+          "plan": [
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.07,
+              "w": 0.24,
+              "h": 0.155,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.095,
+              "y": -0.085,
+              "w": 0.19,
+              "h": 0.015,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "union-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": -0.055,
+              "cy": 0.0075,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0.055,
+              "cy": 0.0075,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "pipes",
+              "material": "steel-pipe"
+            }
+          ],
+          "front": [
+            {
+              "id": "stub",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0065,
+              "y": 0.11,
+              "w": 0.028,
+              "h": 0.044,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "union",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.118,
+              "w": 0.04,
+              "h": 0.018,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.07,
+              "y": -0.11,
+              "w": 0.155,
+              "h": 0.22,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0,
+              "w": 0.015,
+              "h": 0.098,
+              "region": "index",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.4 mm by 2.7 mm gas meter: a grey box with two stubs, a pale index head with a dark counter strip and a round dial with a pointer, and a pale plate. Front, 1.7 mm by 2.7 mm: housing, index head, one stub and one union. Plan, 2.4 mm by 1.7 mm: housing, index strip and two union discs. Front, 1.7 mm by 2.7 mm: housing, index head, one stub and one union. Plan, 2.4 mm by 1.7 mm: housing, index strip and two union discs.",
+            "de": "Ein Gaszähler von 2,4 mm mal 2,7 mm: ein grauer Kasten mit zwei Stutzen, ein heller Zählwerkskopf mit dunklem Zählwerksstreifen und einem runden Prüfrad mit Zeiger, und ein helles Schild. Vorderansicht, 1,7 mm auf 2,7 mm: Gehäuse, Zählwerkkopf, ein Stutzen und eine Überwurfmutter. Grundriss, 2,4 mm auf 1,7 mm: Gehäuse, Zählwerkstreifen und zwei Muttern-Scheiben. Vorderansicht, 1,7 mm auf 2,7 mm: Gehäuse, Zählwerkkopf, ein Stutzen und eine Überwurfmutter. Grundriss, 2,4 mm auf 1,7 mm: Gehäuse, Zählwerkstreifen und zwei Muttern-Scheiben."
+          },
+          "retained": {
+            "en": "Housing, two stubs with unions, index head, counter strip, dial with pointer, data plate.",
+            "de": "Gehäuse, zwei Stutzen mit Überwurfmuttern, Zählwerkskopf, Zählwerksstreifen, Prüfrad mit Zeiger, Datenschild."
+          },
+          "merged": {
+            "en": "Both shells and the seam are one housing; the digits join the dark strip; the dial ticks and pivot are dropped.",
+            "de": "Beide Schalen und die Naht sind ein Gehäuse; die Ziffern gehen im dunklen Streifen auf; die Striche und der Drehpunkt des Prüfrades entfallen."
+          },
+          "omitted": {
+            "en": "Seam bead, digits, ticks, pivot, sealing faces and plate text. Seam bead, bores and stub rings. Seam bead, bores and stub rings.",
+            "de": "Nahtwulst, Ziffern, Striche, Drehpunkt, Dichtflächen und Schildtext. Wulstnaht, Bohrungen und Stutzenringe. Wulstnaht, Bohrungen und Stutzenringe."
+          },
+          "thinElements": {
+            "en": "The pointer is a tapered shape 12 mm wide (0.24 mm); the stubs are 28 mm (0.28 mm) wide.",
+            "de": "Der Zeiger ist eine sich verjüngende Form von 12 mm (0,24 mm) Breite; die Stutzen sind 28 mm (0,28 mm) breit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Housing 0.58, index 0.8, counter 0.1, dial 0.95, plate 0.9; one body pen of 0.18 mm.",
+            "de": "Gehäuse 0,58, Zählwerkskopf 0,8, Zählwerk 0,1, Prüfrad 0,95, Schild 0,9; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Shell, index and pipes stay three regions, the pointer turns with its bone.",
+            "de": "Schale, Zählwerkskopf und Rohre bleiben drei Regionen, der Zeiger dreht sich mit seinem Knochen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stub-1",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.1,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "stub-2",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.035,
+              "y": 0.1,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.22,
+              "r": 0.012,
+              "region": "shell",
+              "material": "die-cast-aluminium"
+            },
+            {
+              "id": "index",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.095,
+              "y": -0.02,
+              "w": 0.19,
+              "h": 0.118,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.054,
+              "w": 0.15,
+              "h": 0.04,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dial",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.97,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.018,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "index",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "needle",
+              "bone": "pointer",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.007,
+                  -0.006
+                ],
+                [
+                  0.007,
+                  -0.006
+                ],
+                [
+                  0.003,
+                  0.028
+                ],
+                [
+                  -0.003,
+                  0.028
+                ]
+              ],
+              "closed": true,
+              "region": "index",
+              "material": "abs-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "meter",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  -0.07
+                ],
+                [
+                  -0.095,
+                  -0.07
+                ],
+                [
+                  -0.095,
+                  -0.085
+                ],
+                [
+                  0.095,
+                  -0.085
+                ],
+                [
+                  0.095,
+                  -0.07
+                ],
+                [
+                  0.12,
+                  -0.07
+                ],
+                [
+                  0.12,
+                  0.085
+                ],
+                [
+                  -0.12,
+                  0.085
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shell",
+                "index"
+              ],
+              "material": "die-cast-aluminium"
+            }
+          ],
+          "front": [
+            {
+              "id": "stub",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.1,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "pipes",
+              "material": "steel-pipe"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  -0.11
+                ],
+                [
+                  0.085,
+                  -0.11
+                ],
+                [
+                  0.085,
+                  0.11
+                ],
+                [
+                  -0.07,
+                  0.11
+                ],
+                [
+                  -0.07,
+                  0.098
+                ],
+                [
+                  -0.085,
+                  0.098
+                ],
+                [
+                  -0.085,
+                  -0.02
+                ],
+                [
+                  -0.07,
+                  -0.02
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shell",
+                "index"
+              ],
+              "material": "die-cast-aluminium"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.2 mm by 1.35 mm gas meter: a grey box with two stubs, a pale head with a dark counter bar and a round dial with a pointer. Front, 0.85 mm by 1.35 mm: housing, index and one thick stub. Plan, 1.2 mm by 0.85 mm: housing, index strip and two stub discs. Front, 0.85 mm by 1.35 mm: the housing and index step merged into one outline with the thick pipe stub on top. Plan, 1.2 mm by 0.85 mm: one outline of housing and index strip; the two stubs are below what the pen can draw and are left out.",
+            "de": "Ein Gaszähler von 1,2 mm mal 1,35 mm: ein grauer Kasten mit zwei Stutzen, ein heller Kopf mit dunklem Zählwerksbalken und einem runden Prüfrad mit Zeiger. Vorderansicht, 0,85 mm auf 1,35 mm: Gehäuse, Zählwerk und ein dicker Stutzen. Grundriss, 1,2 mm auf 0,85 mm: Gehäuse, Zählwerkstreifen und zwei Stutzenscheiben. Vorderansicht, 0,85 mm auf 1,35 mm: Gehäuse und Zählwerkstufe zu einem Umriss verschmolzen, darauf der dicke Rohrstutzen. Grundriss, 1,2 mm auf 0,85 mm: ein Umriss aus Gehäuse und Zählwerkstreifen; die beiden Stutzen liegen unter dem, was der Stift zeichnen kann, und entfallen."
+          },
+          "retained": {
+            "en": "Housing, stubs, index head, counter bar, dial and pointer.",
+            "de": "Gehäuse, Stutzen, Zählwerkskopf, Zählwerksbalken, Prüfrad und Zeiger."
+          },
+          "merged": {
+            "en": "The unions join the stubs, the plate joins the housing; the index head is enlarged downwards by 20 mm to take the dial.",
+            "de": "Die Überwurfmuttern gehen in den Stutzen auf, das Schild geht im Gehäuse auf; der Zählwerkskopf ist um 20 mm nach unten vergrößert, damit er das Prüfrad aufnimmt."
+          },
+          "omitted": {
+            "en": "Seam, digits, ticks, pivot and plate. Union nuts are merged into the stubs. Union nuts and the dial are merged away; in plan the stubs are left out and the outline carries shell and index.",
+            "de": "Naht, Ziffern, Striche, Drehpunkt und Schild. Überwurfmuttern gehen in den Stutzen auf. Überwurfmuttern und Zifferblatt entfallen; im Grundriss entfallen die Stutzen und der Umriss trägt Gehäuse und Zählwerk."
+          },
+          "thinElements": {
+            "en": "The stubs are widened to 40 mm (0.2 mm); the counter bar is 40 mm high (0.2 mm); the pointer is a 0.2 mm line.",
+            "de": "Die Stutzen sind auf 40 mm (0,2 mm) verbreitert; der Zählwerksbalken ist 40 mm hoch (0,2 mm); der Zeiger ist eine 0,2-mm-Linie."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Housing 0.58, head 0.9, counter 0.1, dial 0.97, stubs 0.45; one body pen of 0.13 mm.",
+            "de": "Gehäuse 0,58, Kopf 0,9, Zählwerk 0,1, Prüfrad 0,97, Stutzen 0,45; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "Shell, index and pipes stay the three regions.",
+            "de": "Schale, Zählwerkskopf und Rohre bleiben die drei Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the meter is 0.48 mm by 0.54 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the dial needle of 12 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist der Zähler 0,48 mm mal 0,54 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, der Zeiger von 12 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Dial needle of 12 mm",
+          "de": "Zeiger von 12 mm"
+        },
+        "limitingSizeM": 0.012,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "No gas flow",
+          "de": "Kein Gasdurchfluss"
+        },
+        "description": {
+          "en": "No appliance burns gas: the pointer stands still.",
+          "de": "Kein Gerät verbrennt Gas: der Zeiger steht still."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-bracket-top",
+          "wall-bracket-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "shell": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "index": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "pipes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "flow": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "low-flow",
+        "title": {
+          "en": "Low flow",
+          "de": "Kleiner Durchfluss"
+        },
+        "description": {
+          "en": "A hob burns at 1.8 cubic metres per hour: the pointer has turned a little way.",
+          "de": "Ein Kochfeld verbrennt 1,8 Kubikmeter je Stunde: der Zeiger hat sich ein Stück gedreht."
+        },
+        "bones": {
+          "pointer": {
+            "angleDeg": -60
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-bracket-top",
+          "wall-bracket-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "shell": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "index": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "pipes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "flow": 0.3
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "rated-flow",
+        "title": {
+          "en": "Rated flow",
+          "de": "Nenndurchfluss"
+        },
+        "description": {
+          "en": "A boiler burns gas at the rated 6 cubic metres per hour of a G4 meter.",
+          "de": "Ein Heizkessel verbrennt Gas mit dem Nenndurchfluss von 6 Kubikmetern je Stunde eines G4-Zählers."
+        },
+        "bones": {
+          "pointer": {
+            "angleDeg": -120
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-bracket-top",
+          "wall-bracket-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "shell": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "index": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "pipes": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "flow": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "run",
+        "title": {
+          "en": "Gas flows through",
+          "de": "Gas strömt durch"
+        },
+        "description": {
+          "en": "The pointer of the test dial turns clockwise at a steady 180 degrees per second; a real G4 meter at rated flow needs two minutes per turn (0.2 cubic metres per turn), so the clip is shown 60 times faster. A scene can seek into the clip to follow its own gas flow.",
+          "de": "Der Zeiger des Prüfrades dreht sich im Uhrzeigersinn gleichmäßig mit 180 Grad je Sekunde; ein echter G4-Zähler braucht bei Nenndurchfluss zwei Minuten je Umdrehung (0,2 Kubikmeter je Umdrehung), der Clip läuft also 60-fach schneller. Eine Szene kann in den Clip springen, um ihrem eigenen Gasstrom zu folgen."
+        },
+        "durationS": 4,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "rated-flow",
+            "ease": "linear",
+            "bones": {
+              "pointer": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "rated-flow",
+            "ease": "linear",
+            "bones": {
+              "pointer": {
+                "angleDeg": -720
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-bracket-top",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "wall-bracket-bottom",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "turning",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Pointer turning",
+              "de": "Zeiger dreht"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "operating",
+            "title": {
+              "en": "Gas appliances burning",
+              "de": "Gasgeräte brennen"
+            },
+            "target": "flow"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:flow",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "day-profile",
+        "title": {
+          "en": "Hob, boiler and night",
+          "de": "Kochfeld, Kessel und Nacht"
+        },
+        "description": {
+          "en": "A hob runs on a low flow for a minute, the boiler runs at rated flow for two more, then all appliances switch off.",
+          "de": "Ein Kochfeld läuft eine Minute mit kleinem Durchfluss, der Kessel läuft zwei weitere mit Nenndurchfluss, dann schalten alle Geräte ab."
+        },
+        "durationS": 360,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "low-flow",
+            "ease": "step"
+          },
+          {
+            "t": 65,
+            "pose": "rated-flow",
+            "ease": "step"
+          },
+          {
+            "t": 185,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 360,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-bracket-top",
+            "fromS": 0,
+            "toS": 360
+          },
+          {
+            "anchor": "wall-bracket-bottom",
+            "fromS": 0,
+            "toS": 360
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "No flow",
+              "de": "Kein Durchfluss"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 5,
+            "toS": 65,
+            "title": {
+              "en": "Hob",
+              "de": "Kochfeld"
+            }
+          },
+          {
+            "id": "rated",
+            "fromS": 65,
+            "toS": 185,
+            "title": {
+              "en": "Boiler",
+              "de": "Kessel"
+            }
+          },
+          {
+            "id": "night",
+            "fromS": 185,
+            "toS": 360,
+            "title": {
+              "en": "All off",
+              "de": "Alles aus"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 185,
+            "kind": "shutdown",
+            "title": {
+              "en": "Appliances switched off",
+              "de": "Geräte ausgeschaltet"
+            },
+            "target": "flow"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:flow",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.3
+              },
+              {
+                "t": 65,
+                "v": 1
+              },
+              {
+                "t": 185,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "flow",
+          "title": {
+            "en": "Gas flow",
+            "de": "Gasdurchfluss"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "No flow",
+                "de": "Kein Durchfluss"
+              }
+            },
+            {
+              "v": 0.3,
+              "title": {
+                "en": "Hob (1.8 m3/h)",
+                "de": "Kochfeld (1,8 m3/h)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Rated flow (6 m3/h)",
+                "de": "Nenndurchfluss (6 m3/h)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "shell",
+          "title": {
+            "en": "Aluminium housing and data plate",
+            "de": "Aluminiumgehäuse und Datenschild"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "die-cast-aluminium",
+          "areaM2": 0.26,
+          "characteristicLengthM": 0.27,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Die-cast aluminium 2 mm",
+                "de": "Aluminium-Druckguss 2 mm"
+              },
+              "kind": "metal",
+              "material": "die-cast-aluminium",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.000009,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "index",
+          "title": {
+            "en": "Index head and dial",
+            "de": "Zählwerkskopf und Prüfrad"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-plastic",
+          "areaM2": 0.02,
+          "characteristicLengthM": 0.19,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "head",
+              "title": {
+                "en": "ABS head with 2 mm glass-clear cover",
+                "de": "ABS-Kopf mit 2 mm klarer Abdeckung"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "pipes",
+          "title": {
+            "en": "Pipe stubs and unions",
+            "de": "Rohrstutzen und Überwurfmuttern"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "steel-pipe",
+          "areaM2": 0.014,
+          "characteristicLengthM": 0.028,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Steel tube 2.6 mm with gas inside",
+                "de": "Stahlrohr 2,6 mm mit Gas innen"
+              },
+              "kind": "metal",
+              "material": "steel-pipe",
+              "thicknessM": 0.0026,
+              "resistanceM2KW": 0.00005,
+              "heatCapacityJM2K": 3600,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3600,
+          "operating": {
+            "key": "flow",
+            "heatW": 0.2
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The gas is at room temperature and its flow releases no heat; the 0.2 W at level 1 stands for the friction of the gas in the stubs and the warm pipe from the boiler room, and keeps the operating key bound to a region.",
+          "de": "Das Gas hat Raumtemperatur und sein Strom setzt keine Wärme frei; die 0,2 W auf Stufe 1 stehen für die Reibung des Gases in den Stutzen und das warme Rohr aus dem Heizraum und halten den Betriebsschlüssel an eine Region gebunden."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-bracket-top",
+        "wall-bracket-bottom"
+      ],
+      "assumptions": [
+        {
+          "en": "The 1.95 kg meter hangs on the upper bracket (pin) and leans against the wall at the lower bracket (roller); the pipe connections carry no load.",
+          "de": "Der 1,95 kg schwere Zähler hängt am oberen Halter (Festlager) und lehnt am unteren Halter an der Wand (Rollenlager); die Rohranschlüsse tragen keine Last."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "rated-flow",
+      "defaultClip": "run",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

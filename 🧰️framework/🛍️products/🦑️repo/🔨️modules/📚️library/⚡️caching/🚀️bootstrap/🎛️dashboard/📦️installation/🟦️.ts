@@ -2,13 +2,13 @@ import {buildPreparationBudgetMs,progressDeadlinePolicyV1} from "../../../../../
 import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {withRepositoryPublishedCargoExecutableV1} from "../../../../📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1,withRequestedIssuedResourceControlV1,withRenewableIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1,scriptInvocationEnvironment,withRequestedIssuedResourceControlV1,withRenewableIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type CargoDependencyNetworkV1} from "../../../../📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts";
 import {parseCargoBinarySourcesV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {refuseBootstrapV1,sayBootstrapV1} from "../../📖️texts/🟦️.ts";
 import {readBuildMode,type BuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runOwnedCommand,startOwnedCommandTimeoutV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {startOwnedCommandTimeoutV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import installationSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import orchestrationSchema from "../../../../🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json" with { type: "json" };
@@ -260,10 +260,28 @@ export function mayRunStale(args:readonly string[]):boolean {
   return ["tasks","logs","stop","kill","open"].includes(verb??"")||(verb==="daemon"&&["stop","status"].includes(action??""));
 }
 
-/** 🔨️ Rebuilds and reinstalls through the package script with inherited output; Ctrl+C cancels the build. */
+/** 🦀 Compiles the dashboard binary with Cargo in this process. The control plane does not re-enter `repo run`, so startup never admits the workspace graph or the dependency store. */
+export async function compileDashboardControlPlaneV1(packageRoot:string,options:DashboardExecutionOptions):Promise<void>{
+ compilerAdmissionBudgetV1(options.control);
+ const file=join(packageRoot,"📋️project.json"),facts=lstatSync(file);
+ if(file.length>256||!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size>4194304)throw Error("Physical dashboard compile owner required");
+ const declaration=JSON.parse(readFileSync(file,"utf8"));
+ if(declaration.name!=="@semio-tech/repo-dashboard-rs")throw Error("Exact dashboard compile owner required");
+ const [{readRustBuildIntentV1,rustBuildIntentArgumentsV1},{buildRepositoryCargoArtifacts},{verifyCapturedCargoArtifactsV1}]=await Promise.all([
+  import("../../../../🏗️build/🕸️graph/🦀️rust/📥️intent/🟦️.ts"),
+  import("../../../📦️artifacts/🏗️native-build/🟦️.ts"),
+  import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts"),
+ ]);
+ const intent=readRustBuildIntentV1(declaration.targets?.compile?.metadata?.semio?.rustBuildIntent),phase=createIssuedResourceControlV1(options.invocation,"dashboard:cargo",0);
+ await buildRepositoryCargoArtifacts(resolve(options.workspace,intent.manifest),rustBuildIntentArgumentsV1(intent),options.workspace,{producer:"artifact",invocation:options.invocation,consume:verifyCapturedCargoArtifactsV1,network:options.network,control:phase,environment:process.env,...(intent.sourcesRecord?{sourcesRecord:intent.sourcesRecord}:{})});
+ compilerAdmissionBudgetV1(options.control);
+}
+
+/** 🔨️ Compiles and reinstalls the dashboard in this process; Ctrl+C cancels the build. */
 async function rebuildDashboard(reason:string,options:DashboardExecutionOptions):Promise<void> {
   console.log(`[dashboard] Rebuilding ${options.mode} because ${reason}`);
-  await runOwnedCommand(process.execPath,[join(dashboardPackageRoot,"📜️script.ts"),"build"],dashboardPackageRoot,"dashboard:rebuild",compilerAdmissionBudgetV1(options.control),{env:scriptResourceProcessEnvironmentV1(options.control,scriptInvocationEnvironment(options.invocation,{...process.env,SEMIO_BUILD_MODE:options.mode,SEMIO_SCRIPT_POLICY:undefined})),signal:options.control.signal});
+  await compileDashboardControlPlaneV1(dashboardPackageRoot,options);
+  await installDashboard(dashboardPackageRoot,options.workspace,options);
 }
 
 /** ▶️ Hands the terminal to the selected immutable binary under original cancellation and deadline. */

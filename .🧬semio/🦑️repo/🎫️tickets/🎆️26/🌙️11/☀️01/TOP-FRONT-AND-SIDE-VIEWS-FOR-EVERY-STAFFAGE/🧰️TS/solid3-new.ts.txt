@@ -1,0 +1,63 @@
+const projected = (viewpoint: Viewpoint, q: Vec3): Point => (viewpoint === "plan" ? { x: q[0], y: q[2] } : viewpoint === "front" ? { x: q[2], y: q[1] } : { x: q[0], y: q[1] });
+
+/** ✂️ A convex polygon cut to the side of the line through `base` with normal `normal` that the normal points to. */
+function clipHalf(polygon: readonly Point[], base: Point, normal: Point): Point[] {
+  const side = (p: Point): number => (p.x - base.x) * normal.x + (p.y - base.y) * normal.y;
+  const out: Point[] = [];
+  polygon.forEach((a, i) => {
+    const b = polygon[(i + 1) % polygon.length]!;
+    const [sa, sb] = [side(a), side(b)];
+    if (sa >= 0) out.push(a);
+    if (sa >= 0 !== sb >= 0) out.push({ x: a.x + ((b.x - a.x) * sa) / (sa - sb), y: a.y + ((b.y - a.y) * sa) / (sa - sb) });
+  });
+  return out;
+}
+
+/** 🧊️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile of the bone frame (a along the bone, b along its normal) swept along the lateral axis of the frame from `z0` to `z1` (measured from the rest origin of the bone), as the profile at both ends plus the sweep of every edge; a revolved part is revolved about the vertical axis of its axis bone carried to the current frame (a tilted axis is legal), every profile edge as the hull of the projected circles of its two ends, cut to the half of the axis side when `mirror` is not set. */
+function solid3(solid: Solid, rings: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: Viewpoint): Point[][] {
+  const now = kin.now[bone]!.frame;
+  const rest = kin.rest[bone]!.frame;
+  const place = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];
+  if (solid.kind === "extruded") {
+    const [c0, c1] = [solid.z0 - rest.o[2], solid.z1 - rest.o[2]];
+    return rings.flatMap((ring) => {
+      const low = ring.map((p) => projected(viewpoint, place(p.x, p.y, c0)));
+      const high = ring.map((p) => projected(viewpoint, place(p.x, p.y, c1)));
+      const sweeps = low.map((p, i) => [p, low[(i + 1) % low.length]!, high[(i + 1) % high.length]!, high[i]!]);
+      return [low, high, ...sweeps];
+    });
+  }
+  const axisRest = kin.rest[solid.axisBone]!.frame;
+  const axisNow = kin.now[solid.axisBone]!.frame;
+  const origin = carry(axisRest, axisNow, [solid.axisX, axisRest.o[1], solid.axisZ ?? 0]);
+  const tip = carry(axisRest, axisNow, [solid.axisX, axisRest.o[1] + 1, solid.axisZ ?? 0]);
+  const axis = norm([tip[0] - origin[0], tip[1] - origin[1], tip[2] - origin[2]]);
+  const e1 = norm(Math.hypot(...cross(axis, [0, 0, 1])) > 1e-9 ? cross(axis, [0, 0, 1]) : cross(axis, [1, 0, 0]));
+  const e2 = cross(axis, e1);
+  const circle = (p: Point): Point[] => {
+    const q = place(p.x, p.y, 0);
+    const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
+    const h = dot(d, axis);
+    const radial: Vec3 = [d[0] - h * axis[0], d[1] - h * axis[1], d[2] - h * axis[2]];
+    const r = Math.hypot(...radial);
+    return Array.from({ length: CIRCLE_SEGMENTS }, (_, i) => {
+      const t = (2 * Math.PI * i) / CIRCLE_SEGMENTS;
+      return projected(viewpoint, [origin[0] + h * axis[0] + r * (Math.cos(t) * e1[0] + Math.sin(t) * e2[0]), origin[1] + h * axis[1] + r * (Math.cos(t) * e1[1] + Math.sin(t) * e2[1]), origin[2] + h * axis[2] + r * (Math.cos(t) * e1[2] + Math.sin(t) * e2[2])]);
+    });
+  };
+  const base = projected(viewpoint, origin);
+  const direction = projected(viewpoint, [origin[0] + axis[0], origin[1] + axis[1], origin[2] + axis[2]]);
+  const [dx, dy] = [direction.x - base.x, direction.y - base.y];
+  const flip = Math.abs(dy) > 1e-12 ? dy : dx;
+  const normal: Point = Math.abs(dx) < 1e-12 && Math.abs(dy) < 1e-12 ? { x: 1, y: 0 } : { x: dy, y: -dx };
+  const side: Point = normal.x > 1e-12 || (Math.abs(normal.x) <= 1e-12 && normal.y > 0) ? normal : { x: -normal.x, y: -normal.y };
+  void flip;
+  const half = solid.mirror !== true && viewpoint !== "plan";
+  return rings.flatMap((ring) =>
+    ring.map((p, i) => {
+      const shape = hull([...circle(p), ...circle(ring[(i + 1) % ring.length]!)]);
+      return half ? clipHalf(shape, base, side) : shape;
+    }),
+  );
+}
+

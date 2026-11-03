@@ -9,9 +9,10 @@ import { CATEGORIES, type Manifest, type ManifestEntry } from "@teaching/staffag
 import { mountArchive } from "@teaching/staffage-react/app";
 import { STORAGE_KEY, memoryStorage } from "../../🔨️modules/💾️persistence/🟦️.ts";
 import { tracks } from "../../🔨️modules/🥞️levels/🟦️.tsx";
+import { ROOT_PAGES } from "../../🔨️modules/🏠️overview/🟦️.tsx";
 
 const text = (value: string) => ({ en: value, de: value });
-const human = (id: string): ManifestEntry => ({ id, category: "humans", title: text(id), heightM: 1.7, widthM: 0.5, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: [], viewpoints: ["elevation"], exports: ["svg"], distinction: text(id), completion: "planned" });
+const human = (id: string): ManifestEntry => ({ id, category: "humans", title: text(id), heightM: 1.7, widthM: 0.5, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: [], exports: ["svg"], distinction: text(id), completion: "planned" });
 const manifest = { $schema: "", version: "semio.staffage/v2", categories: CATEGORIES.map((id) => ({ id, emoji: "x", title: text(id), description: text(id), folder: id })), collections: [], entries: Array.from({ length: 24 }, (_, index) => human(`human-${index + 1}`)) } as unknown as Manifest;
 
 const view = { width: 1280, height: 400 };
@@ -76,7 +77,7 @@ describe("the mounted archive", () => {
     await waitFor(() => expect(root.querySelector("[data-layered-overview]")?.getAttribute("data-mode")).toBe("strip"));
     const overview = root.querySelector<HTMLElement>(".staffage-grid");
     expect(overview).not.toBeNull();
-    expect(overview!.querySelectorAll(".staffage-cell").length).toBe(12);
+    expect(overview!.querySelectorAll(".staffage-cell").length).toBe(ROOT_PAGES.length);
     expect(overview!.style.getPropertyValue("--staffage-rows")).toContain("minmax(150px");
     window.location.hash = "#/humans";
     await waitFor(() => expect(root.querySelector('[data-page="category:humans"] [data-layered-overview]')?.getAttribute("data-mode")).toBe("strip"));

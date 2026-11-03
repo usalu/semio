@@ -28,11 +28,18 @@ class SceneIntegrationTest(unittest.TestCase):
         cls.addClassCleanup(cls.configuration.__exit__, None, None, None)
         cls.shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
 
-    def assert_radiator(self, radiator, floor, room_height):
+    def assert_radiator(self, radiator, floor, room_height, cast="shared-radiator-winter"):
         metre = room_height / CASES["physical"]["storey_m"]
-        for name, actual in (("radiator_height_m", radiator.height), ("radiator_width_m", radiator.width),
-                             ("clearance_m", radiator.get_bottom()[1] - floor)):
-            self.assertAlmostEqual(actual, CASES["physical"][name] * metre, places=6)
+        expected = self.shared.staffage_height(cast) * metre
+        self.assertAlmostEqual(radiator.height, expected, delta=0.02 * expected)
+        self.assertAlmostEqual(radiator.get_bottom()[1], floor, delta=0.02 * expected)
+        self.assertLessEqual(radiator.width, CASES["physical"]["radiator_width_m"] * metre + 1e-6)
+
+    def assert_person(self, person, floor, room_height, expected=None):
+        expected = CASES["physical"]["person_m"] / CASES["physical"]["storey_m"] * room_height if expected is None else expected
+        self.assertGreaterEqual(person.height, 0.95 * expected)
+        self.assertLessEqual(person.height, 1.1 * expected)
+        self.assertAlmostEqual(person.get_bottom()[1], floor, delta=0.04 * expected)
 
     def test_demand_emitters_and_occupants(self):
         for chapter, kind in CASES["demand_heaters"].items():
@@ -44,39 +51,40 @@ class SceneIntegrationTest(unittest.TestCase):
                     home = module._home(np.array([1.0, -0.4, 0.0]), scale) if kind == "home" else None
                     heater_args = (house, 1.0) if kind == "house" else (home,) if kind == "home" else (floor, room_height, 1.0)
                     person_args = (house, 1.0) if kind == "house" else (home, 1.0) if kind == "home" else (floor, room_height, 1.0)
-                    self.assert_radiator(module._heater(*heater_args), floor, room_height)
+                    cast = CASES["demand_radiator_casts"][chapter]
+                    self.assert_radiator(module._heater(*heater_args), floor, room_height, cast)
                     person = module._stand(*person_args)
-                    self.assertAlmostEqual(person.height, .7 * room_height, places=6)
-                    self.assertAlmostEqual(person.get_bottom()[1], floor, places=6)
+                    self.assert_person(person, floor, room_height)
 
     def test_system_losses_and_regulation_stages(self):
         module = importlib.import_module(BASE + "📊️demand.🎬️clip.♨️system-losses.🐍️")
         plant = module._plant()
         self.assert_radiator(plant["radiator"], plant["room"]["y_f"], plant["room"]["h"])
-        self.assertAlmostEqual(plant["person"].height, .7 * plant["room"]["h"], places=6)
+        self.assert_person(plant["person"], plant["room"]["y_f"], plant["room"]["h"])
         module = importlib.import_module(BASE + "📊️demand.🎬️clip.⚖️regulations.🐍️")
         stage = module._stage(with_radiator=True)
         room_height = stage["hs"]["w_height"] / 2
         self.assert_radiator(stage["radiator"], stage["floor_y"], room_height)
-        self.assertAlmostEqual(stage["person"].get_bottom()[1], stage["floor_y"], places=6)
-        self.assertAlmostEqual(stage["person"].height, .7 * room_height, places=6)
+        self.assert_person(stage["person"], stage["floor_y"], room_height)
 
     def test_summer_occupant_follows_house_scale(self):
         module = importlib.import_module(BASE + "❄️cooling.🎬️clip.🌤️summer-strategy.🐍️")
         for scale in CASES["scales"]:
             house = self.shared.house_section(np.zeros(3), scale)
             figure = module._person(house, 0.0)
-            self.assertAlmostEqual(figure.height, .7 * house["w_height"] / 2, places=6)
-            self.assertAlmostEqual(figure.get_bottom()[1], house["bottom_left"][1], places=6)
+            self.assert_person(figure, house["bottom_left"][1], house["w_height"] / 2)
 
     def test_seated_room_occupant_has_human_proportions(self):
         module = importlib.import_module(BASE + "❄️cooling.🎬️clip.👥️internal-gains.🐍️")
         for height in (2.25, 3.4):
             room = self.shared.room_section(np.zeros(3), h=height)
             seated = module._seated(room, -0.5)
-            self.assertAlmostEqual(seated["figure"].height, height * 1.3 / 2.5, places=6)
-            self.assertAlmostEqual(seated["figure"].get_bottom()[1], room["y_f"], places=6)
-            self.assertGreater(seated["chest"][1], seated["lap"][1])
+            expected = self.shared.staffage_height("cooling-internal-gains-seated-worker") * height / 2.5
+            self.assertAlmostEqual(seated["group"].height, expected, delta=0.1 * expected)
+            self.assertAlmostEqual(seated["group"].get_bottom()[1], room["y_f"], delta=0.05 * expected)
+            self.assertGreater(seated["chest"][1], seated["laptop"][1])
+            self.assertGreater(seated["head"][1], seated["chest"][1])
+            self.assertLess(seated["head_top"][1], seated["group"].get_top()[1] + 0.05 * expected)
 
     def test_physics_scene_constructor_bounds(self):
         module = importlib.import_module(BASE + "🧲️physics.🎬️clip.🧲️fundamentals.🐍️")
@@ -91,14 +99,22 @@ class SceneIntegrationTest(unittest.TestCase):
                      and (name != "person" or "person_h" in ast.unparse(node))]
             self.assertEqual(len(nodes), 1)
             exec(compile(ast.Module(body=nodes, type_ignores=[]), module.__file__, "exec"), scope)
-        self.assertAlmostEqual(scope["person"].height, room["h"] * 1.75 / 2.5, places=6)
-        self.assertAlmostEqual(scope["person"].get_bottom()[1], room["y_f"], places=6)
-        self.assert_radiator(scope["fe_heater"], house["bottom_left"][1], house["w_height"] / 2)
-        node = next(node for node in assignments if node.targets[0].id == "radiator"
-                    and "5.45" in ast.unparse(node))
-        exec(compile(ast.Module(body=[node], type_ignores=[]), module.__file__, "exec"), scope)
-        self.assertAlmostEqual(scope["radiator"].height, CASES["physics"]["conceptual_heater_height"], places=6)
-        self.assertAlmostEqual(scope["radiator"].width, CASES["physics"]["conceptual_heater_width"], places=6)
+        self.assert_person(scope["person"], room["y_f"], room["h"])
+        self.assert_radiator(scope["fe_heater"], house["bottom_left"][1], house["w_height"] / 2,
+                             "shared-radiator-front-winter")
+        winter = next(node for node in assignments if node.targets[0].id == "radiator"
+                      and "'shared-radiator-winter'" in ast.unparse(node))
+        winter_room = next(node for node in assignments if node.targets[0].id == "room"
+                           and "window=(0.34, 0.92)" in ast.unparse(node))
+        exec(compile(ast.Module(body=[winter_room, winter], type_ignores=[]), module.__file__, "exec"), scope)
+        radiator, winter_room = scope["radiator"], scope["room"]
+        metre = winter_room["h"] / CASES["physical"]["storey_m"]
+        expected = self.shared.staffage_height("shared-radiator-front-winter") * metre
+        self.assertAlmostEqual(radiator.height, expected, delta=CASES["physics"]["radiator_tolerance"] * expected)
+        self.assertAlmostEqual(radiator.get_bottom()[1], winter_room["y_f"], delta=0.02 * expected)
+        self.assertLessEqual(radiator.width, CASES["physical"]["radiator_width_m"] * metre + 1e-6)
+        self.assertLess(radiator.get_top()[1], winter_room["win_lo"])
+        self.assertAlmostEqual(radiator.get_left()[0], winter_room["x_l"], delta=0.05 * expected)
 
     def test_windows_text_native_allocations_are_bounded(self):
         import ctypes
@@ -186,7 +202,10 @@ class SceneIntegrationTest(unittest.TestCase):
             for node in ast.walk(tree):
                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"radiator", "_radiator"}:
                     with self.subTest(path=path, line=node.lineno):
-                        self.assertTrue({"height", "width"}.issubset({keyword.arg for keyword in node.keywords}))
+                        if node.func.id == "_radiator":
+                            self.assertTrue(len(node.args) >= 3 or "height" in {keyword.arg for keyword in node.keywords})
+                        else:
+                            self.assertTrue({"height", "width"}.issubset({keyword.arg for keyword in node.keywords}))
 
 
 if __name__ == "__main__":

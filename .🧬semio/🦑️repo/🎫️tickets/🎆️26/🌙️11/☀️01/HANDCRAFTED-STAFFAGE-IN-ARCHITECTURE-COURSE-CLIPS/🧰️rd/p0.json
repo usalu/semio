@@ -1,0 +1,8 @@
+[
+ {"asset":"panel-radiator","pose":"rated","env":"indoor-heated-winter"},
+ {"asset":"panel-radiator","pose":"comfort","env":"indoor-heated-winter"},
+ {"asset":"panel-radiator","pose":"night","env":"indoor-heated-winter"},
+ {"asset":"panel-radiator","pose":"off","env":"indoor-heated-winter"},
+ {"asset":"electric-kettle","clip":"boil","env":"indoor-heated-winter","times":[0,60,180,300]},
+ {"asset":"cooking-pot","clip":"heat-to-boil","env":"indoor-heated-winter","times":[0,100,320,500]}
+]

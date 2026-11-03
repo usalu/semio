@@ -22,7 +22,7 @@
   "actual_header": {
     "module": "🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.❓️need.🐍️",
     "scene": "Beat1_Lueftungsbedarf",
-    "instruction": "Was Lüftung leisten muss",
+    "instruction": { "en": "What ventilation has to achieve", "de": "Was Lüftung leisten muss" },
     "forbidden": "TITLE_DE"
   },
   "instructional_exceptions": [

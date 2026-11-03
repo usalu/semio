@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { snapLineweight, writeDxf } from "../../🔨️modules/📤️export/📐️dxf/🟦️.ts";
 import { modelScene, python, STAFFAGE_ROOT, withScratch } from "../🧰️support/🧰️.ts";
 
-type Report = { version: string; insunits: number; measurement: number; extmin: number[]; extmax: number[]; errors: string[]; fixes: string[]; layers: Record<string, { aci: number; lineweight: number }>; lwpolylines: { layer: string; closed: boolean; points: number[][] }[]; texts: { layer: string; text: string; height: number; at: number[] }[]; bbox: number[][] | null; layouts: string[]; handles: boolean };
+type Report = { projectname: string; version: string; insunits: number; measurement: number; extmin: number[]; extmax: number[]; errors: string[]; fixes: string[]; layers: Record<string, { aci: number; lineweight: number }>; lwpolylines: { layer: string; closed: boolean; points: number[][] }[]; texts: { layer: string; text: string; height: number; at: number[] }[]; bbox: number[][] | null; layouts: string[]; handles: boolean };
 
 const reopen = (text: string): Promise<Report> => withScratch((directory) => {
   const file = join(directory, "scene.dxf");
@@ -14,6 +14,11 @@ const reopen = (text: string): Promise<Report> => withScratch((directory) => {
 });
 
 describe("📐️ writeDxf", () => {
+  it("records asset, instant, representation, viewpoint, scale and fidelity in the header note that ezdxf reads", async () => {
+    const note = "staffage walking-commuter walk-cycle t=0.3 dark-line plan 1:100 conventional-symbol";
+    expect((await reopen(writeDxf(modelScene(), note))).projectname).toBe(note);
+  });
+
   it("is read by ezdxf as AC1015 in metres and passes ezdxf.audit() without findings", async () => {
     const report = await reopen(writeDxf(modelScene()));
     expect(report.version).toBe("AC1015");

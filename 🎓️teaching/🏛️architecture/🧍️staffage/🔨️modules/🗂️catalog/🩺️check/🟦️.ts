@@ -3,7 +3,7 @@
  * `repo tools exec bun -- <this file> [--asset <id>] [--category <id>] [--file <asset json>] [--catalog <root>] [--samples 9] [--profile <id>] [--no-physics]`
  *
  * Per asset: `validateAsset`; for every authored representation the measured suitability under the print profile (default `office-laser`); every named pose and `samples` instants per clip
- * are evaluated at every authored scale, solved thermally and structurally once (the physics does not depend on the scale) and depicted in all seven views at every authored scale; unavailable
+ * are evaluated at every authored scale, solved thermally and structurally once (the physics does not depend on the scale) and depicted in all seven views and all three viewpoints (elevation, front, plan) at every authored scale; unavailable
  * scales are listed with their reason. Without `--asset`/`--category` the manifest is validated against all assets too. `✓`/`✗` per asset; exit code 1 when any asset fails.
  *
  * @see ../🟦️.ts — semantic validation
@@ -13,18 +13,18 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { Asset, AssetDocument, PrintProfile, ScaleDenominator } from "../../../🧬️schema/🟦️.ts";
-import { SCALE_DENOMINATORS } from "../../../🧬️schema/🟦️.ts";
+import { SCALE_DENOMINATORS, VIEWPOINTS } from "../../../🧬️schema/🟦️.ts";
 import { VIEWS, type EvaluationQuery, type JobControl, type Suitability } from "../../🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🧮️evaluation/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, PRINT_PROFILES, measureSuitability } from "../../🖨️representation/🟦️.ts";
 import { solveStructure } from "../../🏗️structure/🟦️.ts";
 import { solveThermalAt } from "../../🌡️thermal/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../📥️files/🟦️.ts";
+import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles, loadEnvironments } from "../📥️files/🟦️.ts";
 import { type Issue, validateAsset, validateManifest } from "../🟦️.ts";
 
 /** 🎛️ What a check run needs besides the asset. */
-export type CheckOptions = { readonly samples?: number; readonly profile?: PrintProfile; readonly assets?: ReadonlySet<string>; readonly physics?: boolean };
+export type CheckOptions = { readonly samples?: number; readonly profile?: PrintProfile; readonly assets?: ReadonlyMap<string, Asset>; readonly environments?: ReadonlySet<string>; readonly physics?: boolean };
 
 /** 📋️ The outcome of checking one asset: problems (empty = ✓) and report lines (suitability and unavailable scales). */
 export type CheckReport = { readonly problems: readonly string[]; readonly lines: readonly string[]; readonly issues: readonly Issue[]; readonly scales: readonly ScaleReport[] };
@@ -69,7 +69,7 @@ export function checkAssetDetailed(asset: Asset, options: CheckOptions = {}, con
   const physics = options.physics ?? true;
   const profile = options.profile ?? DEFAULT_PRINT_PROFILE;
   const lines: string[] = [];
-  const issues = validateAsset(asset, options.assets === undefined ? {} : { assets: options.assets });
+  const issues = validateAsset(asset, { ...(options.assets === undefined ? {} : { assets: options.assets }), ...(options.environments === undefined ? {} : { environments: options.environments }) });
   const problems = issues.map((issue) => `${issue.code} ${issue.path}: ${issue.message.en}`);
   const scales: ScaleReport[] = [];
   for (const support of asset.structure.supports) {
@@ -124,11 +124,14 @@ export function checkAssetDetailed(asset: Asset, options: CheckOptions = {}, con
       }
       for (const denominator of authored) {
         const state = evaluate(asset, query, { kind: "scale", scale: { denominator } });
-        for (const view of physics ? VIEWS : VIEWS.slice(0, 4)) {
-          const scene = depict(state, { ...defaultDepictionOptions(view, "en", denominator), profile: UNCHECKED }, { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}) });
-          const path = nonFinite(scene.layers);
-          if (path) problems.push(`${label} 1:${denominator} ${view}: non-finite scene${path}`);
-          if (scene.layers.every((layer) => layer.items.length === 0)) problems.push(`${label} 1:${denominator} ${view}: empty scene`);
+        for (const viewpoint of VIEWPOINTS) {
+          if (state.shapes[viewpoint].length === 0) problems.push(`${label} 1:${denominator} ${viewpoint}: no shapes`);
+          for (const view of physics ? VIEWS : VIEWS.slice(0, 4)) {
+            const scene = depict(state, { ...defaultDepictionOptions(view, "en", denominator, viewpoint), profile: UNCHECKED }, { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}) });
+            const path = nonFinite(scene.layers);
+            if (path) problems.push(`${label} 1:${denominator} ${viewpoint} ${view}: non-finite scene${path}`);
+            if (scene.layers.every((layer) => layer.items.length === 0)) problems.push(`${label} 1:${denominator} ${viewpoint} ${view}: empty scene`);
+          }
         }
       }
     } catch (error) {
@@ -148,7 +151,8 @@ if (import.meta.main) {
   const profile = values.profile === undefined ? DEFAULT_PRINT_PROFILE : (PRINT_PROFILES.profiles.find((candidate) => candidate.id === values.profile) ?? (() => { throw new Error(`unknown profile "${values.profile}"`); })());
   const catalog = values.file ? null : await loadCatalogFromFiles(values.catalog ? resolve(values.catalog) : DEFAULT_CATALOG_ROOT);
   const assets: readonly Asset[] = values.file ? [(JSON.parse(readFileSync(resolve(values.file), "utf8")) as AssetDocument).asset] : catalog!.assets;
-  const known = new Set(assets.map((asset) => asset.id));
+  const known = new Map(assets.map((asset) => [asset.id, asset] as const));
+  const environments = catalog ? new Set(((await loadEnvironments(catalog.root))?.presets ?? []).map((preset) => preset.id)) : undefined;
   const selected = assets.filter((asset) => (!values.asset || asset.id === values.asset) && (!values.category || asset.category === values.category));
   if (selected.length === 0) console.log("✗ no asset selected");
   let failed = selected.length === 0 ? 1 : 0;
@@ -163,7 +167,7 @@ if (import.meta.main) {
     failed += issues.length ? 1 : 0;
   }
   for (const [index, asset] of selected.entries()) {
-    const report = checkAssetDetailed(asset, { samples: Number(values.samples), profile, assets: known, physics: !values["no-physics"] });
+    const report = checkAssetDetailed(asset, { samples: Number(values.samples), profile, assets: known, ...(environments === undefined ? {} : { environments }), physics: !values["no-physics"] });
     failed += report.problems.length ? 1 : 0;
     console.log(`${report.problems.length ? "✗" : "✓"} ${asset.id} (${index + 1}/${selected.length})${values.quiet ? "" : report.lines.map((line) => `\n  ${line}`).join("")}${report.problems.length ? `\n  ${report.problems.slice(0, 30).join("\n  ")}` : ""}`);
   }

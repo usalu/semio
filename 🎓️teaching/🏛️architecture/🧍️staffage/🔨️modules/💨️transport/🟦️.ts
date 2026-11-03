@@ -14,7 +14,7 @@
 import type { Asset, Environment, Text } from "../../🧬️schema/🟦️.ts";
 import type { EnvironmentTimeline, EvaluatedState, EvaluationQuery, JobControl, Parcel, ThermalField, TransportField } from "../🔗️contracts/🟦️.ts";
 import { evaluate } from "../🧮️evaluation/🟦️.ts";
-import { solveThermal } from "../🌡️thermal/🟦️.ts";
+import { solveThermal, solveThermalAt, thermalSession } from "../🌡️thermal/🟦️.ts";
 import { type BoundaryLayer, type Turbulence } from "./🌬️ambient/🟦️.ts";
 import { ambientAt } from "./🌬️ambient/🟦️.ts";
 import { type Resolved, type Track, createTrack, parcelsAt } from "./🧮️parcels/🟦️.ts";
@@ -24,13 +24,14 @@ import { type Sink, streamlineSeeds, streamlinesAt } from "./〰️streamlines/�
 import { queryKey } from "./🫁️respiration/🟦️.ts";
 
 export { breathAt, breathPatternAt, exhaledAir, exhaledVolumeM3, respirationOffsets, respirationState, respirationSubjects, respiratoryHeat, routeShares, emitterOwner } from "./🫁️respiration/🟦️.ts";
-export { environmentAt } from "./🌬️ambient/🟦️.ts";
+export { environmentAt } from "../🌡️thermal/🌤️environment/🟦️.ts";
 export { STEPS_PER_S } from "./🔥️sources/🟦️.ts";
 
-/** 🎛️ Options of {@link solveTransport}. Defaults: parcels live 30 s, seed 1, uniform wind, turbulence intensity 0.1 with a 0.03 m/s floor and T_L = 1 s, pathlines and streamlines on.
+/** 🎛️ Options of {@link solveTransport}. Defaults: parcels live 30 s, no period (`periodS`: the length of a looping clip; the random walk and the exhale spread then repeat with it, so the field is periodic and a loop wraps without a jump), seed 1, uniform wind, turbulence intensity 0.1 with a 0.03 m/s floor and T_L = 1 s, pathlines and streamlines on.
  * `evaluate` and `thermal` replace the asset evaluation and the thermal solver (the plume and transpiration strengths come from `thermal`). */
 export type TransportOptions = JobControl & {
   readonly maxAgeS?: number;
+  readonly periodS?: number;
   readonly seed?: number;
   readonly boundaryLayer?: BoundaryLayer;
   readonly turbulence?: Turbulence;
@@ -40,7 +41,7 @@ export type TransportOptions = JobControl & {
   readonly thermal?: (state: EvaluatedState, environment: Environment) => ThermalField;
 };
 
-/** 🎛️ The default turbulence: σ_u = max(0.1·wind, 0.03 m/s) with a 1 s Lagrangian time scale (illustrative). */
+/** 🌪️ The default turbulence: σ_u = max(0.1·wind, 0.03 m/s) with a 1 s Lagrangian time scale (illustrative). */
 export const DEFAULT_TURBULENCE: Turbulence = { intensity: 0.1, floorMS: 0.03, lagrangianTimeS: 1 };
 
 const TRACKS = new WeakMap<Asset, Map<string, Track>>();
@@ -63,6 +64,14 @@ function environmentKey(environment: Environment | EnvironmentTimeline): string 
 
 const note = (en: string, de: string): Text => ({ en, de });
 
+const followsEvaporation = (asset: Asset): boolean => asset.thermal.emitters.some((emitter) => emitter.region !== undefined && emitter.kind !== "plume" && emitter.kind !== "transpiration" && emitter.kind !== "breath");
+
+/** 🧊️ The thermal function of a track whose emitters follow a region's evaporation: the temperatures of the region come from the input history of the query, because a quasi-steady solve would boil the water the moment the element is switched on. One {@link thermalSession} serves the track and it is solved against the whole environment timeline of the track, not against the environment sampled at one time, so the history sees the same wind, air and sun as the parcels. */
+function transientThermal(options: TransportOptions, environment: Environment | EnvironmentTimeline): (state: EvaluatedState, sampled: Environment) => ThermalField {
+  const session = thermalSession();
+  return (state) => solveThermalAt(state.asset, state.query, environment, { session, ...(options.evaluate === undefined ? {} : { evaluate: options.evaluate }) });
+}
+
 function trackOf(asset: Asset, query: EvaluationQuery, environment: Environment | EnvironmentTimeline, options: TransportOptions, settings: Resolved): Track {
   const key = [queryKey(query), environmentKey(environment), JSON.stringify(settings), identity(options.evaluate), identity(options.thermal)].join("|");
   let tracks = TRACKS.get(asset);
@@ -70,16 +79,16 @@ function trackOf(asset: Asset, query: EvaluationQuery, environment: Environment 
   let track = tracks.get(key);
   if (track === undefined) {
     if (tracks.size >= 6) tracks.delete(tracks.keys().next().value as string);
-    track = createTrack(asset, query, environment, settings, options.evaluate ?? evaluate, options.thermal ?? solveThermal);
+    track = createTrack(asset, query, environment, settings, options.evaluate ?? evaluate, options.thermal ?? (followsEvaporation(asset) ? transientThermal(options, environment) : solveThermal));
     tracks.set(key, track);
   }
   return track;
 }
 
-/** 💨️ The transport field at the query's absolute time (`timeS`, 0 for poses without one) in the environment (constant or timeline). Cancellable and progress-reporting through `options`. */
+/** 🚰️ The transport field at the query's absolute time (`timeS`, 0 for poses without one) in the environment (constant or timeline). Cancellable and progress-reporting through `options`. */
 export function solveTransport(asset: Asset, query: EvaluationQuery, environment: Environment | EnvironmentTimeline, options: TransportOptions = {}): TransportField {
   const timeS = Math.max(0, query.timeS ?? 0);
-  const settings: Resolved = { maxAgeS: options.maxAgeS ?? 30, seed: options.seed ?? 1, layer: options.boundaryLayer ?? null, turbulence: options.turbulence ?? DEFAULT_TURBULENCE };
+  const settings: Resolved = { maxAgeS: options.maxAgeS ?? 30, seed: options.seed ?? 1, layer: options.boundaryLayer ?? null, turbulence: options.turbulence ?? DEFAULT_TURBULENCE, periodSteps: Math.round((options.periodS ?? 0) * STEPS_PER_S) };
   const track = trackOf(asset, query, environment, options, settings);
   const label = note("Solving air transport", "Luftbewegung wird berechnet");
   const { parcels, pathlines } = parcelsAt(track, timeS, options.pathlines !== false, options.signal, (done, total) => options.progress?.(done, total, label));

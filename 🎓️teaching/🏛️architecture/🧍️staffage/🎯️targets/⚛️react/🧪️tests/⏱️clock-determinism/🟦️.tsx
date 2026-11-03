@@ -67,7 +67,7 @@ describe("⏱️ clock", () => {
 
   it("renders two figures on one clock at the identical instant", () => {
     const clock = new StaffageClock({ fps: 30, durationS: 1, playing: false, reducedMotion: false });
-    const props = { asset: walker, clock, scale: { denominator: 100 }, language: "en" as const, live: true };
+    const props = { asset: walker, clock, scale: { denominator: 100 }, language: "en" as const, viewpoint: "elevation" as const, live: true };
     const { container } = render(
       <>
         <StaffageFigure {...props} view="dark-line" />

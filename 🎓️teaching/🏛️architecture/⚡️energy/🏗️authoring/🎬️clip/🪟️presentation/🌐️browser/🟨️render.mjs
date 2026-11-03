@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {createRequire} from "node:module";
-import {launchBrowser} from "./🧰️tools.mjs";
+import {accelerateClock,finishTransitions,launchBrowser} from "./🧰️tools.mjs";
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const root=process.cwd();
@@ -118,6 +118,7 @@ try{
   await page.goto("http://presentation.local/");
   await page.clock.install({time:new Date(0)});
   await page.clock.pauseAt(new Date(1000));
+  await accelerateClock(page);
   await page.addStyleTag({content:css});
   await page.addScriptTag({content:bundle.outputFiles[0].text});
   await page.evaluate(value=>window.semioPresentation.configure(value),{contract,icons,cursors,cursorSizes,language:batch.language,viewport});
@@ -139,6 +140,7 @@ try{
     if(point)await page.mouse.move(point[0],point[1]);else await page.mouse.move(1610,910);
     if(frame.cursor?.pressed&&!down){await page.mouse.down();down=true}else if(!frame.cursor?.pressed&&down){await page.mouse.up();down=false}
     await page.clock.runFor(frame.transition_elapsed??1000);
+    await finishTransitions(page);
     await page.evaluate(elapsed=>{window.semioPresentation.animationTimes??=new WeakMap();for(const animation of document.getAnimations()){const time=(window.semioPresentation.animationTimes.get(animation)??0)+elapsed;animation.pause();animation.currentTime=time;window.semioPresentation.animationTimes.set(animation,time)}},frame.transition_elapsed??1000);
     for(let attempt=0;attempt<4&&!await page.evaluate(()=>window.semioPresentation.settled());attempt++)await page.clock.runFor(34);
     if(!await page.evaluate(()=>window.semioPresentation.settled()))throw Error("Actual semio silhouette did not settle: "+JSON.stringify(await page.evaluate(()=>window.semioPresentation.debugGeometry())));

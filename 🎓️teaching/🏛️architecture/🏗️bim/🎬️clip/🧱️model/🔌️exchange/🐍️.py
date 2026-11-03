@@ -447,7 +447,7 @@ def step_excerpt(key: str, model: dict | None = None, *, first_id: int = 101, la
         finish = part.get("surface_finish")
         if finish and finish.get("display_rgb") and 'csg' not in part:
             vertices = core.part_vertices(part)
-            selected = {j for j,face in enumerate(_native_faces(core,part)) if core._surface_finishes().face_matches([vertices[k] for k in face],finish)}
+            selected = {j for j,face in enumerate(_native_faces(core,part)) if core.surface_finishes().face_matches([vertices[k] for k in face],finish)}
             if selected:
                 surface_faces[index] = selected
     profile, tag = body["profile"], obj["tag"]

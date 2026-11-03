@@ -13,6 +13,7 @@ if str(_WORKSPACE_ROOT) not in sys.path:
 _visuals = importlib.import_module("🎓️teaching.🏛️architecture.🎯️optimization.🎬️clip.🎨️visuals.🐍️")
 _mn = _visuals._engine
 _art = _visuals._art
+ICON_METRE = 0.5
 _room = _visuals._room
 _model = _visuals._model
 _text = _visuals._text
@@ -178,7 +179,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return np.array([card_centre[0] - .71, card_centre[1] - .8, 0.0])
 
     def _section(self, design, point, s, *, labels=False, ghost=None, person=True, reach=REACH, demand=False, daylight=False):
-        """🏠 Cropped summer section of one design as named layers: shell, rays, light, sun, cooling and optional labels."""
+        """🔍 Cropped summer section of one design as named layers: shell, rays, light, sun, cooling and optional labels."""
         mn, german = _mn, self.language() == "de"
         design = {**_room.baseline(), **design}
         found = _room.result(design)
@@ -268,20 +269,17 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         extras = mn.VGroup()
         share = found["cooling"] / YMAX
         length = .3 + .9 * min(1.0, share)
-        extras.add(_room._cooler(P(2.7, 2.8), s, COOL))
+        extras.add(_room._cooler(P(CUT - 0.105, 2.8), s))
         for x in (2.35, 2.7, 3.05):
             extras.add(mn.Arrow(P(x, 2.58), P(x, 2.58 - length), buff=0, color=COOL, stroke_width=1.5 + 2 * share, max_tip_length_to_length_ratio=.4, tip_length=.1 * s / .5, max_stroke_width_to_length_ratio=12))
         if person:
-            figure = _art.person_glyph(P(1.5, .875), _art.P_ORANGE)
-            figure.scale_to_fit_height(1.75 * s).move_to(P(1.5, .875))
-            extras.add(figure)
+            extras.add(_art.staffage("optimization-room-occupant", unit=s, anchor=P(1.5, 0)))
         low_a, high_a = _room.autonomy_range()
         brightness = 1 - min(1.0, max(0.0, (found["autonomy"] - low_a) / max(high_a - low_a, 1e-9)))
         for x in (.55, 1.6):
-            lamp = _art.lamp_glyph(P(x, top), drop=.1 * s / .5, scale=s / .6)
+            lamp = _room.pendant(P(x, top), s)
             halo = mn.Circle(radius=.28 * s / .6 * (.4 + .6 * brightness), stroke_width=0, fill_color=_room.LIGHT, fill_opacity=.35 * brightness)
-            bulb = _room.clone(lamp["bulb"]).set_fill(opacity=.08 + .92 * brightness)
-            extras.add(halo.move_to(bulb.get_center()), _room.clone(lamp["cable"]), _room.clone(lamp["shade"]), bulb)
+            extras.add(halo.move_to(lamp["bulb"]), *_room.pendant_lit(lamp, brightness))
         notes = mn.VGroup()
         if labels:
             size = 15
@@ -316,7 +314,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return _mn.VGroup(*[layers[key] for key in ("shell", "overhang", "light", "rays", "marks", "sun", "extras", "notes") if key not in skip])
 
     def _live_section(self, trackers, point, s, **options):
-        """🔴 Section that follows the shared trackers."""
+        """🔄 Section that follows the shared trackers."""
         return self._live(lambda: self._merge(self._section(_room.values(trackers), point, s, **options)[0]))
 
     def _bar(self, base, value_fn, grow, *, height=BAR_HEIGHT, width=.3, color=COOL, size=14, digits=1, unit=True):
@@ -387,7 +385,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return group, cells, edges
 
     def _headline(self, design, third=False):
-        """🏷️ Physical name of one design: window size, overhang and optionally insulation."""
+        """🪧 Physical name of one design: window size, overhang and optionally insulation."""
         depth = design["overhang"]
         over = self.tr("no overhang", "kein Vordach") if depth <= 0 else self._depth(depth) + " " + self.tr("overhang", "Vordach")
         if third:
@@ -395,12 +393,12 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return f"WWR {self._wwr(design['wwr'])} · {over}"
 
     def _badge(self, point, number, *, color=INK, shape="circle", fill=False):
-        """🔢 Run number in a small circle or square."""
+        """🔵 Run number in a small circle or square."""
         outline = (_mn.Square(side_length=.25) if shape == "square" else _mn.Circle(radius=.14)).set_stroke(color, width=2).set_fill(color, opacity=1 if fill else 0).move_to(point)
         return _mn.VGroup(outline, self._t(str(number), point, 14, _art.P_DEEP_DARK if fill else color, .2))
 
     def _card(self, run, number, *, third=False):
-        """🏠 One run as a static summer room with header, run badge and a cooling bar that starts empty."""
+        """🃏 One run as a static summer room with header, run badge and a cooling bar that starts empty."""
         column, row = int(run["coded"][0] > 0), int(run["coded"][1] < 0)
         centre = np.array([CARD_X[column], CARD_Y[row], 0.0])
         design = run["design"]
@@ -435,7 +433,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return _mn.VGroup(*[_mn.VGroup(card["group"], card["layers"]["rays"], card["layers"]["marks"], card["layers"]["sun"], card["layers"]["light"], card["badge"], card["bar"], card["sun_heat"]) for card in cards])
 
     def _signs(self, cards, signs, color):
-        """➕ Contrast sign of each card as a round plus or minus badge."""
+        """🔘 Contrast sign of each card as a round plus or minus badge."""
         group = _mn.VGroup()
         for card, sign in zip(cards, signs):
             point = np.array(card["centre"]) + np.array([1.4, .45, 0])
@@ -454,11 +452,11 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return _mn.VGroup(axes, labels)
 
     def _at_plot(self, wwr, value):
-        """📍 Plot position of a window ratio (in percent) and a cooling value."""
+        """🗺️ Plot position of a window ratio (in percent) and a cooling value."""
         return self.axes_.c2p(wwr, value)
 
     def _spot(self, run):
-        """📍 Plot position of one run."""
+        """📌 Plot position of one run."""
         return self._at_plot(run["design"]["wwr"] * 100, run["response"])
 
     def _mark(self, run):
@@ -480,7 +478,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return label
 
     def _tag(self, point, value, color, size=14, digits=1):
-        """🏷️ Number-only label."""
+        """🪪 Number-only label."""
         return _room.text(_room.parts(value, "", digits, self.language() == "de"), point, size=size, color=color)
 
     def present_experiments(self):
@@ -543,7 +541,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return _mn.VGroup(*parts, _mn.Rectangle(width=.4, height=.09, stroke_width=0, fill_color=MUTED, fill_opacity=1).move_to((.05, -.04, 0)))
 
     def _factors(self):
-        """🎚️ The two factors as sliders with their coded levels and their physical meaning on the room."""
+        """🎛️ The two factors as sliders with their coded levels and their physical meaning on the room."""
         german = self.language() == "de"
         a = self._slider(1.45, self.trackers["wwr"], self.tr("A · window share (WWR)", "A · Fensteranteil (WWR)"), DESIGN, self._wwr, LOW_WWR, HIGH_WWR)
         b = self._slider(-.5, self.trackers["overhang"], self.tr("B · overhang depth", "B · Vordachtiefe"), OPEN, self._depth, LOW_D, HIGH_D)
@@ -564,7 +562,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.sliders = _mn.VGroup(a["static"], a["marker"], b["static"], b["marker"], a["coded"], b["coded"], coding, read_a, read_b)
 
     def _plan(self):
-        """🔲 The four runs as a square of summer rooms and the design matrix."""
+        """🧩 The four runs as a square of summer rooms and the design matrix."""
         self.clear_stage()
         self.cards = [self._card(run, index + 1) for index, run in enumerate(RUNS)]
         headers = [self.tr("No.", "Nr."), self.tr("A\nwindow", "A\nFenster"), self.tr("B\noverhang", "B\nVordach"), self.tr("WWR\n(%)", "WWR\n(%)"), self.tr("Overhang\n(m)", "Vordach\n(m)"), self.tr("Cooling\n(kWh/a)", "Kühlstrom\n(kWh/a)")]
@@ -579,7 +577,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.step("plan_2", _mn.Succession(windows, slabs), _mn.FadeIn(self.runs_chip), _mn.FadeIn(self.order_note), seconds=4)
 
     def _response(self):
-        """📊 Sun heat of every run as rays, then its cooling electricity as a bar and a table entry."""
+        """🌞 Sun heat of every run as rays, then its cooling electricity as a bar and a table entry."""
         self.add(*[card["bar"] for card in self.cards])
         self.cooling_cells = _mn.VGroup(*[self.cells[(row, 5)] for row in range(-1, 4)])
         self.legend = self._legend()
@@ -597,7 +595,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.step("response_3", _mn.FadeIn(self.note), _mn.Indicate(self.source, color=INK, scale_factor=1.04), seconds=1.5)
 
     def _plot(self):
-        """📈 The four runs as two lines of cooling against window size."""
+        """〰️ The four runs as two lines of cooling against window size."""
         axes = self._chart()
         lines = _mn.VGroup(*[_mn.Line(self._spot(RUNS[i]), self._spot(RUNS[j]), color=color, stroke_width=3) for i, j, color in ((0, 2, OPEN), (1, 3, SHADED))])
         self.lines_ += [[self._spot(RUNS[0]), self._spot(RUNS[2])], [self._spot(RUNS[1]), self._spot(RUNS[3])]]
@@ -648,7 +646,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return self._chip(self.tr("Effect = high level − low level · negative = saves cooling electricity", "Effekt = hohe Stufe − niedrige Stufe · negativ = spart Kühlstrom"), (PANEL_X, 1.4, 0), 15, MUTED, 6.5)
 
     def _savings(self):
-        """🧮 The overhang saves little at the small window and much more at the large one."""
+        """💸 The overhang saves little at the small window and much more at the large one."""
         veil_large, veil_small = _mn.VGroup(*[self._veil(self.cards[i]) for i in (2, 3)]), _mn.VGroup(*[self._veil(self.cards[i]) for i in (0, 1)])
         card_small, arrow_small = self._saving(0, 1, side="left", fraction=.5)
         card_large, arrow_large = self._saving(2, 3, side="right", fraction=.85)
@@ -687,8 +685,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
 
 
     def _effects(self):
-        """📐 Main effects and the interaction effect as column, row and diagonal contrasts."""
-        effects = FACTORIAL["effects"]
+        """🔀 Main effects and the interaction effect as column, row and diagonal contrasts."""
         r1, r2, r3, r4 = SHOWN
         self.lines_ = self.lines_[:4]
         columns = [self._rect((CARD_X[i], (CARD_Y[0] + CARD_Y[1]) / 2 + CARD_DY, 0), CARD_W, CARD_Y[0] - CARD_Y[1] + CARD_H, color, stroke=3.4).set_z_index(6) for i, color in ((0, DESIGN), (1, DATA))]
@@ -782,7 +779,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return _mn.VGroup(static, self._live(build))
 
     def _coded_of(self, trackers):
-        """🔢 Coded levels A and B of the live design."""
+        """🧬 Coded levels A and B of the live design."""
         return (trackers["wwr"].get_value() - (HIGH_WWR + LOW_WWR) / 2) / ((HIGH_WWR - LOW_WWR) / 2), (trackers["overhang"].get_value() - (HIGH_D + LOW_D) / 2) / ((HIGH_D - LOW_D) / 2)
 
     def _term_rows(self, trackers):
@@ -801,7 +798,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return rows
 
     def _model_fit(self):
-        """📏 The bilinear model, one room that follows the coded levels and its prediction as a waterfall and a substituted formula."""
+        """🧠 The bilinear model, one room that follows the coded levels and its prediction as a waterfall and a substituted formula."""
         coefficients, effects = FACTORIAL["coefficients"], FACTORIAL["effects"]
         self.trackers_model = self.study_trackers(RUNS[3]["design"])
         terms = [(self.tr("Cooling =", "Kühlstrom ="), MUTED), (self.number(coefficients[0]), COOL)] + [(f"{'+' if value > 0 else '−'} {self.number(abs(value))}·{name}", color) for value, name, color in zip(coefficients[1:], ("A", "B", "A·B"), (DESIGN, OPEN, MIXED))] + [("kWh/a", MUTED)]
@@ -905,8 +902,8 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         spread = (-.9, .45, -.3, .8)
         dots = _mn.VGroup(*[_mn.Dot((2.9 + .7 * i, -.1 + w * .5, 0), radius=.11, color=MUTED) for i, w in enumerate(spread)])
         band = _mn.DashedVMobject(_mn.Rectangle(width=3.3, height=1.0, color=MIXED, stroke_width=2).move_to((3.95, -.1 + .17 * .5, 0)), num_dashes=28)
-        icons = _mn.VGroup(self._cloud().scale(1.6).move_to((2.4, -1.35, 0)), _art.person_glyph((3.9, -1.35, 0), _art.P_ORANGE).scale_to_fit_height(.55).move_to((3.9, -1.35, 0)),
-                           _mn.VGroup(_mn.Rectangle(width=.34, height=.46, color=INK, stroke_width=2), _mn.Polygon((.17, .23, 0), (.42, .14, 0), (.42, -.34, 0), (.17, -.23, 0), color=INK, stroke_width=2, fill_color=_room.GLASS, fill_opacity=.4)).move_to((5.4, -1.35, 0)))
+        icons = _mn.VGroup(self._cloud().scale(1.6).move_to((2.4, -1.35, 0)), _art.staffage("optimization-experiments-occupant", unit=ICON_METRE, anchor=(3.9, -1.35 - .42, 0)),
+                           _art.staffage("optimization-experiments-window", unit=ICON_METRE, anchor=(5.3, -1.35 - .31, 0)))
         scatter = _mn.VGroup(dots, band, icons, self._t(self.tr("weather · occupants · open windows", "Wetter · Nutzer · offene Fenster"), (3.9, -1.95, 0), 16, INK, 5.0),
                              self._t(self.tr("each repeat measures a different value\n(schematic: the room on the left is the simulated one)", "jede Wiederholung misst anders\n(Schema: der Raum links ist der simulierte)"), (3.9, 1.6, 0), 16, INK, 6.0),
                              self._t(self.tr("assumed spread (schematic)", "angenommene Streuung (Schema)"), (3.95, .62, 0), 15, MIXED, 3.0))
@@ -926,7 +923,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         return group
 
     def _fraction(self):
-        """🧩 Purpose of the plan and a half fraction whose insulation factor is confounded with the interaction."""
+        """🧫 Purpose of the plan and a half fraction whose insulation factor is confounded with the interaction."""
         self.clear_stage()
         effects, centre = FACTORIAL["effects"], FACTORIAL["centre"]
         lines = [(self.tr("Question: window share and overhang → summer cooling electricity", "Frage: Fensteranteil und Vordach → sommerlicher Kühlstrom")),
@@ -972,7 +969,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
     def _answer(self):
         """🏁 The recommendation in two rooms: the same 1 m overhang saves a lot at 70 % window share and little at 30 %."""
         self.clear_stage()
-        german = self.language() == "de"
+        self.language()
         unit = 2.9 / YMAX
         static, live, gaps, sweeps = _mn.VGroup(), _mn.VGroup(), _mn.VGroup(), []
         for index, (low, high) in enumerate(((2, 3), (0, 1))):

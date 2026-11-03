@@ -1,0 +1,138 @@
+{
+ "50": {
+  "silhouette": {
+   "en": "Full articulation: head profile with glasses, ear and beret, loden coat with collar, front line, buttons and sleeve cuffs, mitten hands with thumb, trousers per segment, laced shoes in two parts at the ball joint, and the rollator as real tube members, spoked wheels, grip, brake lever with cable, seat, basket, backrest strap and shopping bag.",
+   "de": "Volle Gliederung: Kopfprofil mit Brille, Ohr und Baskenmütze, Lodenmantel mit Kragen, Frontlinie, Knöpfen und Ärmelaufschlägen, Fäustlingshände mit Daumen, Hose je Segment, Schnürschuhe zweiteilig am Ballengelenk sowie der Rollator mit echten Rohrprofilen, Speichenrädern, Griff, Bremshebel mit Zug, Sitz, Korb, Rückenband und Einkaufstasche."
+  },
+  "retained": {
+   "en": "Both thumbs, cuff and sole lines, lace marks, brake cable, wheel spokes, bag handle.",
+   "de": "Beide Daumen, Aufschlag- und Sohlenlinien, Schnürungsmarken, Bremszug, Radspeichen, Taschenhenkel."
+  },
+  "merged": {
+   "en": "Hair fringe and beret share the head bone; the far-side rollator frame is hidden behind the near side and not drawn.",
+   "de": "Haarrand und Baskenmütze liegen auf dem Kopfknochen; der abgewandte Rollatorrahmen verschwindet hinter der nahen Seite und wird nicht gezeichnet."
+  },
+  "omitted": {
+   "en": "Eyes, fingers separations, coat stitching, tyre tread, frame welds, wheel bearings.",
+   "de": "Augen, Fingertrennungen, Mantelnähte, Reifenprofil, Rahmenschweißnähte, Radlager."
+  },
+  "thinElements": {
+   "en": "Frame tubes are 25 mm real and drawn as 0.5 mm capsules: no thickening. Brake lever 14 mm.",
+   "de": "Rahmenrohre sind real 25 mm und als 0,5-mm-Kapseln gezeichnet: keine Verstärkung. Bremshebel 14 mm."
+  },
+  "hatching": {
+   "en": "Loden twill 0.8 mm lines at 45 degrees on the coat, basket mesh 1.2 mm cross hatch, far-side limbs 0.6 mm lines.",
+   "de": "Loden-Köper 0,8-mm-Linien unter 45 Grad auf dem Mantel, Korbgitter 1,2-mm-Kreuzschraffur, abgewandte Glieder 0,6-mm-Linien."
+  },
+  "styles": {
+   "en": "Body pen 0.25 mm, detail 0.15 mm, texture 0.10 mm; dark tyres, light rims, mid-tone coat.",
+   "de": "Körperstift 0,25 mm, Detail 0,15 mm, Textur 0,10 mm; dunkle Reifen, helle Felgen, mittlerer Mantelton."
+  },
+  "overlays": {
+   "en": "Every thermal region is drawn separately: face and neck, hair, beret, hands, coat, trousers, shoes, frame, seat and basket, grips, tyres and bag.",
+   "de": "Jede thermische Region ist einzeln gezeichnet: Gesicht und Hals, Haar, Baskenmütze, Hände, Mantel, Hose, Schuhe, Rahmen, Sitz und Korb, Griffe, Reifen und Tasche."
+  }
+ },
+ "100": {
+  "silhouette": {
+   "en": "Articulated clothing outlines: beret, hair, coarse face profile with nose and chin, coat in torso, hip, skirt and sleeve pieces, mitten hands with thumb, trousers per segment, shoes in two parts at the ball joint, and the rollator with 25 mm tube capsules, wheels with rim and hub, seat, basket and bag.",
+   "de": "Gegliederte Kleidungskonturen: Baskenmütze, Haar, grobes Gesichtsprofil mit Nase und Kinn, Mantel in Rumpf-, Hüft-, Schoß- und Ärmelteilen, Fäustlingshände mit Daumen, Hose je Segment, Schuhe zweiteilig am Ballengelenk sowie der Rollator mit 25-mm-Rohrkapseln, Rädern mit Felge und Nabe, Sitz, Korb und Tasche."
+  },
+  "retained": {
+   "en": "Ear, both thumbs, brake lever, backrest strap, seat pad.",
+   "de": "Ohr, beide Daumen, Bremshebel, Rückenband, Sitzpolster."
+  },
+  "merged": {
+   "en": "Neck skin joins the collar piece of the coat; the caster fork is one piece with the front tube end.",
+   "de": "Der Hals geht in das Kragenstück des Mantels über; die Lenkgabel bildet mit dem Rohrende ein Stück."
+  },
+  "omitted": {
+   "en": "Glasses, eye, mouth, buttons, cuff and lace lines, spokes, brake cable, bag handle, far rollator side.",
+   "de": "Brille, Auge, Mund, Knöpfe, Aufschlag- und Schnürlinien, Speichen, Bremszug, Taschenhenkel, abgewandte Rollatorseite."
+  },
+  "thinElements": {
+   "en": "Tubes are 25 mm real and drawn as 0.25 mm capsules: exact, no thickening; the 14 mm brake lever is a 0.13 mm line, thickened to the detail pen.",
+   "de": "Rohre sind real 25 mm und als 0,25-mm-Kapseln gezeichnet: exakt, keine Verstärkung; der 14-mm-Bremshebel ist eine 0,13-mm-Linie, auf den Detailstift verstärkt."
+  },
+  "hatching": {
+   "en": "Coarse twill 0.6 mm lines on the coat, basket 0.8 mm cross hatch, far limbs 0.5 mm lines.",
+   "de": "Grober Köper aus 0,6-mm-Linien auf dem Mantel, Korb 0,8-mm-Kreuzschraffur, abgewandte Glieder 0,5-mm-Linien."
+  },
+  "styles": {
+   "en": "Body pen 0.25 mm, detail 0.13 mm, texture 0.10 mm.",
+   "de": "Körperstift 0,25 mm, Detail 0,13 mm, Textur 0,10 mm."
+  },
+  "overlays": {
+   "en": "All twelve regions are drawn; face and neck skin are separate from hair and beret.",
+   "de": "Alle zwölf Regionen sind gezeichnet; Gesichts- und Halshaut sind von Haar und Baskenmütze getrennt."
+  }
+ },
+ "200": {
+  "silhouette": {
+   "en": "Main masses: head with beret and hair as one mass, neck-and-coat collar piece, coat torso and hip, one skirt piece and one trouser piece per leg, one sleeve piece per upper arm and forearm, small mitten hands, one shoe mass per foot; the rollator as 0.13 mm tube lines, two wheel discs, a seat line, basket and bag masses.",
+   "de": "Hauptmassen: Kopf mit Baskenmütze und Haar als eine Masse, Hals mit Mantelkragen, Manteltorso und Hüfte, ein Schoßteil und ein Hosenteil je Bein, ein Ärmelstück je Ober- und Unterarm, kleine Fäustlingshände, eine Schuhmasse je Fuß; der Rollator als 0,13-mm-Rohrlinien, zwei Radscheiben, eine Sitzlinie, Korb- und Taschenmasse."
+  },
+  "retained": {
+   "en": "Nose and chin of the face profile, one internal edge per sleeve through the elbow overlap.",
+   "de": "Nase und Kinn des Gesichtsprofils, eine innere Kante je Ärmel durch die Ellbogenüberlappung."
+  },
+  "merged": {
+   "en": "Hair and beret, neck and collar, shoe parts, rim and tyre, backrest and seat pad.",
+   "de": "Haar und Baskenmütze, Hals und Kragen, Schuhteile, Felge und Reifen, Rückenband und Sitzpolster."
+  },
+  "omitted": {
+   "en": "Ear, thumbs, glasses, buttons, laces, spokes, hubs, brake lever and cable, caster fork.",
+   "de": "Ohr, Daumen, Brille, Knöpfe, Schnürung, Speichen, Naben, Bremshebel und Zug, Lenkgabel."
+  },
+  "thinElements": {
+   "en": "The 25 mm tubes (0.125 mm) are drawn with the 0.13 mm pen: within 5 % of true width; grip and seat lines are thickened to 0.17 and 0.2 mm (34 and 40 mm) to stay printable.",
+   "de": "Die 25-mm-Rohre (0,125 mm) sind mit dem 0,13-mm-Stift gezeichnet: innerhalb von 5 % der wahren Breite; Griff- und Sitzlinie sind auf 0,17 und 0,2 mm (34 und 40 mm) verstärkt, um druckbar zu bleiben."
+  },
+  "hatching": {
+   "en": "No hatching; tone only (dark coat, darker tyres).",
+   "de": "Keine Schraffur; nur Ton (dunkler Mantel, dunklere Reifen)."
+  },
+  "styles": {
+   "en": "Body pen 0.13 mm, detail 0.10 mm, ground 0.18 mm; solid tones.",
+   "de": "Körperstift 0,13 mm, Detail 0,10 mm, Boden 0,18 mm; Flächentöne."
+  },
+  "overlays": {
+   "en": "Merged shapes list their regions: head (face, hair) and neck (coat, face skin); frame, grips, seat and bag keep their own strokes and masses.",
+   "de": "Zusammengelegte Formen nennen ihre Regionen: Kopf (Gesicht, Haar) und Hals (Mantel, Gesichtshaut); Rahmen, Griffe, Sitz und Tasche behalten eigene Linien und Massen."
+  }
+ },
+ "500": {
+  "silhouette": {
+   "en": "One composed figure of five filled masses (head, coat torso, hip and two skirt pieces), overlapping leg masses and a single near arm drawn as a stroke; the rollator as three tube strokes, a seat stroke, one basket mass and two wheel discs. Height and length are the real 1.6 m and 1.1 m.",
+   "de": "Eine zusammengesetzte Figur aus gefüllten Massen (Kopf, Manteltorso, Hüfte und zwei Schoßteile), überlappenden Beinmassen und einem einzelnen nahen Arm als Linie; der Rollator als drei Rohrlinien, eine Sitzlinie, eine Korbmasse und zwei Radscheiben. Höhe und Länge sind die realen 1,6 m und 1,1 m."
+  },
+  "retained": {
+   "en": "Nose of the face profile, the stooped posture and the hand on the grip.",
+   "de": "Nase des Gesichtsprofils, die gebeugte Haltung und die Hand am Griff."
+  },
+  "merged": {
+   "en": "Face, hair and neck are one head mass; beret is its cap; basket and shopping bag are one mass; thigh, shank and shoe of one leg are bound per bone but overlap.",
+   "de": "Gesicht, Haar und Hals sind eine Kopfmasse; die Baskenmütze ist ihre Kappe; Korb und Einkaufstasche sind eine Masse; Ober-, Unterschenkel und Schuh eines Beins sind je Knochen gebunden, überlappen aber."
+  },
+  "omitted": {
+   "en": "Far arm (hidden behind the near arm), thumbs, laces, buttons, spokes, hubs, brake lever and cable, backrest, rims, far rollator side.",
+   "de": "Abgewandter Arm (verdeckt vom nahen Arm), Daumen, Schnürung, Knöpfe, Speichen, Naben, Bremshebel und Zug, Rückenband, Felgen, abgewandte Rollatorseite."
+  },
+  "thinElements": {
+   "en": "Tubes (25 mm real) are drawn at the 0.10 mm minimum stroke (50 mm): twice the true width, kept because dropping the aid would remove the identity; the arm is a 0.16 mm stroke (80 mm), equal to the sleeve width.",
+   "de": "Rohre (real 25 mm) sind mit dem Mindeststrich 0,10 mm (50 mm) gezeichnet: doppelte wahre Breite, beibehalten, weil ohne das Hilfsmittel die Identität verloren ginge; der Arm ist ein 0,16-mm-Strich (80 mm), gleich der Ärmelbreite."
+  },
+  "hatching": {
+   "en": "No hatching at 1:500.",
+   "de": "Keine Schraffur bei 1:500."
+  },
+  "styles": {
+   "en": "Body pen 0.13 mm; tones: dark coat, trousers and tyres; light head and basket.",
+   "de": "Körperstift 0,13 mm; Töne: dunkler Mantel, Hose und Reifen; heller Kopf und Korb."
+  },
+  "overlays": {
+   "en": "Merged shapes list all regions they stand for: the head mass lists face-skin and hair, the basket mass seat-basket and bag; hands, grips, tyres and frame have own strokes or discs.",
+   "de": "Zusammengelegte Formen nennen alle Regionen, für die sie stehen: die Kopfmasse Gesichtshaut und Haar, die Korbmasse Sitz-Korb und Tasche; Hände, Griffe, Reifen und Rahmen haben eigene Linien oder Scheiben."
+  }
+ }
+}

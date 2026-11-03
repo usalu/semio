@@ -1,0 +1,4 @@
+{ "version": 1, "casts": {
+  "side-thermal": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "theme": "dark" },
+  "side-line": { "asset": "panel-radiator", "pose": "rated", "view": "dark-line", "theme": "dark" }
+} }

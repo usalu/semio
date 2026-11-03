@@ -1,0 +1,315 @@
+{
+ "id": "phase-change",
+ "oracle": "scipy solve_ivp (LSODA, terminal event) of the nonlinear lumped balance with CoolProp air properties, IAPWS-95 saturation pressure and latent heat of boiling; energy-balance closure per time",
+ "tolerances": {
+  "tempK": 0.05,
+  "massG": 0.1,
+  "powerRel": 0.002,
+  "closureRel": 0.001,
+  "latentRel": 0.002,
+  "pointK": 0.05
+ },
+ "coolprop": {
+  "boilingPointC": 99.97429584766638,
+  "latentHeatBoilingJKg": 2256471.592406728
+ },
+ "cases": [
+  {
+   "id": "kettle-water",
+   "transition": "boiling",
+   "pointC": 100.0,
+   "timesS": [
+    30,
+    90,
+    150,
+    180,
+    190,
+    200,
+    260,
+    400
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "water",
+      "title": {
+       "en": "water",
+       "de": "water"
+      },
+      "emissivity": 0.96,
+      "solarAbsorptivity": 0.1,
+      "phaseChange": {
+       "transition": "boiling",
+       "pointC": 100.0,
+       "latentHeatJKg": 2256403.7
+      },
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 20,
+      "meanRadiantTempC": 20,
+      "relativeHumidity": 0.5,
+      "windMS": 0,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "power",
+       "title": {
+        "en": "Power",
+        "de": "Leistung"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "kettle-water",
+       "title": {
+        "en": "kettle-water",
+        "de": "kettle-water"
+       },
+       "kind": "water",
+       "model": "operating",
+       "material": "water",
+       "areaM2": 0.012,
+       "characteristicLengthM": 0.12,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 349000.0,
+       "operating": {
+        "key": "power",
+        "heatW": 1930.0
+       },
+       "source": "illustrative"
+      }
+     ]
+    }
+   },
+   "expected": {
+    "initialC": 15.963165425598982,
+    "crossingS": 186.47892508037035,
+    "latentHeatJKg": 2256403.721526573,
+    "plateauW": 1776.2106516510753,
+    "plateauKgS": 0.0007871865458763637,
+    "plateauLewisKgS": 6.169800782440056e-05,
+    "rows": [
+     {
+      "tempC": 29.778118553712627,
+      "phaseKg": 0.0,
+      "phaseW": 0.0,
+      "closureJM2": -2.421438694000244e-08
+     },
+     {
+      "tempC": 57.254936352815754,
+      "phaseKg": 0.0,
+      "phaseW": 0.0,
+      "closureJM2": 2.7939677238464355e-08
+     },
+     {
+      "tempC": 84.19826985886608,
+      "phaseKg": 0.0,
+      "phaseW": 0.0,
+      "closureJM2": 1.862645149230957e-08
+     },
+     {
+      "tempC": 97.24043635856809,
+      "phaseKg": 0.0,
+      "phaseW": 0.0,
+      "closureJM2": -3.725290298461914e-09
+     },
+     {
+      "tempC": 100.0,
+      "phaseKg": 0.0027717428037551625,
+      "phaseW": 1776.2106516510753,
+      "closureJM2": 1.1175870895385742e-08
+     },
+     {
+      "tempC": 100.0,
+      "phaseKg": 0.010643608262518799,
+      "phaseW": 1776.2106516510753,
+      "closureJM2": 7.450580596923828e-09
+     },
+     {
+      "tempC": 100.0,
+      "phaseKg": 0.05787480101510062,
+      "phaseW": 1776.2106516510753,
+      "closureJM2": 1.4901161193847656e-08
+     },
+     {
+      "tempC": 100.0,
+      "phaseKg": 0.16808091743779152,
+      "phaseW": 1776.2106516510753,
+      "closureJM2": 7.450580596923828e-09
+     }
+    ]
+   }
+  },
+  {
+   "id": "ice-plate",
+   "transition": "melting",
+   "pointC": 0.0,
+   "timesS": [
+    60,
+    150,
+    250,
+    400,
+    800
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "ice",
+      "title": {
+       "en": "ice",
+       "de": "ice"
+      },
+      "emissivity": 0.97,
+      "solarAbsorptivity": 0.1,
+      "phaseChange": {
+       "transition": "melting",
+       "pointC": 0.0,
+       "latentHeatJKg": 333550.0
+      },
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": -5,
+      "meanRadiantTempC": -5,
+      "relativeHumidity": 0.7,
+      "windMS": 0,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "power",
+       "title": {
+        "en": "Power",
+        "de": "Leistung"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "ice-plate",
+       "title": {
+        "en": "ice-plate",
+        "de": "ice-plate"
+       },
+       "kind": "surface",
+       "model": "operating",
+       "material": "ice",
+       "areaM2": 0.1,
+       "characteristicLengthM": 0.3,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 60000.0,
+       "operating": {
+        "key": "power",
+        "heatW": 150.0
+       },
+       "source": "illustrative"
+      }
+     ]
+    }
+   },
+   "expected": {
+    "initialC": -5.000000000000025,
+    "crossingS": 202.37867024913928,
+    "latentHeatJKg": 333550.0,
+    "plateauW": 146.2789222086187,
+    "plateauKgS": 0.0004385517080156459,
+    "plateauLewisKgS": 0.0,
+    "rows": [
+     {
+      "tempC": -3.5046336279466668,
+      "phaseKg": 0.0,
+      "phaseW": 0.0,
+      "closureJM2": -3.4924596548080444e-10
+     },
+     {
+      "tempC": -1.2816297175833917,
+      "phaseKg": 0.0,
+      "phaseW": 0.0,
+      "closureJM2": -2.9103830456733704e-10
+     },
+     {
+      "tempC": 0.0,
+      "phaseKg": 0.020884415500216264,
+      "phaseW": 146.2789222086187,
+      "closureJM2": -5.238689482212067e-10
+     },
+     {
+      "tempC": 0.0,
+      "phaseKg": 0.08666717170256316,
+      "phaseW": 146.2789222086187,
+      "closureJM2": -5.820766091346741e-10
+     },
+     {
+      "tempC": 0.0,
+      "phaseKg": 0.2620878549088215,
+      "phaseW": 146.2789222086187,
+      "closureJM2": -4.656612873077393e-10
+     }
+    ]
+   }
+  }
+ ]
+}

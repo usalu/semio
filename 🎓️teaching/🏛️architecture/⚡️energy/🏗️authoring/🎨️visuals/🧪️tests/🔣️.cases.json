@@ -1,24 +1,4 @@
 {
-  "standing": {
-    "height": 0.66,
-    "scale": 1.7,
-    "opacity": 1,
-    "contours": 1
-  },
-  "seated": {
-    "height": 0.55,
-    "scale": 2.4,
-    "opacity": 1,
-    "contours": 1
-  },
-  "radiator": {
-    "height": 0.26,
-    "width": 0.52,
-    "height_to_person": [
-      0.35,
-      0.45
-    ]
-  },
   "house": {
     "wall": 0.14,
     "storey": 1.2,
@@ -46,12 +26,5 @@
       0.7,
       0.95
     ]
-  },
-  "raster": {
-    "connected_components": 1
-  },
-  "lamp": {
-    "minimum_fill_opacity": 0.5,
-    "bulb_overlaps_shade": true
   }
 }

@@ -6,13 +6,14 @@
  * @see ../🧭️context/🟦️.tsx — the ambient clock
  */
 import { Component, useEffect, useMemo, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
-import type { Asset, EvaluationQuery, View } from "@teaching/staffage";
+import type { Asset, EvaluationQuery, View, Viewpoint } from "@teaching/staffage";
 import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { Button, Notice, cn } from "../🪟️chrome/🟦️.tsx";
 import { useCatalog } from "../📚️catalog/🟦️.ts";
 import type { Row } from "../🔎️search/🟦️.ts";
+import { VIEWPOINT_PHRASES, resolveViewpoint, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
 
 /** 🌑️ Whether the surface is dark now, following the theme switch and the device. */
 export function useDarkSurface(): boolean {
@@ -114,26 +115,28 @@ function usePreviewClock(asset: Asset, clock: StaffageClock): StaffageClock {
   return useMemo(() => (durationS > 0 ? loopedClock(clock, durationS) : clock), [clock, durationS]);
 }
 
-function ReadyPreview(props: { readonly asset: Asset; readonly solid?: boolean; readonly scale: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
-  const { asset, solid, scale, query, className, compact, view } = props;
+function ReadyPreview(props: { readonly asset: Asset; readonly viewpoint: Viewpoint; readonly solid?: boolean; readonly scale: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
+  const { asset, viewpoint, solid, scale, query, className, compact, view } = props;
   const { language, ambient } = useArchive();
   const dark = useDarkSurface();
   const clock = usePreviewClock(asset, ambient);
+  const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
+  if (!resolution.available) return <Notice kind="unavailable" compact className={cn("h-full overflow-hidden", className)} title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}>{compact ? null : resolution.message[language]}</Notice>;
   return (
     <div aria-hidden="true" inert className={cn("relative h-full min-h-0 w-full overflow-hidden", className)} data-preview={asset.id}>
       <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact title={asset.title[language]}>{compact ? null : message}</Notice>}>
-        <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={view ?? surfaceView(dark, solid)} scale={{ denominator: scale }} language={language} fit="contain" transparent annotations={QUIET} />
+        <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={view ?? surfaceView(dark, solid)} viewpoint={viewpoint} scale={{ denominator: scale }} language={language} fit="contain" transparent annotations={QUIET} />
       </FigureBoundary>
     </div>
   );
 }
 
 /** 🖼️ The live preview of a row, fitted to its box. */
-export function RowPreview(props: { readonly row: Row; readonly solid?: boolean; readonly scale?: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
-  const { row, solid, scale = 100, query, className, compact, view } = props;
+export function RowPreview(props: { readonly row: Row; readonly viewpoint: Viewpoint; readonly solid?: boolean; readonly scale?: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
+  const { row, viewpoint, solid, scale = 100, query, className, compact, view } = props;
   const { language } = useArchive();
   if (row.status !== "ready" || row.asset === undefined) return row.status === "pending" ? <div role="status" aria-busy="true" aria-label={row.entry.title[language]} className={cn("h-full min-h-12 w-full animate-pulse bg-muted/60 motion-reduce:animate-none", className)} /> : <UnavailableNotice row={row} compact className={cn("h-full", className)} />;
-  return <ReadyPreview asset={row.asset} {...(solid === undefined ? {} : { solid })} scale={scale} {...(query === undefined ? {} : { query })} {...(className === undefined ? {} : { className })} {...(compact === undefined ? {} : { compact })} {...(view === undefined ? {} : { view })} />;
+  return <ReadyPreview asset={row.asset} viewpoint={viewpoint} {...(solid === undefined ? {} : { solid })} scale={scale} {...(query === undefined ? {} : { query })} {...(className === undefined ? {} : { className })} {...(compact === undefined ? {} : { compact })} {...(view === undefined ? {} : { view })} />;
 }
 
 /** 🚨️ The failure of the manifest or of a category, in words, with the way to try again; nothing while all is well. */

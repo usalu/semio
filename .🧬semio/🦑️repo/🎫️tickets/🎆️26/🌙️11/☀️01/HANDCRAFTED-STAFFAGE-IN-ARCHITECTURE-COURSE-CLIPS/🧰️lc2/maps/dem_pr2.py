@@ -1,0 +1,16 @@
+MAP = {
+    "1 · Grundlagen": "1 · Fundamentals",
+    "2 · Lüftung": "2 · Ventilation",
+    "3 · Heizen": "3 · Heating",
+    "Verluste & Gewinne": "Losses & gains",
+    "4 · Kühlen": "4 · Cooling",
+    "Sommerlasten": "Summer loads",
+    "5 · Energiebilanz": "5 · Energy balance",
+    "Gesetz & Ausweis": "Law & certificate",
+    "Raum": "Room",
+    "Zähler": "Meter",
+    "Quelle": "Source",
+    "Ausweis": "Certificate",
+    "Gaskessel": "Gas boiler",
+    "Wärmepumpe": "Heat pump",
+}

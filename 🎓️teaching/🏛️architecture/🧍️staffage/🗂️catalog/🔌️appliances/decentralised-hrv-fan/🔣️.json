@@ -1,0 +1,2322 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "decentralised-hrv-fan",
+    "category": "appliances",
+    "title": {
+      "en": "Decentralised Reversing Fan with Ceramic Heat Store",
+      "de": "Dezentraler Pendellüfter mit Keramik-Wärmespeicher"
+    },
+    "summary": {
+      "en": "A 0.26 m square decentralised push-pull ventilation unit with its inner cover off: a reversible fan turns in front of a ceramic honeycomb core that stores the heat of the extract air for 70 seconds and gives it back to the supply air for the next 70.",
+      "de": "Ein quadratisches dezentrales Pendellüftungsgerät von 0,26 m bei abgenommener Innenblende: ein umkehrbarer Ventilator dreht sich vor einem Keramik-Wabenkern, der die Wärme der Abluft 70 Sekunden speichert und in den nächsten 70 Sekunden an die Zuluft zurückgibt."
+    },
+    "tags": [
+      "fan",
+      "reversing-fan",
+      "push-pull",
+      "pendulum-ventilation",
+      "decentralised",
+      "heat-recovery",
+      "regenerator",
+      "ceramic",
+      "ventilation",
+      "wall-mounted",
+      "appliance",
+      "electrical",
+      "rotating"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (F2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "din-en-13141-8-2014",
+          "citation": "DIN EN 13141-8:2014 Ventilation for buildings - Performance testing of components for residential ventilation - Unducted mechanical supply and exhaust ventilation units (including heat recovery); regenerative push-pull units reverse every 50 to 90 seconds."
+        },
+        {
+          "id": "passive-house-institute-2021",
+          "citation": "Passive House Institute (2021). Criteria for certified ventilation units: heat recovery efficiencies of 75 to 90 percent for decentralised units with ceramic regenerators and specific electric power below 0.45 Wh per cubic metre."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "A decentralised push-pull unit of the common DN160 wall sleeve class seen from the room with the inner cover and the filter taken off: a cover plate of 0.26 m by 0.26 m with rounded corners, a sleeve ring of 0.196 m, a ceramic honeycomb core of 0.16 m diameter and 0.1 m depth with hexagonal cells, and in front of it a five-bladed reversible axial fan on a 56 mm motor hub. The origin is the centre of the hub in the wall plane; the unit is 0.24 m deep (depthM, the sleeve through the wall is not drawn). Authored estimate for dimensions and the mass of 2.7 kg. The fan blows room air outwards for 70 seconds (the warm air heats the ceramic, the air leaves at about 0 degC) and then reverses and draws outdoor air inwards for 70 seconds (the ceramic warms it to about 16 degC): the heat recovery efficiency is about 80 percent, at 35 m3/h per unit and 4 W of electric power (core, motor and electronics) in the working stage. The clip shows the real 1500 rpm slowed to two revolutions per 70 s phase, with a short standstill at each reversal.",
+        "de": "Ein dezentrales Pendellüftungsgerät der üblichen Klasse für DN160-Wandhülsen, vom Raum aus gesehen bei abgenommener Innenblende und ohne Filter: eine Blende von 0,26 m mal 0,26 m mit gerundeten Ecken, ein Hülsenring von 0,196 m, ein Keramik-Wabenkern von 0,16 m Durchmesser und 0,1 m Tiefe mit sechseckigen Zellen und davor ein fünfflügeliger umkehrbarer Axialventilator auf einer 56 mm großen Motornabe. Der Ursprung ist die Mitte der Nabe in der Wandebene; das Gerät ist 0,24 m tief (depthM, die Hülse durch die Wand ist nicht gezeichnet). Maße und die Masse von 2,7 kg sind Schätzwerte. Der Ventilator bläst 70 Sekunden lang Raumluft nach außen (die warme Luft erwärmt die Keramik, die Luft verlässt das Haus mit etwa 0 degC) und kehrt dann um und saugt 70 Sekunden lang Außenluft nach innen (die Keramik erwärmt sie auf etwa 16 degC): der Wärmebereitstellungsgrad beträgt etwa 80 Prozent, bei 35 m3/h je Gerät und 4 W elektrischer Leistung (Kern, Motor und Elektronik) in der Arbeitsstufe. Der Clip zeigt die echten 1500 U/min verlangsamt auf zwei Umdrehungen je 70-s-Phase mit kurzem Stillstand bei jeder Umkehr."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.26,
+      "widthM": 0.26,
+      "depthM": 0.24,
+      "massKg": 2.65
+    },
+    "materials": [
+      {
+        "id": "abs-plastic",
+        "title": {
+          "en": "White ABS plastic",
+          "de": "Weißer ABS-Kunststoff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "motor-housing",
+        "title": {
+          "en": "Steel motor can",
+          "de": "Stahlbecher des Motors"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "ceramic-honeycomb",
+        "title": {
+          "en": "Ceramic honeycomb",
+          "de": "Keramik-Wabe"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 2300,
+        "conductivityWmK": 1.2,
+        "specificHeatJKgK": 900,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "plate",
+      "bones": [
+        {
+          "id": "plate",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Inner cover plate",
+            "de": "Innenblende"
+          },
+          "lengthM": 0.26,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.45,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "ring",
+          "parent": "plate",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Wall sleeve with fan housing",
+            "de": "Wandhülse mit Ventilatorgehäuse"
+          },
+          "lengthM": 0.2,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.5,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "core",
+          "parent": "ring",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Ceramic regenerator core",
+            "de": "Keramik-Regeneratorkern"
+          },
+          "lengthM": 0.16,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.6,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rotor",
+          "parent": "ring",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Reversible rotor with blades",
+            "de": "Umkehrbares Laufrad mit Flügeln"
+          },
+          "lengthM": 0.08,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-screw-top",
+        "bone": "plate",
+        "x": 0,
+        "y": 0.108,
+        "kind": "support",
+        "title": {
+          "en": "Upper screw in the wall",
+          "de": "Obere Schraube in der Wand"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.014,
+        "footprintWidthM": 0.014
+      },
+      {
+        "id": "wall-screw-bottom",
+        "bone": "plate",
+        "x": 0,
+        "y": -0.108,
+        "kind": "support",
+        "title": {
+          "en": "Lower screw in the wall",
+          "de": "Untere Schraube in der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.014,
+        "footprintWidthM": 0.014,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "outlet",
+        "bone": "ring",
+        "x": 0,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Centre of the sleeve opening",
+          "de": "Mitte der Hülsenöffnung"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.13,
+              "y": -0.13,
+              "w": 0.26,
+              "h": 0.26,
+              "r": 0.02,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-1",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": -0.108,
+              "cy": -0.108,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-2",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0.108,
+              "cy": -0.108,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-3",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": -0.108,
+              "cy": 0.108,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-4",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0.108,
+              "cy": 0.108,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.098,
+              "ry": 0.098,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "opening",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.088,
+              "ry": 0.088
+            },
+            {
+              "id": "core-disc",
+              "bone": "core",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.08,
+              "region": "core",
+              "material": "ceramic-honeycomb"
+            },
+            {
+              "id": "core-cells",
+              "bone": "core",
+              "role": "detail",
+              "z": 3.25,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.02165 -0.05 L -0.03248 -0.04375 L -0.0433 -0.05 L -0.0433 -0.0625 L -0.03248 -0.06875 L -0.02165 -0.0625 Z M 0 -0.05 L -0.01083 -0.04375 L -0.02165 -0.05 L -0.02165 -0.0625 L -0.01083 -0.06875 L 0 -0.0625 Z M 0.02165 -0.05 L 0.01083 -0.04375 L 0 -0.05 L 0 -0.0625 L 0.01083 -0.06875 L 0.02165 -0.0625 Z M 0.0433 -0.05 L 0.03248 -0.04375 L 0.02165 -0.05 L 0.02165 -0.0625 L 0.03248 -0.06875 L 0.0433 -0.0625 Z M -0.03248 -0.03125 L -0.0433 -0.025 L -0.05413 -0.03125 L -0.05413 -0.04375 L -0.0433 -0.05 L -0.03248 -0.04375 Z M -0.01083 -0.03125 L -0.02165 -0.025 L -0.03248 -0.03125 L -0.03248 -0.04375 L -0.02165 -0.05 L -0.01083 -0.04375 Z M 0.01083 -0.03125 L 0 -0.025 L -0.01083 -0.03125 L -0.01083 -0.04375 L 0 -0.05 L 0.01083 -0.04375 Z M 0.03248 -0.03125 L 0.02165 -0.025 L 0.01083 -0.03125 L 0.01083 -0.04375 L 0.02165 -0.05 L 0.03248 -0.04375 Z M 0.05413 -0.03125 L 0.0433 -0.025 L 0.03248 -0.03125 L 0.03248 -0.04375 L 0.0433 -0.05 L 0.05413 -0.04375 Z M -0.0433 -0.0125 L -0.05413 -0.00625 L -0.06495 -0.0125 L -0.06495 -0.025 L -0.05413 -0.03125 L -0.0433 -0.025 Z M -0.02165 -0.0125 L -0.03248 -0.00625 L -0.0433 -0.0125 L -0.0433 -0.025 L -0.03248 -0.03125 L -0.02165 -0.025 Z M 0 -0.0125 L -0.01083 -0.00625 L -0.02165 -0.0125 L -0.02165 -0.025 L -0.01083 -0.03125 L 0 -0.025 Z M 0.02165 -0.0125 L 0.01083 -0.00625 L 0 -0.0125 L 0 -0.025 L 0.01083 -0.03125 L 0.02165 -0.025 Z M 0.0433 -0.0125 L 0.03248 -0.00625 L 0.02165 -0.0125 L 0.02165 -0.025 L 0.03248 -0.03125 L 0.0433 -0.025 Z M 0.06495 -0.0125 L 0.05413 -0.00625 L 0.0433 -0.0125 L 0.0433 -0.025 L 0.05413 -0.03125 L 0.06495 -0.025 Z M -0.05413 0.00625 L -0.06495 0.0125 L -0.07578 0.00625 L -0.07578 -0.00625 L -0.06495 -0.0125 L -0.05413 -0.00625 Z M -0.03248 0.00625 L -0.0433 0.0125 L -0.05413 0.00625 L -0.05413 -0.00625 L -0.0433 -0.0125 L -0.03248 -0.00625 Z M -0.01083 0.00625 L -0.02165 0.0125 L -0.03248 0.00625 L -0.03248 -0.00625 L -0.02165 -0.0125 L -0.01083 -0.00625 Z M 0.01083 0.00625 L 0 0.0125 L -0.01083 0.00625 L -0.01083 -0.00625 L 0 -0.0125 L 0.01083 -0.00625 Z M 0.03248 0.00625 L 0.02165 0.0125 L 0.01083 0.00625 L 0.01083 -0.00625 L 0.02165 -0.0125 L 0.03248 -0.00625 Z M 0.05413 0.00625 L 0.0433 0.0125 L 0.03248 0.00625 L 0.03248 -0.00625 L 0.0433 -0.0125 L 0.05413 -0.00625 Z M 0.07578 0.00625 L 0.06495 0.0125 L 0.05413 0.00625 L 0.05413 -0.00625 L 0.06495 -0.0125 L 0.07578 -0.00625 Z M -0.0433 0.025 L -0.05413 0.03125 L -0.06495 0.025 L -0.06495 0.0125 L -0.05413 0.00625 L -0.0433 0.0125 Z M -0.02165 0.025 L -0.03248 0.03125 L -0.0433 0.025 L -0.0433 0.0125 L -0.03248 0.00625 L -0.02165 0.0125 Z M 0 0.025 L -0.01083 0.03125 L -0.02165 0.025 L -0.02165 0.0125 L -0.01083 0.00625 L 0 0.0125 Z M 0.02165 0.025 L 0.01083 0.03125 L 0 0.025 L 0 0.0125 L 0.01083 0.00625 L 0.02165 0.0125 Z M 0.0433 0.025 L 0.03248 0.03125 L 0.02165 0.025 L 0.02165 0.0125 L 0.03248 0.00625 L 0.0433 0.0125 Z M 0.06495 0.025 L 0.05413 0.03125 L 0.0433 0.025 L 0.0433 0.0125 L 0.05413 0.00625 L 0.06495 0.0125 Z M -0.03248 0.04375 L -0.0433 0.05 L -0.05413 0.04375 L -0.05413 0.03125 L -0.0433 0.025 L -0.03248 0.03125 Z M -0.01083 0.04375 L -0.02165 0.05 L -0.03248 0.04375 L -0.03248 0.03125 L -0.02165 0.025 L -0.01083 0.03125 Z M 0.01083 0.04375 L 0 0.05 L -0.01083 0.04375 L -0.01083 0.03125 L 0 0.025 L 0.01083 0.03125 Z M 0.03248 0.04375 L 0.02165 0.05 L 0.01083 0.04375 L 0.01083 0.03125 L 0.02165 0.025 L 0.03248 0.03125 Z M 0.05413 0.04375 L 0.0433 0.05 L 0.03248 0.04375 L 0.03248 0.03125 L 0.0433 0.025 L 0.05413 0.03125 Z M -0.02165 0.0625 L -0.03248 0.06875 L -0.0433 0.0625 L -0.0433 0.05 L -0.03248 0.04375 L -0.02165 0.05 Z M 0 0.0625 L -0.01083 0.06875 L -0.02165 0.0625 L -0.02165 0.05 L -0.01083 0.04375 L 0 0.05 Z M 0.02165 0.0625 L 0.01083 0.06875 L 0 0.0625 L 0 0.05 L 0.01083 0.04375 L 0.02165 0.05 Z M 0.0433 0.0625 L 0.03248 0.06875 L 0.02165 0.0625 L 0.02165 0.05 L 0.03248 0.04375 L 0.0433 0.05 Z",
+              "region": "core",
+              "material": "ceramic-honeycomb"
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.02395 0.01013 L 0.02891 0.01486 L 0.03388 0.01932 L 0.03853 0.0242 L 0.04277 0.02958 L 0.04653 0.03546 L 0.04976 0.04183 L 0.0524 0.04865 L 0.05441 0.05589 L 0.07676 0.01385 L 0.07109 0.00763 L 0.06496 0.00221 L 0.05845 -0.00236 L 0.05165 -0.00604 L 0.04464 -0.00879 L 0.03755 -0.01055 L 0.0305 -0.01122 L 0.02395 -0.01013 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.00224 0.0259 L -0.0052 0.03208 L -0.0079 0.03819 L -0.01111 0.04412 L -0.01492 0.04981 L -0.01935 0.05521 L -0.0244 0.06025 L -0.03008 0.06487 L -0.03634 0.06902 L 0.01055 0.07728 L 0.01471 0.06997 L 0.01797 0.06247 L 0.02031 0.05486 L 0.0217 0.04725 L 0.02215 0.03974 L 0.02163 0.03245 L 0.0201 0.02554 L 0.01703 0.01964 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02533 0.00588 L -0.03212 0.00497 L -0.03876 0.00429 L -0.0454 0.00307 L -0.05199 0.00121 L -0.05848 -0.00134 L -0.06484 -0.00459 L -0.07099 -0.00856 L -0.07687 -0.01324 L -0.07024 0.03391 L -0.062 0.03562 L -0.05385 0.0364 L -0.0459 0.03627 L -0.03823 0.03524 L -0.03095 0.03335 L -0.02418 0.0306 L -0.01808 0.02701 L -0.01342 0.02227 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-4",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.01342 -0.02227 L -0.01465 -0.02901 L -0.01606 -0.03554 L -0.01695 -0.04223 L -0.01721 -0.04907 L -0.0168 -0.05604 L -0.01567 -0.06308 L -0.0138 -0.07016 L -0.01116 -0.0772 L -0.05396 -0.05632 L -0.05303 -0.04796 L -0.05126 -0.03997 L -0.04868 -0.03245 L -0.04533 -0.02547 L -0.04128 -0.01913 L -0.03657 -0.01354 L -0.03127 -0.00885 L -0.02533 -0.00588 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-5",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.01703 -0.01964 L 0.02306 -0.0229 L 0.02884 -0.02625 L 0.03492 -0.02917 L 0.04135 -0.03153 L 0.0481 -0.03329 L 0.05515 -0.0344 L 0.06246 -0.0348 L 0.06997 -0.03447 L 0.03689 -0.06872 L 0.02922 -0.06526 L 0.02218 -0.0611 L 0.01582 -0.05632 L 0.01022 -0.05099 L 0.00544 -0.04517 L 0.00157 -0.03897 L -0.00125 -0.03248 L -0.00224 -0.0259 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "hub",
+              "material": "motor-housing"
+            },
+            {
+              "id": "hub-cap",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.003,
+              "cy": 0.003,
+              "rx": 0.01,
+              "ry": 0.01,
+              "region": "hub",
+              "material": "motor-housing"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.13,
+              "y": -0.12,
+              "w": 0.26,
+              "h": 0.02,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.098,
+              "y": -0.1,
+              "w": 0.196,
+              "h": 0.22,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.104,
+              "y": 0.105,
+              "w": 0.208,
+              "h": 0.015,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "cover-joint",
+              "bone": "ring",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  -0.085
+                ],
+                [
+                  0.098,
+                  -0.085
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "wall-line",
+              "bone": "ring",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.02
+                ],
+                [
+                  0.098,
+                  0.02
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.13,
+              "w": 0.02,
+              "h": 0.26,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.1,
+              "y": -0.098,
+              "w": 0.22,
+              "h": 0.196,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.105,
+              "y": -0.104,
+              "w": 0.015,
+              "h": 0.208,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "cover-joint",
+              "bone": "ring",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.085,
+                  -0.098
+                ],
+                [
+                  -0.085,
+                  0.098
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "wall-line",
+              "bone": "ring",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.098
+                ],
+                [
+                  0.02,
+                  0.098
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.26 m square inner cover, 5.2 mm on paper, with the inner cover taken off: a round sleeve in which a honeycomb disc of ceramic shows between five swept fan blades. Front and plan, 4.8 mm by 5.2 mm on paper, show the unit side-on as a T: the thin cover plate on the room side and the round sleeve that runs 0.22 m into the wall, with a flared rim at its outer end, a cover joint and the line where it passes the wall face. Fan, ceramic core and opening are inside the sleeve and not visible from outside.",
+            "de": "Eine quadratische Innenblende von 0,26 m, auf Papier 5,2 mm, bei abgenommener Blende: eine runde Hülse, in der zwischen fünf gepfeilten Flügeln eine Keramik-Wabenscheibe sichtbar ist. Vorderansicht und Grundriss, 4,8 mm auf 5,2 mm, zeigen das Gerät von der Seite als T: die dünne Abdeckplatte auf der Raumseite und die runde Hülse, die 0,22 m in die Wand läuft, mit einem aufgeweiteten Rand am Außenende, einer Deckelfuge und der Linie, an der sie die Wandfläche durchstößt. Ventilator, Keramikkern und Öffnung liegen in der Hülse und sind von außen nicht zu sehen."
+          },
+          "retained": {
+            "en": "Plate of 0.26 m with its rounded corners, sleeve ring of 0.196 m, dark opening of 0.176 m, ceramic disc of 0.16 m with 37 hexagonal cells of 25 mm, five blades and the 56 mm hub with cap, four screws.",
+            "de": "Platte von 0,26 m mit gerundeten Ecken, Hülsenring von 0,196 m, dunkle Öffnung von 0,176 m, Keramikscheibe von 0,16 m mit 37 sechseckigen Zellen von 25 mm, fünf Flügel und die 56 mm große Nabe mit Kappe, vier Schrauben."
+          },
+          "merged": {
+            "en": "The 0.1 m depth of the core is seen end-on: only its face with the cell pattern is drawn; the real cells are 2 to 3 mm and are shown as 25 mm hexagons.",
+            "de": "Die 0,1 m Tiefe des Kerns wird von vorn gesehen: nur seine Stirnfläche mit dem Zellmuster ist gezeichnet; die echten Zellen sind 2 bis 3 mm groß und werden als Sechsecke von 25 mm gezeigt."
+          },
+          "omitted": {
+            "en": "The weather hood outside, the foam seal around the sleeve and the cable. In front and plan the fan, the core and the screws are omitted because they are hidden.",
+            "de": "Die Wetterschutzhaube außen, die Schaumdichtung um die Hülse und das Kabel. In Vorderansicht und Grundriss entfallen Ventilator, Kern und Schrauben, weil sie verdeckt sind."
+          },
+          "thinElements": {
+            "en": "The cell walls are drawn with the 0.13 mm detail pen; the blades are 22 mm wide at the root (0.44 mm) and 50 mm at the tip.",
+            "de": "Die Zellwände werden mit dem 0,13-mm-Detailstift gezeichnet; die Flügel sind an der Wurzel 22 mm (0,44 mm) und an der Spitze 50 mm breit."
+          },
+          "hatching": {
+            "en": "None; the honeycomb is a cell outline pattern on a light terracotta tone.",
+            "de": "Keine; die Wabe ist ein Zellmuster aus Konturen auf einem hellen Terrakotta-Ton."
+          },
+          "styles": {
+            "en": "Plate 0.88, ring 0.7, opening 0.12, ceramic 0.62, blades 0.82, hub 0.55; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Platte 0,88, Ring 0,7, Öffnung 0,12, Keramik 0,62, Flügel 0,82, Nabe 0,55; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Casing, core, blades and hub are four regions: in the thermal view the core charges and discharges with the air direction while the blades turn forward and back with the rotor bone.",
+            "de": "Gehäuse, Kern, Flügel und Nabe sind vier Regionen: in der Thermalansicht lädt und entlädt sich der Kern mit der Luftrichtung, während sich die Flügel mit dem Rotorknochen vor und zurück drehen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.13,
+              "y": -0.13,
+              "w": 0.26,
+              "h": 0.26,
+              "r": 0.02,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.098,
+              "ry": 0.098,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "opening",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.086,
+              "ry": 0.086
+            },
+            {
+              "id": "core-disc",
+              "bone": "core",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.08,
+              "region": "core",
+              "material": "ceramic-honeycomb"
+            },
+            {
+              "id": "core-cells",
+              "bone": "core",
+              "role": "detail",
+              "z": 3.25,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 -0.022 L -0.01905 -0.011 L -0.03811 -0.022 L -0.03811 -0.044 L -0.01905 -0.055 L 0 -0.044 Z M 0.03811 -0.022 L 0.01905 -0.011 L 0 -0.022 L 0 -0.044 L 0.01905 -0.055 L 0.03811 -0.044 Z M -0.01905 0.011 L -0.03811 0.022 L -0.05716 0.011 L -0.05716 -0.011 L -0.03811 -0.022 L -0.01905 -0.011 Z M 0.01905 0.011 L 0 0.022 L -0.01905 0.011 L -0.01905 -0.011 L 0 -0.022 L 0.01905 -0.011 Z M 0.05716 0.011 L 0.03811 0.022 L 0.01905 0.011 L 0.01905 -0.011 L 0.03811 -0.022 L 0.05716 -0.011 Z M 0 0.044 L -0.01905 0.055 L -0.03811 0.044 L -0.03811 0.022 L -0.01905 0.011 L 0 0.022 Z M 0.03811 0.044 L 0.01905 0.055 L 0 0.044 L 0 0.022 L 0.01905 0.011 L 0.03811 0.022 Z",
+              "region": "core",
+              "material": "ceramic-honeycomb"
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.02252 0.01299 L 0.02731 0.01762 L 0.03214 0.02209 L 0.03665 0.02697 L 0.04074 0.03232 L 0.04435 0.03815 L 0.04743 0.04445 L 0.04993 0.05118 L 0.05179 0.05832 L 0.07731 0.01032 L 0.07138 0.0041 L 0.06499 -0.00129 L 0.05821 -0.00581 L 0.05114 -0.00941 L 0.04388 -0.01205 L 0.03653 -0.01366 L 0.02925 -0.01416 L 0.02252 -0.01299 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.0054 0.02543 L -0.00832 0.03142 L -0.01108 0.03739 L -0.01433 0.04319 L -0.01815 0.04873 L -0.02258 0.05397 L -0.02761 0.05884 L -0.03325 0.0633 L -0.03946 0.06728 L 0.01407 0.07672 L 0.01816 0.06916 L 0.02131 0.06141 L 0.02352 0.05357 L 0.02475 0.04573 L 0.02501 0.03801 L 0.02428 0.03052 L 0.02251 0.02344 L 0.01932 0.0174 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02586 0.00273 L -0.03245 0.00179 L -0.03899 0.00102 L -0.0455 -0.00028 L -0.05195 -0.0022 L -0.0583 -0.00479 L -0.0645 -0.00808 L -0.07048 -0.01206 L -0.07618 -0.01674 L -0.06862 0.03709 L -0.06016 0.03864 L -0.05182 0.03924 L -0.04368 0.03892 L -0.03584 0.03767 L -0.02842 0.03554 L -0.02152 0.03252 L -0.01534 0.02865 L -0.01058 0.02375 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-4",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.01058 -0.02375 L -0.01173 -0.03031 L -0.01302 -0.03676 L -0.01379 -0.04336 L -0.01396 -0.05009 L -0.01346 -0.05693 L -0.01225 -0.06384 L -0.01031 -0.07075 L -0.00762 -0.07763 L -0.05648 -0.0538 L -0.05534 -0.04527 L -0.05334 -0.03715 L -0.05051 -0.02951 L -0.04691 -0.02245 L -0.04258 -0.01604 L -0.03758 -0.01042 L -0.03199 -0.00573 L -0.02586 -0.00273 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-5",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.01932 -0.0174 L 0.0252 -0.02052 L 0.03094 -0.02374 L 0.03697 -0.02652 L 0.04333 -0.02876 L 0.04999 -0.03039 L 0.05693 -0.03137 L 0.06411 -0.03167 L 0.07147 -0.03123 L 0.03371 -0.07034 L 0.02596 -0.06662 L 0.01885 -0.06221 L 0.01246 -0.05716 L 0.00685 -0.05155 L 0.0021 -0.04545 L -0.0017 -0.03896 L -0.00443 -0.0322 L -0.0054 -0.02543 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "hub",
+              "material": "motor-housing"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.13,
+              "y": -0.12,
+              "w": 0.26,
+              "h": 0.02,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.098,
+              "y": -0.1,
+              "w": 0.196,
+              "h": 0.22,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.104,
+              "y": 0.1,
+              "w": 0.208,
+              "h": 0.02,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.13,
+              "w": 0.02,
+              "h": 0.26,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.1,
+              "y": -0.098,
+              "w": 0.22,
+              "h": 0.196,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.104,
+              "w": 0.02,
+              "h": 0.208,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.6 mm square with a round sleeve, a light disc with a coarse cell pattern and a five-bladed pinwheel. Front and plan, 2.4 mm by 2.6 mm: plate, sleeve and rim as three separate masses.",
+            "de": "Ein Quadrat von 2,6 mm mit einer runden Hülse, einer hellen Scheibe mit grobem Zellmuster und einem fünfflügeligen Windrad. Vorderansicht und Grundriss, 2,4 mm auf 2,6 mm: Platte, Hülse und Rand als drei getrennte Massen."
+          },
+          "retained": {
+            "en": "Plate, ring, opening, ceramic disc with 19 cells of 44 mm, five blades and the hub.",
+            "de": "Platte, Ring, Öffnung, Keramikscheibe mit 19 Zellen von 44 mm, fünf Flügel und die Nabe."
+          },
+          "merged": {
+            "en": "The cells are merged to 19 coarse hexagons; screws and hub cap are dropped.",
+            "de": "Die Zellen sind zu 19 groben Sechsecken zusammengefasst; Schrauben und Nabenkappe entfallen."
+          },
+          "omitted": {
+            "en": "Four screws, the hub cap and the fine cell structure. Cover joint and wall line in front and plan.",
+            "de": "Vier Schrauben, die Nabenkappe und die feine Zellstruktur. Deckelfuge und Wandlinie in Vorderansicht und Grundriss."
+          },
+          "thinElements": {
+            "en": "The blades are widened to 30 mm at the root (0.3 mm) and 58 mm at the tip; the cell outlines stay 0.13 mm.",
+            "de": "Die Flügel sind an der Wurzel auf 30 mm (0,3 mm) und an der Spitze auf 58 mm verbreitert; die Zellkonturen bleiben 0,13 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Plate 0.88, ring 0.7, opening 0.12, ceramic 0.62, blades 0.82, hub 0.55; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Platte 0,88, Ring 0,7, Öffnung 0,12, Keramik 0,62, Flügel 0,82, Nabe 0,55; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Casing, core, blades and hub stay four regions.",
+            "de": "Gehäuse, Kern, Flügel und Nabe bleiben vier Regionen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.13,
+              "y": -0.13,
+              "w": 0.26,
+              "h": 0.26,
+              "r": 0.02,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "opening",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.094,
+              "ry": 0.094,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "core-disc",
+              "bone": "core",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.082,
+              "ry": 0.082,
+              "region": "core",
+              "material": "ceramic-honeycomb"
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.02121 0.02121 L 0.02522 0.02639 L 0.02922 0.03154 L 0.03284 0.03703 L 0.03598 0.04291 L 0.03858 0.04917 L 0.04057 0.05581 L 0.0419 0.06281 L 0.04253 0.07011 L 0.08198 0.00178 L 0.07533 -0.00499 L 0.06815 -0.01078 L 0.06054 -0.01553 L 0.05262 -0.01917 L 0.04452 -0.02165 L 0.03639 -0.02291 L 0.02845 -0.02287 L 0.02121 -0.02121 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02898 0.00776 L -0.03546 0.00865 L -0.04193 0.00954 L -0.04849 0.00993 L -0.05515 0.00971 L -0.06187 0.00882 L -0.06862 0.00723 L -0.07534 0.00488 L -0.08198 0.00178 L -0.04253 0.07011 L -0.03334 0.06774 L -0.02474 0.06441 L -0.01683 0.06019 L -0.00971 0.05515 L -0.00351 0.04938 L 0.00164 0.04297 L 0.00558 0.03607 L 0.00776 0.02898 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.00776 -0.02898 L 0.01024 -0.03503 L 0.01271 -0.04108 L 0.01565 -0.04696 L 0.01917 -0.05262 L 0.02329 -0.058 L 0.02805 -0.06304 L 0.03344 -0.06769 L 0.03945 -0.07189 L -0.03945 -0.07189 L -0.04199 -0.06275 L -0.04341 -0.05363 L -0.04372 -0.04467 L -0.04291 -0.03598 L -0.041 -0.02773 L -0.03803 -0.02006 L -0.03403 -0.0132 L -0.02898 -0.00776 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "hub",
+              "material": "motor-housing"
+            }
+          ],
+          "plan": [
+            {
+              "id": "body",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  -0.12
+                ],
+                [
+                  -0.13,
+                  -0.1
+                ],
+                [
+                  -0.098,
+                  -0.1
+                ],
+                [
+                  -0.098,
+                  0.12
+                ],
+                [
+                  0.098,
+                  0.12
+                ],
+                [
+                  0.098,
+                  -0.1
+                ],
+                [
+                  0.13,
+                  -0.1
+                ],
+                [
+                  0.13,
+                  -0.12
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "body",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  -0.13
+                ],
+                [
+                  -0.1,
+                  -0.13
+                ],
+                [
+                  -0.1,
+                  -0.098
+                ],
+                [
+                  0.12,
+                  -0.098
+                ],
+                [
+                  0.12,
+                  0.098
+                ],
+                [
+                  -0.1,
+                  0.098
+                ],
+                [
+                  -0.1,
+                  0.13
+                ],
+                [
+                  -0.12,
+                  0.13
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.3 mm square with a dark ring, a light ceramic disc and a three-bladed pinwheel. Front and plan, 1.2 mm by 1.3 mm: one T-shaped mass of plate and sleeve.",
+            "de": "Ein Quadrat von 1,3 mm mit einem dunklen Ring, einer hellen Keramikscheibe und einem dreiflügeligen Windrad. Vorderansicht und Grundriss, 1,2 mm auf 1,3 mm: eine T-förmige Masse aus Platte und Hülse."
+          },
+          "retained": {
+            "en": "Plate, dark opening ring, ceramic disc, three broad blades and the hub.",
+            "de": "Platte, dunkler Öffnungsring, Keramikscheibe, drei breite Flügel und die Nabe."
+          },
+          "merged": {
+            "en": "The housing ring joins the opening; the cell pattern is merged into the tone of the disc; five blades become three.",
+            "de": "Der Gehäusering geht in der Öffnung auf; das Zellmuster geht im Ton der Scheibe auf; aus fünf Flügeln werden drei."
+          },
+          "omitted": {
+            "en": "Screws, hub cap, ring outline and cells. The rim at the outer end in front and plan.",
+            "de": "Schrauben, Nabenkappe, Ringkontur und Zellen. Der Rand am Außenende in Vorderansicht und Grundriss."
+          },
+          "thinElements": {
+            "en": "The blades are 60 to 90 mm wide (0.3 to 0.45 mm), the ceramic disc 164 mm (0.82 mm) so that the light disc reads between the blades.",
+            "de": "Die Flügel sind 60 bis 90 mm (0,3 bis 0,45 mm) breit, die Keramikscheibe 164 mm (0,82 mm), damit die helle Scheibe zwischen den Flügeln lesbar bleibt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Plate 0.88, opening 0.12, ceramic 0.62, blades 0.82, hub 0.55; one body pen of 0.13 mm.",
+            "de": "Platte 0,88, Öffnung 0,12, Keramik 0,62, Flügel 0,82, Nabe 0,55; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "The opening carries the casing region; core, blades and hub keep theirs.",
+            "de": "Die Öffnung trägt die Gehäuseregion; Kern, Flügel und Nabe behalten ihre."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the fan unit is 0.52 mm by 0.52 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the mounting screws of 14 mm, is 0.03 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist das Lüftergerät 0,52 mm mal 0,52 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, die Befestigungsschrauben von 14 mm, misst 0,03 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Mounting screws of 14 mm",
+          "de": "Befestigungsschrauben von 14 mm"
+        },
+        "limitingSizeM": 0.014,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The rotor stands still, no air moves and the core is at room temperature.",
+          "de": "Das Laufrad steht still, keine Luft bewegt sich und der Kern hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "core": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "blades": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hub": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "exhaust-out": 0,
+            "supply-in": 0
+          },
+          "operating": {
+            "fan": 0,
+            "extract": 0,
+            "supply": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "extract",
+        "title": {
+          "en": "Extract phase",
+          "de": "Abluftphase"
+        },
+        "description": {
+          "en": "The fan blows room air of 21 degC outwards through the core: the ceramic takes up its heat and the air leaves the house at about 0 degC.",
+          "de": "Der Ventilator bläst Raumluft von 21 degC durch den Kern nach außen: die Keramik nimmt ihre Wärme auf und die Luft verlässt das Haus mit etwa 0 degC."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "core": {
+              "exposedFraction": 0,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 1,
+                "tempC": 21
+              }
+            },
+            "blades": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hub": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "exhaust-out": 1,
+            "supply-in": 0
+          },
+          "operating": {
+            "fan": 1,
+            "extract": 1,
+            "supply": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "supply",
+        "title": {
+          "en": "Supply phase",
+          "de": "Zuluftphase"
+        },
+        "description": {
+          "en": "The fan reverses and draws outdoor air of -5 degC inwards through the warm core: the ceramic gives its heat back and the air enters the room at about 16 degC.",
+          "de": "Der Ventilator kehrt um und saugt Außenluft von -5 degC durch den warmen Kern nach innen: die Keramik gibt ihre Wärme zurück und die Luft tritt mit etwa 16 degC in den Raum."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 720
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "core": {
+              "exposedFraction": 0,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 1,
+                "tempC": -5
+              }
+            },
+            "blades": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hub": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "exhaust-out": 0,
+            "supply-in": 1
+          },
+          "operating": {
+            "fan": 1,
+            "extract": 0,
+            "supply": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "pendulum-cycle",
+        "title": {
+          "en": "Pendulum cycle with reversing spin",
+          "de": "Pendelbetrieb mit umkehrender Drehrichtung"
+        },
+        "description": {
+          "en": "The fan pushes room air outwards for 70 seconds while the core charges, stops, turns the other way and draws outdoor air inwards for 70 seconds while the core discharges; three double cycles. The shown turning is slowed to two revolutions per phase.",
+          "de": "Der Ventilator bläst 70 Sekunden lang Raumluft nach außen, während sich der Kern lädt, steht kurz, dreht in die Gegenrichtung und saugt 70 Sekunden lang Außenluft nach innen, während sich der Kern entlädt; drei Doppelzyklen. Die gezeigte Drehung ist auf zwei Umdrehungen je Phase verlangsamt."
+        },
+        "durationS": 420,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "extract",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 67,
+            "pose": "extract",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 70,
+            "pose": "supply",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 137,
+            "pose": "supply",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 140,
+            "pose": "extract",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 207,
+            "pose": "extract",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 210,
+            "pose": "supply",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 277,
+            "pose": "supply",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 280,
+            "pose": "extract",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 347,
+            "pose": "extract",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 350,
+            "pose": "supply",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 417,
+            "pose": "supply",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 420,
+            "pose": "supply",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 420
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 420
+          }
+        ],
+        "phases": [
+          {
+            "id": "extract-1",
+            "fromS": 0,
+            "toS": 70,
+            "title": {
+              "en": "Extract",
+              "de": "Abluft"
+            }
+          },
+          {
+            "id": "supply-1",
+            "fromS": 70,
+            "toS": 140,
+            "title": {
+              "en": "Supply",
+              "de": "Zuluft"
+            }
+          },
+          {
+            "id": "extract-2",
+            "fromS": 140,
+            "toS": 210,
+            "title": {
+              "en": "Extract",
+              "de": "Abluft"
+            }
+          },
+          {
+            "id": "supply-2",
+            "fromS": 210,
+            "toS": 280,
+            "title": {
+              "en": "Supply",
+              "de": "Zuluft"
+            }
+          },
+          {
+            "id": "extract-3",
+            "fromS": 280,
+            "toS": 350,
+            "title": {
+              "en": "Extract",
+              "de": "Abluft"
+            }
+          },
+          {
+            "id": "supply-3",
+            "fromS": 350,
+            "toS": 420,
+            "title": {
+              "en": "Supply",
+              "de": "Zuluft"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "operating",
+            "title": {
+              "en": "Fan runs, extract phase",
+              "de": "Ventilator läuft, Abluftphase"
+            },
+            "target": "fan"
+          },
+          {
+            "t": 70,
+            "kind": "operating",
+            "title": {
+              "en": "Reversal to supply",
+              "de": "Umkehr auf Zuluft"
+            },
+            "target": "supply"
+          },
+          {
+            "t": 140,
+            "kind": "operating",
+            "title": {
+              "en": "Reversal to extract",
+              "de": "Umkehr auf Abluft"
+            },
+            "target": "extract"
+          },
+          {
+            "t": 210,
+            "kind": "operating",
+            "title": {
+              "en": "Reversal to supply",
+              "de": "Umkehr auf Zuluft"
+            },
+            "target": "supply"
+          },
+          {
+            "t": 280,
+            "kind": "operating",
+            "title": {
+              "en": "Reversal to extract",
+              "de": "Umkehr auf Abluft"
+            },
+            "target": "extract"
+          },
+          {
+            "t": 350,
+            "kind": "operating",
+            "title": {
+              "en": "Reversal to supply",
+              "de": "Umkehr auf Zuluft"
+            },
+            "target": "supply"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 420,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:extract",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 70,
+                "v": 0
+              },
+              {
+                "t": 140,
+                "v": 1
+              },
+              {
+                "t": 210,
+                "v": 0
+              },
+              {
+                "t": 280,
+                "v": 1
+              },
+              {
+                "t": 350,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:supply",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 70,
+                "v": 1
+              },
+              {
+                "t": 140,
+                "v": 0
+              },
+              {
+                "t": 210,
+                "v": 1
+              },
+              {
+                "t": 280,
+                "v": 0
+              },
+              {
+                "t": 350,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:exhaust-out",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 70,
+                "v": 0
+              },
+              {
+                "t": 140,
+                "v": 1
+              },
+              {
+                "t": 210,
+                "v": 0
+              },
+              {
+                "t": 280,
+                "v": 1
+              },
+              {
+                "t": 350,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:supply-in",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 70,
+                "v": 1
+              },
+              {
+                "t": 140,
+                "v": 0
+              },
+              {
+                "t": 210,
+                "v": 1
+              },
+              {
+                "t": 280,
+                "v": 0
+              },
+              {
+                "t": 350,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "reverse-spin",
+        "title": {
+          "en": "Reversal of the spin",
+          "de": "Umkehr der Drehrichtung"
+        },
+        "description": {
+          "en": "The rotor runs two revolutions in the extract direction, comes to rest and returns the same way in the supply direction; the turning rate is slowed to 180 degrees per second.",
+          "de": "Das Laufrad macht zwei Umdrehungen in Abluftrichtung, kommt zur Ruhe und läuft in Zuluftrichtung zurück; die Drehrate ist auf 180 Grad je Sekunde verlangsamt."
+        },
+        "durationS": 8,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "extract",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "extract",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 720
+              }
+            }
+          },
+          {
+            "t": 8,
+            "pose": "supply",
+            "ease": "smooth",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "extract",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Extract direction",
+              "de": "Abluftrichtung"
+            }
+          },
+          {
+            "id": "supply",
+            "fromS": 4,
+            "toS": 8,
+            "title": {
+              "en": "Supply direction",
+              "de": "Zuluftrichtung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "operating",
+            "title": {
+              "en": "Reversal",
+              "de": "Umkehr"
+            },
+            "target": "supply"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:extract",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:supply",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:exhaust-out",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:supply-in",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "fan",
+          "title": {
+            "en": "Fan",
+            "de": "Ventilator"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Running (35 m3/h, 4 W)",
+                "de": "Läuft (35 m3/h, 4 W)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "extract",
+          "title": {
+            "en": "Extract phase",
+            "de": "Abluftphase"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Not extracting",
+                "de": "Keine Abluft"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Extracting through the core",
+                "de": "Abluft durch den Kern"
+              }
+            }
+          ]
+        },
+        {
+          "id": "supply",
+          "title": {
+            "en": "Supply phase",
+            "de": "Zuluftphase"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Not supplying",
+                "de": "Keine Zuluft"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Supplying through the core",
+                "de": "Zuluft durch den Kern"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Cover plate and wall sleeve",
+            "de": "Blende und Wandhülse"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "abs-plastic",
+          "areaM2": 0.09,
+          "characteristicLengthM": 0.26,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "ABS shell 2.5 mm",
+                "de": "ABS-Schale 2,5 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "operating": {
+            "key": "fan",
+            "heatW": 1
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "core",
+          "title": {
+            "en": "Ceramic regenerator core",
+            "de": "Keramik-Regeneratorkern"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "ceramic-honeycomb",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.003,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Ceramic cell wall 0.6 mm (half wall seen by one air side)",
+                "de": "Keramik-Zellwand 0,6 mm (Halbwand einer Luftseite)"
+              },
+              "kind": "masonry",
+              "material": "ceramic-honeycomb",
+              "thicknessM": 0.0003,
+              "resistanceM2KW": 0.0003,
+              "heatCapacityJM2K": 620,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 620,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "blades",
+          "title": {
+            "en": "Blades",
+            "de": "Flügel"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-plastic",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.05,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "blade",
+              "title": {
+                "en": "ABS blade 1.5 mm",
+                "de": "ABS-Flügel 1,5 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.007,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "hub",
+          "title": {
+            "en": "Motor hub",
+            "de": "Motornabe"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "motor-housing",
+          "areaM2": 0.006,
+          "characteristicLengthM": 0.056,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "can",
+              "title": {
+                "en": "Steel motor can 0.8 mm",
+                "de": "Stahlbecher des Motors 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "motor-housing",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 6300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 6300,
+          "operating": {
+            "key": "fan",
+            "heatW": 3
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "exhaust-out",
+          "kind": "vent",
+          "title": {
+            "en": "Cooled extract air leaving to outside (rise against the 21 degC room air)",
+            "de": "Abgekühlte Abluft nach außen (Anstieg gegen die 21-degC-Raumluft)"
+          },
+          "anchor": "outlet",
+          "directionDeg": 180,
+          "diameterM": 0.16,
+          "operatingKey": "extract",
+          "volumeFlowM3S": 0.0097,
+          "temperatureRiseK": -21,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "din-en-13141-8-2014"
+        },
+        {
+          "id": "supply-in",
+          "kind": "vent",
+          "title": {
+            "en": "Preheated outdoor air entering the room (rise against the 21 degC room air)",
+            "de": "Vorgewärmte Außenluft in den Raum (Anstieg gegen die 21-degC-Raumluft)"
+          },
+          "anchor": "outlet",
+          "directionDeg": 0,
+          "diameterM": 0.16,
+          "operatingKey": "supply",
+          "volumeFlowM3S": 0.0097,
+          "temperatureRiseK": -5,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "din-en-13141-8-2014"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The core is a regenerator: during the extract phase the 21 degC room air heats the ceramic and leaves at about 0 degC, in the supply phase the -5 degC outdoor air takes the heat back and reaches the room at about 16 degC (5 K below the 21 degC reference, 80 percent heat recovery of the 26 K difference); the core region sees the air stream as a contact at the temperature of the phase, with the half cell wall of 0.3 mm and about 0.9 m2 of cell surface giving a time constant of the order of the 70 s phase.",
+          "de": "Der Kern ist ein Regenerator: in der Abluftphase erwärmt die 21 degC warme Raumluft die Keramik und verlässt sie mit etwa 0 degC, in der Zuluftphase holt die -5 degC kalte Außenluft die Wärme zurück und erreicht den Raum mit etwa 16 degC (5 K unter der Bezugstemperatur von 21 degC, 80 Prozent Wärmerückgewinnung der 26 K Differenz); die Kernregion sieht den Luftstrom als Kontakt mit der Temperatur der Phase, mit der Halbwand von 0,3 mm und etwa 0,9 m2 Zelloberfläche ergibt sich eine Zeitkonstante in der Größenordnung der 70-s-Phase."
+        },
+        {
+          "en": "The 4 W of electric power end as heat: 1 W at the plate and sleeve and 3 W at the hub at full level; the emitter directions are nominal in-plane directions (the real flow is normal to the drawing plane).",
+          "de": "Die 4 W elektrische Leistung enden als Wärme: 1 W an Blende und Hülse und 3 W an der Nabe auf voller Stufe; die Emitterrichtungen sind nominelle Richtungen in der Ebene (die echte Strömung steht senkrecht zur Zeichenebene)."
+        },
+        {
+          "en": "Reference air of both emitters is the room air at 21 degC, not the outdoor air: the exhaust rise of -21 K leaves the unit at about 0 degC, the supply rise of -5 K enters the room at about 16 degC; the outdoor air at -5 degC is only the source of the supply stream, never the reference of a rise.",
+          "de": "Bezugsluft beider Emitter ist die Raumluft mit 21 degC, nicht die Außenluft: der Abluftanstieg von -21 K verlässt das Gerät mit etwa 0 degC, der Zuluftanstieg von -5 K erreicht den Raum mit etwa 16 degC; die Außenluft mit -5 degC ist nur die Quelle des Zuluftstroms, nie die Bezugsluft eines Anstiegs."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-screw-top",
+        "wall-screw-bottom"
+      ],
+      "assumptions": [
+        {
+          "en": "The 2.7 kg unit hangs on the upper screw (pin) and leans against the wall at the lower screw (roller); most of its mass sits in the sleeve inside the wall.",
+          "de": "Das 2,7 kg schwere Gerät hängt an der oberen Schraube (Festlager) und lehnt an der unteren Schraube an der Wand (Rollenlager); der größte Teil seiner Masse sitzt in der Hülse in der Wand."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "extract",
+      "defaultClip": "pendulum-cycle",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

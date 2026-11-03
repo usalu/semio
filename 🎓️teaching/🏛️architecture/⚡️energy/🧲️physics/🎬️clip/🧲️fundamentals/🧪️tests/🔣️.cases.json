@@ -1,0 +1,44 @@
+{
+  "cast_prefix": "physics-fundamentals-",
+  "view": "thermal",
+  "beat1": {
+    "scene": "Beat1_Leistung",
+    "slot": { "center": [4.8, 1.95], "height": 0.6, "tolerance": 1e-6 },
+    "card": { "center": [3.4, 1.95], "width": 6.2, "height": 0.75 },
+    "icons": ["vacuum", "kettle", "shower"],
+    "seek_seconds": [0.0, 10.0, 30.0, 150.0, 190.0]
+  },
+  "kettle": {
+    "cast": "physics-fundamentals-kettle",
+    "catalog": "electric-kettle",
+    "clip": "boil",
+    "phase": "boil",
+    "rate_constant": "KETTLE_RATE",
+    "clause": "kettle",
+    "water_kg": 1.0,
+    "start_c": 15.0,
+    "end_c": 100.0,
+    "boil_start_s": 184.0,
+    "tolerance_s": 5.0
+  },
+  "pot": {
+    "cast": "physics-fundamentals-pot",
+    "catalog": "cooking-pot",
+    "clip": "heat-to-boil",
+    "phase": "boil",
+    "rate_constant": "POT_BOIL_RATE",
+    "water_kg": 1.0,
+    "narrated_kj": 419.0,
+    "narrated_tolerance_kj": 1.0,
+    "room_c": 21.0,
+    "boil_start_s": 319.0,
+    "scene_boil_s": 10.46,
+    "scene_boil_tolerance_s": 0.05,
+    "pot_input_w": 1200.0
+  },
+  "water": {
+    "pressure_pa": 101325.0,
+    "zero_c": 0.01,
+    "boil_c": 100.0
+  }
+}

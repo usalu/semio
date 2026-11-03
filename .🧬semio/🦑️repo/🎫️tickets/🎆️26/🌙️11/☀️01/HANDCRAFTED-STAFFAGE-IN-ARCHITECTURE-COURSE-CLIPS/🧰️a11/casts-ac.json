@@ -1,0 +1,6 @@
+{ "version": 1, "casts": {
+  "a-ac-front-cool": { "asset": "split-ac-indoor-unit", "pose": "cooling", "view": "thermal", "environment": "summer-heatwave-calm", "viewpoint": "front", "theme": "dark" },
+  "b-ac-front-line": { "asset": "split-ac-indoor-unit", "pose": "cooling", "view": "dark-line", "viewpoint": "front", "theme": "dark" },
+  "c-ac-front-100": { "asset": "split-ac-indoor-unit", "pose": "cooling", "view": "dark-line", "viewpoint": "front", "theme": "dark", "scale": 100 },
+  "d-ac-front-200": { "asset": "split-ac-indoor-unit", "pose": "cooling", "view": "dark-line", "viewpoint": "front", "theme": "dark", "scale": 200 }
+} }

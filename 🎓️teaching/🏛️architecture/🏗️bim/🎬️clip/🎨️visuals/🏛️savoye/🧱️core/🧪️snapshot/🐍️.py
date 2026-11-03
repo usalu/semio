@@ -21,7 +21,7 @@ def test_visual_snapshots_follow_content_producers_and_isolate_consumers():
     def build(m):
         calls.append(m)
         return {"points":copy.deepcopy(m["points"]),"value":m["value"]}
-    with patch.object(G._model,"building_geometry",build),patch.object(G._model,"_geometry_producers",lambda: (build,)):
+    with patch.object(G._model,"building_geometry",build),patch.object(G._model,"geometry_producers",lambda: (build,)):
         a,ga = G.geometry_context(source)
         b,gb = G.geometry_context(json.loads(json.dumps(source)))
         assert a is b and ga is gb and len(calls)==case["same_content_builds"]
@@ -41,7 +41,7 @@ def test_visual_snapshots_follow_content_producers_and_isolate_consumers():
         before = G.geometry_context(source)[1]
         assert before["value"]==2
         changed = object()
-        with patch.object(G._model,"_geometry_producers",lambda: (build,changed)):
+        with patch.object(G._model,"geometry_producers",lambda: (build,changed)):
             after = G.geometry_context(source)[1]
             assert after is not before
             assert G.geometry_context(source)[1] is after
@@ -55,7 +55,7 @@ def test_visual_default_and_membership_share_the_resolved_source_without_geometr
     """🧭 Default source changes refresh; membership never constructs geometry."""
     value = [{"value":7,"points":[[7,8,9]],"models":[]}]
     stamp = [1]
-    with patch.object(G,"_source_revision",lambda: stamp[0]),patch.object(G._model,"_source",lambda: json.dumps(value[0])),patch.object(G._model,"building_geometry",side_effect=AssertionError("membership built geometry")),patch.object(G._model,"partial_model",lambda name,m: {"element_guids":[str(m["value"])]}):
+    with patch.object(G,"_source_revision",lambda: stamp[0]),patch.object(G._model,"source_text",lambda: json.dumps(value[0])),patch.object(G._model,"building_geometry",side_effect=AssertionError("membership built geometry")),patch.object(G._model,"partial_model",lambda name,m: {"element_guids":[str(m["value"])]}):
         a = G.source_model()
         assert G.membership(a)["7"]==frozenset(G.DISCIPLINES)
         with patch.object(G.json,"dumps",side_effect=AssertionError("snapshot reserialized")):
@@ -73,7 +73,7 @@ def test_visual_default_and_membership_share_the_resolved_source_without_geometr
 
 def test_actual_source_snapshot_membership_matches_independent_source_lists():
     """🏛️ Actual discipline membership reads the immutable source without building geometry."""
-    raw=json.loads(G._model._source())
+    raw=json.loads(G._model.source_text())
     registry={o['tag']:o['guid'] for group in ('elements','types','spaces','storeys','materials') for o in raw[group]}
     expected={}
     for spec in raw['models']:

@@ -1,0 +1,7 @@
+sleeping-person supine 50
+sleeping-person side 50
+sleeping-person curled 50
+seated-office-worker typing 50
+seated-reader seated-upright 50
+seated-reader reclined-reading 50
+standing-adult relaxed 50

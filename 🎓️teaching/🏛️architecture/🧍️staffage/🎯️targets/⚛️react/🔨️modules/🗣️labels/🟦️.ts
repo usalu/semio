@@ -2,7 +2,7 @@
  *
  * @see ../🧍️figure/🟦️.tsx — the `aria-label` and the value table
  */
-import { VIEWS, decimalsFor, formatNumber } from "@teaching/staffage";
+import { VIEWS, decimalsFor, formatNumber, viewpointCaption } from "@teaching/staffage";
 import type { DrawingScene, EvaluationQuery, ItemValue, Language, Text, View } from "@teaching/staffage";
 
 /** 🖼️ The seven view names. */
@@ -29,6 +29,7 @@ const WORDS = {
   quantity: { en: "Quantity", de: "Größe" },
   value: { en: "Value", de: "Wert" },
   item: { en: "Item", de: "Element" },
+  conventionalSymbol: { en: "Conventional symbol, not to scale", de: "Konventionelles Symbol, nicht maßstäblich" },
 } as const satisfies Record<string, Text>;
 
 /** 🗣️ A word of the table and label vocabulary. */
@@ -42,10 +43,10 @@ export function describeQuery(query: EvaluationQuery, language: Language): strin
   return `${WORDS.transition[language]} ${query.from} → ${query.to} ${WORDS.at[language]} ${seconds(query.timeS)}`;
 }
 
-/** 🗣️ The `aria-label` of a figure: asset, query, view and scale. */
+/** 🗣️ The `aria-label` of a figure: asset, query, view, viewpoint and scale. */
 export function describeScene(scene: DrawingScene, language: Language): string {
   const { metadata } = scene;
-  return `${metadata.title[language]}, ${describeQuery(metadata.query, language)}, ${VIEW_NAMES[metadata.view][language]}, ${WORDS.scale[language]} 1:${metadata.scale.denominator}`;
+  return `${metadata.title[language]}, ${describeQuery(metadata.query, language)}, ${VIEW_NAMES[metadata.view][language]}, ${language === "en" ? viewpointCaption(metadata.viewpoint, undefined, language).toLowerCase() : viewpointCaption(metadata.viewpoint, undefined, language)}, ${WORDS.scale[language]} 1:${metadata.scale.denominator}`;
 }
 
 /** 🔢️ A value with its unit in the reader's number format. */

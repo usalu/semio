@@ -5,7 +5,7 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { AssetDocument } from "../../🧬️schema/🟦️.ts";
+import { VIEWPOINTS, type AssetDocument } from "../../🧬️schema/🟦️.ts";
 import { VIEWS, type DrawingScene } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict, depictAll } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
@@ -18,22 +18,23 @@ const geometry = (scene: DrawingScene): string => JSON.stringify(scene.layers.fl
 const widths = (scene: DrawingScene, layer: string): number[] => scene.layers.filter((l) => l.id === layer).flatMap((l) => l.items.flatMap((i) => (i.kind === "path" && i.stroke ? [i.stroke.widthMm] : [])));
 
 describe("🎨️ seven modes", () => {
-  it("draws the same fill shapes in every mode and different shapes per scale", () => {
-    const sets = new Map<number, string>();
-    for (const denominator of [200, 100, 50] as const) {
-      const options = unchecked(defaultDepictionOptions("light-line", "en", denominator));
-      const scenes = depictAll(stateAt(denominator), options);
-      const reference = fills(scenes["light-line"]);
-      expect(reference.length).toBeGreaterThan(0);
-      for (const view of VIEWS) if (view !== "forces" && view !== "moments") expect(fills(scenes[view]).length).toBeGreaterThan(0);
-      for (const view of ["dark-line", "dark-solid", "light-solid"] as const) expect(fills(scenes[view])).toEqual(reference);
-      const rep = asset.representations[`${denominator}`];
-      if (rep.status !== "authored") throw new Error(`1:${denominator} is not authored`);
-      expect(reference.every((id) => rep.geometry.elevation.some((shape) => `shape:${shape.id}` === id))).toBe(true);
-      sets.set(denominator, geometry(scenes["light-line"]));
-    }
-    expect(new Set(sets.values()).size).toBe(3);
-  });
+  for (const viewpoint of VIEWPOINTS)
+    it(`draws the same fill shapes in every mode and different shapes per scale in the ${viewpoint} viewpoint`, () => {
+      const sets = new Map<number, string>();
+      for (const denominator of [200, 100, 50] as const) {
+        const options = unchecked(defaultDepictionOptions("light-line", "en", denominator, viewpoint));
+        const scenes = depictAll(stateAt(denominator), options);
+        const reference = fills(scenes["light-line"]);
+        expect(reference.length).toBeGreaterThan(0);
+        for (const view of VIEWS) if (view !== "forces" && view !== "moments") expect(fills(scenes[view]).length).toBeGreaterThan(0);
+        for (const view of ["dark-line", "dark-solid", "light-solid"] as const) expect(fills(scenes[view])).toEqual(reference);
+        const rep = asset.representations[`${denominator}`];
+        if (rep.status !== "authored") throw new Error(`1:${denominator} is not authored`);
+        expect(reference.every((id) => rep.geometry[viewpoint].some((shape) => `shape:${shape.id}` === id))).toBe(true);
+        sets.set(denominator, geometry(scenes["light-line"]));
+      }
+      expect(new Set(sets.values()).size).toBe(3);
+    });
 
   it("draws outlines with the body pen of the selected representation", () => {
     for (const denominator of [200, 50] as const) {

@@ -45,12 +45,13 @@
       }
     },
     "CategoryId": {
-      "description": "One of the eight archive categories.",
+      "description": "One of the nine archive categories.",
       "enum": [
         "humans",
         "animals",
         "vegetation",
         "furniture",
+        "appliances",
         "objects",
         "vehicles",
         "machinery",
@@ -68,9 +69,10 @@
       ]
     },
     "Viewpoint": {
-      "description": "The projection an authored geometry set is drawn in.",
+      "description": "The projection an authored geometry set is drawn in: the side elevation (the rig plane, seen from the right of the asset), the front elevation (seen from ahead), or the plan (top view, seen from above).",
       "enum": [
         "elevation",
+        "front",
         "plan"
       ]
     },
@@ -150,6 +152,31 @@
         }
       }
     },
+    "PhaseChange": {
+      "description": "A phase change at constant temperature: the temperature of a heated region is capped at pointC and the surplus power is converted into mass of the new phase at latentHeatJKg.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transition",
+        "pointC",
+        "latentHeatJKg"
+      ],
+      "properties": {
+        "transition": {
+          "enum": [
+            "boiling",
+            "melting"
+          ]
+        },
+        "pointC": {
+          "type": "number"
+        },
+        "latentHeatJKg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
     "Material": {
       "description": "A material with the properties the thermal and structural models read.",
       "type": "object",
@@ -197,6 +224,9 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "phaseChange": {
+          "$ref": "#/$defs/PhaseChange"
+        },
         "source": {
           "$ref": "#/$defs/ParameterSource"
         },
@@ -229,6 +259,16 @@
         },
         "maxDeg": {
           "type": "number"
+        },
+        "twistMinDeg": {
+          "type": "number",
+          "minimum": -720,
+          "maximum": 0
+        },
+        "twistMaxDeg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 720
         },
         "axisDeg": {
           "type": "number"
@@ -345,6 +385,9 @@
         "y": {
           "type": "number"
         },
+        "z": {
+          "type": "number"
+        },
         "angleDeg": {
           "type": "number"
         },
@@ -437,6 +480,11 @@
         "y": {
           "type": "number"
         },
+        "z": {
+          "description": "Lateral position in the bone frame (left is +); default 0.",
+          "type": "number",
+          "default": 0
+        },
         "kind": {
           "$ref": "#/$defs/AnchorKind"
         },
@@ -448,6 +496,13 @@
         },
         "normalDeg": {
           "type": "number"
+        },
+        "tiltDeg": {
+          "description": "Elevation of the support normal out of the sagittal (x, y) plane towards the left (+z), degrees: 0 keeps the normal in the plane (the default), 90 points it along +z, so a roller with tiltDeg 90 restrains the lateral direction only (a lateral guide); the normal is (cos normalDeg cos tiltDeg, sin normalDeg cos tiltDeg, sin tiltDeg).",
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "default": 0
         },
         "footprintLengthM": {
           "type": "number",
@@ -509,6 +564,10 @@
         "r1": {
           "type": "number",
           "minimum": 0
+        },
+        "followTip": {
+          "description": "Plan geometry only: the (x1, y1) end follows the x travel of the tip of the shape's own bone while the (x0, y0) end follows its origin, so the stadium stretches along a limb seen from above.",
+          "type": "boolean"
         }
       }
     },
@@ -578,6 +637,10 @@
         "r": {
           "type": "number",
           "minimum": 0
+        },
+        "followTip": {
+          "description": "Front geometry only: the shape stretches vertically between the origin and the tip of its own bone; a vertex at the height of the bone origin follows the y travel of the origin and one at the height of the bone tip the y travel of the tip, in between linearly.",
+          "type": "boolean"
         }
       }
     },
@@ -607,6 +670,10 @@
           "minItems": 2
         },
         "closed": {
+          "type": "boolean"
+        },
+        "followTip": {
+          "description": "Front geometry only: the shape stretches vertically between the origin and the tip of its own bone; a vertex at the height of the bone origin follows the y travel of the origin and one at the height of the bone tip the y travel of the tip, in between linearly.",
           "type": "boolean"
         }
       }
@@ -646,6 +713,92 @@
         },
         {
           "$ref": "#/$defs/PathShape"
+        }
+      ]
+    },
+    "Solid": {
+      "description": "How a shape of any viewpoint (side elevation, front elevation or plan) is a solid of the rig plane profile, authored in its bone's local frame like a side elevation shape, placed with the full 3D frame of its bone and projected to the viewpoint; the side elevation, the front elevation and the plan of one solid are one 3D definition. revolved: an axisymmetric part about an axis through the rest origin of axisBone, the axis point is the rest origin of axisBone translated by axisX along world x and axisZ along world z at rest, and the axis is then carried with the bone frame; axisBone must be the shape's own bone or one of its ancestors, so the solid moves rigidly with its bone; front paper x is the lateral distance from the axis (mirror also draws the reflection, so a half profile reads as the whole body), plan is the circle of the widest lateral reach about the axis. extruded: a laterally prismatic part spanning z0..z1 (left is +); front is z0..z1 by the height range of the profile, plan is the forward range of the profile by z0..z1.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "axisBone",
+            "axis",
+            "axisX"
+          ],
+          "properties": {
+            "kind": {
+              "const": "revolved"
+            },
+            "axisBone": {
+              "description": "The bone whose frame carries the axis: the shape's own bone or one of its ancestors (validator `solid-axis-not-ancestor`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "axis": {
+              "description": "The direction of the axis in the bone-local frame of axisBone: u along the bone, v its normal in the sagittal plane, w the lateral axis (left is +). The axis is carried with the bone frame, so the solid revolves about the same line whatever the pose. Axisymmetric parts about a vertical bone use u; a part about a horizontal axle across the bone uses w.",
+              "enum": [
+                "u",
+                "v",
+                "w"
+              ]
+            },
+            "axisX": {
+              "description": "Translation of the axis point from the rest origin of axisBone along the world x axis (ahead) at rest, not along the bone's u; the axis is then carried with the bone frame.",
+              "type": "number"
+            },
+            "axisZ": {
+              "description": "Translation of the axis point from the rest origin of axisBone along the world z axis (left is +) at rest, not along the bone's w; default 0; the axis is then carried with the bone frame.",
+              "type": "number"
+            },
+            "mirror": {
+              "type": "boolean"
+            },
+            "lateralScale": {
+              "description": "Optional elliptic cross-section: the scale of the lateral radius relative to the radius in the profile, perpendicular to the axis and to the sagittal normal; 1 is a physical circle (the default, not a fallback), 0.5 an ellipse half as wide as it is deep.",
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "default": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "sweep",
+            "z0",
+            "z1"
+          ],
+          "properties": {
+            "kind": {
+              "const": "extruded"
+            },
+            "sweep": {
+              "description": "The bone-local axis the profile is swept along, required and never defaulted. w sweeps along the lateral axis (left is +): the profile lies in the bone's (u, v) plane, as every extruded solid has been authored. v sweeps along the bone normal: the profile lies in the bone's (u, w) plane and the thickness runs along v. z0, z1 and zTip are offsets along this axis from the bone origin at rest (they keep the name z of the default lateral sweep).",
+              "enum": [
+                "v",
+                "w"
+              ]
+            },
+            "z0": {
+              "type": "number"
+            },
+            "z1": {
+              "type": "number"
+            },
+            "zTip": {
+              "description": "Optional linear taper: the lateral span [z0, z1] (left is +) at the tip of the bone, in the same order as z0..z1 (zTip[0] < zTip[1]); the span at the bone origin is z0..z1 and the span between is interpolated linearly along the bone (u). Absent means a constant span. A tapered limb, blade or branch is one extruded solid.",
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
         }
       ]
     },
@@ -714,6 +867,9 @@
               "type": "number",
               "exclusiveMinimum": 0
             },
+            "solid": {
+              "$ref": "#/$defs/Solid"
+            },
             "x0": {
               "type": "number"
             },
@@ -733,6 +889,9 @@
             "r1": {
               "type": "number",
               "minimum": 0
+            },
+            "followTip": {
+              "type": "boolean"
             }
           }
         },
@@ -795,6 +954,9 @@
             "penMm": {
               "type": "number",
               "exclusiveMinimum": 0
+            },
+            "solid": {
+              "$ref": "#/$defs/Solid"
             },
             "cx": {
               "type": "number"
@@ -875,6 +1037,9 @@
               "type": "number",
               "exclusiveMinimum": 0
             },
+            "solid": {
+              "$ref": "#/$defs/Solid"
+            },
             "x": {
               "type": "number"
             },
@@ -892,6 +1057,10 @@
             "r": {
               "type": "number",
               "minimum": 0
+            },
+            "followTip": {
+              "description": "Front geometry only: the shape stretches vertically between the origin and the tip of its own bone; a vertex at the height of the bone origin follows the y travel of the origin and one at the height of the bone tip the y travel of the tip, in between linearly.",
+              "type": "boolean"
             }
           }
         },
@@ -953,6 +1122,9 @@
               "type": "number",
               "exclusiveMinimum": 0
             },
+            "solid": {
+              "$ref": "#/$defs/Solid"
+            },
             "points": {
               "type": "array",
               "items": {
@@ -966,6 +1138,10 @@
               "minItems": 2
             },
             "closed": {
+              "type": "boolean"
+            },
+            "followTip": {
+              "description": "Front geometry only: the shape stretches vertically between the origin and the tip of its own bone; a vertex at the height of the bone origin follows the y travel of the origin and one at the height of the bone tip the y travel of the tip, in between linearly.",
               "type": "boolean"
             }
           }
@@ -1027,9 +1203,83 @@
               "type": "number",
               "exclusiveMinimum": 0
             },
+            "solid": {
+              "$ref": "#/$defs/Solid"
+            },
             "d": {
               "type": "string",
               "minLength": 1
+            }
+          }
+        },
+        {
+          "description": "A member: a prismatic bar between two bone-local end points with a physical section, carried by the full 3D frames of its bones and drawn in its true foreshortened outline in every viewpoint. It has no planar geometry and no solid; a diagonal is one member and never a bounding rectangle.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "z",
+            "filled",
+            "tone",
+            "from",
+            "to",
+            "section"
+          ],
+          "properties": {
+            "kind": {
+              "const": "member"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "from": {
+              "$ref": "#/$defs/MemberEnd"
+            },
+            "to": {
+              "$ref": "#/$defs/MemberEnd"
+            },
+            "section": {
+              "$ref": "#/$defs/MemberSection"
             }
           }
         }
@@ -1231,10 +1481,19 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "elevation"
+            "elevation",
+            "front",
+            "plan"
           ],
           "properties": {
             "elevation": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              },
+              "minItems": 1
+            },
+            "front": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Shape"
@@ -1245,12 +1504,44 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Shape"
-              }
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "sections": {
+          "description": "Which of the two projections, the front elevation or the plan (top view), is drawn as a section.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "front": {
+              "$ref": "#/$defs/ViewSection"
+            },
+            "plan": {
+              "$ref": "#/$defs/ViewSection"
             }
           }
         },
         "decisions": {
           "$ref": "#/$defs/RepresentationDecisions"
+        }
+      }
+    },
+    "ViewSection": {
+      "description": "A viewpoint drawn as a section: the cut plane lies at `plane` metres along the view axis (front: the forward position x of a plane across the forward axis, seen from ahead; plan: the height y of a horizontal plane, seen from above; the plan section is named Grundriss-Schnitt in German) and is named by `label`, such as A-A. The side elevation shows the cut-line marker at that plane.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plane",
+        "label"
+      ],
+      "properties": {
+        "plane": {
+          "type": "number"
+        },
+        "label": {
+          "$ref": "#/$defs/Text"
         }
       }
     },
@@ -1314,6 +1605,7 @@
       "required": [
         "status",
         "denominator",
+        "cause",
         "reason",
         "limitingFeature",
         "limitingSizeM",
@@ -1322,6 +1614,13 @@
       "properties": {
         "status": {
           "const": "unavailable"
+        },
+        "cause": {
+          "description": "Why no physically scaled drawing exists at this scale, in all three viewpoints: a real feature is smaller than the print profile can print (`below-printable-feature`) or the asset has no meaningful physical depiction at this scale (`no-physical-depiction`).",
+          "enum": [
+            "below-printable-feature",
+            "no-physical-depiction"
+          ]
         },
         "denominator": {
           "$ref": "#/$defs/ScaleDenominator"
@@ -1415,10 +1714,19 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "elevation"
+            "elevation",
+            "front",
+            "plan"
           ],
           "properties": {
             "elevation": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              },
+              "minItems": 1
+            },
+            "front": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Shape"
@@ -1429,7 +1737,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Shape"
-              }
+              },
+              "minItems": 1
             }
           }
         },
@@ -1523,13 +1832,23 @@
       }
     },
     "BoneOffset": {
-      "description": "An offset from rest for one bone.",
+      "description": "An offset from rest for one bone. abductionDeg is the lateral spread of a revolute bone: the bone turns out of the sagittal plane about its own normal (positive towards the left of the asset), added down the chain like angleDeg; all three views are projections of the same three-dimensional chain. twistDeg turns the bone and its subtree about its own longitudinal axis (a yaw for a vertical bone: slew, swivel, steering), added down the chain like angleDeg.",
       "type": "object",
       "additionalProperties": false,
       "required": [],
       "properties": {
         "angleDeg": {
           "type": "number"
+        },
+        "abductionDeg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "twistDeg": {
+          "type": "number",
+          "minimum": -720,
+          "maximum": 720
         },
         "dx": {
           "type": "number"
@@ -1587,7 +1906,28 @@
         "fyN": {
           "type": "number"
         },
+        "z": {
+          "description": "Lateral position of the load point (left is +) for a bone point; default 0.",
+          "type": "number",
+          "default": 0
+        },
+        "fzN": {
+          "description": "Lateral force component (left is +); default 0.",
+          "type": "number",
+          "default": 0
+        },
+        "momentXNm": {
+          "description": "Moment about the forward axis; default 0.",
+          "type": "number",
+          "default": 0
+        },
+        "momentYNm": {
+          "description": "Moment about the vertical axis; default 0.",
+          "type": "number",
+          "default": 0
+        },
         "momentNm": {
+          "description": "Moment about the lateral axis (the sagittal moment, counter-clockwise positive in the elevation); default 0.",
           "type": "number"
         },
         "distributed": {
@@ -1615,6 +1955,11 @@
             },
             "wyNPerM": {
               "type": "number"
+            },
+            "wzNPerM": {
+              "description": "Lateral line load (left is +); default 0.",
+              "type": "number",
+              "default": 0
             }
           }
         },
@@ -2102,7 +2447,8 @@
           "minimum": 0
         },
         "windDirectionDeg": {
-          "type": "number"
+          "type": "number",
+          "description": "Horizontal bearing the air moves towards, degrees from the forward axis +x towards the left axis +z (0 forward, 90 towards the left of the asset, 180 backward; the frame is left-handed: x ahead, y up, z left); the wind has no vertical component."
         },
         "solarWM2": {
           "type": "number",
@@ -2191,6 +2537,8 @@
         "passive",
         "operating",
         "conditioned",
+        "hydronic",
+        "coupled",
         "fixed"
       ]
     },
@@ -2403,6 +2751,9 @@
             }
           }
         },
+        "phaseChange": {
+          "$ref": "#/$defs/PhaseChange"
+        },
         "hidden": {
           "$ref": "#/$defs/Text"
         },
@@ -2435,6 +2786,78 @@
               "type": "number"
             },
             "interiorFilmM2KW": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "hydronic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "rows",
+            "flowPosition",
+            "filmM2KW"
+          ],
+          "properties": {
+            "key": {
+              "$ref": "#/$defs/Slug"
+            },
+            "rows": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "v",
+                  "supplyTempC",
+                  "returnTempC"
+                ],
+                "properties": {
+                  "v": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "supplyTempC": {
+                    "type": "number"
+                  },
+                  "returnTempC": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "flowPosition": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "filmM2KW": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "coupled": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "region",
+            "wetFraction",
+            "filmM2KW"
+          ],
+          "properties": {
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "wetFraction": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "filmM2KW": {
               "type": "number",
               "minimum": 0
             }
@@ -2673,7 +3096,7 @@
       }
     },
     "Emitter": {
-      "description": "A rig-attached source of air or vapour.",
+      "description": "A rig-attached source of air or vapour. A vent, flue, fan or exhaust with a region releases the vapour mass rate of that region's evaporation (surface evaporation plus phase change).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -2822,6 +3245,17 @@
         "environment": {
           "$ref": "#/$defs/Environment"
         },
+        "referenceEnvironment": {
+          "description": "The ambient case standalone thermal previews and exports use by default: the id of an environment preset or one inline environment. An explicit choice of the caller wins; absent, `environment` applies.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Slug"
+            },
+            {
+              "$ref": "#/$defs/Environment"
+            }
+          ]
+        },
         "baseMet": {
           "type": "number",
           "minimum": 0
@@ -2904,7 +3338,7 @@
       }
     },
     "Dimensions": {
-      "description": "Nominal overall real dimensions and total mass.",
+      "description": "Nominal overall real dimensions and total mass. The dimensions are the physical envelope of everything that belongs to the asset in its rest pose (held items, attachments, plates, flanges, lids, footings); they exclude stroke width, ground shading, plumes, transport and annotations. A drawing agrees when |measured - declared| <= max(2 % of declared, 15 mm) in every viewpoint.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -2915,14 +3349,17 @@
       ],
       "properties": {
         "heightM": {
+          "description": "Extent along world y (up): the vertical extent of the side elevation and of the front elevation.",
           "type": "number",
           "exclusiveMinimum": 0
         },
         "widthM": {
+          "description": "Extent along world x (ahead): the horizontal extent of the side elevation and of the plan (top view, paper x); the catalog check compares it with the drawn extent. For a side elevation this is the real depth of the object, not its left-right width.",
           "type": "number",
           "exclusiveMinimum": 0
         },
         "depthM": {
+          "description": "Extent along world z (lateral): the horizontal extent of the front elevation (paper x) and the vertical extent of the plan (top view, paper up); the left-right width of an object drawn in side elevation.",
           "type": "number",
           "exclusiveMinimum": 0
         },
@@ -2939,8 +3376,7 @@
       "required": [
         "defaultPose",
         "defaultClip",
-        "defaultScale",
-        "viewpoints"
+        "defaultScale"
       ],
       "properties": {
         "defaultPose": {
@@ -2951,13 +3387,6 @@
         },
         "defaultScale": {
           "$ref": "#/$defs/ScaleDenominator"
-        },
-        "viewpoints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Viewpoint"
-          },
-          "minItems": 1
         }
       }
     },
@@ -3126,7 +3555,6 @@
         "representations",
         "symbols",
         "analytics",
-        "viewpoints",
         "exports",
         "distinction",
         "completion"
@@ -3211,12 +3639,6 @@
               "transport",
               "structural"
             ]
-          }
-        },
-        "viewpoints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Viewpoint"
           }
         },
         "exports": {
@@ -3325,6 +3747,78 @@
           }
         }
       }
+    },
+    "MemberEnd": {
+      "description": "An end point of a member: bone-local metres from the origin of its bone at rest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "bone": {
+          "description": "The bone whose frame the point is given in; default the shape's own bone. It is the shape's own bone or one of its ancestors (validator `member-end-not-ancestor`).",
+          "$ref": "#/$defs/Slug"
+        },
+        "x": {
+          "description": "Metres along the bone (u) from its origin at rest.",
+          "type": "number"
+        },
+        "y": {
+          "description": "Metres along the bone normal (v) from its origin at rest.",
+          "type": "number"
+        },
+        "z": {
+          "description": "Metres laterally (w, left is +) from its origin at rest; required, never defaulted.",
+          "type": "number"
+        }
+      }
+    },
+    "MemberSection": {
+      "description": "The physical section of a member: a rectangle of width w (along bar x bone-w) and height h (completing the orthonormal frame), or a circle of diameter d, all in metres.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "w",
+            "h"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rect"
+            },
+            "w": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "h": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "d"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "d": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
     }
   }
 }

@@ -2,7 +2,7 @@
  *
  * {@link resolveRepresentation} picks the decision (exact preset, derived inside `validRange`, or unavailable with the supported scales and alternatives), then measures
  * {@link measureSuitability} on the evaluated paper geometry at the requested scale over **all named poses**: pens and hatch pens against `minStrokeMm`, hatch spacing against
- * `minHatchSpacingMm`, the ink gap between separate outlines and negative-space slivers inside the inked silhouette against `minGapMm` (touching or overlapping ink is a join, never a gap), and the feature width of filled shapes against `minFeatureMm` (definitions in the measure module).
+ * `minHatchSpacingMm`, the ink gap between separate outlines and negative-space slivers inside the inked silhouette against `minGapMm` (touching or overlapping ink is a join, never a gap), and the feature width of filled shapes against `minFeatureMm` (definitions in the measure module). Features are measured on the visible part of a shape: what a nearer filled shape covers (depth order of the prepared shapes) contributes nothing.
  * An authored representation that violates the profile resolves to `unsuitable` with every violation and alternatives; nothing is substituted silently. Results are cached per
  * (asset, scale, thresholds).
  *
@@ -10,12 +10,12 @@
  * @see ./🧭️pick/🟦️.ts — selection without a profile
  * @see ../🔗️contracts/🟦️.ts — `RepresentationResolution`, `Suitability`, `Violation`
  */
-import type { Asset, AuthoredRepresentation, PrintProfile, Shape, Slug, SymbolRepresentation } from "../../🧬️schema/🟦️.ts";
-import type { DrawingScale, RepresentationResolution, Suitability, Violation } from "../🔗️contracts/🟦️.ts";
+import { VIEWPOINTS, type Asset, type AuthoredRepresentation, type PrintProfile, type Shape, type Slug, type SymbolRepresentation } from "../../🧬️schema/🟦️.ts";
+import type { DrawingScale, RepresentationResolution, RepresentationSelector, Suitability, Violation } from "../🔗️contracts/🟦️.ts";
 import { outlineRuns, prepare, sourceOf } from "../🎨️depiction/🧩️shapes/🟦️.ts";
 import { pointInside } from "../🎨️depiction/📐️geometry/🟦️.ts";
 import { evaluate } from "../🧮️evaluation/🟦️.ts";
-import { type PaperShape, featureWidthMm, gapsBetween, whiteSliver } from "./📐️measure/🟦️.ts";
+import { type PaperShape, featureWidthMm, gapsBetween, releaseMeasureScratch, visibleFeatureWidthMm, whiteSliver } from "./📐️measure/🟦️.ts";
 import { RepresentationError, pickRepresentation, scaleAlternatives, supportedScales } from "./🧭️pick/🟦️.ts";
 
 export { DEFAULT_PRINT_PROFILE, PRINT_PROFILES, printProfile } from "./🧾️profiles/🟦️.ts";
@@ -23,8 +23,8 @@ export { RepresentationError, pickRepresentation, scaleAlternatives, supportedSc
 export { resolutionLabel, resolutionText } from "./🏷️label/🟦️.ts";
 export { compareRepresentations } from "./🪞️copies/🟦️.ts";
 export type { Similarity } from "./🪞️copies/🟦️.ts";
-export { featureWidthMm, gapsBetween, squaredDistanceTransform, whiteSliver } from "./📐️measure/🟦️.ts";
-export type { Gap, PaperShape, Sliver, Stroke } from "./📐️measure/🟦️.ts";
+export { featureWidthMm, gapsBetween, squaredDistanceTransform, visibleFeatureWidthMm, whiteSliver } from "./📐️measure/🟦️.ts";
+export type { Gap, PaperShape, Cover, Sliver, Stroke, VisibleFeature } from "./📐️measure/🟦️.ts";
 
 /** 🔍️ How far apart (ink gap, millimetres) two outlines may be and still be measured as a gap. */
 export const GAP_SEARCH_MM = 1;
@@ -36,11 +36,29 @@ export function penOf(pens: AuthoredRepresentation["pens"] | SymbolRepresentatio
 
 const CACHE = new WeakMap<Asset, Map<string, Suitability>>();
 
+function fingerprint(text: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return `${text.length}:${(h >>> 0).toString(16)}`;
+}
+
 function thresholdKey(requested: number, profile: PrintProfile): string {
   return `${requested}|${profile.id}|${profile.minStrokeMm}|${profile.minGapMm}|${profile.minFeatureMm}|${profile.minHatchSpacingMm}`;
 }
 
-function measureOnce(asset: Asset, rep: AuthoredRepresentation, requested: number, profile: PrintProfile): Suitability {
+/** 🖨️ What suitability measures: the pens, hatches and three-view geometry of an authored representation or of a symbol. */
+type Drawn = { readonly pens: AuthoredRepresentation["pens"]; readonly hatches: AuthoredRepresentation["hatches"]; readonly geometry: AuthoredRepresentation["geometry"] };
+
+/** 📏️ One suitability measurement; the retained raster buffers of the measure module are dropped when it ends, success or failure. */
+function measureOnce(asset: Asset, rep: Drawn, selector: RepresentationSelector, requested: number, profile: PrintProfile): Suitability {
+  try {
+    return measureDrawn(asset, rep, selector, requested, profile);
+  } finally {
+    releaseMeasureScratch();
+  }
+}
+
+function measureDrawn(asset: Asset, rep: Drawn, selector: RepresentationSelector, requested: number, profile: PrintProfile): Suitability {
   const violations: Violation[] = [];
   let minStroke = Number.POSITIVE_INFINITY;
   let minGap = Number.POSITIVE_INFINITY;
@@ -56,7 +74,7 @@ function measureOnce(asset: Asset, rep: AuthoredRepresentation, requested: numbe
   };
   const hatches = new Map(rep.hatches.map((hatch) => [hatch.id, hatch]));
   const hatchSeen = new Set<string>();
-  for (const shape of rep.geometry.elevation) {
+  for (const shape of [...rep.geometry.elevation, ...rep.geometry.front, ...rep.geometry.plan]) {
     const pen = penOf(rep.pens, shape);
     if (pen === null) continue;
     stroke([shape.id], pen);
@@ -76,22 +94,32 @@ function measureOnce(asset: Asset, rep: AuthoredRepresentation, requested: numbe
   const featureWorst = new Map<Slug, Violation>();
   const k = 1000 / requested;
   const poses = asset.poses.filter((pose) => !pose.key);
-  for (const pose of poses) {
-    const state = evaluate(asset, { kind: "pose", pose: pose.id }, { kind: "scale", scale: { denominator: requested } });
-    const prepared = prepare(state, "elevation", sourceOf(state), k);
+  for (const { pose, viewpoint } of poses.flatMap((pose) => VIEWPOINTS.map((viewpoint) => ({ pose, viewpoint })))) {
+    const state = evaluate(asset, { kind: "pose", pose: pose.id }, selector);
+    const prepared = prepare(state, viewpoint, sourceOf(state), k);
     const filled = prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground");
     const byId = new Map(prepared.map((p) => [p.shape.id, p]));
-    for (const p of prepared) {
-      if (p.shape.role === "ground") continue;
-      if (p.closed && p.shape.filled && profile.minFeatureMm > 0) {
-        const boxMin = Math.min(p.box.maxX - p.box.minX, p.box.maxY - p.box.minY);
-        const raw = featureWidthMm(p.rings, profile.minFeatureMm);
-        const width = Math.max(raw, Math.min(boxMin, profile.minFeatureMm)) + p.weightMm;
-        minFeature = Math.min(minFeature, width);
-        if (width < profile.minFeatureMm - 1e-9) {
-          const previous = featureWorst.get(p.shape.id);
-          if (previous === undefined || width < previous.measuredMm) featureWorst.set(p.shape.id, { check: "feature", shapes: [p.shape.id], measuredMm: width, requiredMm: profile.minFeatureMm });
-        }
+    const boxMinOf = (p: (typeof prepared)[number]): number => Math.min(p.box.maxX - p.box.minX, p.box.maxY - p.box.minY);
+    const measured = profile.minFeatureMm > 0 ? prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground") : [];
+    for (const p of measured.sort((a, b) => boxMinOf(a) - boxMinOf(b))) {
+      const covers = process.env.DEBUG_FW3_WHOLE === "1" ? [] : prepared.flatMap((q) => (q.occluder !== null && q.order > p.order && q.box.minX <= p.box.maxX && p.box.minX <= q.box.maxX && q.box.minY <= p.box.maxY && p.box.minY <= q.box.maxY ? [{ rings: q.occluder.rings, penMm: q.weightMm }] : []));
+      const atLeast = Math.max(minFeature, profile.minFeatureMm) - p.weightMm + 1e-9;
+      let raw: number;
+      let boxMin: number;
+      if (covers.length === 0) {
+        raw = featureWidthMm(p.rings, profile.minFeatureMm, atLeast);
+        boxMin = boxMinOf(p);
+      } else {
+        const visible = visibleFeatureWidthMm(p.rings, covers, profile.minFeatureMm, atLeast);
+        if (visible === null) continue;
+        raw = visible.widthMm;
+        boxMin = visible.boxMinMm;
+      }
+      const width = Math.max(raw, Math.min(boxMin, profile.minFeatureMm)) + p.weightMm;
+      minFeature = Math.min(minFeature, width);
+      if (width < profile.minFeatureMm - 1e-9) {
+        const previous = featureWorst.get(p.shape.id);
+        if (previous === undefined || width < previous.measuredMm) featureWorst.set(p.shape.id, { check: "feature", shapes: [p.shape.id], measuredMm: width, requiredMm: profile.minFeatureMm });
       }
     }
     const grouped = new Map<Slug, { rings: (readonly { readonly x: number; readonly y: number }[])[]; penMm: number }>();
@@ -134,13 +162,13 @@ function measureOnce(asset: Asset, rep: AuthoredRepresentation, requested: numbe
 export function measureSuitability(asset: Asset, representation: AuthoredRepresentation, requested: number, profile: PrintProfile): Suitability {
   let byKey = CACHE.get(asset);
   if (byKey === undefined) CACHE.set(asset, (byKey = new Map()));
-  const key = `${representation.denominator}|${thresholdKey(requested, profile)}`;
+  const key = `${representation.denominator}|${thresholdKey(requested, profile)}|${fingerprint(JSON.stringify([representation, asset.rig, asset.poses]))}`;
   let result = byKey.get(key);
-  if (result === undefined) byKey.set(key, (result = measureOnce(asset, representation, requested, profile)));
+  if (result === undefined) byKey.set(key, (result = measureOnce(asset, representation, { kind: "scale", scale: { denominator: requested } }, requested, profile)));
   return result;
 }
 
-/** 🖨️ How a scale request resolves for the asset under the profile: `authored` (exact or derived, with its suitability), `unavailable` (the asset's decision or outside every valid range) or `unsuitable` (measured violations of the profile); see the module description. */
+/** 🧾️ How a scale request resolves for the asset under the profile: `authored` (exact or derived, with its suitability), `unavailable` (the asset's decision or outside every valid range) or `unsuitable` (measured violations of the profile); see the module description. */
 export function resolveRepresentation(asset: Asset, scale: DrawingScale, profile: PrintProfile): RepresentationResolution {
   const picked = pickRepresentation(asset, scale.denominator);
   if (picked.kind === "unavailable") return picked;
@@ -168,4 +196,16 @@ export function resolveSymbol(asset: Asset, symbol: Slug, requested: number): Re
 export function requireDrawable(resolution: RepresentationResolution, asset: string): Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }> {
   if (resolution.kind === "unavailable" || resolution.kind === "unsuitable") throw new RepresentationError(resolution, asset);
   return resolution;
+}
+
+const SYMBOL_CACHE = new WeakMap<SymbolRepresentation, Map<string, Suitability>>();
+
+/** ✅️ The suitability of a symbol drawn at `requested` under a print profile: its pens, hatch spacing, gaps and feature widths measured on the evaluated paper geometry of all three viewpoints, the same measurements as an authored representation. A `true-extent` symbol is physically scaled and must pass; paper-millimetre symbols measure at their fixed paper size. Cached per symbol, scale and thresholds. */
+export function measureSymbolSuitability(asset: Asset, symbol: SymbolRepresentation, requested: number, profile: PrintProfile): Suitability {
+  let byKey = SYMBOL_CACHE.get(symbol);
+  if (byKey === undefined) SYMBOL_CACHE.set(symbol, (byKey = new Map()));
+  const key = `${thresholdKey(requested, profile)}|${fingerprint(JSON.stringify([symbol, asset.rig, asset.poses]))}`;
+  let result = byKey.get(key);
+  if (result === undefined) byKey.set(key, (result = measureOnce(asset, symbol, { kind: "symbol", symbol: symbol.id }, requested, profile)));
+  return result;
 }

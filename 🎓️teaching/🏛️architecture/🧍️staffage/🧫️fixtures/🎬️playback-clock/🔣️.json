@@ -1,0 +1,24 @@
+{
+  "description": "Cast time to frame: one pure function for live playback, seeking, preview and export. Expected frames are authored by hand from frame = floor(t / fps stepped) with a loop wrapping at durationS, other casts holding the last frame.",
+  "playback": [
+    { "name": "whole loop", "fps": 10, "count": 3, "durationS": 0.3, "loop": true,
+      "samples": [{ "t": 0, "frame": 0 }, { "t": 0.1, "frame": 1 }, { "t": 0.29, "frame": 2 }, { "t": 0.3, "frame": 0 }, { "t": 0.45, "frame": 1 }, { "t": -0.05, "frame": 2 }, { "t": 3.0, "frame": 0 }] },
+    { "name": "fractional loop period", "fps": 20, "count": 2, "durationS": 0.1, "loop": true,
+      "samples": [{ "t": 0, "frame": 0 }, { "t": 0.05, "frame": 1 }, { "t": 0.0999, "frame": 1 }, { "t": 0.1, "frame": 0 }, { "t": 0.149, "frame": 0 }, { "t": 0.15, "frame": 1 }] },
+    { "name": "hold the last frame", "fps": 4, "count": 5, "durationS": 1, "loop": false,
+      "samples": [{ "t": -1, "frame": 0 }, { "t": 0.25, "frame": 1 }, { "t": 0.9, "frame": 3 }, { "t": 1, "frame": 4 }, { "t": 7, "frame": 4 }] },
+    { "name": "thinned transient", "fps": 0.3993333333333333, "count": 600, "durationS": 1500, "loop": false,
+      "samples": [{ "t": 0.5, "frame": 0 }, { "t": 2.6, "frame": 1 }, { "t": 1500, "frame": 599 }, { "t": 99999, "frame": 599 }] },
+    { "name": "thinned loop", "fps": 3, "count": 600, "durationS": 200, "loop": true,
+      "samples": [{ "t": 199.9, "frame": 599 }, { "t": 200, "frame": 0 }, { "t": 200.34, "frame": 1 }] },
+    { "name": "static", "fps": 1, "count": 1, "durationS": 0, "loop": false,
+      "samples": [{ "t": 0, "frame": 0 }, { "t": 12, "frame": 0 }] }
+  ],
+  "schedules": [
+    { "durationS": 0.1, "loop": true, "fps": 15, "count": 2, "exportFps": 20 },
+    { "durationS": 1.2, "loop": true, "fps": 25, "count": 30, "exportFps": 25 },
+    { "durationS": 0.3, "loop": false, "fps": 10, "count": 4, "exportFps": 10 },
+    { "durationS": 1500, "loop": false, "fps": 15, "count": 600, "exportFps": 0.3993333333333333 },
+    { "durationS": 200, "loop": true, "fps": 15, "count": 600, "exportFps": 3 }
+  ]
+}

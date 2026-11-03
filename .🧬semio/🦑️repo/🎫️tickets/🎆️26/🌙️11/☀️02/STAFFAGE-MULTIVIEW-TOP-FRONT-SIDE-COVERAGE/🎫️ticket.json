@@ -1,0 +1,32 @@
+{
+  "title": "Staffage Multiview Top Front Side Coverage",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Extend the handcrafted staffage archive (🎓️teaching/🏛️architecture/🧍️staffage) so every asset has a correct plan (top), front and elevation (side) view across all poses, clips (full duration, transitions), supported scales (1:500, 1:200, 1:100, 1:50, others declared), all seven modes (dark/light line/solid, thermal, structural forces, structural moments) and all consumers (catalog, detail, comparison, playground, component, site, course casts, SVG/PDF/DXF/DWG/frames/video exports). One evaluated 3D state per instant, projected per view; explicit missing-combination failures; coverage matrix, proof sheets, regression tests. Coordinator Opus 5.5 Medium with the 20-worker fleet of staffage-multiview-launch-kit (14 Sonnet 5.5, 6 Haiku 5.5).",
+  "goal": "🎯runningdrawing",
+  "note": "Created manually: mcp__repo__ticket_open was not permitted in this session.",
+  "sessions": [
+    "b70d17d2-5220-47df-a160-626bfa8fbaa6"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-02",
+      "author": "ueli",
+      "client": "claude-code",
+      "checkpoint": "ccac6866cc11544b90ee55a9e0c78184fd689766",
+      "prompt": "Staffage multiview: every asset gets correct top/front/side views across all poses, clips, scales, seven modes and consumers; 20-worker fleet.",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-02 23:30",
+      "author": "ueli",
+      "client": "claude-code",
+      "prompt": "Session 2 (manual reopen: mcp__repo__ticket_reopen not permitted): resume with a fresh 20-worker fleet from the handoff and work board; finish matrix v3, remaining FAILs, open solids/rig bugs, consumers, exports, media regeneration, proof sheets and verification.",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    }
+  ]
+}

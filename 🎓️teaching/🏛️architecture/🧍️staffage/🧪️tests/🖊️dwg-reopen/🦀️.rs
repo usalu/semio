@@ -4,6 +4,7 @@ use acadrust::entities::EntityType;
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../../🧫️fixtures/📐️model-scene/🔣️.json");
+const SHEET: &str = include_str!("../../🧫️fixtures/📑️sheet-model-scene/🔣️.json");
 
 fn read(bytes: &[u8]) -> acadrust::CadDocument {
     acadrust::DwgReader::from_stream(std::io::Cursor::new(bytes.to_vec())).read().expect("acadrust reads the DWG")
@@ -58,4 +59,21 @@ fn an_empty_scene_still_encodes_a_genuine_ac1024() {
 #[test]
 fn non_metre_scenes_are_refused() {
     assert!(staffage_dwg::encode_json(br#"{"units":"mm","layers":[]}"#).is_err());
+}
+
+#[test]
+fn a_dwg_states_its_view_in_its_layers_and_its_note_and_is_byte_deterministic() {
+    let bytes = staffage_dwg::encode_json(SHEET.as_bytes()).expect("the writer encodes the sheet scene");
+    assert_eq!(bytes, staffage_dwg::encode_json(SHEET.as_bytes()).expect("a second encode"), "same bytes on a rerun");
+    let document = read(&bytes);
+    for name in ["PLAN-STAFFAGE-BODY", "FRONT-STAFFAGE-BODY", "STAFFAGE-NOTE"] {
+        assert!(document.layers.get(name).is_some(), "layer {name} survives");
+    }
+    let on_layer = |layer: &str| document.entities().filter(|entity| matches!(entity, EntityType::LwPolyline(line) if line.common.layer == layer)).count();
+    assert_eq!(on_layer("PLAN-STAFFAGE-BODY"), 1);
+    assert_eq!(on_layer("FRONT-STAFFAGE-BODY"), 1);
+    let notes: Vec<_> = document.entities().filter_map(|entity| match entity { EntityType::Text(text) if text.common.layer == "STAFFAGE-NOTE" => Some((text.height, text.value.clone())), _ => None }).collect();
+    assert_eq!(notes.len(), 1);
+    assert!((notes[0].0 - 0.25).abs() < 1e-9);
+    assert_eq!(notes[0].1, "staffage standing-adult relaxed light-line front 1:100 physical");
 }

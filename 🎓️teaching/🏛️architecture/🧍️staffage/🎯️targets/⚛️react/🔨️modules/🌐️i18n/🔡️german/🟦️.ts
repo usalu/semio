@@ -6,5 +6,6 @@ import { CORE_DE } from "./🧱️core.ts";
 import { DETAIL_DE } from "./📖️detail.ts";
 import { PLAYGROUND_DE } from "./🧪️playground.ts";
 import { VIEWER_DE } from "./🎛️viewer.ts";
+import { VIEWPOINTS_DE } from "./🔭️viewpoints.ts";
 
-export const GERMAN: Record<keyof typeof ENGLISH, string> = { ...CORE_DE, ...COLLECTIONS_DE, ...COMPARE_DE, ...DETAIL_DE, ...PLAYGROUND_DE, ...VIEWER_DE };
+export const GERMAN: Record<keyof typeof ENGLISH, string> = { ...CORE_DE, ...COLLECTIONS_DE, ...COMPARE_DE, ...DETAIL_DE, ...PLAYGROUND_DE, ...VIEWER_DE, ...VIEWPOINTS_DE };

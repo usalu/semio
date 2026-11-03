@@ -21,7 +21,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -53,12 +52,13 @@ dim_arrow = _manim_module.dim_arrow
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
@@ -66,7 +66,9 @@ room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 window_opening = _manim_module.window_opening
 window_opening = _manim_module.window_opening
-person_glyph = _manim_module.person_glyph
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
+fitted_staffage = _manim_module.fitted_staffage
 sun_glyph = _manim_module.sun_glyph
 cloud_glyph = _manim_module.cloud_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
@@ -131,19 +133,11 @@ def _window(pos, height=1.15, width=0.16, color=P_CYAN, inward=1):
     return win["group"]
 
 
-def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
-    """🧍 A 1.75 m occupant in a 2.5 m clear room, anchored to the slab top."""
+def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", rate: float = 1.0, t: float = 0.16, mirror: bool = False):
+    """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top; ``mirror`` faces the other way."""
     height = 0.7 * (room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return person_glyph([x, floor_y + height / 2, 0], color=color, scale=height / 0.66)
-
-
-def _fan(pos, color, radius: float = 0.24):
-    """🌀 Ring plus three blades — marks a stream as fan-driven."""
-    ring = Circle(radius=radius, color=color, stroke_width=2.4)
-    blades = VGroup(*[Line(ORIGIN, RIGHT * radius * 0.78, color=color, stroke_width=2.4).rotate(a, about_point=ORIGIN)
-                      for a in (0.0, TAU / 3, 2 * TAU / 3)])
-    return VGroup(ring, blades).move_to(pos)
+    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]), rate=rate, mirror=mirror)
 
 
 def _streams(streams, rt: float, *, speed: float = 0.5, waves: int = 3, radius: float = 0.065):
@@ -153,14 +147,16 @@ def _streams(streams, rt: float, *, speed: float = 0.5, waves: int = 3, radius: 
 
 def _room_occupants(room_c, room_h, left_window, right_window, *, count: int = 4):
     """🫂 Place full-height occupants clear of both inward window swing envelopes."""
-    prototype = _stand(room_c, room_h, float(room_c[0]))
-    gap = 0.12 * prototype.height / 1.75
-    left = left_window.get_right()[0] + prototype.width / 2 + gap
-    right = right_window.get_left()[0] - prototype.width / 2 - gap
-    if count < 1 or right - left < (count - 1) * (prototype.width + gap):
+    cast = "shared-person-pathlines"
+    height = 0.7 * (room_h - 0.16)
+    gap = 0.12 * height / staffage_height(cast)
+    body = 0.2 * height
+    left = left_window.get_right()[0] + body / 2 + gap
+    right = right_window.get_left()[0] - body / 2 - gap
+    if count < 1 or right - left < (count - 1) * (body + gap):
         raise ValueError("Occupants do not fit clear of the open windows")
     xs = [(left + right) / 2] if count == 1 else np.linspace(left, right, count)
-    return VGroup(*[_stand(room_c, room_h, x) for x in xs])
+    return VGroup(*[_stand(room_c, room_h, x, cast, 0.9 + 0.07 * i, mirror=i % 2 == 1) for i, x in enumerate(xs)])
 
 
 def _gauge(x: float, y_c: float, color: str, tracker, *, length: float = 2.4, thickness: float = 0.46):
@@ -248,7 +244,7 @@ class Beat1_Lueftungsbedarf(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Was Lüftung leisten muss")
+        subtitle = section_heading(tr("What ventilation has to achieve", "Was Lüftung leisten muss"))
         din = _din_ref("DIN EN 16798-1 · DIN 1946-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -272,8 +268,8 @@ class Beat1_Lueftungsbedarf(Scene):
         g_odor = _gauge(gx["odor"], 0.35, ODOUR_COLOR, odor)
         cap_y = g_co2["track"].get_top()[1] + 0.34
         cap_co2 = math_label(r"\mathrm{CO_{2}}", np.array([gx["co2"], cap_y, 0.0]), color=CO2_COLOR)
-        cap_moist = math_label(r"\text{Feuchte}", np.array([gx["moist"], cap_y, 0.0]), size=LABEL_FONT_SIZE, color=MOISTURE_COLOR)
-        cap_odor = math_label(r"\text{Geruch}", np.array([gx["odor"], cap_y, 0.0]), size=LABEL_FONT_SIZE, color=ODOUR_COLOR)
+        cap_moist = math_label(tr(r"\text{Moisture}", r"\text{Feuchte}"), np.array([gx["moist"], cap_y, 0.0]), size=LABEL_FONT_SIZE, color=MOISTURE_COLOR)
+        cap_odor = math_label(tr(r"\text{Odour}", r"\text{Geruch}"), np.array([gx["odor"], cap_y, 0.0]), size=LABEL_FONT_SIZE, color=ODOUR_COLOR)
 
         def tick(gauge, x, frac):
             y = gauge["y_of"](frac)
@@ -285,11 +281,11 @@ class Beat1_Lueftungsbedarf(Scene):
             lines.arrange(DOWN, buff=0.08, aligned_edge=LEFT)
             return lines.move_to(np.array([gx["co2"] + 0.45 + lines.width / 2, y, 0.0]))
 
-        tag_out = tag("Außenluft", r"420\,\mathrm{ppm}", tick_out.get_y())
-        tag_pk = tag("Pettenkoferwert", r"1000\,\mathrm{ppm}", tick_pk.get_y())
-        read_co2 = math_readout(lambda: rf"c = {de_num(co2.get_value() * 1000)}\,\mathrm{{ppm}}", np.array([gx["co2"], -1.35, 0.0]),
+        tag_out = tag(tr("Outdoor air", "Außenluft"), r"420\,\mathrm{ppm}", tick_out.get_y())
+        tag_pk = tag(tr("Pettenkofer limit", "Pettenkoferwert"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
+        read_co2 = math_readout(lambda: rf"c = {label_number(co2.get_value() * 1000)}\,\mathrm{{ppm}}", np.array([gx["co2"], -1.35, 0.0]),
                                 color=CO2_COLOR, edge="center")
-        read_lat = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{lat}}}} = {de_num(moist.get_value() * PEOPLE * LATENT_PER_PERSON_W)}\,\mathrm{{W}}",
+        read_lat = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{lat}}}} = {label_number(moist.get_value() * PEOPLE * LATENT_PER_PERSON_W)}\,\mathrm{{W}}",
                                 np.array([gx["moist"], -1.35, 0.0]), color=MOISTURE_COLOR, edge="center")
         co2_col = VGroup(g_co2["group"], cap_co2, tick_out, tick_pk, tag_out, tag_pk, read_co2)
         moist_col = VGroup(g_moist["group"], cap_moist, read_lat)
@@ -346,8 +342,8 @@ class Beat1_Lueftungsbedarf(Scene):
                 np.array([room_c[0], win_y + 0.46, 0.0]), np.array([hi - 0.3, win_y + 0.3, 0.0]), np.array([hi + 0.9, win_y + 0.38, 0.0])]
         fresh = [smooth_path([p + UP * dy for p in lane]) for dy in (0.0, 0.2)]
         fresh_guides = flow_guides(fresh, AIR_COLOR, opacity=0.3)
-        tag_in = body_text("Zuluft", font_size=LABEL_FONT_SIZE, color=AIR_COLOR).move_to(np.array([lo - 0.95, win_y - 0.75, 0.0]))
-        tag_exit = body_text("Abluft", font_size=LABEL_FONT_SIZE, color=AIR_COLOR).move_to(np.array([hi + 0.62, win_y - 0.75, 0.0]))
+        tag_in = body_text(tr("Supply air", "Zuluft"), font_size=LABEL_FONT_SIZE, color=AIR_COLOR).move_to(np.array([lo - 0.95, win_y - 0.75, 0.0]))
+        tag_exit = body_text(tr("Exhaust air", "Abluft"), font_size=LABEL_FONT_SIZE, color=AIR_COLOR).move_to(np.array([hi + 0.95, win_y - 0.75, 0.0]))
 
         def breeze(rt):
             return [_streams([(fresh, AIR_COLOR)], rt, speed=0.5, waves=4)]
@@ -363,21 +359,21 @@ class Beat1_Lueftungsbedarf(Scene):
         for x in xs:
             blocks.add(Rectangle(width=1.1, height=0.44, color=AIR_COLOR, stroke_width=2, fill_color=AIR_COLOR,
                                  fill_opacity=0.22).move_to(np.array([x, -1.22, 0.0])))
-            texts.add(math_label(rf"{de_num(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", np.array([x, -1.29, 0.0]),
+            texts.add(math_label(rf"{label_number(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", np.array([x, -1.29, 0.0]),
                                  size=LABEL_FONT_SIZE, color=AIR_COLOR))
         n_tag = math_label(rf"{PEOPLE}\,\times", np.array([-5.75, -1.29, 0.0]), color=P_ORANGE, edge="center")
         k = ValueTracker(0.0)
-        v_total = math_readout(lambda: rf"= {de_num(PER_PERSON_M3H * k.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        v_total = math_readout(lambda: rf"= {label_number(PER_PERSON_M3H * k.get_value())}\,\mathrm{{m^{{3}}/h}}",
                                np.array([-0.2, -1.29, 0.0]), color=P_WHITE, edge="left")
         self.play(FadeIn(n_tag), run_time=0.6)
         self.add(v_total)
         for i, (b, t, p) in enumerate(zip(blocks, texts, people)):
-            self.play(FadeIn(b), FadeIn(t), Indicate(p, color=P_ORANGE, scale_factor=1.1), k.animate.set_value(i + 1.0),
+            self.play(FadeIn(b), FadeIn(t), p.animate(rate_func=there_and_back).scale(1.1, about_edge=DOWN), k.animate.set_value(i + 1.0),
                       run_time=3.2 / PEOPLE)
         panel = math_panel([
             (None, r"\dot{V}_{\mathrm{Pers}}", AIR_COLOR), (None, "=", P_WHITE), ("n", f"{PEOPLE}", P_ORANGE),
-            (None, r"\cdot", P_WHITE), ("blk", rf"{de_num(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", AIR_COLOR),
-            (None, "=", P_WHITE), ("tot", rf"{de_num(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
+            (None, r"\cdot", P_WHITE), ("blk", rf"{label_number(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", AIR_COLOR),
+            (None, "=", P_WHITE), ("tot", rf"{label_number(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
         ], color=AIR_COLOR)
         _fill_panel(self, panel, {"n": n_tag, "blk": texts[0], "tot": v_total})
         hold_for(self, N, "personen")
@@ -386,8 +382,8 @@ class Beat1_Lueftungsbedarf(Scene):
 
         def season_card(name: str, color: str, theta: float, icon, at):
             lines = VGroup(body_text(name, font_size=BODY_FONT_SIZE, color=color),
-                           math_label(rf"\theta_{{\mathrm{{e}}}} = {de_num(theta)}\,°\mathrm{{C}}", size=LABEL_FONT_SIZE, color=color),
-                           math_label(rf"\dot{{V}}_{{\mathrm{{Pers}}}} = {de_num(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}",
+                           math_label(rf"\theta_{{\mathrm{{e}}}} = {label_number(theta)}\,°\mathrm{{C}}", size=LABEL_FONT_SIZE, color=color),
+                           math_label(rf"\dot{{V}}_{{\mathrm{{Pers}}}} = {label_number(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}",
                                       size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(DOWN, buff=0.14, aligned_edge=LEFT)
             frame = RoundedRectangle(width=3.7, height=1.4, corner_radius=0, color=color, stroke_width=2).move_to(at)
             lines.move_to(at + RIGHT * 0.35)
@@ -396,7 +392,7 @@ class Beat1_Lueftungsbedarf(Scene):
         winter_icon = _room(ORIGIN, 0.8, 0.55, color=WINTER_COLOR, t=0.07)
         summer_icon = sun_glyph(ORIGIN, color=P_YELLOW).scale(0.34)
         card_w = season_card("Winter", WINTER_COLOR, THETA_WINTER[1], winter_icon, np.array([4.3, 0.95, 0.0]))
-        card_s = season_card("Sommer", SUMMER_COLOR, THETA_SUMMER[1], summer_icon, np.array([4.3, -0.55, 0.0]))
+        card_s = season_card(tr("Summer", "Sommer"), SUMMER_COLOR, THETA_SUMMER[1], summer_icon, np.array([4.3, -0.55, 0.0]))
         self.play(FadeOut(VGroup(blocks, texts, n_tag, v_total)), run_time=0.6)
         self.play(FadeIn(card_w, shift=LEFT * 0.2), run_time=1.2)
         self.play(FadeIn(card_s, shift=LEFT * 0.2), run_time=1.2)
@@ -438,7 +434,7 @@ class Beat2_Lueftungsweg(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Der Lüftungsweg durchs Haus")
+        subtitle = section_heading(tr("The ventilation path through the house", "Der Lüftungsweg durchs Haus"))
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -476,16 +472,16 @@ class Beat2_Lueftungsweg(Scene):
             return [_streams(season[mode["now"]], rt, speed=0.45, waves=waves, radius=0.09)]
 
         def zone_labels(inner: str, outer: str, c_in: str, c_out: str):
-            inside = VGroup(body_text("Innen", font_size=BODY_FONT_SIZE, color=c_in),
+            inside = VGroup(body_text(tr("Inside", "Innen"), font_size=BODY_FONT_SIZE, color=c_in),
                             body_text(inner, font_size=LABEL_FONT_SIZE, color=c_in)).arrange(DOWN, buff=0.12)
             inside.move_to(np.array([0.5 * (bl[0] + x_r) + 0.25, 0.5 * (bl[1] + y_mid), 0.0]))
-            outside = VGroup(body_text("Außen", font_size=BODY_FONT_SIZE, color=c_out),
+            outside = VGroup(body_text(tr("Outside", "Außen"), font_size=BODY_FONT_SIZE, color=c_out),
                              body_text(outer, font_size=LABEL_FONT_SIZE, color=c_out)).arrange(DOWN, buff=0.12)
             outside.move_to(np.array([-5.7, y_mid, 0.0]))
             return inside, outside
 
         label_in_w, label_out_w = zone_labels("warm", "kalt", P_ORANGE, WINTER_COLOR)
-        label_in_s, label_out_s = zone_labels("kühl", "heiß", P_CYAN, SUMMER_COLOR)
+        label_in_s, label_out_s = zone_labels(tr("cool", "kühl"), tr("hot", "heiß"), P_CYAN, SUMMER_COLOR)
 
         def lvl(theta: float) -> float:
             return (theta + 10.0) / 50.0
@@ -500,9 +496,9 @@ class Beat2_Lueftungsweg(Scene):
             return -1.1 + 0.05 + (therm_h - 0.12) * float(np.clip(lvl(tracker.get_value()), 0, 1))
 
         cap_y = -1.1 + therm_h + 0.3
-        read_e = math_readout(lambda: rf"{de_num(theta_e.get_value())}\,°\mathrm{{C}}", np.array([therm_x["e"], cap_y, 0.0]),
+        read_e = math_readout(lambda: rf"{label_number(theta_e.get_value())}\,°\mathrm{{C}}", np.array([therm_x["e"], cap_y, 0.0]),
                               size=LABEL_FONT_SIZE, color=P_BLUE, edge="center")
-        read_i = math_readout(lambda: rf"{de_num(theta_i.get_value())}\,°\mathrm{{C}}", np.array([therm_x["i"], cap_y, 0.0]),
+        read_i = math_readout(lambda: rf"{label_number(theta_i.get_value())}\,°\mathrm{{C}}", np.array([therm_x["i"], cap_y, 0.0]),
                               size=LABEL_FONT_SIZE, color=P_ORANGE, edge="center")
         sym_e = math_label(r"\theta_{\mathrm{e}}", np.array([therm_x["e"], -1.62, 0.0]), size=BODY_FONT_SIZE, color=P_BLUE)
         sym_i = math_label(r"\theta_{\mathrm{i}}", np.array([therm_x["i"], -1.62, 0.0]), size=BODY_FONT_SIZE, color=P_ORANGE)
@@ -518,7 +514,7 @@ class Beat2_Lueftungsweg(Scene):
         badge_pos = np.array([3.0, 1.3, 0.0])
         cloud_label = body_text("Winter", font_size=BODY_FONT_SIZE, color=WINTER_COLOR).move_to(badge_pos)
         badge_winter = VGroup(cloud_glyph(cloud_label, color=WINTER_COLOR), cloud_label)
-        sun_label = body_text("Sommer", font_size=BODY_FONT_SIZE, color=SUMMER_COLOR)
+        sun_label = body_text(tr("Summer", "Sommer"), font_size=BODY_FONT_SIZE, color=SUMMER_COLOR)
         sun = sun_glyph(ORIGIN, color=P_YELLOW).scale(0.4)
         badge_summer = VGroup(sun, sun_label.next_to(sun, DOWN, buff=0.1)).move_to(badge_pos)
 
@@ -549,7 +545,7 @@ class Beat2_Lueftungsweg(Scene):
         hold_for(self, N, "winter", during=breeze)
 
         caption = swap_caption(self, caption, subtitle_text(N, "waerme_winter"))
-        read_dt = math_readout(lambda: rf"\Delta\theta = {de_num(abs(theta_i.get_value() - theta_e.get_value()))}\,\mathrm{{K}}",
+        read_dt = math_readout(lambda: rf"\Delta\theta = {label_number(abs(theta_i.get_value() - theta_e.get_value()))}\,\mathrm{{K}}",
                                np.array([mid_x, -2.1, 0.0]), color=P_YELLOW, edge="center")
         self.play(FadeIn(q_winter), FadeIn(read_dt), *breeze(1.6), run_time=1.6)
         self.play(Circumscribe(read_dt, color=P_YELLOW, fade_out=True), *breeze(1.2), run_time=1.2)
@@ -605,7 +601,7 @@ class Beat3_Fahrplan(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Der Fahrplan des Videos")
+        subtitle = section_heading(tr("The roadmap of this video", "Der Fahrplan des Videos"))
         din = _din_ref("DIN EN 12831-1 · DIN 1946-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -615,7 +611,7 @@ class Beat3_Fahrplan(Scene):
         card_w, card_h, gap, y_c = 2.25, 2.7, 0.4, 0.6
         xs = [(i - 2) * (card_w + gap) for i in range(5)]
         colors = [AIR_COLOR, P_YELLOW, P_GREEN, P_TEAL, P_ORANGE]
-        names = ["Luftmenge", "Wärmestrom", "natürlich", "mechanisch", "Übergabe"]
+        names = [tr("Air volume", "Luftmenge"), tr("Heat flow", "Wärmestrom"), tr("natural", "natürlich"), tr("mechanical", "mechanisch"), tr("Handover", "Übergabe")]
         symbols = [r"V,\;n,\;\dot{V}", r"\Delta\theta,\;c_{\mathrm{Luft}},\;\Delta x", r"A_{\mathrm{eff}}",
                    r"\eta_{\mathrm{WRG}}", r"\Phi_{\mathrm{V}},\;\dot{Q}_{\mathrm{L}}"]
 
@@ -632,7 +628,7 @@ class Beat3_Fahrplan(Scene):
                 window["sash"].become(_manim_module.window_opening(window))
                 return window["group"]
             if i == 3:
-                return _fan(ORIGIN, color, radius=0.4)
+                return fitted_staffage("shared-mvhr-normal", width=0.9, height=0.78)
             return house_section(scale=0.24)["group"].set_color(color)
 
         cards, shades = [], []
@@ -662,10 +658,10 @@ class Beat3_Fahrplan(Scene):
         bracket = VGroup(Line(np.array([xs[0] - card_w / 2, span_y, 0.0]), np.array([xs[3] + card_w / 2, span_y, 0.0]), color=P_PRIMARY, stroke_width=2),
                          *[Line(np.array([x, span_y, 0.0]), np.array([x, span_y + 0.12, 0.0]), color=P_PRIMARY, stroke_width=2)
                            for x in (xs[0] - card_w / 2, xs[3] + card_w / 2)])
-        bracket_tag = body_text("gilt im Winter wie im Sommer", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
+        bracket_tag = body_text(tr("applies in winter and summer alike", "gilt im Winter wie im Sommer"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
             np.array([0.5 * (xs[0] + xs[3]) - 0.4, span_y - 0.32, 0.0]))
-        chip_h = _handover(r"\to\;\text{Heizung:}\;\Phi_{\mathrm{V}}", P_ORANGE)
-        chip_k = _handover(r"\to\;\text{Kühlung:}\;\dot{Q}_{\mathrm{L}}", P_CYAN)
+        chip_h = _handover(tr(r"\to\;\text{Heating:}\;\Phi_{\mathrm{V}}", r"\to\;\text{Heizung:}\;\Phi_{\mathrm{V}}"), P_ORANGE)
+        chip_k = _handover(tr(r"\to\;\text{Cooling:}\;\dot{Q}_{\mathrm{L}}", r"\to\;\text{Kühlung:}\;\dot{Q}_{\mathrm{L}}"), P_CYAN)
         chips = VGroup(chip_h, chip_k).arrange(DOWN, buff=0.1, aligned_edge=RIGHT)
         chips.move_to(np.array([xs[4] + card_w / 2 - chips.width / 2, span_y - 0.78, 0.0]))
         chip_h.set_x(chips.get_x())

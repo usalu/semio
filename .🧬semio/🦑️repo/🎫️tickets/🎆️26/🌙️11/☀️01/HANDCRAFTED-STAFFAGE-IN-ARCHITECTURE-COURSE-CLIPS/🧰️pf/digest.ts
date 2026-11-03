@@ -1,0 +1,12 @@
+import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { exportCast } from "../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🟦️.ts";
+const STAFFAGE = resolve(import.meta.dir, "../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage");
+const manifest = JSON.parse(readFileSync(join(STAFFAGE, "🧫️fixtures/🎭️cast-export/🔣️.json"), "utf8")).manifest;
+const out = mkdtempSync(join(tmpdir(), "d-"));
+const ids = process.argv.slice(2);
+await exportCast(manifest, ids, out, { language: "en" });
+for (const id of ids) for (const n of readdirSync(join(out, id)).sort()) console.log(id, n, createHash("sha256").update(readFileSync(join(out, id, n))).digest("hex").slice(0, 12));
+rmSync(out, { recursive: true, force: true });

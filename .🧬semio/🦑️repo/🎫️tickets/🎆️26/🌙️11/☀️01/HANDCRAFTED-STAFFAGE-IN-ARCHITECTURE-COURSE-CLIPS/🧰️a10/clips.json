@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "casts": {
+    "a10-fan-spin": { "asset": "duct-fan", "clip": "spin", "view": "dark-line", "theme": "dark", "viewpoint": "elevation", "scale": 50, "fps": 15, "language": "en" },
+    "a10-fan-spin-thermal": { "asset": "duct-fan", "clip": "spin", "view": "thermal", "theme": "dark", "viewpoint": "elevation", "scale": 50, "fps": 15, "environment": "office-neutral", "language": "en" },
+    "a10-flicker": { "asset": "tealight", "clip": "flicker", "view": "dark-solid", "theme": "dark", "viewpoint": "elevation", "scale": 50, "fps": 15, "language": "en" },
+    "a10-flicker-transport": { "asset": "tealight", "clip": "flicker", "view": "thermal", "theme": "dark", "viewpoint": "elevation", "scale": 50, "fps": 15, "environment": "office-neutral", "transport": ["parcels"], "language": "en" },
+    "a10-mvhr-spin": { "asset": "mvhr-unit", "clip": "boost-spin", "view": "dark-solid", "theme": "dark", "viewpoint": "elevation", "scale": 50, "fps": 15, "language": "en" },
+    "a10-mvhr-transport": { "asset": "mvhr-unit", "pose": "boost", "view": "thermal", "theme": "dark", "viewpoint": "elevation", "scale": 50, "environment": "office-neutral", "transport": ["parcels", "pathlines"], "language": "en" },
+    "a10-shower-transport": { "asset": "shower-head", "pose": "running", "view": "thermal", "theme": "dark", "viewpoint": "elevation", "scale": 50, "environment": "office-neutral", "transport": ["parcels", "pathlines"], "language": "en" }
+  }
+}

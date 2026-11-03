@@ -1,6 +1,6 @@
 """🫁️ Independent oracle of the respiration model: scipy quad integrates the half-sine flow of every scenario pattern (inhaled and exhaled volume = tidal volume), CoolProp gives the respiratory heat of the exhaled state, and the ASHRAE regression gives the numbers the thermal solver uses.
 
-Run `uv run --with scipy --with CoolProp --with numpy python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import math

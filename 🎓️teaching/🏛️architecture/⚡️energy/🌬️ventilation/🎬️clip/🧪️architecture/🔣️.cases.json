@@ -81,9 +81,8 @@
     "origin_x": -4,
     "floor_y": -1,
     "units_per_m": 0.8,
-    "width_m": 1.1,
-    "height_m": 0.6,
-    "floor_clearance_m": 0.12
+    "height_m": 0.71,
+    "floor_clearance_m": 0.04
   },
   "material": {
     "fill_opacity": 1,

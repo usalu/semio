@@ -1,0 +1,33 @@
+/** 🔭️ Deutsche Texte der Blickrichtungswahl, des Dreitafelbilds und der Blickrichtungsprobleme. @see ../🔠️english/🔭️viewpoints.ts — Englisch, Schlüssel für Schlüssel */
+import type { VIEWPOINTS_EN } from "../🔠️english/🔭️viewpoints.ts";
+
+export const VIEWPOINTS_DE: Record<keyof typeof VIEWPOINTS_EN, string> = {
+  "viewpoints.label": "Blickrichtung",
+  "viewpoints.help": "Seiten-, Vorder- und Draufsicht zeigen dieselbe Figur im selben Augenblick und im selben Maßstab. Ein Wechsel der Blickrichtung ändert weder Pose, Zeit, Wiedergabe noch Maßstab.",
+  "viewpoints.name.elevation": "Seitenansicht",
+  "viewpoints.name.front": "Vorderansicht",
+  "viewpoints.name.plan": "Draufsicht",
+  "viewpoints.name.all": "Drei Ansichten",
+  "viewpoints.phrase.elevation": "Seitenansicht",
+  "viewpoints.phrase.front": "Vorderansicht",
+  "viewpoints.phrase.plan": "Draufsicht",
+  "viewpoints.phrase.all": "Drei Ansichten zusammen",
+  "viewpoints.choice.unavailable": "{name} (nicht verfügbar): {reason}",
+  "viewpoints.sheet": "Drei Ansichten von {title}: Seitenansicht, Vorderansicht und Draufsicht",
+  "viewpoints.sheetHelp": "Die Draufsicht über der Seitenansicht, die Vorderansicht rechts daneben, in einem Maßstab. Werte werden aus dem fokussierten Feld gelesen.",
+  "viewpoints.sheetScale": "Ein Maßstab in allen drei Ansichten: 1 m sind {mm} mm auf Papier bei 1:{scale}.",
+  "viewpoints.friezeNote": "Darstellungsanordnung: Die Figuren stehen zum Vergleich nebeneinander, nicht an ihren wirklichen Orten; die {view} zeigt jede Figur für sich.",
+  "viewpoints.unavailable": "Die {view} ist nicht verfügbar",
+  "viewpoints.nothingInstead": "Es wird keine andere Ansicht an ihrer Stelle gezeigt.",
+  "viewpoints.sheetUnavailable": "Im Dreitafelbild nicht verfügbar: {views}.",
+  "viewpoints.focus": "Fokussiertes Feld",
+  "viewpoints.focusPressed": "{name}, fokussiertes Feld",
+  "viewpoints.focusAction": "{name}, zum fokussierten Feld machen",
+  "viewpoints.missing.elevation": "Diese Zeichnung hat keine Seitenansicht.",
+  "viewpoints.missing.front": "Diese Zeichnung hat keine Vorderansicht.",
+  "viewpoints.missing.plan": "Diese Zeichnung hat keine Draufsicht.",
+  "viewpoints.failed": "Diese Blickrichtung konnte nicht gezeichnet werden.",
+  "viewpoints.failedDetails": "Technische Einzelheiten",
+  "viewpoints.announce.single": "Gezeigt wird die {view}.",
+  "viewpoints.announce.all": "Gezeigt werden drei Ansichten, fokussiertes Feld: {view}.",
+};

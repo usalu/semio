@@ -54,13 +54,14 @@ dim_chip = _manim_module.dim_chip
 math_label = _manim_module.math_label
 math_row = _manim_module.math_row
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 highlight_param = _manim_module.highlight_param
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
@@ -170,8 +171,8 @@ def _bar_stack(x, base_y, colours, *, unit, width: float = 0.55, opacities=None)
 
 def _series_chain(y):
     """⛓️ The five videos of the series as chips on one line — Lüftung is the stop we are at."""
-    entries = (("Physikalische Grundlagen", P_YELLOW), ("Lüftung", VENT_BLUE), ("Heizung", COL_HEAT),
-               ("Kühlung", COL_COOL), ("Energiebilanz", P_TEAL))
+    entries = ((tr("Physical fundamentals", "Physikalische Grundlagen"), P_YELLOW), (tr("Ventilation", "Lüftung"), VENT_BLUE), (tr("Heating", "Heizung"), COL_HEAT),
+               (tr("Cooling", "Kühlung"), COL_COOL), (tr("Energy balance", "Energiebilanz"), P_TEAL))
     chips = VGroup(*[chip(text, colour, font_size=LABEL_FONT_SIZE) for text, colour in entries])
     chips.arrange(RIGHT, buff=0.62)
     chips.move_to(np.array([0.0, y, 0.0]))
@@ -190,15 +191,16 @@ X_FORMULA, X_WINTER, X_SUMMER = -6.55, 1.55, 4.75
 Y_HEAD = 0.10
 Y_ROWS = (-0.46, -0.96, -1.46, -1.96)
 
+_CARD_EN = {"Volumen": "Volume", "Luftwechsel": "Air change", "Volumenstrom": "Volume flow", "Wärmekapazität": "Heat capacity", "Winter / Sommer": "Winter / Summer", "Feuchte, Sommer": "Moisture, summer", "Rückgewinnung": "Recovery"}
 CARD_SPECS = (
-    ("v", r"V", "Volumen", lambda k: rf"{de_num(V_NET * k)}\,\mathrm{{m^{{3}}}}", COL_V),
-    ("n", r"n", "Luftwechsel", lambda k: rf"{de_num(N_RATE * k, 1)}\,\mathrm{{h^{{-1}}}}", COL_N),
-    ("vdot", r"\dot{V}=q_{v,\mathrm{R}}", "Volumenstrom", lambda k: rf"{de_num(V_DOT * k)}\,\mathrm{{m^{{3}}/h}}", COL_VDOT),
-    ("c", r"c_{\mathrm{Luft}}", "Wärmekapazität", lambda k: rf"{de_num(C_LUFT * k, 2)}\,\mathrm{{Wh/(m^{{3}}K)}}", COL_C),
+    ("v", r"V", "Volumen", lambda k: rf"{label_number(V_NET * k)}\,\mathrm{{m^{{3}}}}", COL_V),
+    ("n", r"n", "Luftwechsel", lambda k: rf"{label_number(N_RATE * k, 1)}\,\mathrm{{h^{{-1}}}}", COL_N),
+    ("vdot", r"\dot{V}=q_{v,\mathrm{R}}", "Volumenstrom", lambda k: rf"{label_number(V_DOT * k)}\,\mathrm{{m^{{3}}/h}}", COL_VDOT),
+    ("c", r"c_{\mathrm{Luft}}", "Wärmekapazität", lambda k: rf"{label_number(C_LUFT * k, 2)}\,\mathrm{{Wh/(m^{{3}}K)}}", COL_C),
     ("dt", r"\Delta\theta", "Winter / Sommer",
-     lambda k: rf"{de_num(DT_WINTER * k)}\,/\,{de_num(DT_SUMMER * k)}\,\mathrm{{K}}", COL_DT),
-    ("dx", r"\Delta x", "Feuchte, Sommer", lambda k: rf"{de_num(DX_GKG * k, 1)}\,\mathrm{{g/kg}}", COL_DX),
-    ("eta", r"\eta_{\mathrm{WRG}}", "Rückgewinnung", lambda k: de_num(ETA_WRG * k, 1), COL_ETA),
+     lambda k: rf"{label_number(DT_WINTER * k)}\,/\,{label_number(DT_SUMMER * k)}\,\mathrm{{K}}", COL_DT),
+    ("dx", r"\Delta x", "Feuchte, Sommer", lambda k: rf"{label_number(DX_GKG * k, 1)}\,\mathrm{{g/kg}}", COL_DX),
+    ("eta", r"\eta_{\mathrm{WRG}}", "Rückgewinnung", lambda k: label_number(ETA_WRG * k, 1), COL_ETA),
 )
 
 
@@ -246,20 +248,20 @@ class Beat1_Zusammenfassung(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Sieben Größen, eine Kette")
+        subtitle = section_heading(tr("Seven quantities, one chain", "Sieben Größen, eine Kette"))
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
         xs = [-5.7 + 1.9 * i for i in range(7)]
-        cards = {key: _sym_card(sym, name, fmt, colour, np.array([x, CARD_Y, 0.0]))
+        cards = {key: _sym_card(sym, tr(_CARD_EN[name], name), fmt, colour, np.array([x, CARD_Y, 0.0]))
                  for (key, sym, name, fmt, colour), x in zip(CARD_SPECS, xs)}
         frames = VGroup(*[c["frame"] for c in cards.values()])
 
-        head_w = body_text("Winter · Heizung", font_size=LABEL_FONT_SIZE, color=COL_HEAT).move_to(
+        head_w = body_text(tr("Winter · Heating", "Winter · Heizung"), font_size=LABEL_FONT_SIZE, color=COL_HEAT).move_to(
             np.array([X_WINTER, Y_HEAD, 0.0]))
-        head_s = body_text("Sommer · Kühlung", font_size=LABEL_FONT_SIZE, color=COL_COOL).move_to(
+        head_s = body_text(tr("Summer · Cooling", "Sommer · Kühlung"), font_size=LABEL_FONT_SIZE, color=COL_COOL).move_to(
             np.array([X_SUMMER, Y_HEAD, 0.0]))
         rule = Line(np.array([-6.6, -0.14, 0.0]), np.array([6.2, -0.14, 0.0]), color=P_WHITE, stroke_width=1.2,
                     stroke_opacity=0.35)
@@ -281,7 +283,7 @@ class Beat1_Zusammenfassung(Scene):
         row1, it1 = _place_row([("vdot", r"\dot{V}", COL_VDOT), (None, "=", None), ("v", "V", COL_V), (None, r"\cdot", None),
                                 ("n", "n", COL_N)], Y_ROWS[0], X_FORMULA)
         k1 = ValueTracker(0.0)
-        res1 = math_readout(lambda: rf"=\;{de_num(V_DOT * k1.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        res1 = math_readout(lambda: rf"=\;{label_number(V_DOT * k1.get_value())}\,\mathrm{{m^{{3}}/h}}",
                             np.array([row1.get_right()[0] + 0.12, Y_ROWS[0], 0.0]), size=24, color=COL_VDOT, edge="left")
         caption = swap_caption(self, caption, subtitle_text(N, "vdot"))
         self.play(FadeIn(rule), FadeIn(head_w), FadeIn(head_s), run_time=0.6)
@@ -305,9 +307,9 @@ class Beat1_Zusammenfassung(Scene):
                                 (None, r"\cdot", None), ("c", r"c_{\mathrm{Luft}}", COL_C), (None, r"\cdot", None),
                                 ("dt", r"\Delta\theta", COL_DT)], Y_ROWS[1], X_FORMULA)
         k2 = ValueTracker(0.0)
-        res2w = math_readout(lambda: rf"{de_num(Q_WINTER * k2.get_value())}\,\mathrm{{W}}",
+        res2w = math_readout(lambda: rf"{label_number(Q_WINTER * k2.get_value())}\,\mathrm{{W}}",
                              np.array([X_WINTER, Y_ROWS[1], 0.0]), size=BODY_FONT_SIZE, color=COL_HEAT, edge="center")
-        res2s = math_readout(lambda: rf"{de_num(Q_SUMMER * k2.get_value())}\,\mathrm{{W}}",
+        res2s = math_readout(lambda: rf"{label_number(Q_SUMMER * k2.get_value())}\,\mathrm{{W}}",
                              np.array([X_SUMMER, Y_ROWS[1], 0.0]), size=BODY_FONT_SIZE, color=COL_COOL, edge="center")
         caption = swap_caption(self, caption, subtitle_text(N, "sens"))
         self.add(res2w, res2s)
@@ -323,7 +325,7 @@ class Beat1_Zusammenfassung(Scene):
                                 (None, r"\cdot", None), (None, r"\rho", P_WHITE), (None, r"\cdot", None), (None, "r", P_WHITE),
                                 (None, r"\cdot", None), ("dx", r"\Delta x", COL_DX)], Y_ROWS[2], X_FORMULA)
         k3 = ValueTracker(0.0)
-        res3s = math_readout(lambda: rf"{de_num(Q_LATENT * k3.get_value())}\,\mathrm{{W}}",
+        res3s = math_readout(lambda: rf"{label_number(Q_LATENT * k3.get_value())}\,\mathrm{{W}}",
                              np.array([X_SUMMER, Y_ROWS[2], 0.0]), size=BODY_FONT_SIZE, color=COL_DX, edge="center")
         none_w = math_label("–", np.array([X_WINTER, Y_ROWS[2], 0.0]), size=BODY_FONT_SIZE, color=P_PRIMARY)
         caption = swap_caption(self, caption, subtitle_text(N, "lat"))
@@ -339,9 +341,9 @@ class Beat1_Zusammenfassung(Scene):
         row4, it4 = _place_row([("q", r"\dot{Q}_{\mathrm{V,sens}}", P_WHITE), (None, r"\cdot", None),
                                 ("eta", r"(1-\eta_{\mathrm{WRG}})", COL_ETA)], Y_ROWS[3], X_FORMULA)
         k4 = ValueTracker(0.0)
-        res4w = math_readout(lambda: rf"{de_num(Q_WINTER_WRG * k4.get_value())}\,\mathrm{{W}}",
+        res4w = math_readout(lambda: rf"{label_number(Q_WINTER_WRG * k4.get_value())}\,\mathrm{{W}}",
                              np.array([X_WINTER, Y_ROWS[3], 0.0]), size=BODY_FONT_SIZE, color=COL_HEAT, edge="center")
-        res4s = math_readout(lambda: rf"{de_num(Q_SUMMER_WRG * k4.get_value())}\,\mathrm{{W}}\,+\,{de_num(Q_LATENT)}\,\mathrm{{W}}",
+        res4s = math_readout(lambda: rf"{label_number(Q_SUMMER_WRG * k4.get_value())}\,\mathrm{{W}}\,+\,{label_number(Q_LATENT)}\,\mathrm{{W}}",
                              np.array([X_SUMMER, Y_ROWS[3], 0.0]), size=BODY_FONT_SIZE, color=COL_COOL, edge="center")
         caption = swap_caption(self, caption, subtitle_text(N, "wrg"))
         self.add(res4w, res4s)
@@ -404,7 +406,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Was Heizung und Kühlung übernehmen")
+        subtitle = section_heading(tr("What heating and cooling take over", "Was Heizung und Kühlung übernehmen"))
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -438,8 +440,8 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         ground = VGroup(*[Line(np.array([x - 0.45, base_y, 0.0]), np.array([x + 0.45, base_y, 0.0]), color=P_PRIMARY, stroke_width=2.2)
                           for x in (X_BAR_W, X_BAR_S)])
 
-        hand_w = _hand_over("→ Heizung:", r"\Phi_{\mathrm{V}}", COL_HEAT).move_to(np.array([X_COL_W + 1.55, Y_HAND, 0.0]))
-        hand_s = _hand_over("→ Kühlung:", r"\dot{Q}_{\mathrm{L}}", COL_COOL).move_to(np.array([X_COL_S + 1.55, Y_HAND, 0.0]))
+        hand_w = _hand_over(tr("→ Heating:", "→ Heizung:"), r"\Phi_{\mathrm{V}}", COL_HEAT).move_to(np.array([X_COL_W + 1.55, Y_HAND, 0.0]))
+        hand_s = _hand_over(tr("→ Cooling:", "→ Kühlung:"), r"\dot{Q}_{\mathrm{L}}", COL_COOL).move_to(np.array([X_COL_S + 1.55, Y_HAND, 0.0]))
         hand_w.align_to(np.array([X_COL_W, 0.0, 0.0]), LEFT)
         hand_s.align_to(np.array([X_COL_S, 0.0, 0.0]), LEFT)
 
@@ -450,18 +452,18 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
             return math_readout(fn, np.array([x_left, y, 0.0]), size=size, color=color, edge="left")
 
         w_dt = row(r"\Delta\theta=20\,\mathrm{K}", ROW_Y[0], X_COL_W, COL_DT)
-        w_flow = live(lambda: rf"\Phi_{{\mathrm{{V}}}}=\dot{{Q}}_{{\mathrm{{V,sens}}}}={de_num(w0.get_value() + w1.get_value())}\,\mathrm{{W}}",
+        w_flow = live(lambda: rf"\Phi_{{\mathrm{{V}}}}=\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(w0.get_value() + w1.get_value())}\,\mathrm{{W}}",
                       ROW_Y[1], X_COL_W, COL_HEAT)
-        w_term = row(r"\text{Lüftungsterm der Heizlast}", ROW_Y[2], X_COL_W, P_WHITE)
-        w_wrg = live(lambda: rf"\text{{mit WRG:}}\;\Phi_{{\mathrm{{V}}}}={de_num(w0.get_value())}\,\mathrm{{W}}", ROW_Y[3], X_COL_W, COL_ETA)
+        w_term = row(tr(r"\text{Ventilation term}", r"\text{Lüftungsterm der Heizlast}"), ROW_Y[2], X_COL_W, P_WHITE)
+        w_wrg = live(lambda: tr(rf"\text{{with HRV:}}\;\Phi_{{\mathrm{{V}}}}={label_number(w0.get_value())}\,\mathrm{{W}}", rf"\text{{mit WRG:}}\;\Phi_{{\mathrm{{V}}}}={label_number(w0.get_value())}\,\mathrm{{W}}"), ROW_Y[3], X_COL_W, COL_ETA)
 
         s_dt = row(r"\Delta\theta=6\,\mathrm{K}", ROW_Y[0], X_COL_S, COL_DT)
-        s_sens = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}}={de_num(s0.get_value() + s1.get_value())}\,\mathrm{{W}}",
+        s_sens = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(s0.get_value() + s1.get_value())}\,\mathrm{{W}}",
                       ROW_Y[1], X_COL_S, COL_COOL)
-        s_lat = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}={de_num(s2.get_value())}\,\mathrm{{W}}", ROW_Y[2], X_COL_S, COL_DX)
-        s_air = row(r"\text{Auslegung:}\;q_{v,\mathrm{R}}=0{,}061\,\mathrm{m^{3}/s}", ROW_Y[3], X_COL_S, COL_VDOT)
-        s_night = row(r"\text{Nachtlüftung}\to\text{Speicher}", ROW_Y[4], X_COL_S, P_WHITE)
-        s_rec = live(lambda: rf"\text{{mit WRG:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={de_num(s0.get_value())}\,\mathrm{{W}}",
+        s_lat = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}={label_number(s2.get_value())}\,\mathrm{{W}}", ROW_Y[2], X_COL_S, COL_DX)
+        s_air = row(tr(r"\text{Design:}\;q_{v,\mathrm{R}}=0.061\,\mathrm{m^{3}/s}", r"\text{Auslegung:}\;q_{v,\mathrm{R}}=0{,}061\,\mathrm{m^{3}/s}"), ROW_Y[3], X_COL_S, COL_VDOT)
+        s_night = row(tr(r"\text{Night ventilation}\to\text{storage}", r"\text{Nachtlüftung}\to\text{Speicher}"), ROW_Y[4], X_COL_S, P_WHITE)
+        s_rec = live(lambda: tr(rf"\text{{with HRV:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(s0.get_value())}\,\mathrm{{W}}", rf"\text{{mit WRG:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(s0.get_value())}\,\mathrm{{W}}"),
                      ROW_Y[5], X_COL_S, COL_ETA)
 
         self.play(Create(hs["group"]), run_time=1.2)

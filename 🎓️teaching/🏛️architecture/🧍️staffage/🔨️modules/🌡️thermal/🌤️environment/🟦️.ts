@@ -1,6 +1,6 @@
 /** 🌤️ The environment at an absolute time: a constant environment or a keyed {@link EnvironmentTimeline} (`step` holds, `linear` blends to the next key).
  *
- * Wind direction blends along the shorter arc; every other field blends linearly. Before the first key the first environment holds, after the last the last.
+ * The wind blends as a horizontal velocity vector `(U cos φ, U sin φ)` in the ahead-left plane, component-wise and linearly, so opposite winds pass through calm instead of swinging round; every other field blends linearly. This is the one environment evaluator of thermal and transport. Before the first key the first environment holds, after the last the last.
  *
  * @see ../../🔗️contracts/🟦️.ts — EnvironmentTimeline
  */
@@ -16,7 +16,10 @@ export const isTimeline = (input: EnvironmentInput): input is EnvironmentTimelin
 function blend(a: Environment, b: Environment, f: number): Environment {
   const lerp = (x: number, y: number): number => x + (y - x) * f;
   const opt = (x: number | undefined, y: number | undefined): number | undefined => (x === undefined && y === undefined ? undefined : lerp(x ?? y!, y ?? x!));
-  const turn = ((((b.windDirectionDeg - a.windDirectionDeg) % 360) + 540) % 360) - 180;
+  const rad = (d: number): number => (d * Math.PI) / 180;
+  const wx = lerp(a.windMS * Math.cos(rad(a.windDirectionDeg)), b.windMS * Math.cos(rad(b.windDirectionDeg)));
+  const wz = lerp(a.windMS * Math.sin(rad(a.windDirectionDeg)), b.windMS * Math.sin(rad(b.windDirectionDeg)));
+  const speed = Math.hypot(wx, wz);
   const sky = opt(a.skyTempC, b.skyTempC);
   const ground = opt(a.groundTempC, b.groundTempC);
   return {
@@ -25,8 +28,8 @@ function blend(a: Environment, b: Environment, f: number): Environment {
     ...(sky === undefined ? {} : { skyTempC: sky }),
     ...(ground === undefined ? {} : { groundTempC: ground }),
     relativeHumidity: lerp(a.relativeHumidity, b.relativeHumidity),
-    windMS: lerp(a.windMS, b.windMS),
-    windDirectionDeg: a.windDirectionDeg + turn * f,
+    windMS: speed,
+    windDirectionDeg: speed === 0 ? a.windDirectionDeg : (Math.atan2(wz, wx) * 180) / Math.PI,
     solarWM2: lerp(a.solarWM2, b.solarWM2),
     diffuseFraction: lerp(a.diffuseFraction, b.diffuseFraction),
     pressurePa: lerp(a.pressurePa, b.pressurePa),

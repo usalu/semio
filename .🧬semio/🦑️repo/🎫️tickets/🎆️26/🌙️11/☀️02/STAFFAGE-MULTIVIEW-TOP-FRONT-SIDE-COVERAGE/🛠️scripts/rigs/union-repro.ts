@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { evaluate } from "../../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+const L = join(import.meta.dirname, "../../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage");
+(globalThis as any).__dump = [];
+const a = JSON.parse(readFileSync(join(L, "🗂️catalog/🌳️vegetation/agave/🔣️.json"), "utf8")).asset;
+for (const [pose, d] of [["frost-sag", 200], ["drought-infolded", 100]] as const) evaluate(a, { kind: "pose", pose }, { kind: "scale", scale: { denominator: d } });
+const dump = (globalThis as any).__dump;
+console.log("failing unions", dump.length);
+writeFileSync(process.argv[2]!, JSON.stringify(dump.slice(0, 3)));

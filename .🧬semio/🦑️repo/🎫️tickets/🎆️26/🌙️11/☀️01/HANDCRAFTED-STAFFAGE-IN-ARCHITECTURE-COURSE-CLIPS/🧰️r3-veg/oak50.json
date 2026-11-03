@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "casts": {
+    "oak-50": { "asset": "english-oak", "pose": "calm", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 50 },
+    "oak-100": { "asset": "english-oak", "pose": "calm", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 100 },
+    "oak-200": { "asset": "english-oak", "pose": "calm", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 200 },
+    "oak-500": { "asset": "english-oak", "pose": "calm", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 500 }
+  }
+}

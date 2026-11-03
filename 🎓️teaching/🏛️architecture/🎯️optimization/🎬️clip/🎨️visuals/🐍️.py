@@ -36,7 +36,8 @@ def source_files() -> tuple[Path, ...]:
     return (Path(__file__), Path(_room.__file__), *sorted(model.rglob("*.py")),
             *sorted(model.rglob("*.json")), root / "🧪️cases/🔣️.json", Path(_fonts.__file__),
             Path(_art.__file__), Path(_art.__file__).with_name("🔣️.json"),
-            Path(_art.__file__).parent / "🫟️silhouettes/🔣️.json", *_theme.source_files())
+            Path(_art.__file__).parent / "🔣️icons/🔣️.json",
+            Path(_art.__file__).parent / "🧍️staffage/🔣️.json", *_theme.source_files())
 
 
 def _text(value, point=(0, 0, 0), *, size=24, color=INK, width=6):
@@ -131,7 +132,7 @@ class ClipScene(_room.RoomVisuals, _engine.Scene):
 
     def plot_axes(self, *, x_range, y_range, x_label=None, y_label=None, point=(-.8, .25, 0), width=7.5, height=3.6,
                   x_digits=0, y_digits=0, x_ticks=None, y_ticks=None, titles=True, corner=False):
-        """📐 Axes in physical units with localized titles and numeric ticks, without a TeX dependency.
+        """📉 Axes in physical units with localized titles and numeric ticks, without a TeX dependency.
 
         ``corner=True`` lets both axis lines meet in the lower left corner even when a range runs through zero (otherwise the lines cross at zero, e.g. a y axis inside a plot
         whose x range starts at −0.3, next to tick numbers at the left edge); ``c2p`` is unaffected.

@@ -12,6 +12,13 @@ import { mix, wrap } from "../🖍️palette/🟦️.ts";
 import { commandsOf } from "../📐️geometry/🟦️.ts";
 
 const BAR_STEPS = 24;
+/** 📐️ The shortest paper span between the extension lines that still holds the value between them; shorter spans lift the value above the upper extension line on a leader. */
+export const DIMENSION_FIT_MM = 3;
+const DIMENSION_LEADER_MM = 3.2;
+/** 📐️ The clear paper distance between the drawn content and the start of the extension lines (ISO 129-1: a visible gap to the object). */
+export const DIMENSION_GAP_MM = 1.5;
+/** 📐️ The paper distance from the right edge of the drawn content to the dimension line, so line, ticks and leader stand clear of the drawing at every scale. */
+export const DIMENSION_OFFSET_MM = 6;
 const MIN_TICK_GAP_MM = 6;
 const LEGEND_BAR_MM = 50;
 const LEGEND_WRAP = 100;
@@ -31,26 +38,44 @@ function segmentsFor(metres: number): number {
   return Math.abs(mantissa - 2) < 1e-9 ? 4 : 5;
 }
 
-/** 📐️ The vertical overall-height dimension right of the content: extension lines, oblique ticks, the value in metres. */
-export function dimensionLine(canvas: Canvas, ctx: Ctx): void {
-  const { state, k, language, colours, options } = ctx;
+/** 📐️ The extent in metres a dimension measures, y up. */
+export type DimensionExtent = { readonly minX: number; readonly maxX: number; readonly minY: number; readonly maxY: number };
+
+const DIMENSION_QUANTITIES = {
+  elevation: { quantity: "height", label: { en: "Overall height", de: "Gesamthöhe" } },
+  front: { quantity: "height", label: { en: "Overall height", de: "Gesamthöhe" } },
+  plan: { quantity: "depth", label: { en: "Overall depth", de: "Gesamttiefe" } },
+} as const;
+
+/** 📐️ The vertical overall dimension right of the content: extension lines, oblique ticks, the value in metres (between the extension lines, or on a leader above them when the span is shorter than {@link DIMENSION_FIT_MM}). It measures the drawn vertical extent of the viewpoint (height in elevations, depth in the plan). */
+export function dimensionLine(canvas: Canvas, ctx: Ctx, extent: DimensionExtent, contentMaxX: number = extent.maxX * ctx.k): void {
+  const { k, language, colours, options } = ctx;
   const box = canvas.box;
   if (box === null) return;
+  const { quantity, label } = DIMENSION_QUANTITIES[options.viewpoint];
   const w = ANNOTATION_PEN_MM;
   const stroke = { color: colours.ink, widthMm: w, cap: "butt" as const };
-  const x = box.maxX + 3;
-  const top = -state.bounds.maxY * k;
-  const bottom = -state.bounds.minY * k;
-  const edge = state.bounds.maxX * k + 1;
+  const right = Math.max(box.maxX, contentMaxX, extent.maxX * k);
+  const x = right + DIMENSION_OFFSET_MM;
+  const top = -extent.maxY * k;
+  const bottom = -extent.minY * k;
+  const edge = Math.max(contentMaxX, extent.maxX * k) + DIMENSION_GAP_MM;
   canvas.path("annotations", "dimension:extension-top", commandsOf([{ x: edge, y: top }, { x: x + 1, y: top }], false), { stroke });
   canvas.path("annotations", "dimension:extension-bottom", commandsOf([{ x: edge, y: bottom }, { x: x + 1, y: bottom }], false), { stroke });
   canvas.path("annotations", "dimension:line", commandsOf([{ x, y: top }, { x, y: bottom }], false), {
     stroke: { ...stroke, widthMm: w * 1.4 },
-    value: { quantity: "height", value: state.bounds.maxY - state.bounds.minY, unit: "m", label: { en: "Overall height", de: "Gesamthöhe" } },
+    value: { quantity, value: extent.maxY - extent.minY, unit: "m", label },
   });
   for (const [id, y] of [["top", top], ["bottom", bottom]] as const) canvas.path("annotations", `dimension:tick-${id}`, commandsOf([{ x: x - 0.9, y: y + 0.9 }, { x: x + 0.9, y: y - 0.9 }], false), { stroke: { ...stroke, widthMm: w * 2 } });
-  const height = state.bounds.maxY - state.bounds.minY;
-  canvas.text("annotations", "dimension:text", { x: x + 1.6, y: (top + bottom) / 2 + ANNOTATION_TEXT_MM * 0.35 }, `${formatNumber(height, height < 10 ? 2 : 1, language)} m`, ANNOTATION_TEXT_MM, colours.ink);
+  const length = extent.maxY - extent.minY;
+  const value = `${formatNumber(length, length < 10 ? 2 : 1, language)} m`;
+  if (bottom - top >= DIMENSION_FIT_MM) {
+    canvas.text("annotations", "dimension:text", { x: x + 1.6, y: (top + bottom) / 2 + ANNOTATION_TEXT_MM * 0.35 }, value, ANNOTATION_TEXT_MM, colours.ink);
+    return;
+  }
+  const lead = top - DIMENSION_LEADER_MM;
+  canvas.path("annotations", "dimension:leader", commandsOf([{ x, y: top }, { x, y: lead }], false), { stroke });
+  canvas.text("annotations", "dimension:text", { x: x + 1.6, y: lead + ANNOTATION_TEXT_MM * 0.35 }, value, ANNOTATION_TEXT_MM, colours.ink);
 }
 
 /** 📏️ The alternating-block scale bar with `0` and length labels; returns the height it used. */

@@ -32,7 +32,7 @@ export function rolesAssetWith(shapesOf: (denominator: number) => readonly Shape
   const base = sampleAsset();
   const template = base.representations["100"] as AuthoredRepresentation;
   const ranges: Record<number, [number, number]> = { 500: [350, 1000], 200: [150, 349], 100: [75, 149], 50: [20, 74] };
-  const representations = Object.fromEntries([500, 200, 100, 50].map((denominator) => [`${denominator}`, change({ ...template, denominator: denominator as 50, validRange: { minDenominator: ranges[denominator]![0], maxDenominator: ranges[denominator]![1] }, pens: ROLE_PENS[denominator]!, hatches: [], geometry: { elevation: shapesOf(denominator) } })]));
+  const representations = Object.fromEntries([500, 200, 100, 50].map((denominator) => [`${denominator}`, change({ ...template, denominator: denominator as 50, validRange: { minDenominator: ranges[denominator]![0], maxDenominator: ranges[denominator]![1] }, pens: ROLE_PENS[denominator]!, hatches: [], geometry: { elevation: shapesOf(denominator), front: shapesOf(denominator), plan: shapesOf(denominator) } })]));
   const { respiration: _respiration, body: _body, ...thermal } = base.thermal;
   return {
     ...base,

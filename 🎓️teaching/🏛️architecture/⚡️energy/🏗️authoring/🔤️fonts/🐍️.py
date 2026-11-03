@@ -25,7 +25,7 @@ _PANGO_TEXT_RENDERER = None
 
 
 def _render_pango_text(*args, **kwargs):
-    """🔤 Attach each native Windows face once to Pango's shared rendering map."""
+    """🖨️ Attach each native Windows face once to Pango's shared rendering map."""
     import manimpango
 
     with _PANGO_FONT_LOCK:
@@ -283,7 +283,7 @@ def apply_scene_style(scene) -> str:
 
 
 def body_text(text: str, *, font_size: float, color: str, **kwargs):
-    """🔤 One on-screen string with the shared face — never a bare ``Text(...)`` in scenes."""
+    """🔡 One on-screen string with the shared face — never a bare ``Text(...)`` in scenes."""
     from manim import Text
 
     return Text(
@@ -296,23 +296,34 @@ def body_text(text: str, *, font_size: float, color: str, **kwargs):
     )
 
 
+@_cache(maxsize=8192)
+def _fits_width(text: str, font_size: float, max_width: float, face: str) -> bool:
+    """📏 Measure one candidate line once per face, size and limit; the face keys the cache entry."""
+    return body_text(text, font_size=font_size, color=_theme.CHROME_FOREGROUND).width <= max_width
+
+
 def wrap_body_lines(text: str, *, font_size: float, max_width: float) -> list[str]:
-    """📐 Word-wrap at ``max_width`` while honouring explicit ``\\n`` breaks; size stays fixed."""
-    paragraphs = text.split("\n")
+    """📐 Word-wrap at ``max_width`` while honouring explicit newline breaks; size stays fixed.
+
+    Each line takes the longest word prefix that fits, found by bisection because the
+    rendered width of a growing prefix never shrinks: ``log2(words)`` Pango layouts per line.
+    """
     wrapped: list[str] = []
-    for para in paragraphs:
+    for para in text.split("\n"):
         words = para.split()
-        if not words:
-            continue
-        current = words[0]
-        for word in words[1:]:
-            trial = f"{current} {word}"
-            if body_text(trial, font_size=font_size, color=_theme.CHROME_FOREGROUND).width <= max_width:
-                current = trial
-            else:
-                wrapped.append(current)
-                current = word
-        wrapped.append(current)
+        start = 0
+        while start < len(words):
+            low, high = 1, len(words) - start
+            if _fits_width(" ".join(words[start:]), font_size, max_width, BODY_FONT):
+                low = high
+            while low < high:
+                middle = (low + high + 1) // 2
+                if _fits_width(" ".join(words[start:start + middle]), font_size, max_width, BODY_FONT):
+                    low = middle
+                else:
+                    high = middle - 1
+            wrapped.append(" ".join(words[start:start + low]))
+            start += low
     return wrapped or [""]
 
 

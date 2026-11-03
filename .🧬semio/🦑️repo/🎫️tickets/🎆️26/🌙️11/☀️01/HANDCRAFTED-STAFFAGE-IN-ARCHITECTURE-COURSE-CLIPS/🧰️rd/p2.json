@@ -1,0 +1,4 @@
+[
+ {"asset":"electric-kettle","pose":"off","env":"indoor-heated-winter"},
+ {"asset":"electric-kettle","pose":"heating","env":"indoor-heated-winter"}
+]

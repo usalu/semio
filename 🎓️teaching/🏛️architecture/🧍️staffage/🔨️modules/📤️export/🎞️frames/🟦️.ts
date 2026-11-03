@@ -5,8 +5,8 @@
  * downloads module (PNG is already compressed), so every frame file is byte-identical to the rendered PNG.
  * <https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT> */
 import type { JobControl, View } from "../../🔗️contracts/🟦️.ts";
-import type { Slug } from "../../../🧬️schema/🟦️.ts";
-import { writeZip, type ZipEntry } from "../../../🎯️targets/⚛️react/🔨️modules/📤️downloads/🗜️zip/🟦️.ts";
+import type { Slug, Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import { writeZip, type ZipEntry } from "../🗜️zip/🟦️.ts";
 
 /** 📅️ The times at which a clip is sampled. */
 export type FrameSchedule = { readonly fps: number; readonly durationS: number; readonly loop: boolean; readonly count: number; readonly times: readonly number[] };
@@ -23,7 +23,7 @@ export function frameSchedule(clip: { readonly durationS: number; readonly loop:
 export const frameName = (index: number): string => `frame-${String(index).padStart(6, "0")}.png`;
 
 /** 🧾️ What the manifest of a PNG sequence states. */
-export type FrameManifestInput = { readonly asset: Slug; readonly clip: Slug; readonly view: View; readonly scaleDenominator: number; readonly widthPx: number; readonly heightPx: number; readonly transparent: boolean };
+export type FrameManifestInput = { readonly asset: Slug; readonly clip: Slug; readonly view: View; readonly viewpoint: Viewpoint; readonly scaleDenominator: number; readonly widthPx: number; readonly heightPx: number; readonly transparent: boolean };
 
 /** 🧾️ The manifest written next to the frames. */
 export function frameManifest(schedule: FrameSchedule, input: FrameManifestInput): Readonly<Record<string, unknown>> {
@@ -32,6 +32,7 @@ export function frameManifest(schedule: FrameSchedule, input: FrameManifestInput
     asset: input.asset,
     clip: input.clip,
     view: input.view,
+    viewpoint: input.viewpoint,
     scale: { denominator: input.scaleDenominator, text: `1:${input.scaleDenominator}` },
     fps: schedule.fps,
     durationS: schedule.durationS,

@@ -1,0 +1,10 @@
+{ "version": 1, "casts": {
+  "a-front-thermal-rated": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "viewpoint": "front", "theme": "dark" },
+  "b-front-thermal-night": { "asset": "panel-radiator", "pose": "night", "view": "thermal", "environment": "indoor-heated-winter", "viewpoint": "front", "theme": "dark" },
+  "c-front-thermal-off": { "asset": "panel-radiator", "pose": "off", "view": "thermal", "environment": "indoor-heated-winter", "viewpoint": "front", "theme": "dark" },
+  "d-front-line": { "asset": "panel-radiator", "pose": "rated", "view": "dark-line", "viewpoint": "front", "theme": "dark" },
+  "e-front-solid": { "asset": "panel-radiator", "pose": "rated", "view": "dark-solid", "viewpoint": "front", "theme": "dark" },
+  "f-front-thermal-100": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "viewpoint": "front", "theme": "dark", "scale": 100 },
+  "g-front-thermal-200": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "viewpoint": "front", "theme": "dark", "scale": 200 },
+  "h-side-thermal": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "theme": "dark" }
+} }

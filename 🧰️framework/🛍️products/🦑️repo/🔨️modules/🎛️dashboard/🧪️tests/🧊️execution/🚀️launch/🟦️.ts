@@ -35,12 +35,15 @@ test("dashboard controls install missing modes once and retain stale installed c
       dashboardInstalled: (root: string, mode: string) => { expect(root).toBe(process.cwd()); expect(mode).toBe(row.mode); events.push("exists"); return row.installed; },
       staleDashboard: async (root: string, mode: string) => { expect(root).toBe(process.cwd()); expect(mode).toBe(row.mode); checks++; events.push("stale"); await Promise.resolve(); return row.stale ?? undefined; },
       scriptInvocationEnvironment: (value: unknown, env: object) => { expect(value).toBe(invocation); return { ...env, received: invocation }; },
-      runOwnedCommand: async (command: string, args: string[], cwd: string, label: string, budget: number, child: { signal: AbortSignal; env: Record<string, unknown> }) => {
-        expect([command, args, cwd, label, budget]).toEqual([process.execPath, [join(dashboardPackageRoot, "📜️script.ts"), "build"], dashboardPackageRoot, "dashboard:rebuild", row.preparationBudget]);
-        expect(child.signal).toBe(preparation.signal); expect(child.env.preparation).toBe(preparation); expect(child.env.SEMIO_SCRIPT_POLICY).toBeUndefined(); expect(child.env.received).toBe(invocation); expect(child.env.SEMIO_BUILD_MODE).toBe(row.mode);
+      compileDashboardControlPlaneV1: async (packageRoot: string, received: { control: unknown; mode: string; workspace: string }) => {
+        expect(packageRoot).toBe(dashboardPackageRoot); expect(received.control).toBe(preparation); expect(received.mode).toBe(row.mode); expect(received.workspace).toBe(process.cwd());
         rebuilds++; events.push("rebuild"); await Promise.resolve();
         if (row.outcome === "rebuild-cancelled") original.abort(failures);
         if (row.outcome.startsWith("rebuild-")) throw failures;
+      },
+      installDashboard: async (packageRoot: string, installedRoot: string, received: { control: unknown }) => {
+        expect([packageRoot, installedRoot, received.control]).toEqual([dashboardPackageRoot, process.cwd(), preparation]);
+        events.push("install"); return "installed-dashboard";
       },
       withInstalledDashboardV1: async (root: string, context: unknown, body: (path: string) => Promise<number>) => {
         expect(root).toBe(process.cwd()); expect(context).toBe(options); expect(events.includes("phase")).toBe(events.includes("phase-settled")); expect(row.installed || rebuilds === 1).toBe(true);

@@ -44,7 +44,7 @@ def _cut(api,parts,cutters,progress=None,cancel=None):
 def _downward_shadows(api,stock,cutters):
     """🌤️ Bound actual vertical accessibility by the upper and vertical native supporting faces."""
     if not cutters:return []
-    result=[];backend=api._surface_finishes();box=api._material_bounds(stock);stocks=api._native_material_cells(stock)
+    result=[];backend=api.surface_finishes();box=api._material_bounds(stock);stocks=api._native_material_cells(stock)
     def shadow(source,cell):
         """🔦 Retain the exact portion of one stock cell below a real native upper boundary."""
         clipped=backend.clip_stock(source,[],exact=True);vertices=[[_q(v)for v in point]for point in api.part_vertices(cell)]

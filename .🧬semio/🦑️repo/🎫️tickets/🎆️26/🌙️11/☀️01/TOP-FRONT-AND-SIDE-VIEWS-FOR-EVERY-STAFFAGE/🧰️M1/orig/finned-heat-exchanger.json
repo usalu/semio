@@ -1,0 +1,1769 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "finned-heat-exchanger",
+    "category": "machinery",
+    "title": {
+      "en": "Finned Tube Coil",
+      "de": "Lamellenrohr-Register"
+    },
+    "summary": {
+      "en": "A 0.52 m finned copper-aluminium coil cut across its tubes: cold as evaporator or cooling coil, hot as condenser or heating coil, with headers and stubs.",
+      "de": "Ein 0,52 m hohes Kupfer-Aluminium-Lamellenregister im Schnitt quer zu den Rohren: kalt als Verdampfer oder Kühler, heiß als Verflüssiger oder Erhitzer, mit Sammlern und Stutzen."
+    },
+    "tags": [
+      "coil",
+      "heat-exchanger",
+      "evaporator",
+      "condenser",
+      "heating-coil",
+      "cooling-coil",
+      "fins",
+      "machinery"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-14511-2022",
+          "citation": "DIN EN 14511:2022 Air conditioners, liquid chilling packages and heat pumps for space heating and cooling - Terms, test conditions and performance (rating conditions A7/W35 and A35/W7)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "vdi-3803-2010-coil",
+          "citation": "VDI 3803 Part 1:2010 Air-conditioning - Central air-handling units (heating and cooling coils, fin pitch 2 to 4 mm)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A finned tube coil of a small heat pump or air handler: 23 copper tubes of 9.5 mm in two staggered columns (45 mm pitch rows, 40 mm tube pitch) through 0.2 mm aluminium fins at 3 mm pitch, 0.1 m deep and 0.48 m high, between a bottom and a top header of 0.15 m, each with a connection stub. The drawing is the section across the tubes, so the fins appear as a hatch and the tubes as circles. Mass 5.0 kg (fins 2.6, tubes 1.1, headers and end plates 1.3). The duty key runs from -1 (cold: evaporating at about -5 degC or chilled water) over 0 to +1 (hot: condensing at about 55 degC or hot water); the heatW values (fins 500 W, tubes 24 W, headers 3 W) are authored estimates of the heat the surfaces exchange with 21 degC room air, so the fins reach about -9 and +51 degC. The same asset stands for the evaporator and the condenser of the heat pump and for the heating coil of an air handler. The origin is the centre of the bottom header on the base line.",
+        "de": "Ein Lamellenregister einer kleinen Wärmepumpe oder eines Lüftungsgeräts: 23 Kupferrohre von 9,5 mm in zwei versetzten Spalten (Reihenabstand 45 mm, Rohrteilung 40 mm) durch 0,2 mm dicke Aluminiumlamellen im Abstand von 3 mm, 0,1 m tief und 0,48 m hoch, zwischen einem unteren und einem oberen Sammler von 0,15 m mit je einem Anschlussstutzen. Die Zeichnung ist der Schnitt quer zu den Rohren, daher erscheinen die Lamellen als Schraffur und die Rohre als Kreise. Masse 5,0 kg (Lamellen 2,6, Rohre 1,1, Sammler und Seitenbleche 1,3). Der Schlüssel duty läuft von -1 (kalt: Verdampfen bei etwa -5 degC oder Kaltwasser) über 0 bis +1 (heiß: Kondensieren bei etwa 55 degC oder Heißwasser); die heatW-Werte (Lamellen 500 W, Rohre 24 W, Sammler 3 W) sind Schätzwerte der Wärme, die die Oberflächen mit 21 degC warmer Raumluft austauschen, sodass die Lamellen etwa -9 und +51 degC erreichen. Dasselbe Asset steht für Verdampfer und Verflüssiger der Wärmepumpe und für den Erhitzer eines Lüftungsgeräts. Der Ursprung ist die Mitte des unteren Sammlers auf der Grundlinie."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.52,
+      "widthM": 0.205,
+      "depthM": 0.5,
+      "massKg": 5
+    },
+    "materials": [
+      {
+        "id": "aluminium-fin",
+        "title": {
+          "en": "Aluminium fins",
+          "de": "Aluminium-Lamellen"
+        },
+        "emissivity": 0.1,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 2700,
+        "conductivityWmK": 237,
+        "specificHeatJKgK": 900,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "copper",
+        "title": {
+          "en": "Copper tube",
+          "de": "Kupferrohr"
+        },
+        "emissivity": 0.05,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 8900,
+        "conductivityWmK": 390,
+        "specificHeatJKgK": 385,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "frame",
+      "bones": [
+        {
+          "id": "frame",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Headers and end plates",
+            "de": "Sammler und Seitenbleche"
+          },
+          "lengthM": 0.52,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0,
+            "comY": 0.26,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "fins",
+          "parent": "frame",
+          "x": 0,
+          "y": 0.02,
+          "angleDeg": 0,
+          "title": {
+            "en": "Aluminium fin pack",
+            "de": "Aluminium-Lamellenpaket"
+          },
+          "lengthM": 0.48,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.6,
+            "comX": 0,
+            "comY": 0.24,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "tubes",
+          "parent": "fins",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Copper tube rows",
+            "de": "Kupferrohrreihen"
+          },
+          "lengthM": 0.48,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.1,
+            "comX": 0,
+            "comY": 0.24,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "frame",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.15,
+        "footprintWidthM": 0.4,
+        "frictionCoefficient": 0.4
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "fins",
+            "title": {
+              "en": "Fin pack in section",
+              "de": "Lamellenpaket im Schnitt"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "fin-pack",
+              "bone": "fins",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0,
+              "w": 0.1,
+              "h": 0.48,
+              "region": "fins",
+              "material": "aluminium-fin"
+            },
+            {
+              "id": "tube-1",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.02,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-2",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.06,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-3",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.1,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-4",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.14,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-5",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.18,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-6",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.22,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-7",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.26,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-8",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.3,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-9",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.34,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-10",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.38,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-11",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.42,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-12",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.46,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-13",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.04,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-14",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.08,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-15",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.12,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-16",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.16,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-17",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.2,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-18",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.24,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-19",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.28,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-20",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.32,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-21",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.36,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-22",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.4,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-23",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.44,
+              "rx": 0.009,
+              "ry": 0.009,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "header-bottom",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0,
+              "w": 0.15,
+              "h": 0.02,
+              "r": 0.01,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "header-top",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.5,
+              "w": 0.15,
+              "h": 0.02,
+              "r": 0.01,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "inlet-stub",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.504,
+              "w": 0.055,
+              "h": 0.012,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "outlet-stub",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.004,
+              "w": 0.055,
+              "h": 0.012,
+              "region": "headers",
+              "material": "copper"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.52 m tall finned coil cut across its tubes, 10 mm by 10 mm on paper: a fin pack with 23 staggered tube circles between a bottom and a top header, a connection stub at each header.",
+            "de": "Ein 0,52 m hohes Lamellenregister im Schnitt quer zu den Rohren, auf Papier 10 mm mal 10 mm: ein Lamellenpaket mit 23 versetzten Rohrkreisen zwischen einem unteren und einem oberen Sammler und je einem Anschlussstutzen am Sammler."
+          },
+          "retained": {
+            "en": "The fin pack as hatched block, every one of the 23 tubes in two staggered columns, both headers and both stubs.",
+            "de": "Das Lamellenpaket als schraffierter Block, alle 23 Rohre in zwei versetzten Spalten, beide Sammler und beide Stutzen."
+          },
+          "merged": {
+            "en": "Nothing is merged: the fins are shown by a hatch.",
+            "de": "Nichts ist zusammengeführt: die Lamellen zeigt eine Schraffur."
+          },
+          "omitted": {
+            "en": "The end plates, the return bends and the fin collars.",
+            "de": "Die Seitenbleche, die Rohrbögen und die Lamellenkragen."
+          },
+          "thinElements": {
+            "en": "The 0.25 mm real fins (about 3 mm pitch) are drawn as a 0.5 mm hatch, 25 mm real pitch, so that they print; the tubes are 18 mm across.",
+            "de": "Die realen 0,25 mm dicken Lamellen (rund 3 mm Teilung) sind als 0,5-mm-Schraffur mit 25 mm realer Teilung gezeichnet, damit sie drucken; die Rohre sind 18 mm weit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Fins, tubes and headers are three regions: in the thermal view the whole pack warms (hot coil) or cools (cold coil), the tubes first.",
+            "de": "Lamellen, Rohre und Sammler sind drei Regionen: in der Thermalansicht erwärmt sich das ganze Paket (heißes Register) oder kühlt ab (kaltes Register), die Rohre zuerst."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [
+          {
+            "id": "fins",
+            "title": {
+              "en": "Fin pack in section",
+              "de": "Lamellenpaket im Schnitt"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "fin-pack",
+              "bone": "fins",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0,
+              "w": 0.1,
+              "h": 0.48,
+              "region": "fins",
+              "material": "aluminium-fin"
+            },
+            {
+              "id": "tube-1",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.02,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-2",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.06,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-3",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.1,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-4",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.14,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-5",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.18,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-6",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.22,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-7",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.26,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-8",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.3,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-9",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.34,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-10",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.38,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-11",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.42,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-12",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.0225,
+              "cy": 0.46,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-13",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.04,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-14",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.08,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-15",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.12,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-16",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.16,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-17",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.2,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-18",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.24,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-19",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.28,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-20",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.32,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-21",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.36,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-22",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.4,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "tube-23",
+              "bone": "tubes",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.0225,
+              "cy": 0.44,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "tubes",
+              "material": "copper"
+            },
+            {
+              "id": "header-bottom",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0,
+              "w": 0.15,
+              "h": 0.025,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "header-top",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.495,
+              "w": 0.15,
+              "h": 0.025,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "inlet-stub",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.5,
+              "w": 0.055,
+              "h": 0.02,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "outlet-stub",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0,
+              "w": 0.055,
+              "h": 0.02,
+              "region": "headers",
+              "material": "copper"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 5 mm tall coil: a hatched fin block with 23 tube dots, two headers and two stubs.",
+            "de": "Ein 5 mm hohes Register: ein schraffierter Lamellenblock mit 23 Rohrpunkten, zwei Sammlern und zwei Stutzen."
+          },
+          "retained": {
+            "en": "Fin block, all tubes, headers and stubs.",
+            "de": "Lamellenblock, alle Rohre, Sammler und Stutzen."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "Return bends and end plates.",
+            "de": "Rohrbögen und Seitenbleche."
+          },
+          "thinElements": {
+            "en": "Tubes drawn 22 mm across, headers 25 mm; the hatch is 50 mm real pitch.",
+            "de": "Rohre 22 mm weit gezeichnet, Sammler 25 mm; die Schraffur hat 50 mm reale Teilung."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail none mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail keiner mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Same three regions as at 1:50.",
+            "de": "Dieselben drei Regionen wie bei 1:50."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "fin-pack",
+              "bone": "fins",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.01,
+              "w": 0.1,
+              "h": 0.46,
+              "regions": [
+                "fins",
+                "tubes"
+              ],
+              "material": "aluminium-fin"
+            },
+            {
+              "id": "header-bottom",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0,
+              "w": 0.15,
+              "h": 0.04,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "header-top",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0.48,
+              "w": 0.15,
+              "h": 0.04,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "inlet-stub",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.49,
+              "w": 0.06,
+              "h": 0.03,
+              "region": "headers",
+              "material": "copper"
+            },
+            {
+              "id": "outlet-stub",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.03,
+              "region": "headers",
+              "material": "copper"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.6 mm tall coil: one solid block between two headers with two stubs.",
+            "de": "Ein 2,6 mm hohes Register: ein einziger Block zwischen zwei Sammlern mit zwei Stutzen."
+          },
+          "retained": {
+            "en": "Fin block, headers and stubs.",
+            "de": "Lamellenblock, Sammler und Stutzen."
+          },
+          "merged": {
+            "en": "Fins and the 23 tubes are one block (regions fins and tubes).",
+            "de": "Lamellen und die 23 Rohre sind ein Block (Regionen Lamellen und Rohre)."
+          },
+          "omitted": {
+            "en": "All tube circles, hatch and return bends.",
+            "de": "Alle Rohrkreise, Schraffur und Rohrbögen."
+          },
+          "thinElements": {
+            "en": "Headers thickened from 20 to 40 mm, stubs from 12 to 30 mm.",
+            "de": "Sammler von 20 auf 40 mm verdickt, Stutzen von 12 auf 30 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail none mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail keiner mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "The block lists fins and tubes as merged regions.",
+            "de": "Der Block führt Lamellen und Rohre als zusammengeführte Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the asset is only 1 mm wide on paper and its smallest part, the 0.2 mm fins and the 18 mm tubes, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 1 mm breit auf Papier und sein kleinstes Teil, die 0,2 mm dicken Lamellen und die 18 mm dicken Rohre, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 0.2 mm fins and the 18 mm tubes",
+          "de": "Die 0,2 mm dicken Lamellen und die 18 mm dicken Rohre"
+        },
+        "limitingSizeM": 0.0002,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "cold",
+        "title": {
+          "en": "Cold coil",
+          "de": "Kaltes Register"
+        },
+        "description": {
+          "en": "Evaporating refrigerant or chilled water about 22 K below the air cools tubes and fins: the fins sit at about 5 degC in a 22 degC room and at about -6 degC in cold, windy outdoor air; the coil is an evaporator or cooling coil.",
+          "de": "Verdampfendes Kältemittel oder Kaltwasser etwa 22 K unter der Lufttemperatur kühlt Rohre und Lamellen: die Lamellen liegen in einem Raum von 22 degC bei etwa 5 degC und in kalter, windiger Außenluft bei etwa -6 degC; das Register ist ein Verdampfer oder Kühler."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "fins": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "tubes": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "headers": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "duty": -0.7
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "idle",
+        "title": {
+          "en": "Idle",
+          "de": "Ruhend"
+        },
+        "description": {
+          "en": "No flow: the coil is at room temperature.",
+          "de": "Kein Durchfluss: das Register hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "fins": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "tubes": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "headers": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "duty": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "hot",
+        "title": {
+          "en": "Hot coil",
+          "de": "Heißes Register"
+        },
+        "description": {
+          "en": "Condensing refrigerant or hot water at about 50 degC warms tubes and fins: the tubes reach about 52 degC and the fins about 45 degC in a 21 degC room; the coil is a condenser or heating coil.",
+          "de": "Kondensierendes Kältemittel oder Heißwasser von etwa 50 degC erwärmt Rohre und Lamellen: die Rohre erreichen in einem Raum von 21 degC etwa 52 degC und die Lamellen etwa 45 degC; das Register ist ein Verflüssiger oder Erhitzer."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "fins": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "tubes": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "headers": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "duty": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "reverse",
+        "title": {
+          "en": "Reversal",
+          "de": "Umkehr"
+        },
+        "description": {
+          "en": "The coil starts cold, passes through idle and ends hot, as the roles of a reversible heat pump swap.",
+          "de": "Das Register startet kalt, geht über den Ruhezustand und endet heiß, wenn eine reversible Wärmepumpe die Rollen tauscht."
+        },
+        "durationS": 60,
+        "fps": 2,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "cold",
+            "ease": "linear"
+          },
+          {
+            "t": 20,
+            "pose": "idle",
+            "ease": "linear"
+          },
+          {
+            "t": 40,
+            "pose": "hot",
+            "ease": "linear"
+          },
+          {
+            "t": 60,
+            "pose": "hot",
+            "ease": "linear"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 60
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 20,
+            "title": {
+              "en": "Cold",
+              "de": "Kalt"
+            }
+          },
+          {
+            "id": "swap",
+            "fromS": 20,
+            "toS": 40,
+            "title": {
+              "en": "Swapping",
+              "de": "Wechsel"
+            }
+          },
+          {
+            "id": "hot",
+            "fromS": 40,
+            "toS": 60,
+            "title": {
+              "en": "Hot",
+              "de": "Heiß"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "warm-up",
+        "title": {
+          "en": "Warm up",
+          "de": "Aufwärmen"
+        },
+        "description": {
+          "en": "The idle coil heats within a minute when hot water starts flowing.",
+          "de": "Das ruhende Register heizt sich innerhalb einer Minute auf, wenn heißes Wasser zu fließen beginnt."
+        },
+        "durationS": 60,
+        "fps": 2,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "hot",
+            "ease": "step"
+          },
+          {
+            "t": 60,
+            "pose": "hot",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 60
+          }
+        ],
+        "phases": [
+          {
+            "id": "idle",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Idle",
+              "de": "Ruhend"
+            }
+          },
+          {
+            "id": "hot",
+            "fromS": 5,
+            "toS": 60,
+            "title": {
+              "en": "Heating",
+              "de": "Heizen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Flow starts",
+              "de": "Durchfluss beginnt"
+            },
+            "target": "duty"
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "duty",
+          "title": {
+            "en": "Coil duty",
+            "de": "Registerleistung"
+          },
+          "levels": [
+            {
+              "v": -0.7,
+              "title": {
+                "en": "Cold (evaporator or cooling coil)",
+                "de": "Kalt (Verdampfer oder Kühler)"
+              }
+            },
+            {
+              "v": 0,
+              "title": {
+                "en": "Idle",
+                "de": "Ruhend"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot (condenser or heating coil)",
+                "de": "Heiß (Verflüssiger oder Erhitzer)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "fins",
+          "title": {
+            "en": "Aluminium fins",
+            "de": "Aluminium-Lamellen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "aluminium-fin",
+          "areaM2": 2,
+          "characteristicLengthM": 0.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "fins-skin",
+              "title": {
+                "en": "Aluminium fins",
+                "de": "Aluminium-Lamellen"
+              },
+              "kind": "metal",
+              "material": "aluminium-fin",
+              "thicknessM": 0.0002,
+              "resistanceM2KW": 0.000002,
+              "heatCapacityJM2K": 300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 300,
+          "operating": {
+            "key": "duty",
+            "heatW": 340
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "tubes",
+          "title": {
+            "en": "Copper tubes",
+            "de": "Kupferrohre"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "copper",
+          "areaM2": 0.08,
+          "characteristicLengthM": 0.018,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "tubes-skin",
+              "title": {
+                "en": "Copper tubes",
+                "de": "Kupferrohre"
+              },
+              "kind": "metal",
+              "material": "copper",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.00001,
+              "heatCapacityJM2K": 300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 300,
+          "operating": {
+            "key": "duty",
+            "heatW": 24
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "headers",
+          "title": {
+            "en": "Headers and stubs",
+            "de": "Sammler und Stutzen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "copper",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.15,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "headers-skin",
+              "title": {
+                "en": "Headers and stubs",
+                "de": "Sammler und Stutzen"
+              },
+              "kind": "metal",
+              "material": "copper",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00001,
+              "heatCapacityJM2K": 150,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 150,
+          "operating": {
+            "key": "duty",
+            "heatW": 2
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The air flowing through the coil is not part of this asset; the heatW values give only the surface temperatures against still room air, the heat of the coil itself (kilowatts) is carried by the cycle drawing; the heat capacities are those of the thin fin and tube skins that follow the water or refrigerant within about half a minute.",
+          "de": "Die durch das Register strömende Luft gehört nicht zu diesem Asset; die heatW-Werte liefern nur die Oberflächentemperaturen gegen ruhende Raumluft, die Wärme des Registers selbst (Kilowatt) trägt die Kreislaufzeichnung; die Wärmekapazitäten sind die der dünnen Lamellen- und Rohrhäute, die dem Wasser oder Kältemittel binnen etwa einer halben Minute folgen."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 5 kg coil stands on its bottom header: a unilateral contact of 0.15 m by 0.4 m carries the weight.",
+          "de": "Das 5 kg schwere Register steht auf seinem unteren Sammler: ein einseitiger Kontakt von 0,15 m mal 0,4 m trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "hot",
+      "defaultClip": "reverse",
+      "defaultScale": 50,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

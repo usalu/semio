@@ -1,0 +1,2007 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "toaster",
+    "category": "appliances",
+    "title": {
+      "en": "Two-Slice Toaster",
+      "de": "Zweischeiben-Toaster"
+    },
+    "summary": {
+      "en": "A chromed two-slice toaster of 900 W, 0.30 m wide and 0.20 m high with bread: while toasting, 95 W warm the housing walls, 25 W the top plate, 150 W the crust of the bread and a 630 W stream of hot air rises out of the slots.",
+      "de": "Ein verchromter Zweischeiben-Toaster von 900 W, 0,30 m breit und 0,20 m hoch mit Brot: Beim Toasten erwärmen 95 W die Gehäusewände, 25 W die Deckplatte, 150 W die Brotkruste, und ein Strom heißer Luft von 630 W steigt aus den Schlitzen."
+    },
+    "tags": [
+      "toaster",
+      "kitchen",
+      "appliance",
+      "internal-gain",
+      "electric",
+      "heat-source"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A4)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-60335-2-9",
+          "citation": "IEC 60335-2-9 Household and similar electrical appliances - Safety - Part 2-9: Particular requirements for grills, toasters and similar portable cooking appliances (product class; rated input of the class 800-1000 W; the split of the input is an authored estimate)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface emissivities, natural convection, plumes)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel, polymers)."
+        }
+      ],
+      "notes": {
+        "en": "Front view of a typical two-slice toaster with slots along the width (no single product): 0.30 m x 0.17 m x 0.188 m body, feet 0.012 m, bread slices 0.115 m x 0.115 m x 0.012 m above the plate when lowered, mass 1.3 kg including two 35 g slices; dimensions and rated input 900 W (class 800-1000 W, IEC 60335-2-9) are authored from the product class. The 900 W end up as 95 W in the housing walls, 25 W in the top plate, 150 W in the crust (browning, drying) and 630 W as hot slot air (0.00507 m3/s at 103 K rise: 630 W; moisture of the toasting bread 0.03 kg/kg); the top plate of 0.045 m2 carries 555 W/m2, which at a combined convective and radiative coefficient of about 10 W/m2K is a rise of 55 K (about 75 degrees C), the usual touch temperature of a toaster top; the rest of the wire power rises through the slots; the split is an authored estimate.",
+        "de": "Vorderansicht eines typischen Zweischeiben-Toasters mit Schlitzen entlang der Breite (kein einzelnes Produkt): Gehäuse 0,30 m x 0,17 m x 0,188 m, Füße 0,012 m, Brotscheiben 0,115 m x 0,115 m, abgesenkt 0,012 m über der Platte, Masse 1,3 kg einschließlich zweier Scheiben zu je 35 g; Maße und Nennaufnahme 900 W (Klasse 800-1000 W, IEC 60335-2-9) sind aus der Produktklasse geschätzt. Die 900 W teilen sich auf in 95 W in den Gehäusewänden, 25 W in der Deckplatte, 150 W in der Kruste (Bräunung, Trocknung) und 630 W als heiße Schlitzluft (0,00507 m3/s bei 103 K Anstieg: 630 W; Feuchte des Toastguts 0,03 kg/kg); die Deckplatte von 0,045 m2 trägt 555 W/m2, bei einem kombinierten Konvektions- und Strahlungskoeffizienten von etwa 10 W/m2K ein Anstieg von 55 K (etwa 75 Grad C), die übliche Berührtemperatur einer Toasterdecke; der Rest der Heizdrahtleistung steigt durch die Schlitze auf; die Aufteilung ist ein Schätzwert."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.2,
+      "widthM": 0.3,
+      "depthM": 0.17,
+      "massKg": 1.3
+    },
+    "materials": [
+      {
+        "id": "chrome-steel",
+        "title": {
+          "en": "Brushed chromed steel sheet",
+          "de": "Gebürstetes verchromtes Stahlblech"
+        },
+        "emissivity": 0.12,
+        "solarAbsorptivity": 0.35,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "mica-steel",
+        "title": {
+          "en": "Dark steel top plate with slot rims",
+          "de": "Dunkle Stahl-Deckplatte mit Schlitzrändern"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "bread-crust",
+        "title": {
+          "en": "Toasting bread crust",
+          "de": "Röstende Brotkruste"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 250,
+        "conductivityWmK": 0.1,
+        "specificHeatJKgK": 2500,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "pp-black",
+        "title": {
+          "en": "Black polypropylene",
+          "de": "Schwarzes Polypropylen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 900,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "rubber-foot",
+        "title": {
+          "en": "Rubber foot",
+          "de": "Gummifuß"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 2000,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "title": {
+            "en": "Housing with top plate and feet",
+            "de": "Gehäuse mit Deckplatte und Füßen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.188,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.18,
+            "comX": 0,
+            "comY": 0.09,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "iec-60335-2-9"
+          }
+        },
+        {
+          "id": "slices",
+          "parent": "base",
+          "title": {
+            "en": "Carriage with two bread slices",
+            "de": "Schlitten mit zwei Brotscheiben"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.115,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.06,
+            "maxM": 0.06
+          },
+          "mass": {
+            "kg": 0.07,
+            "comX": 0,
+            "comY": 0.14,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "lever",
+          "parent": "base",
+          "title": {
+            "en": "Lowering lever",
+            "de": "Absenkhebel"
+          },
+          "x": 0.1,
+          "y": 0.145,
+          "angleDeg": 0,
+          "lengthM": 0.03,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.06,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 0.03,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "dial",
+          "parent": "base",
+          "title": {
+            "en": "Browning dial",
+            "de": "Bräunungsregler"
+          },
+          "x": -0.1,
+          "y": 0.13,
+          "angleDeg": 0,
+          "lengthM": 0.015,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -10,
+            "maxDeg": 270
+          },
+          "mass": {
+            "kg": 0.02,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-left",
+        "bone": "base",
+        "x": -0.1,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left rubber foot",
+          "de": "Linker Gummifuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "foot-right",
+        "bone": "base",
+        "x": 0.1,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right rubber foot",
+          "de": "Rechter Gummifuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "slot-outlet",
+        "bone": "base",
+        "x": 0,
+        "y": 0.188,
+        "kind": "emitter",
+        "title": {
+          "en": "Warm air above the slots",
+          "de": "Warme Luft über den Schlitzen"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "slice-rear",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.049 0.085 L -0.049 0.168 C -0.062 0.172 -0.064 0.19 -0.046 0.196 C -0.03 0.202 0.03 0.202 0.046 0.196 C 0.064 0.19 0.062 0.172 0.049 0.168 L 0.049 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "slice-front",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.052 0.085 L -0.052 0.168 C -0.062 0.172 -0.064 0.19 -0.046 0.196 C -0.03 0.202 0.03 0.202 0.046 0.196 C 0.064 0.19 0.062 0.172 0.052 0.168 L 0.052 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "crumb-edge",
+              "bone": "slices",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.04,
+                  0.176
+                ],
+                [
+                  -0.038,
+                  0.186
+                ],
+                [
+                  -0.025,
+                  0.192
+                ],
+                [
+                  0.025,
+                  0.192
+                ],
+                [
+                  0.038,
+                  0.186
+                ],
+                [
+                  0.04,
+                  0.176
+                ]
+              ],
+              "closed": false,
+              "region": "bread"
+            },
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.138 0.012 L 0.138 0.012 C 0.145 0.012 0.15 0.017 0.15 0.024 L 0.15 0.15 C 0.15 0.172 0.136 0.188 0.114 0.188 L -0.114 0.188 C -0.136 0.188 -0.15 0.172 -0.15 0.15 L -0.15 0.024 C -0.15 0.017 -0.145 0.012 -0.138 0.012 Z",
+              "region": "casing",
+              "material": "chrome-steel"
+            },
+            {
+              "id": "top-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.128 0.172 L 0.128 0.172 L 0.114 0.188 L -0.114 0.188 Z",
+              "region": "top-plate",
+              "material": "mica-steel"
+            },
+            {
+              "id": "seam-top",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.128,
+                  0.172
+                ],
+                [
+                  0.128,
+                  0.172
+                ]
+              ],
+              "closed": false,
+              "region": "top-plate"
+            },
+            {
+              "id": "tray-slot",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.036
+                ],
+                [
+                  0.1,
+                  0.036
+                ]
+              ],
+              "closed": false,
+              "region": "casing"
+            },
+            {
+              "id": "highlight",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.138,
+                  0.06
+                ],
+                [
+                  -0.138,
+                  0.14
+                ]
+              ],
+              "closed": false,
+              "region": "casing"
+            },
+            {
+              "id": "lever-track",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.094,
+              "y": 0.052,
+              "w": 0.012,
+              "h": 0.11,
+              "r": 0.006,
+              "region": "casing"
+            },
+            {
+              "id": "lever",
+              "bone": "lever",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.015,
+              "y": -0.012,
+              "w": 0.03,
+              "h": 0.024,
+              "r": 0.006,
+              "region": "control",
+              "material": "pp-black"
+            },
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.015,
+              "ry": 0.015,
+              "region": "control",
+              "material": "pp-black"
+            },
+            {
+              "id": "dial-pointer",
+              "bone": "dial",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.012
+                ]
+              ],
+              "closed": false,
+              "region": "control"
+            },
+            {
+              "id": "cancel-button",
+              "bone": "base",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.12,
+              "w": 0.024,
+              "h": 0.014,
+              "r": 0.004,
+              "region": "control",
+              "material": "pp-black"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.085,
+              "w": 0.3,
+              "h": 0.17,
+              "r": 0.022,
+              "region": "casing",
+              "material": "chrome-steel"
+            },
+            {
+              "id": "top-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.114,
+              "y": -0.057,
+              "w": 0.228,
+              "h": 0.114,
+              "r": 0.01,
+              "region": "top-plate",
+              "material": "mica-steel"
+            },
+            {
+              "id": "seam-top",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.128,
+              "y": -0.071,
+              "w": 0.256,
+              "h": 0.142,
+              "r": 0.012
+            },
+            {
+              "id": "slot-1",
+              "bone": "base",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "rect",
+              "x": -0.06,
+              "y": 0.0155,
+              "w": 0.12,
+              "h": 0.029,
+              "r": 0.006,
+              "region": "top-plate",
+              "material": "mica-steel"
+            },
+            {
+              "id": "slot-2",
+              "bone": "base",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "rect",
+              "x": -0.06,
+              "y": -0.0445,
+              "w": 0.12,
+              "h": 0.029,
+              "r": 0.006,
+              "region": "top-plate",
+              "material": "mica-steel"
+            },
+            {
+              "id": "slice-rear",
+              "bone": "slices",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.049,
+              "y": 0.0235,
+              "w": 0.098,
+              "h": 0.013,
+              "r": 0.004,
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "slice-front",
+              "bone": "slices",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.052,
+              "y": -0.0365,
+              "w": 0.104,
+              "h": 0.013,
+              "r": 0.004,
+              "region": "bread",
+              "material": "bread-crust"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.035,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "slice-rear",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M 0.0235 0.085 L 0.0365 0.085 L 0.0365 0.1895 C 0.0365 0.19309 0.03359 0.196 0.03 0.196 L 0.03 0.196 C 0.02641 0.196 0.0235 0.19309 0.0235 0.1895 L 0.0235 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "slice-front",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.0365 0.085 L -0.0235 0.085 L -0.0235 0.1895 C -0.0235 0.19309 -0.02641 0.196 -0.03 0.196 L -0.03 0.196 C -0.03359 0.196 -0.0365 0.19309 -0.0365 0.1895 L -0.0365 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.078 0.012 L 0.078 0.012 C 0.08187 0.012 0.085 0.01513 0.085 0.019 L 0.085 0.166 C 0.085 0.17815 0.07515 0.188 0.063 0.188 L -0.063 0.188 C -0.07515 0.188 -0.085 0.17815 -0.085 0.166 L -0.085 0.019 C -0.085 0.01513 -0.08187 0.012 -0.078 0.012 Z",
+              "region": "casing",
+              "material": "chrome-steel"
+            },
+            {
+              "id": "top-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.071,
+                  0.172
+                ],
+                [
+                  0.071,
+                  0.172
+                ],
+                [
+                  0.057,
+                  0.188
+                ],
+                [
+                  -0.057,
+                  0.188
+                ]
+              ],
+              "closed": true,
+              "region": "top-plate",
+              "material": "mica-steel"
+            },
+            {
+              "id": "seam-top",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.071,
+                  0.172
+                ],
+                [
+                  0.071,
+                  0.172
+                ]
+              ],
+              "closed": false,
+              "region": "top-plate"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A chromed two-slice toaster 6 mm wide in front view: rounded box on two rubber feet with a bevelled dark top plate, a bread slice with its shoulders rising out of the slot, a sliding lever in its track, a browning dial with pointer and a cancel button. Front view: the 0.17 m wide rounded body on two front feet, the bevelled top plate and the two bread slices, which stand 13 mm thick behind the top edge and rise with the carriage. Top view: the 0.3 m by 0.17 m body with the bevelled top plate and two slots in which the bread tops show.",
+            "de": "Ein verchromter Zweischeiben-Toaster in Vorderansicht, 6 mm breit: gerundeter Kasten auf zwei Gummifüßen mit abgeschrägter dunkler Deckplatte, eine Brotscheibe mit Schultern aus dem Schlitz, ein Hebel in seiner Führung, ein Bräunungsregler mit Zeiger und eine Abbruchtaste. Vorderansicht: der 0,17 m breite, gerundete Korpus auf zwei vorderen Füßen, die abgeschrägte Deckplatte und die zwei Brotscheiben, die 13 mm dick hinter der Oberkante stehen und mit dem Schlitten steigen. Draufsicht: der Korpus von 0,3 m mal 0,17 m mit der abgeschrägten Deckplatte und zwei Schlitzen, in denen die Brotoberseiten zu sehen sind."
+          },
+          "retained": {
+            "en": "Width 0.30 m, body height 0.188 m, feet 0.012 m and the 12 mm of bread above the plate exactly; both slices (the rear one peeks out beside the front one), tray slot, lever track and the chrome highlight.",
+            "de": "Breite 0,30 m, Gehäusehöhe 0,188 m, Füße 0,012 m und die 12 mm Brot über der Platte exakt; beide Scheiben (die hintere guckt neben der vorderen hervor), Krümelschublade, Hebelführung und die Chromlichtkante."
+          },
+          "merged": {
+            "en": "The slot rims are merged into the top plate; the crumb edge is one line instead of a crust and a crumb contour.",
+            "de": "Die Schlitzränder gehen in der Deckplatte auf; die Krume ist eine Linie statt Kruste und Krumenkontur."
+          },
+          "omitted": {
+            "en": "Logo, mains cable (it leaves at the back), bun-warmer rack, slot ribs and screws. Front and top view omit the lever, the dial and the cancel button, which sit on the right-hand face and are seen edge-on there, and the rear feet.",
+            "de": "Logo, Netzkabel (es verlässt das Gerät hinten), Brötchenaufsatz, Schlitzrippen und Schrauben. Vorder- und Draufsicht lassen Hebel, Drehknopf und Abbruchtaste weg, die auf der rechten Seitenfläche sitzen und dort nur von der Kante zu sehen wären, außerdem die hinteren Füße."
+          },
+          "thinElements": {
+            "en": "The lever track is 0.012 m = 0.24 mm wide, drawn as a 0.13 mm outline; the crumb edge and the dial pointer are 0.13 mm strokes.",
+            "de": "Die Hebelführung ist 0,012 m = 0,24 mm breit und als 0,13-mm-Kontur gezeichnet; Krumenkante und Reglerzeiger sind 0,13-mm-Striche."
+          },
+          "hatching": {
+            "en": "None; the crust would need dots finer than 0.4 mm.",
+            "de": "Keine; die Kruste bräuchte Punkte feiner als 0,4 mm."
+          },
+          "styles": {
+            "en": "Chrome casing 0.82, dark top plate 0.55, bread 0.78, plastic controls 0.2 and feet 0.15; body pen 0.18 mm, detail 0.13 mm, texture 0.1 mm.",
+            "de": "Chromgehäuse 0,82, dunkle Deckplatte 0,55, Brot 0,78, Kunststoffbedienung 0,2 und Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm, Textur 0,1 mm."
+          },
+          "overlays": {
+            "en": "Casing, top plate, bread, controls and feet are separate regions: the thermal view shows the hot top plate and the browning bread above a warm casing.",
+            "de": "Gehäuse, Deckplatte, Brot, Bedienung und Füße sind eigene Regionen: Die Thermalansicht zeigt die heiße Deckplatte und das bräunende Brot über einem warmen Gehäuse."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "slice-front",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.052 0.085 L -0.052 0.166 C -0.064 0.172 -0.063 0.19 -0.046 0.196 C -0.03 0.201 0.03 0.201 0.046 0.196 C 0.063 0.19 0.064 0.172 0.052 0.166 L 0.052 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.14 0.02 L 0.14 0.02 C 0.146 0.02 0.15 0.026 0.15 0.034 L 0.15 0.15 C 0.15 0.172 0.136 0.188 0.114 0.188 L -0.114 0.188 C -0.136 0.188 -0.15 0.172 -0.15 0.15 L -0.15 0.034 C -0.15 0.026 -0.146 0.02 -0.14 0.02 Z",
+              "region": "casing",
+              "material": "chrome-steel"
+            },
+            {
+              "id": "top-bevel",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.128,
+                  0.172
+                ],
+                [
+                  0.128,
+                  0.172
+                ]
+              ],
+              "closed": false,
+              "region": "top-plate"
+            },
+            {
+              "id": "lever-track",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.094,
+              "y": 0.052,
+              "w": 0.012,
+              "h": 0.11,
+              "r": 0.006,
+              "region": "casing"
+            },
+            {
+              "id": "lever",
+              "bone": "lever",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.015,
+              "y": -0.012,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "control",
+              "material": "pp-black"
+            },
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.015,
+              "ry": 0.015,
+              "region": "control",
+              "material": "pp-black"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.085,
+              "w": 0.3,
+              "h": 0.17,
+              "r": 0.022,
+              "region": "casing",
+              "material": "chrome-steel"
+            },
+            {
+              "id": "top-bevel",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.128,
+              "y": -0.071,
+              "w": 0.256,
+              "h": 0.142,
+              "r": 0.012,
+              "region": "top-plate"
+            },
+            {
+              "id": "slice-rear",
+              "bone": "slices",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.052,
+              "y": 0.019,
+              "w": 0.104,
+              "h": 0.022,
+              "r": 0.005,
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "slice-front",
+              "bone": "slices",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.052,
+              "y": -0.041,
+              "w": 0.104,
+              "h": 0.022,
+              "r": 0.005,
+              "region": "bread",
+              "material": "bread-crust"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.035,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "slice-rear",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.019 0.085 L 0.041 0.085 L 0.041 0.185 C 0.041 0.19108 0.03608 0.196 0.03 0.196 L 0.03 0.196 C 0.02392 0.196 0.019 0.19108 0.019 0.185 L 0.019 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "slice-front",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.041 0.085 L -0.019 0.085 L -0.019 0.185 C -0.019 0.19108 -0.02392 0.196 -0.03 0.196 L -0.03 0.196 C -0.03608 0.196 -0.041 0.19108 -0.041 0.185 L -0.041 0.085 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.077 0.02 L 0.077 0.02 C 0.08142 0.02 0.085 0.02358 0.085 0.028 L 0.085 0.166 C 0.085 0.17815 0.07515 0.188 0.063 0.188 L -0.063 0.188 C -0.07515 0.188 -0.085 0.17815 -0.085 0.166 L -0.085 0.028 C -0.085 0.02358 -0.08142 0.02 -0.077 0.02 Z",
+              "region": "casing",
+              "material": "chrome-steel"
+            },
+            {
+              "id": "top-bevel",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.071,
+                  0.172
+                ],
+                [
+                  0.071,
+                  0.172
+                ]
+              ],
+              "closed": false,
+              "region": "top-plate"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A toaster 3 mm wide and 2 mm high: one chromed block with a bevel line, the bread shoulders above it, the lever in its track, the round dial and two stub feet. Front view: the rounded body on two feet and the two bread slices thickened to 22 mm. Top view: the body with the bevel outline and the two bread tops.",
+            "de": "Ein Toaster, 3 mm breit und 2 mm hoch: ein verchromter Block mit Fasenlinie, die Brotschultern darüber, der Hebel in seiner Führung, der runde Regler und zwei Stummelfüße. Vorderansicht: der gerundete Korpus auf zwei Füßen und die zwei auf 22 mm verdickten Brotscheiben. Draufsicht: der Korpus mit der Fasenkontur und den zwei Brotoberseiten."
+          },
+          "retained": {
+            "en": "Overall size, the bread shoulders, bevel line, lever and track, dial.",
+            "de": "Gesamtgröße, Brotschultern, Fasenlinie, Hebel und Führung, Regler."
+          },
+          "merged": {
+            "en": "The rear slice merges behind the front one; the top plate is only the bevel line; the cancel button joins the casing.",
+            "de": "Die hintere Scheibe geht hinter der vorderen auf; die Deckplatte ist nur die Fasenlinie; die Abbruchtaste geht im Gehäuse auf."
+          },
+          "omitted": {
+            "en": "Crumb tray slot, highlight, dial pointer, slot ribs, logo, cable. Front and top view omit the slots, the controls and the rear feet.",
+            "de": "Krümelschubladenfuge, Lichtkante, Reglerzeiger, Schlitzrippen, Logo, Kabel. Vorder- und Draufsicht lassen die Schlitze, die Bedienelemente und die hinteren Füße weg."
+          },
+          "thinElements": {
+            "en": "The rubber feet are 0.012 m = 0.12 mm high in reality: thickened to 0.02 m (0.2 mm) so they print; the body bottom rises by the same 0.008 m.",
+            "de": "Die Gummifüße sind real 0,012 m = 0,12 mm hoch: auf 0,02 m (0,2 mm) verdickt, damit sie drucken; der Gehäuseboden steigt um dieselben 0,008 m."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Chrome casing 0.82, bread 0.78, controls 0.2-0.25, feet 0.15; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Chromgehäuse 0,82, Brot 0,78, Bedienung 0,2-0,25, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "The bevel line carries the top plate, track and bread their regions; the casing block carries the casing.",
+            "de": "Die Fasenlinie trägt die Deckplatte, Führung und Brot ihre Regionen; der Gehäuseblock trägt das Gehäuse."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "slice",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.052 0.1 L -0.052 0.166 C -0.062 0.172 -0.062 0.19 -0.046 0.196 C -0.03 0.2 0.03 0.2 0.046 0.196 C 0.062 0.19 0.062 0.172 0.052 0.166 L 0.052 0.1 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.15 0 L 0.15 0 L 0.15 0.15 C 0.15 0.172 0.136 0.188 0.114 0.188 L -0.114 0.188 C -0.136 0.188 -0.15 0.172 -0.15 0.15 Z",
+              "regions": [
+                "casing",
+                "top-plate",
+                "control",
+                "feet"
+              ],
+              "material": "chrome-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.085,
+              "w": 0.3,
+              "h": 0.17,
+              "r": 0.022,
+              "regions": [
+                "casing",
+                "top-plate",
+                "control",
+                "feet"
+              ],
+              "material": "chrome-steel"
+            },
+            {
+              "id": "slice",
+              "bone": "slices",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.052,
+              "y": -0.045,
+              "w": 0.104,
+              "h": 0.09,
+              "r": 0.01,
+              "region": "bread",
+              "material": "bread-crust"
+            }
+          ],
+          "front": [
+            {
+              "id": "slice",
+              "bone": "slices",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.061 0.1 L 0.061 0.1 L 0.061 0.176 C 0.061 0.18705 0.05205 0.196 0.041 0.196 L -0.041 0.196 C -0.05205 0.196 -0.061 0.18705 -0.061 0.176 L -0.061 0.1 Z",
+              "region": "bread",
+              "material": "bread-crust"
+            },
+            {
+              "id": "casing",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.085 0 L 0.085 0 L 0.085 0.166 C 0.085 0.17815 0.07515 0.188 0.063 0.188 L -0.063 0.188 C -0.07515 0.188 -0.085 0.17815 -0.085 0.166 L -0.085 0 Z",
+              "regions": [
+                "casing",
+                "top-plate",
+                "control",
+                "feet"
+              ],
+              "material": "chrome-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A toaster 1.5 mm wide and 1 mm high: one rounded block with a bread dome rising 0.06 mm out of the top edge. Front view: one body block with the bread block rising above it as one 0.12 m wide mass. Top view: the body with one bread patch for both slices.",
+            "de": "Ein Toaster, 1,5 mm breit und 1 mm hoch: ein gerundeter Block mit einer Brotkuppe, die 0,06 mm aus der Oberkante ragt. Vorderansicht: ein Korpusblock, über dem der Brotblock als eine 0,12 m breite Masse aufragt. Draufsicht: der Korpus mit einem Brotfeld für beide Scheiben."
+          },
+          "retained": {
+            "en": "Width 0.30 m, body height 0.188 m, the bread shoulders above the top edge.",
+            "de": "Breite 0,30 m, Gehäusehöhe 0,188 m, die Brotschultern über der Oberkante."
+          },
+          "merged": {
+            "en": "Casing, top plate, lever, dial and feet merge into one block (its shape lists the four regions); the two slices merge into one dome.",
+            "de": "Gehäuse, Deckplatte, Hebel, Regler und Füße gehen in einem Block auf (seine Form listet die vier Regionen); die zwei Scheiben bilden eine Kuppe."
+          },
+          "omitted": {
+            "en": "Feet, lever, dial, track, bevel and every line. Front and top view carry no slots, feet or controls.",
+            "de": "Füße, Hebel, Regler, Führung, Fase und jede Linie. Vorder- und Draufsicht tragen weder Schlitze noch Füße oder Bedienelemente."
+          },
+          "thinElements": {
+            "en": "The 0.012 m feet (0.06 mm) are merged into the block; the bread above the plate is 0.012 m = 0.06 mm and stays true: only the dome shoulders (0.3 mm wide) show.",
+            "de": "Die 0,012 m hohen Füße (0,06 mm) gehen im Block auf; das Brot über der Platte ist 0,012 m = 0,06 mm hoch und bleibt wahr: nur die Schultern der Kuppe (0,3 mm breit) sind zu sehen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Block 0.82 and bread 0.78; body pen 0.18 mm.",
+            "de": "Block 0,82 und Brot 0,78; Körperstift 0,18 mm."
+          },
+          "overlays": {
+            "en": "The block lists casing, top plate, controls and feet, so the thermal overlay paints it with their area-weighted value; the dome keeps the bread.",
+            "de": "Der Block listet Gehäuse, Deckplatte, Bedienung und Füße, die Thermalansicht färbt ihn mit deren flächengewichtetem Wert; die Kuppe behält das Brot."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "A toaster is 0.30 m x 0.20 m = 0.6 x 0.4 mm on paper at 1:500: the bread dome (0.012 m = 0.02 mm), the feet and the lever are far below the 0.2 mm feature width, so only an anonymous speck would print.",
+          "de": "Ein Toaster misst 0,30 m x 0,20 m = 0,6 x 0,4 mm auf dem Papier bei 1:500: Brotkuppe (0,012 m = 0,02 mm), Füße und Hebel liegen weit unter der Merkmalsbreite von 0,2 mm, es würde nur ein namenloser Fleck drucken."
+        },
+        "limitingFeature": {
+          "en": "Bread dome, feet and lever (0.012-0.03 m = 0.02-0.06 mm)",
+          "de": "Brotkuppe, Füße und Hebel (0,012-0,03 m = 0,02-0,06 mm)"
+        },
+        "limitingSizeM": 0.012,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "idle",
+        "title": {
+          "en": "Idle and empty",
+          "de": "Leer und aus"
+        },
+        "description": {
+          "en": "Cold toaster without bread, lever up, dial on the middle setting.",
+          "de": "Kalter Toaster ohne Brot, Hebel oben, Regler in der mittleren Stufe."
+        },
+        "bones": {
+          "slices": {
+            "dy": -0.04
+          },
+          "lever": {
+            "dy": 0
+          },
+          "dial": {
+            "angleDeg": 120
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-left",
+          "foot-right"
+        ],
+        "loads": [],
+        "thermal": {
+          "operating": {
+            "elements": 0
+          },
+          "regions": {
+            "casing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "bread": {
+              "exposedFraction": 0,
+              "sunlitFraction": 0
+            },
+            "control": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "slot-air": 0
+          }
+        }
+      },
+      {
+        "id": "toasting",
+        "title": {
+          "en": "Toasting",
+          "de": "Toastet"
+        },
+        "description": {
+          "en": "Lever down: the two slices sit in the slots with 12 mm above the plate, the elements draw 900 W and hot air rises from the slots.",
+          "de": "Hebel unten: Die zwei Scheiben stecken in den Schlitzen, 12 mm ragen über die Platte, die Heizdrähte ziehen 900 W und heiße Luft steigt aus den Schlitzen."
+        },
+        "bones": {
+          "slices": {
+            "dy": 0
+          },
+          "lever": {
+            "dy": -0.045
+          },
+          "dial": {
+            "angleDeg": 120
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-left",
+          "foot-right"
+        ],
+        "loads": [],
+        "thermal": {
+          "operating": {
+            "elements": 1
+          },
+          "regions": {
+            "casing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "bread": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0
+            },
+            "control": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "slot-air": 1
+          }
+        }
+      },
+      {
+        "id": "popped",
+        "title": {
+          "en": "Toast popped up",
+          "de": "Toast ausgeworfen"
+        },
+        "description": {
+          "en": "The elements are off, the carriage has lifted the browned slices 40 mm; the casing and the plate are still warm.",
+          "de": "Die Heizdrähte sind aus, der Schlitten hat die gebräunten Scheiben 40 mm angehoben; Gehäuse und Platte sind noch warm."
+        },
+        "bones": {
+          "slices": {
+            "dy": 0.04
+          },
+          "lever": {
+            "dy": 0
+          },
+          "dial": {
+            "angleDeg": 120
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-left",
+          "foot-right"
+        ],
+        "loads": [],
+        "thermal": {
+          "operating": {
+            "elements": 0
+          },
+          "regions": {
+            "casing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "bread": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "control": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "slot-air": 0
+          }
+        }
+      }
+    ],
+    "clips": [
+      {
+        "id": "toast-cycle",
+        "title": {
+          "en": "One toast cycle",
+          "de": "Ein Toastvorgang"
+        },
+        "description": {
+          "en": "Bread goes in and the lever is pressed: the elements heat for 150 s, then the carriage pops the toast up.",
+          "de": "Brot kommt hinein und der Hebel wird gedrückt: Die Heizdrähte heizen 150 s, dann wirft der Schlitten den Toast aus."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "toasting",
+            "ease": "step"
+          },
+          {
+            "t": 155,
+            "pose": "popped",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "popped",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-left",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "foot-right",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "empty",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Empty",
+              "de": "Leer"
+            }
+          },
+          {
+            "id": "toasting",
+            "fromS": 5,
+            "toS": 155,
+            "title": {
+              "en": "Toasting",
+              "de": "Toastet"
+            }
+          },
+          {
+            "id": "popped",
+            "fromS": 155,
+            "toS": 300,
+            "title": {
+              "en": "Toast up, cooling",
+              "de": "Toast oben, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Lever down, elements on",
+              "de": "Hebel unten, Heizung an"
+            },
+            "target": "elements"
+          },
+          {
+            "t": 155,
+            "kind": "shutdown",
+            "title": {
+              "en": "Carriage pops, elements off",
+              "de": "Schlitten wirft aus, Heizung aus"
+            },
+            "target": "elements"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:elements",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              },
+              {
+                "t": 155,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:slot-air",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              },
+              {
+                "t": 155,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cool-down",
+        "title": {
+          "en": "Cooling down after toasting",
+          "de": "Abkühlen nach dem Toasten"
+        },
+        "description": {
+          "en": "Right after the pop: the toast is taken out and the casing cools for ten minutes.",
+          "de": "Gleich nach dem Auswerfen: Der Toast wird entnommen und das Gehäuse kühlt zehn Minuten ab."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "popped",
+            "ease": "step"
+          },
+          {
+            "t": 60,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "idle",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "foot-right",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "popped",
+            "fromS": 0,
+            "toS": 60,
+            "title": {
+              "en": "Toast up",
+              "de": "Toast oben"
+            }
+          },
+          {
+            "id": "emptied",
+            "fromS": 60,
+            "toS": 600,
+            "title": {
+              "en": "Empty, cooling",
+              "de": "Leer, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 60,
+            "kind": "motion",
+            "title": {
+              "en": "Toast taken out",
+              "de": "Toast entnommen"
+            },
+            "target": "slices"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:elements",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325,
+        "skyTempC": 20,
+        "groundTempC": 20
+      },
+      "operating": [
+        {
+          "id": "elements",
+          "title": {
+            "en": "Heating elements",
+            "de": "Heizdrähte"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Toasting (900 W)",
+                "de": "Toasten (900 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Housing walls (chromed sheet)",
+            "de": "Gehäusewände (verchromtes Blech)"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chrome-steel",
+          "areaM2": 0.24,
+          "characteristicLengthM": 0.19,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Chromed steel sheet 0.8 mm",
+                "de": "Verchromtes Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "chrome-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000016,
+              "heatCapacityJM2K": 2826,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2826,
+          "operating": {
+            "key": "elements",
+            "heatW": 95
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-9"
+        },
+        {
+          "id": "top-plate",
+          "title": {
+            "en": "Top plate and slot rims",
+            "de": "Deckplatte und Schlitzränder"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "mica-steel",
+          "areaM2": 0.045,
+          "characteristicLengthM": 0.17,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.9,
+          "layers": [
+            {
+              "id": "plate",
+              "title": {
+                "en": "Steel plate 1 mm",
+                "de": "Stahlplatte 1 mm"
+              },
+              "kind": "metal",
+              "material": "mica-steel",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3533,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3533,
+          "operating": {
+            "key": "elements",
+            "heatW": 25
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-9"
+        },
+        {
+          "id": "bread",
+          "title": {
+            "en": "Two bread slices (crust surface)",
+            "de": "Zwei Brotscheiben (Krustenoberfläche)"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "bread-crust",
+          "areaM2": 0.045,
+          "characteristicLengthM": 0.11,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "crust",
+              "title": {
+                "en": "Crust and outer crumb 5 mm",
+                "de": "Kruste und äußere Krume 5 mm"
+              },
+              "kind": "insulation",
+              "material": "bread-crust",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.05,
+              "heatCapacityJM2K": 3125,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3125,
+          "operating": {
+            "key": "elements",
+            "heatW": 150
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "control",
+          "title": {
+            "en": "Lever and dial",
+            "de": "Hebel und Regler"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pp-black",
+          "areaM2": 0.003,
+          "characteristicLengthM": 0.03,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "knob",
+              "title": {
+                "en": "Polypropylene 3 mm",
+                "de": "Polypropylen 3 mm"
+              },
+              "kind": "polymer",
+              "material": "pp-black",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.013636,
+              "heatCapacityJM2K": 5130,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5130,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "feet",
+          "title": {
+            "en": "Rubber feet",
+            "de": "Gummifüße"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "rubber-foot",
+          "areaM2": 0.002,
+          "characteristicLengthM": 0.04,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.1,
+          "layers": [
+            {
+              "id": "foot",
+              "title": {
+                "en": "Rubber 8 mm",
+                "de": "Gummi 8 mm"
+              },
+              "kind": "polymer",
+              "material": "rubber-foot",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.04,
+              "heatCapacityJM2K": 17600,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 17600,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "slot-air",
+          "kind": "vent",
+          "title": {
+            "en": "Hot air rising from the slots",
+            "de": "Heiße Luft aus den Schlitzen"
+          },
+          "anchor": "slot-outlet",
+          "directionDeg": 90,
+          "diameterM": 0.05,
+          "operatingKey": "elements",
+          "volumeFlowM3S": 0.00507,
+          "temperatureRiseK": 103,
+          "vapourKgPerKg": 0.03,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The heating wires inside are not a region: their 900 W leave through the housing walls (95 W), the top plate (25 W), the bread crust (150 W) and the hot air through the slots (630 W). The housing stays cool-touch at about 60 degC surface in a 21 degC room (95 W on 0.24 m2, about 400 W/m2 by free convection and radiation). A room sees all of it as an internal gain.",
+          "de": "Die Heizdrähte im Inneren sind keine Region: Ihre 900 W verlassen das Gerät durch die Gehäusewände (95 W), die Deckplatte (25 W), die Brotkruste (150 W) und die heiße Luft aus den Schlitzen (630 W). Das Gehäuse bleibt berührungskühl bei etwa 60 °C Oberfläche in einem 21-°C-Raum (95 W auf 0,24 m2, etwa 400 W/m2 durch freie Konvektion und Strahlung). Ein Raum erlebt alles davon als innere Last."
+        },
+        {
+          "en": "The bread is a thermal region that is part of the object while it sits in the toaster; the crust releases its drying moisture into the slot air.",
+          "de": "Das Brot ist eine thermische Region des Objekts, solange es im Toaster steckt; die Kruste gibt ihre Trocknungsfeuchte an die Schlitzluft ab."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-left",
+        "foot-right"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid body standing on two rubber feet on a worktop.",
+          "de": "Ein starrer Körper auf zwei Gummifüßen auf einer Arbeitsplatte."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "toasting",
+      "defaultClip": "toast-cycle",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

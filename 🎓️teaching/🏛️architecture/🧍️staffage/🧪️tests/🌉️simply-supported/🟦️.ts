@@ -18,21 +18,21 @@ describe("simply supported beam against anastruct", () => {
     expect(near(roller!.fyN, oracle["reactionRightFyN"]!, 1e-9)).toBe(true);
     expect(near(pin!.fyN + roller!.fyN, 9000, 1e-12)).toBe(true);
     expect(Math.abs(pin!.fxN)).toBeLessThan(1e-9);
-    expect(Math.abs(pin!.momentNm)).toBeLessThan(1e-9);
+    expect(Math.abs(pin!.mzNm)).toBeLessThan(1e-9);
   });
   it("is in equilibrium", () => {
     expect(Math.abs(result.residual.fyN)).toBeLessThan(1e-9 * 9000);
-    expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * 36000);
+    expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * 36000);
   });
   it("reaches the maximum sagging moment at midspan", () => {
     const max = Math.max(...beam.stations.map((s) => s.momentNm));
     expect(near(max, 7000, 1e-9)).toBe(true);
-    expect(Math.abs(max / -oracle["maxMomentNm"]! - 1)).toBeLessThan(5e-3);
-    expect(near(max, -oracle["analyticMaxMomentNm"]!, 1e-9)).toBe(true);
+    expect(Math.abs(max / oracle["maxMomentNm"]! - 1)).toBeLessThan(5e-3);
+    expect(near(max, oracle["analyticMaxMomentNm"]!, 1e-9)).toBe(true);
     expect(at(2).length).toBe(2);
   });
   it("matches the closed-form moment at stations", () => {
-    for (const [s, m] of Object.entries(oracle.stationMomentNm)) expect(near(at(Number(s)).at(-1)!.momentNm, -m, 1e-9, 1e-7)).toBe(true);
+    for (const [s, m] of Object.entries(oracle.stationMomentNm)) expect(near(at(Number(s)).at(-1)!.momentNm, m, 1e-9, 1e-7)).toBe(true);
   });
   it("jumps the shear by the midspan load", () => {
     const [before, after] = at(2);

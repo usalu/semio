@@ -1,0 +1,17 @@
+{ "version": 1, "casts": {
+ "adult-relaxed-50": { "asset": "standing-adult", "pose": "relaxed", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "adult-pointing-50": { "asset": "standing-adult", "pose": "pointing", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "adult-crossed-50": { "asset": "standing-adult", "pose": "arms-crossed", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "adult-relaxed-100": { "asset": "standing-adult", "pose": "pointing", "view": "dark-line", "viewpoint": "plan", "scale": 100, "theme": "dark" },
+ "adult-relaxed-200": { "asset": "standing-adult", "pose": "pointing", "view": "dark-line", "viewpoint": "plan", "scale": 200, "theme": "dark" },
+ "adult-relaxed-500": { "asset": "standing-adult", "pose": "pointing", "view": "dark-line", "viewpoint": "plan", "scale": 500, "theme": "dark" },
+ "adult-thermal-50": { "asset": "standing-adult", "pose": "relaxed", "view": "thermal", "viewpoint": "plan", "scale": 50, "environment": "winter-overcast", "theme": "dark" },
+ "worker-typing-50": { "asset": "seated-office-worker", "pose": "typing", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "worker-leaning-50": { "asset": "seated-office-worker", "pose": "leaning-back", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "worker-reading-50": { "asset": "seated-office-worker", "pose": "reading-screen", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "worker-typing-100": { "asset": "seated-office-worker", "pose": "typing", "view": "dark-line", "viewpoint": "plan", "scale": 100, "theme": "dark" },
+ "worker-typing-200": { "asset": "seated-office-worker", "pose": "typing", "view": "dark-line", "viewpoint": "plan", "scale": 200, "theme": "dark" },
+ "worker-typing-500": { "asset": "seated-office-worker", "pose": "typing", "view": "dark-line", "viewpoint": "plan", "scale": 500, "theme": "dark" },
+ "worker-thermal-50": { "asset": "seated-office-worker", "pose": "typing", "view": "thermal", "viewpoint": "plan", "scale": 50, "environment": "office-neutral", "theme": "dark" },
+ "worker-clip-50": { "asset": "seated-office-worker", "clip": "typing", "view": "dark-line", "viewpoint": "plan", "scale": 50, "fps": 4, "theme": "dark" }
+} }

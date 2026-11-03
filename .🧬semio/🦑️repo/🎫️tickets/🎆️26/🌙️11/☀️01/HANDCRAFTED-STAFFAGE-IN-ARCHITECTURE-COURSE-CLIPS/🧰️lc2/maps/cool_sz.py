@@ -1,0 +1,17 @@
+MAP = {
+    "Konvektive Kühlleistung der Zuluft": "Convective cooling power of the supply air",
+    r"\theta_{Raum}": r"\theta_{room}",
+    "Temperaturhub": "Temperature lift",
+    "Luftdichte": "Air density",
+    "spez. Wärmekapazität": "specific heat capacity",
+    "Temperaturdifferenz": "Temperature difference",
+    "Volumenstrom": "Volume flow",
+    "← Lüftung · Kapitel 5: Zu-/Abluftsystem": "← Ventilation · Chapter 5: Supply/extract system",
+    "Gleichgewicht: Kühlleistung = Kühllast": "Balance: cooling power = cooling load",
+    "Kühlleistung": "Cooling power",
+    "Kühllast": "Cooling load",
+    r"↓\;\text{umstellen nach}\;q_{v,R}": r"↓\;\text{solve for}\;q_{v,R}",
+    "← Lüftung · Kapitel 2:": "← Ventilation · Chapter 2:",
+    "← Teil 4:": "← Part 4:",
+    "Solarlast": "Solar load",
+}

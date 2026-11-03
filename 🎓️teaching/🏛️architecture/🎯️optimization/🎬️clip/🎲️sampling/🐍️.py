@@ -251,7 +251,7 @@ class Beat2_GridRandomSampling(_visuals.ClipScene):
             if share <= 1e-3:
                 group.add(*[_room.dashed(a, b, color=WARN, stroke_width=1.8) for a, b in zip(corners, corners[1:] + corners[:1])],
                           self._txt("?", at=base + mn.UP * height * 0.22, size=26, color=WARN),
-                          self._txt(self.tr("not simulated", "Nicht simuliert"), at=base + np.array([-width / 2, height * 0.45 + 0.3, 0.0]), size=15, color=WARN, edge="left"))
+                          self._txt(self.tr("not simulated", "Nicht simuliert"), at=base + np.array([0.0, height * 0.45 + 0.3, 0.0]), size=15, color=WARN))
                 return group
             partial = [found[key] * _clip(share * 3 - index) for index, (key, _, _) in enumerate(names)]
             printed = _room.apportion(partial, 1)
@@ -263,7 +263,7 @@ class Beat2_GridRandomSampling(_visuals.ClipScene):
                 cursor += span
             total = sum(printed)
             if total_label:
-                group.add(self._txt(*self._q(total, "kWh/a", 1), at=base + np.array([-width / 2 - 0.1, cursor + 0.28, 0.0]), size=16, edge="left"))
+                group.add(self._txt(*self._q(total, "kWh/a", 1), at=base + np.array([0.0, cursor + 0.28, 0.0]), size=16))
             if labels and anchors:
                 group.add(_room.column(anchors, x=base[0] + width / 2 + 0.6, top=base[1] + height - 0.05, bottom=base[1] + 0.1, size=13))
             if footer and share >= 0.999:

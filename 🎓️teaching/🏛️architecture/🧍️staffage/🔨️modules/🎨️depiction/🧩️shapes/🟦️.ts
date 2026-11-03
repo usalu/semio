@@ -7,9 +7,10 @@
  * @see ../../../🧬️schema/🟦️.ts — `AuthoredRepresentation`, `Hatch`, `PenSet`
  * @see ../../🔗️contracts/🟦️.ts — {@link EvaluatedShape}
  */
-import type { Asset, Hatch, PenSet, Shape, ShapeRole, Slug, Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import type { Hatch, PenSet, Shape, ShapeRole, Slug, Viewpoint } from "../../../🧬️schema/🟦️.ts";
 import type { EvaluatedState, Fill, ItemValue, LayerId, Legend } from "../../🔗️contracts/🟦️.ts";
 import type { Canvas, Ctx } from "../🧱️canvas/🟦️.ts";
+import { depthOrder } from "../🧊️depth/🟦️.ts";
 import { type Box, type Occluder, type Ring, type Run, type Vec, boxOf, circleCommands, clipSegmentToRings, commandsOf, pointInside, ringsCommands, simplify, visibleRuns } from "../📐️geometry/🟦️.ts";
 
 const ROLE_LAYER: Readonly<Record<ShapeRole, LayerId>> = { body: "body", detail: "detail", texture: "texture", glazing: "glazing", ground: "ground" };
@@ -52,21 +53,7 @@ export function regionsOf(shape: Shape): readonly Slug[] {
   return shape.region !== undefined ? [shape.region] : (shape.regions ?? []);
 }
 
-/** ⚖️ The area-weighted value of the regions a shape paints (`undefined` when none has a value); a single-region shape returns that region's value. Merged forms are labelled merged by the views. */
-export function areaWeighted(asset: Asset, shape: Shape, valueOf: (region: Slug) => number | undefined): number | undefined {
-  let weight = 0;
-  let sum = 0;
-  for (const id of regionsOf(shape)) {
-    const value = valueOf(id);
-    const area = asset.thermal.regions.find((region) => region.id === id)?.areaM2 ?? 0;
-    if (value === undefined || !(area > 0)) continue;
-    weight += area;
-    sum += area * value;
-  }
-  return weight > 0 ? sum / weight : undefined;
-}
-
-/** 🔭️ Selects the shapes the representation draws, maps them to paper millimetres (`k` paper mm per metre; paper-unit symbols sit at the model origin), simplifies them and sorts them by z. */
+/** 🔭️ Selects the shapes the representation draws, maps them to paper millimetres (`k` paper mm per metre; paper-unit symbols sit at the model origin), simplifies them and sorts them by z, then by physical depth where a pose reverses it ({@link depthOrder}). */
 export function prepare(state: EvaluatedState, viewpoint: Viewpoint, source: Source, k: number): Prepared[] {
   const hatches = new Map(source.hatches.map((hatch) => [hatch.id, hatch]));
   const selected = state.shapes[viewpoint].flatMap((e, index) => {
@@ -79,7 +66,8 @@ export function prepare(state: EvaluatedState, viewpoint: Viewpoint, source: Sou
   });
   const parents = new Map(state.asset.rig.bones.map((b) => [b.id, b.parent]));
   selected.sort((a, b) => a.e.shape.z - b.e.shape.z || a.index - b.index);
-  return selected.map(({ e, rings, box, weight }, order) => ({
+  const painted = source.paperUnits ? selected : depthOrder(state, viewpoint, selected.map(({ e }) => e)).map((position) => selected[position]!);
+  return painted.map(({ e, rings, box, weight }, order) => ({
     shape: e.shape,
     rings,
     closed: e.closed,
@@ -168,7 +156,7 @@ export function drawShapes(canvas: Canvas, ctx: Ctx, shapes: readonly Prepared[]
   if (!ANALYTIC_VIEWS.includes(ctx.options.view)) {
     const solid = ctx.options.view.endsWith("-solid");
     for (const p of shapes) {
-      if (p.hatch === null || !p.closed || !p.shape.filled) continue;
+      if (p.hatch === null || !p.closed || !p.shape.filled || p.shape.role === "glazing") continue;
       const hiders = shapes.flatMap((q) => (q.occluder !== null && q.order > p.order ? [q.occluder] : []));
       const { lines, dots } = hatchOf(p.rings, p.hatch, p.shape.id);
       const commands = lines.flatMap(([a, b]) => visibleRuns([a, b], false, hiders, CLIP_EPS_MM).flatMap((run) => commandsOf(run.points, false)));
@@ -189,11 +177,12 @@ export function drawShapes(canvas: Canvas, ctx: Ctx, shapes: readonly Prepared[]
 
 const joined = (a: Prepared, b: Prepared): boolean => a.shape.region !== undefined && a.shape.region === b.shape.region && (a.shape.bone === b.shape.bone || a.parent === b.shape.bone || b.parent === a.shape.bone);
 
-/** ✂️ The visible outline runs of every shape (filled closed shapes only when `includeFilled`): hidden lines behind higher-z filled shapes are removed, and filled shapes of one region on the same or adjacent bones hide each other's inner outlines so they read as one silhouette. */
+/** ✂️ The visible outline runs of every shape (filled closed shapes only when `includeFilled`): hidden lines behind higher-z filled shapes are removed, and filled shapes of one region on the same or adjacent bones hide each other's inner outlines so they read as one silhouette. Unfilled strokes (lines, paths, unfilled rings and rects) take no part in that merge: a drawn detail inside a same-region body survives unless a nearer filled shape genuinely covers it. */
 export function* outlineRuns(shapes: readonly Prepared[], includeFilled: boolean): Generator<{ readonly p: Prepared; readonly run: Run; readonly n: number }> {
   for (const p of shapes) {
     if (p.closed && p.shape.filled && !includeFilled) continue;
-    const hiders = shapes.flatMap((q) => (q.occluder !== null && q !== p && (q.order > p.order || joined(p, q)) ? [q.occluder] : []));
+    const merges = p.closed && p.shape.filled;
+    const hiders = shapes.flatMap((q) => (q.occluder !== null && q !== p && (q.order > p.order || (merges && joined(p, q))) ? [q.occluder] : []));
     let n = 0;
     for (const ring of p.rings) for (const run of visibleRuns(ring, p.closed, hiders, CLIP_EPS_MM)) yield { p, run, n: n++ };
   }

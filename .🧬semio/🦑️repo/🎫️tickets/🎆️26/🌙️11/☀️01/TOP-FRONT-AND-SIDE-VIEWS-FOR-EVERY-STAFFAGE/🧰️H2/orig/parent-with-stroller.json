@@ -1,0 +1,138 @@
+{
+ "50": {
+  "silhouette": {
+   "en": "Full drawing from the original 1:50 study: profile face with ear and eye, jacket with collar, hem and zip, fingered hands with thumbs, jeans seam, sneakers with toe and stripe; stroller with every tube, seat seam, basket mesh, hood with rib, spoked wheels; child with body, legs, head, eye, hat and arm.",
+   "de": "Volle Zeichnung nach der ursprünglichen 1:50-Studie: Gesicht im Profil mit Ohr und Auge, Jacke mit Kragen, Saum und Reißverschluss, Hände mit Fingern und Daumen, Jeansnaht, Sneaker mit Spitze und Streifen; Kinderwagen mit allen Rohren, Sitznaht, Korbgeflecht, Verdeck mit Rippe, Speichenrädern; Kind mit Körper, Beinen, Kopf, Auge, Mütze und Arm."
+  },
+  "retained": {
+   "en": "All detail of the original drawing.",
+   "de": "Alle Details der ursprünglichen Zeichnung."
+  },
+  "merged": {
+   "en": "Nothing merged.",
+   "de": "Nichts verschmolzen."
+  },
+  "omitted": {
+   "en": "Cables, brake, laces.",
+   "de": "Züge, Bremse, Schnürsenkel."
+  },
+  "thinElements": {
+   "en": "Tubes are capsules of their real diameter (20 to 34 mm = 0.4 to 0.68 mm); finger separations 0.13 mm.",
+   "de": "Rohre sind Kapseln mit realem Durchmesser (20 bis 34 mm = 0,4 bis 0,68 mm); Fingertrennungen 0,13 mm."
+  },
+  "hatching": {
+   "en": "None.",
+   "de": "Keine."
+  },
+  "styles": {
+   "en": "Body 0.35, detail 0.25, texture 0.13 mm.",
+   "de": "Körper 0,35, Detail 0,25, Textur 0,13 mm."
+  },
+  "overlays": {
+   "en": "One shape per region and bone.",
+   "de": "Eine Form je Region und Knochen."
+  }
+ },
+ "100": {
+  "silhouette": {
+   "en": "Adult with ear, hair, scarf, collar, jacket with zip and hem, cuffs, mitten hands with thumbs, jeans with hems, sneakers; stroller with tubes whose pen equals the tube diameter, grip, seat fabric, basket, canopy with rib, tyre bands with hubs and spokes; child with body, legs, head, hat and arm.",
+   "de": "Erwachsene Person mit Ohr, Haar, Schal, Kragen, Jacke mit Reißverschluss und Saum, Manschetten, Fäustlingshänden mit Daumen, Jeans mit Säumen, Sneakern; Kinderwagen mit Rohren, deren Stiftbreite dem Rohrdurchmesser entspricht, Griff, Sitzstoff, Korb, Verdeck mit Rippe, Reifenbändern mit Naben und Speichen; Kind mit Körper, Beinen, Kopf, Mütze und Arm."
+  },
+  "retained": {
+   "en": "Four spokes per rear wheel (every sixth of 24), hub dots, footrest.",
+   "de": "Vier Speichen am Hinterrad (jede sechste von 24), Nabenpunkte, Fußstütze."
+  },
+  "merged": {
+   "en": "Front-wheel spokes (0.8 mm wheel) are dropped; tyre and rim form one filled band; fingers one mitten.",
+   "de": "Speichen des Vorderrads (0,8-mm-Rad) entfallen; Reifen und Felge bilden ein gefülltes Band; Finger ein Fäustling."
+  },
+  "omitted": {
+   "en": "Eye of the adult, finger separations, basket mesh, seat seam, child eye, laces.",
+   "de": "Auge der Person, Fingertrennungen, Korbgeflecht, Sitznaht, Kinderauge, Schnürsenkel."
+  },
+  "thinElements": {
+   "en": "Stroller tubes keep the real diameters as pen widths (push bar 0.24 mm = 24 mm, chassis 0.26, strut 0.22, fork 0.2, footrest 0.16, grip 0.34); spokes 0.1 mm (2 mm real, thickened 5 times); no outline pairs where gaps would be below 0.1 mm.",
+   "de": "Wagenrohre behalten die realen Durchmesser als Stiftbreiten (Schubbügel 0,24 mm = 24 mm, Chassis 0,26, Strebe 0,22, Gabel 0,2, Fußstütze 0,16, Griff 0,34); Speichen 0,1 mm (2 mm real, 5-fach verbreitert); wo Abstände unter 0,1 mm lägen, gibt es keine Konturpaare."
+  },
+  "hatching": {
+   "en": "Jacket shell 1.2 mm lines at 30 degrees; stroller textile (seat, canopy) 0.8 mm lines at 45 degrees; far limbs 0.6 mm lines at 60 degrees.",
+   "de": "Jackenstoff 1,2-mm-Linien unter 30 Grad; Wagentextil (Sitz, Verdeck) 0,8-mm-Linien unter 45 Grad; abgewandte Glieder 0,6-mm-Linien unter 60 Grad."
+  },
+  "styles": {
+   "en": "Body 0.25, detail 0.15, texture 0.1 mm; tyres near black, hat dark, jacket mid tone.",
+   "de": "Körper 0,25, Detail 0,15, Textur 0,1 mm; Reifen fast schwarz, Mütze dunkel, Jacke mittlerer Ton."
+  },
+  "overlays": {
+   "en": "All twelve regions are drawn, each with its own shape.",
+   "de": "Alle zwölf Regionen sind gezeichnet, jede mit eigener Form."
+  }
+ },
+ "200": {
+  "silhouette": {
+   "en": "Adult: head, hair, scarf, jacket with zip line, hips, upper arm and forearm-with-hand per side, thigh and shank per leg, shoes. Stroller: frame tubes as lines, seat, basket, canopy, child with body, legs, head, hat and arm, two wheels.",
+   "de": "Erwachsene Person: Kopf, Haar, Schal, Jacke mit Reißverschlusslinie, Hüfte, Ober- und Unterarm mit Hand je Seite, Ober- und Unterschenkel je Bein, Schuhe. Kinderwagen: Rahmenrohre als Linien, Sitz, Korb, Verdeck, Kind mit Körper, Beinen, Kopf, Mütze und Arm, zwei Räder."
+  },
+  "retained": {
+   "en": "Rear wheel ring with one spoke diameter as a rotation cue, front wheel ring, child arm line.",
+   "de": "Hinterradring mit einem Speichendurchmesser als Drehhinweis, Vorderradring, Kinderarmlinie."
+  },
+  "merged": {
+   "en": "Hand into the forearm piece; tyre and rim into one ring (0.09 mm apart).",
+   "de": "Hand im Unterarmstück; Reifen und Felge zu einem Ring (0,09 mm Abstand)."
+  },
+  "omitted": {
+   "en": "Face features, fingers, pocket, hem, hood rib, footrest gap, fabric hatching, hubs, cuffs, sole lines.",
+   "de": "Gesichtszüge, Finger, Tasche, Saum, Verdeckrippe, Fußstützenspalt, Stoffschraffur, Naben, Manschetten, Sohlenlinien."
+  },
+  "thinElements": {
+   "en": "Frame tubes 0.13 mm lines (26 mm line weight for 22 to 26 mm real: no thickening), rear tyre ring 0.18 mm (36 mm vs 40 mm), front ring 0.13 mm, child arm 0.3 mm (60 mm).",
+   "de": "Rahmenrohre 0,13-mm-Linien (26 mm Strichstärke für 22 bis 26 mm real: keine Verdickung), Hinterreifenring 0,18 mm (36 mm statt 40 mm), Vorderring 0,13 mm, Kinderarm 0,3 mm (60 mm)."
+  },
+  "hatching": {
+   "en": "None.",
+   "de": "Keine."
+  },
+  "styles": {
+   "en": "Outlines 0.18 mm, zip 0.13 mm, spoke 0.1 mm; tones: jacket mid, jeans dark, seat and canopy mid grey, tyres lines only.",
+   "de": "Konturen 0,18 mm, Reißverschluss 0,13 mm, Speiche 0,1 mm; Töne: Jacke mittel, Jeans dunkel, Sitz und Verdeck mittelgrau, Reifen nur Linien."
+  },
+  "overlays": {
+   "en": "Every region of the adult has its own piece except the forearm pieces (sleeve plus bare hand); the child, seat, basket, canopy, frame and wheels are separate pieces.",
+   "de": "Jede Region der Person hat ein eigenes Stück außer den Unterarmstücken (Ärmel plus nackte Hand); Kind, Sitz, Korb, Verdeck, Rahmen und Räder sind getrennte Stücke."
+  }
+ },
+ "500": {
+  "silhouette": {
+   "en": "The adult as one composed figure (hair-and-head piece, jacket mass with the near arm reaching to the handle, hips, two legs in stride with shoes) pushing a stroller reduced to frame lines, a rear wheel ring, a filled front wheel, and one canopy-and-seat mass with the child inside; the stride and the outstretched arm to the handle carry the activity.",
+   "de": "Die erwachsene Person als eine zusammengesetzte Figur (Haar-und-Kopf-Stück, Jackenmasse mit dem nahen, zum Griff reichenden Arm, Hüfte, zwei Beine im Schritt mit Schuhen), die einen Kinderwagen schiebt, der auf Rahmenlinien, einen Hinterradring, ein gefülltes Vorderrad und eine Verdeck-und-Sitz-Masse mit dem Kind darin reduziert ist; Schritt und gestreckter Arm zum Griff tragen die Aktivität."
+  },
+  "retained": {
+   "en": "Handle, push bar, chassis and fork lines, both wheels, canopy, seat, child mass; both legs of the adult.",
+   "de": "Griff, Schubbügel-, Chassis- und Gabellinien, beide Räder, Verdeck, Sitz, Kindermasse; beide Beine der Person."
+  },
+  "merged": {
+   "en": "Child clothing and face are one mass behind the canopy; face and hair are one head piece; hand and sleeve merge into the forearm piece.",
+   "de": "Kinderkleidung und -gesicht sind eine Masse hinter dem Verdeck; Gesicht und Haar sind ein Kopfstück; Hand und Ärmel verschmelzen im Unterarmstück."
+  },
+  "omitted": {
+   "en": "Basket (0.76 x 0.2 mm), footrest, child arm, hat, spokes (rear wheel 1.6 mm, front wheel 0.8 mm), hub, far arm, all details of the adult. Wheel rotation is not visible at this scale.",
+   "de": "Korb (0,76 x 0,2 mm), Fußstütze, Kinderarm, Mütze, Speichen (Hinterrad 1,6 mm, Vorderrad 0,8 mm), Nabe, ferner Arm, alle Details der Person. Die Raddrehung ist in diesem Maßstab nicht sichtbar."
+  },
+  "thinElements": {
+   "en": "Frame tubes (20 to 26 mm) are single 0.13 mm lines (65 mm real, 2.5 to 3 times thickened) on the real tube axes; the front wheel (0.16 m, 0.32 mm) is a filled disc instead of a ring because a ring would close its 0.06 mm opening.",
+   "de": "Rahmenrohre (20 bis 26 mm) sind einzelne 0,13-mm-Linien (65 mm real, 2,5- bis 3-fach verbreitert) auf den realen Rohrachsen; das Vorderrad (0,16 m, 0,32 mm) ist eine gefüllte Scheibe statt eines Rings, weil ein Ring seine 0,06-mm-Öffnung schließen würde."
+  },
+  "hatching": {
+   "en": "None.",
+   "de": "Keine."
+  },
+  "styles": {
+   "en": "One 0.13 mm pen; solid view: jacket mid tone, jeans dark, shoes black, canopy and child mass mid grey.",
+   "de": "Ein 0,13-mm-Stift; Flächenansicht: Jacke mittlerer Ton, Jeans dunkel, Schuhe schwarz, Verdeck und Kindermasse mittelgrau."
+  },
+  "overlays": {
+   "en": "Thermal colours attach to pieces; the child mass merges child clothing and skin, the forearm piece merges sleeve and bare hand; stroller regions are strokes and the canopy mass.",
+   "de": "Wärmefarben liegen auf den Stücken; die Kindermasse mischt Kinderkleidung und -haut, das Unterarmstück Ärmel und nackte Hand; Wagenregionen sind Striche und die Verdeckmasse."
+  }
+ }
+}

@@ -1,0 +1,7 @@
+[
+  {"asset": "solar-thermal-collector", "clip": "stagnation", "env": "summer-heatwave-calm", "times": [30, 120, 300]},
+  {"asset": "solar-thermal-collector", "clip": "start-up", "env": "summer-heatwave-calm", "times": [30, 120, 300]},
+  {"asset": "solar-thermal-collector", "clip": "operating", "env": "summer-heatwave-calm", "times": [0, 120, 300]},
+  {"asset": "solar-thermal-collector", "clip": "start-up", "env": "summer-heatwave-calm", "times": [30, 300], "label": "removal 300", "patch": [{"region": "absorber", "set": {"heatW": -300}}]},
+  {"asset": "pendant-lamp", "pose": "on", "env": "indoor-warm-summer", "label": "lamp holder 3W shade 20W", "patch": [{"region": "lampholder", "set": {"heatW": 3}}, {"region": "shade", "set": {"heatW": 20}}]}
+]

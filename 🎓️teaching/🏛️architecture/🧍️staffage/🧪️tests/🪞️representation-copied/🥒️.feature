@@ -28,3 +28,8 @@ Feature: Every scale is redrawn, never copied
     Given the valid range of 1:100 stretched to 60…200 and the body pen set to 0.0003
     When it is validated
     Then valid-range-overlap and pen-units are reported
+
+  Scenario: A scaled copy with arc paths is still found
+    Given a 1:100 drawing with an arc path in every view and a 1:200 drawing with all lengths doubled
+    When the two drawings are compared
+    Then the drawings are scaled copies, the arc radii and end points are doubled and its rotation and flags are unchanged

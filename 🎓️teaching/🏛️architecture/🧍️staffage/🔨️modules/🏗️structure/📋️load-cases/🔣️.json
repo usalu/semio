@@ -1,0 +1,27 @@
+{
+  "$schema": "./🔣️.schema.json",
+  "version": 1,
+  "gravityMS2": 9.81,
+  "standard": {
+    "id": "en-1991-1-1",
+    "title": { "en": "EN 1991-1-1:2002 Eurocode 1, actions on structures, densities, self-weight and imposed loads (recommended values, national annexes may differ)", "de": "EN 1991-1-1:2002 Eurocode 1, Einwirkungen auf Tragwerke, Wichten, Eigengewicht und Nutzlasten (empfohlene Werte, nationale Anhänge können abweichen)" }
+  },
+  "occupancy": [
+    { "id": "a-floors", "category": "A", "title": { "en": "A: residential floors", "de": "A: Wohnräume, Decken" }, "areaKNPerM2": 2.0, "pointKN": 2.0, "table": "6.2" },
+    { "id": "a-stairs", "category": "A", "title": { "en": "A: residential stairs", "de": "A: Wohnräume, Treppen" }, "areaKNPerM2": 3.0, "pointKN": 2.0, "table": "6.2" },
+    { "id": "a-balconies", "category": "A", "title": { "en": "A: residential balconies", "de": "A: Wohnräume, Balkone" }, "areaKNPerM2": 4.0, "pointKN": 2.0, "table": "6.2" },
+    { "id": "b-offices", "category": "B", "title": { "en": "B: offices", "de": "B: Büros" }, "areaKNPerM2": 3.0, "pointKN": 2.0, "table": "6.2" },
+    { "id": "c1-tables", "category": "C1", "title": { "en": "C1: areas with tables", "de": "C1: Flächen mit Tischen" }, "areaKNPerM2": 3.0, "pointKN": 4.0, "table": "6.2" },
+    { "id": "c2-seating", "category": "C2", "title": { "en": "C2: areas with fixed seats", "de": "C2: Flächen mit fester Bestuhlung" }, "areaKNPerM2": 4.0, "pointKN": 4.0, "table": "6.2" },
+    { "id": "c3-free-movement", "category": "C3", "title": { "en": "C3: areas without obstacles to people", "de": "C3: Flächen ohne Hindernisse für Personen" }, "areaKNPerM2": 5.0, "pointKN": 4.0, "table": "6.2" },
+    { "id": "c5-crowds", "category": "C5", "title": { "en": "C5: areas susceptible to large crowds", "de": "C5: Flächen mit großem Menschengedränge" }, "areaKNPerM2": 5.0, "pointKN": 4.5, "table": "6.2" },
+    { "id": "d1-shops", "category": "D1", "title": { "en": "D1: retail shops", "de": "D1: Verkaufsflächen" }, "areaKNPerM2": 5.0, "pointKN": 4.0, "table": "6.2" },
+    { "id": "e1-storage", "category": "E1", "title": { "en": "E1: storage and industrial use", "de": "E1: Lager und industrielle Nutzung" }, "areaKNPerM2": 7.5, "pointKN": 7.0, "table": "6.2" },
+    { "id": "h-roofs", "category": "H", "title": { "en": "H: roofs not accessible except for maintenance", "de": "H: nicht begehbare Dächer außer Wartung" }, "areaKNPerM2": 0.4, "pointKN": 1.0, "table": "6.10" }
+  ],
+  "materials": [
+    { "id": "reinforced-concrete", "title": { "en": "Reinforced normal-weight concrete", "de": "Stahlbeton, Normalbeton" }, "densityKNPerM3": 25.0, "table": "A.1" },
+    { "id": "structural-steel", "title": { "en": "Structural steel", "de": "Baustahl" }, "densityKNPerM3": 77.0, "table": "A.4" },
+    { "id": "glulam-gl24h", "title": { "en": "Glued laminated timber GL24h", "de": "Brettschichtholz GL24h" }, "densityKNPerM3": 3.7, "table": "A.3" }
+  ]
+}

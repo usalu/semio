@@ -18,9 +18,10 @@ import { FavoriteButton, RowFacts } from "../🗃️browse/🟦️.tsx";
 import { UnavailableNotice } from "../🖼️previews/🟦️.tsx";
 import { freshId, placeAllEvents } from "../⭐️collections/🧮️actions/🟦️.ts";
 import type { Row } from "../🔎️search/🟦️.ts";
-import { DEFAULT_VIEWER, compareToParams, formatAddress, navigate, useAddress, viewerFromParams, viewerToParams, type ViewerState } from "../🗺️routing/🟦️.ts";
+import { addressProblems, DEFAULT_VIEWER, compareToParams, formatAddress, navigate, useAddress, viewerFromParams, viewerToParams, type ViewerState } from "../🗺️routing/🟦️.ts";
 import { PosesAndClips, ClipTimeline } from "./🎞️clips/🟦️.tsx";
 import { DimensionsSection } from "./📐️dimensions/🟦️.tsx";
+import { comparisonOf } from "../⚖️compare/🧮️panes/🟦️.ts";
 import { ExportPanel } from "./📤️export-panel/🟦️.tsx";
 import { ModelSection } from "./🧬️model/🟦️.tsx";
 import { ProvenanceSection } from "./📚️provenance/🟦️.tsx";
@@ -72,7 +73,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
       <FavoriteButton asset={row.entry.id} title={title} className="border border-border" />
       {asset === undefined ? null : (
         <>
-          <ButtonLink href={formatAddress({ page: "compare" }, compareToParams({ panes: [{ asset: asset.id, view: "dark-line", selection: null }, { asset: asset.id, view: "thermal", selection: null }], scale: viewer.scale, timeS: null }))} icon="combine">{t("detail.compare")}</ButtonLink>
+          <ButtonLink href={formatAddress({ page: "compare" }, compareToParams(comparisonOf(asset.id, viewer)))} icon="combine">{t("detail.compare")}</ButtonLink>
           <Button icon="plus" onClick={() => { for (const event of placeAllEvents([asset], playground, () => freshId("placed"))) store.dispatch(event); setAnnounce(t("detail.placed", { title })); }}>{t("detail.place")}</Button>
         </>
       )}
@@ -82,6 +83,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
   return (
     <PageFrame page={`asset:${row.entry.id}`} wide eyebrow={category} title={title} lede={asset?.summary[language] ?? row.entry.distinction[language]} actions={actions}>
       <p role="status" className="sr-only">{announce}</p>
+      {active ? addressProblems(address.params, "asset").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />) : null}
       {copied === "idle" ? null : <Notice kind="info" compact title={t(copied === "done" ? "detail.shareDone" : "detail.shareBlocked")} />}
       <div className="flex flex-wrap items-center gap-single">
         <RowFacts row={row} />
@@ -107,7 +109,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
           <DimensionsSection asset={asset} row={row} />
           <ModelSection asset={asset} state={frame?.state ?? null} thermal={frame?.thermal ?? null} structure={frame?.structure ?? null} environment={frame?.environment ?? asset.thermal.environment} language={language} />
           <ProvenanceSection asset={asset} />
-          <ExportPanel asset={asset} query={query} language={language} options={{ sheet: viewer.sheet, fps: viewer.fps, durationS: viewer.durationS }} onOptions={(settings) => change({ sheet: settings.sheet, fps: settings.fps, durationS: settings.durationS })} request={{ view: viewer.view, scale: { denominator: viewer.scale }, language, theme: viewer.theme === "auto" ? (document.documentElement.classList.contains("dark") ? "dark" : "light") : viewer.theme, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, ...(Object.keys(viewer.environment).length > 0 ? { environment: frame?.environment ?? { ...asset.thermal.environment, ...viewer.environment } } : {}) }} />
+          <ExportPanel asset={asset} query={query} language={language} options={{ sheet: viewer.sheet, fps: viewer.fps, durationS: viewer.durationS }} onOptions={(settings) => change({ sheet: settings.sheet, fps: settings.fps, durationS: settings.durationS })} request={{ view: viewer.view, viewpoint: viewer.viewpoint, scale: { denominator: viewer.scale }, language, theme: viewer.theme === "auto" ? (document.documentElement.classList.contains("dark") ? "dark" : "light") : viewer.theme, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, ...(Object.keys(viewer.environment).length > 0 ? { environment: frame?.environment ?? { ...asset.thermal.environment, ...viewer.environment } } : {}) }} />
         </>
       )}
     </PageFrame>

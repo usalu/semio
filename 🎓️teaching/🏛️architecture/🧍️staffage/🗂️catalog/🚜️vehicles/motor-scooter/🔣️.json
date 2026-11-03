@@ -202,17 +202,17 @@
      },
      "x": 0.42,
      "y": 0.98,
-     "angleDeg": 0,
-     "lengthM": 0.8,
+     "angleDeg": -73,
+     "lengthM": 0.78,
      "joint": {
       "type": "revolute",
-      "minDeg": -12,
-      "maxDeg": 12
+      "minDeg": 0,
+      "maxDeg": 0
      },
      "mass": {
       "kg": 13,
-      "comX": 0.1,
-      "comY": -0.2,
+      "comX": 0.2205,
+      "comY": 0.0372,
       "distribution": "point",
       "source": "authored-estimate"
      }
@@ -224,9 +224,9 @@
       "en": "Front wheel with disc",
       "de": "Vorderrad mit Scheibe"
      },
-     "x": 0.25000000000000006,
-     "y": -0.75,
-     "angleDeg": 0,
+     "x": 0.7903,
+     "y": 0.0198,
+     "angleDeg": 73,
      "lengthM": 0.23,
      "joint": {
       "type": "revolute"
@@ -341,8 +341,8 @@
    {
     "id": "contact-f",
     "bone": "steer",
-    "x": 0.25000000000000006,
-    "y": -0.98,
+    "x": 1.0103,
+    "y": -0.0474,
     "kind": "contact",
     "title": {
      "en": "Front tyre patch",
@@ -395,7 +395,8 @@
     "title": {
      "en": "Tailpipe mouth",
      "de": "Auspuffmündung"
-    }
+    },
+    "z": -0.15
    },
    {
     "id": "seat-storage",
@@ -448,7 +449,13 @@
        "filled": true,
        "tone": 0.1,
        "region": "tyres",
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
       },
       {
        "kind": "path",
@@ -460,7 +467,13 @@
        "filled": true,
        "tone": 0.78,
        "region": "tyres",
-       "material": "alloy"
+       "material": "alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.075,
+        "z1": 0.075
+       }
       },
       {
        "kind": "path",
@@ -472,7 +485,13 @@
        "filled": true,
        "tone": 0.45,
        "region": "brake-disc",
-       "material": "cast-iron"
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.075,
+        "z1": 0.075
+       }
       },
       {
        "kind": "ellipse",
@@ -487,7 +506,13 @@
        "filled": true,
        "tone": 0.7,
        "region": "brake-disc",
-       "material": "alloy"
+       "material": "alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.075,
+        "z1": 0.075
+       }
       },
       {
        "kind": "path",
@@ -734,32 +759,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.09,
-         -0.05
+         0.0215,
+         -0.1007
         ],
         [
-         -0.08,
-         0.1
+         -0.119,
+         -0.0473
         ],
         [
-         -0.02,
-         0.17
+         -0.1684,
+         0.0306
         ],
         [
-         0.06,
-         0.17
+         -0.145,
+         0.1071
         ],
         [
-         0.13,
-         0.1
+         -0.0576,
+         0.1536
         ],
         [
-         0.13,
-         -0.02
+         0.0571,
+         0.1185
         ],
         [
-         0.06,
-         -0.08
+         0.094,
+         0.034
         ]
        ],
        "closed": true,
@@ -772,14 +797,20 @@
        "regions": [
         "steer-assembly"
        ],
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": 0.17
+       }
       },
       {
        "kind": "capsule",
        "x0": 0,
        "y0": 0,
-       "x1": 0.25,
-       "y1": -0.75,
+       "x1": 0.7903,
+       "y1": 0.0198,
        "r0": 0.026,
        "r1": 0.02,
        "id": "fork",
@@ -789,12 +820,18 @@
        "filled": true,
        "tone": 0.4,
        "region": "steer-assembly",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
       },
       {
        "kind": "ellipse",
-       "cx": 0.04,
-       "cy": 0.06,
+       "cx": -0.0457,
+       "cy": 0.0558,
        "rx": 0.03,
        "ry": 0.045,
        "id": "headlamp",
@@ -804,7 +841,14 @@
        "filled": true,
        "tone": 0.9,
        "region": "headlamp",
-       "material": "glass"
+       "material": "glass",
+       "rotationDeg": 73,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "capsule",
@@ -842,204 +886,204 @@
        "kind": "poly",
        "points": [
         [
-         0.4753,
-         -0.5923
+         0.7054,
+         0.2814
         ],
         [
-         0.46,
-         -0.5725
+         0.682,
+         0.2725
         ],
         [
-         0.443,
-         -0.5541
+         0.6594,
+         0.2616
         ],
         [
-         0.4245,
-         -0.5374
+         0.638,
+         0.2488
         ],
         [
-         0.4044,
-         -0.5225
+         0.6179,
+         0.234
         ],
         [
-         0.3831,
-         -0.5094
+         0.5991,
+         0.2174
         ],
         [
-         0.3608,
-         -0.4983
+         0.582,
+         0.1993
         ],
         [
-         0.3374,
-         -0.4893
+         0.5666,
+         0.1796
         ],
         [
-         0.3134,
-         -0.4824
+         0.553,
+         0.1587
         ],
         [
-         0.2889,
-         -0.4778
+         0.5414,
+         0.1366
         ],
         [
-         0.264,
-         -0.4754
+         0.5318,
+         0.1135
         ],
         [
-         0.239,
-         -0.4752
+         0.5243,
+         0.0896
         ],
         [
-         0.2141,
-         -0.4774
+         0.5191,
+         0.0652
         ],
         [
-         0.1895,
-         -0.4817
+         0.5161,
+         0.0404
         ],
         [
-         0.1654,
-         -0.4883
+         0.5153,
+         0.0154
         ],
         [
-         0.142,
-         -0.4971
+         0.5169,
+         -0.0095
         ],
         [
-         0.1195,
-         -0.5079
+         0.5206,
+         -0.0342
         ],
         [
-         0.0981,
-         -0.5208
+         0.5267,
+         -0.0585
         ],
         [
-         0.0779,
-         -0.5355
+         0.5349,
+         -0.0821
         ],
         [
-         0.0591,
-         -0.552
+         0.5452,
+         -0.1049
         ],
         [
-         0.0419,
-         -0.5702
+         0.5575,
+         -0.1266
         ],
         [
-         0.0265,
-         -0.5898
+         0.5718,
+         -0.1471
         ],
         [
-         0.0128,
-         -0.6108
+         0.5879,
+         -0.1663
         ],
         [
-         0.0012,
-         -0.6329
+         0.6056,
+         -0.1839
         ],
         [
-         -0.0084,
-         -0.6559
+         0.6248,
+         -0.1998
         ],
         [
-         0.0198,
-         -0.6662
+         0.6429,
+         -0.1758
         ],
         [
-         0.0283,
-         -0.6457
+         0.6258,
+         -0.1617
         ],
         [
-         0.0387,
-         -0.626
+         0.61,
+         -0.146
         ],
         [
-         0.0509,
-         -0.6073
+         0.5956,
+         -0.1289
         ],
         [
-         0.0646,
-         -0.5898
+         0.5829,
+         -0.1107
         ],
         [
-         0.0799,
-         -0.5736
+         0.5719,
+         -0.0913
         ],
         [
-         0.0966,
-         -0.5589
+         0.5627,
+         -0.071
         ],
         [
-         0.1146,
-         -0.5458
+         0.5555,
+         -0.05
         ],
         [
-         0.1337,
-         -0.5344
+         0.5501,
+         -0.0284
         ],
         [
-         0.1538,
-         -0.5247
+         0.5467,
+         -0.0063
         ],
         [
-         0.1746,
-         -0.5169
+         0.5454,
+         0.0158
         ],
         [
-         0.1961,
-         -0.511
+         0.546,
+         0.0381
         ],
         [
-         0.218,
-         -0.5071
+         0.5487,
+         0.0602
         ],
         [
-         0.2402,
-         -0.5052
+         0.5534,
+         0.082
         ],
         [
-         0.2625,
-         -0.5053
+         0.56,
+         0.1033
         ],
         [
-         0.2846,
-         -0.5075
+         0.5685,
+         0.1238
         ],
         [
-         0.3065,
-         -0.5116
+         0.5789,
+         0.1435
         ],
         [
-         0.3279,
-         -0.5177
+         0.5909,
+         0.1622
         ],
         [
-         0.3487,
-         -0.5257
+         0.6047,
+         0.1798
         ],
         [
-         0.3686,
-         -0.5356
+         0.62,
+         0.1959
         ],
         [
-         0.3876,
-         -0.5473
+         0.6367,
+         0.2106
         ],
         [
-         0.4054,
-         -0.5606
+         0.6546,
+         0.2238
         ],
         [
-         0.422,
-         -0.5755
+         0.6737,
+         0.2353
         ],
         [
-         0.4371,
-         -0.5918
+         0.6937,
+         0.245
         ],
         [
-         0.4507,
-         -0.6095
+         0.7146,
+         0.2528
         ]
        ],
        "closed": true,
@@ -1050,7 +1094,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "body-panels",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "capsule",
@@ -1116,12 +1166,1327 @@
        "region": "headlamp",
        "material": "glass"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0,
+       "w": 0.12,
+       "h": 0.46,
+       "r": 0.045,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.21,
+         0.26
+        ],
+        [
+         0.21,
+         0.26
+        ],
+        [
+         0.2,
+         0.5
+        ],
+        [
+         0.16,
+         0.9
+        ],
+        [
+         0.13,
+         1
+        ],
+        [
+         -0.13,
+         1
+        ],
+        [
+         -0.16,
+         0.9
+        ],
+        [
+         -0.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.095,
+        "z1": 0.125
+       },
+       "id": "stand-leg-l",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.125,
+        "z1": -0.095
+       },
+       "id": "stand-leg-r",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "fork-l",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.016,
+       "r1": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.062,
+        "z1": 0.094
+       }
+      },
+      {
+       "id": "fork-r",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.016,
+       "r1": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.094,
+        "z1": -0.062
+       }
+      },
+      {
+       "id": "cowl",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.0215,
+         -0.1007
+        ],
+        [
+         -0.119,
+         -0.0473
+        ],
+        [
+         -0.1684,
+         0.0306
+        ],
+        [
+         -0.145,
+         0.1071
+        ],
+        [
+         -0.0576,
+         0.1536
+        ],
+        [
+         0.0571,
+         0.1185
+        ],
+        [
+         0.094,
+         0.034
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": 0.17
+       }
+      },
+      {
+       "id": "headlamp",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.9,
+       "region": "headlamp",
+       "material": "glass",
+       "kind": "ellipse",
+       "cx": -0.0457,
+       "cy": 0.0558,
+       "rx": 0.03,
+       "ry": 0.045,
+       "rotationDeg": 73,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.073,
+         -0.017
+        ],
+        [
+         -0.063,
+         0.017
+        ],
+        [
+         -0.096,
+         0.027
+        ],
+        [
+         -0.107,
+         -0.007
+        ]
+       ],
+       "closed": true,
+       "id": "handlebar",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.062,
+         -0.033
+        ],
+        [
+         -0.045,
+         0.024
+        ],
+        [
+         -0.107,
+         0.043
+        ],
+        [
+         -0.125,
+         -0.014
+        ]
+       ],
+       "closed": true,
+       "id": "grip-l",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "steer-assembly",
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.29,
+        "z1": 0.37
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.062,
+         -0.033
+        ],
+        [
+         -0.045,
+         0.024
+        ],
+        [
+         -0.107,
+         0.043
+        ],
+        [
+         -0.125,
+         -0.014
+        ]
+       ],
+       "closed": true,
+       "id": "grip-r",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "steer-assembly",
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.29
+       }
+      },
+      {
+       "id": "fender-f",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.7054,
+         0.2814
+        ],
+        [
+         0.682,
+         0.2725
+        ],
+        [
+         0.6594,
+         0.2616
+        ],
+        [
+         0.638,
+         0.2488
+        ],
+        [
+         0.6179,
+         0.234
+        ],
+        [
+         0.5991,
+         0.2174
+        ],
+        [
+         0.582,
+         0.1993
+        ],
+        [
+         0.5666,
+         0.1796
+        ],
+        [
+         0.553,
+         0.1587
+        ],
+        [
+         0.5414,
+         0.1366
+        ],
+        [
+         0.5318,
+         0.1135
+        ],
+        [
+         0.5243,
+         0.0896
+        ],
+        [
+         0.5191,
+         0.0652
+        ],
+        [
+         0.5161,
+         0.0404
+        ],
+        [
+         0.5153,
+         0.0154
+        ],
+        [
+         0.5169,
+         -0.0095
+        ],
+        [
+         0.5206,
+         -0.0342
+        ],
+        [
+         0.5267,
+         -0.0585
+        ],
+        [
+         0.5349,
+         -0.0821
+        ],
+        [
+         0.5452,
+         -0.1049
+        ],
+        [
+         0.5575,
+         -0.1266
+        ],
+        [
+         0.5718,
+         -0.1471
+        ],
+        [
+         0.5879,
+         -0.1663
+        ],
+        [
+         0.6056,
+         -0.1839
+        ],
+        [
+         0.6248,
+         -0.1998
+        ],
+        [
+         0.6429,
+         -0.1758
+        ],
+        [
+         0.6258,
+         -0.1617
+        ],
+        [
+         0.61,
+         -0.146
+        ],
+        [
+         0.5956,
+         -0.1289
+        ],
+        [
+         0.5829,
+         -0.1107
+        ],
+        [
+         0.5719,
+         -0.0913
+        ],
+        [
+         0.5627,
+         -0.071
+        ],
+        [
+         0.5555,
+         -0.05
+        ],
+        [
+         0.5501,
+         -0.0284
+        ],
+        [
+         0.5467,
+         -0.0063
+        ],
+        [
+         0.5454,
+         0.0158
+        ],
+        [
+         0.546,
+         0.0381
+        ],
+        [
+         0.5487,
+         0.0602
+        ],
+        [
+         0.5534,
+         0.082
+        ],
+        [
+         0.56,
+         0.1033
+        ],
+        [
+         0.5685,
+         0.1238
+        ],
+        [
+         0.5789,
+         0.1435
+        ],
+        [
+         0.5909,
+         0.1622
+        ],
+        [
+         0.6047,
+         0.1798
+        ],
+        [
+         0.62,
+         0.1959
+        ],
+        [
+         0.6367,
+         0.2106
+        ],
+        [
+         0.6546,
+         0.2238
+        ],
+        [
+         0.6737,
+         0.2353
+        ],
+        [
+         0.6937,
+         0.245
+        ],
+        [
+         0.7146,
+         0.2528
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.7,
+       "region": "brake-disc",
+       "material": "alloy",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.075,
+        "z1": 0.075
+       }
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.06,
+       "w": 0.46,
+       "h": 0.12,
+       "r": 0.03,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.945,
+         0
+        ],
+        [
+         -0.93,
+         0.1
+        ],
+        [
+         -0.88,
+         0.16
+        ],
+        [
+         -0.7,
+         0.19
+        ],
+        [
+         -0.4,
+         0.19
+        ],
+        [
+         -0.25,
+         0.2
+        ],
+        [
+         -0.05,
+         0.2
+        ],
+        [
+         0.2,
+         0.2
+        ],
+        [
+         0.35,
+         0.17
+        ],
+        [
+         0.5,
+         0.12
+        ],
+        [
+         0.56,
+         0.08
+        ],
+        [
+         0.56,
+         -0.08
+        ],
+        [
+         0.5,
+         -0.12
+        ],
+        [
+         0.35,
+         -0.17
+        ],
+        [
+         0.2,
+         -0.2
+        ],
+        [
+         -0.05,
+         -0.2
+        ],
+        [
+         -0.25,
+         -0.2
+        ],
+        [
+         -0.4,
+         -0.19
+        ],
+        [
+         -0.7,
+         -0.19
+        ],
+        [
+         -0.88,
+         -0.16
+        ],
+        [
+         -0.93,
+         -0.1
+        ],
+        [
+         -0.945,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.12,
+       "w": 0.58,
+       "h": 0.195,
+       "r": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.155,
+        "z1": 0.155
+       },
+       "id": "seat-l",
+       "bone": "seat",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "seat",
+       "material": "seat-vinyl"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.89,
+       "y0": -0.15,
+       "x1": -0.5,
+       "y1": -0.15,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "muffler",
+       "bone": "swing",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.958,
+       "y0": -0.15,
+       "x1": -0.818,
+       "y1": -0.15,
+       "r0": 0.022,
+       "r1": 0.022,
+       "id": "tail-pipe",
+       "bone": "swing",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.45,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.54,
+       "y": -0.215,
+       "w": 0.22,
+       "h": 0.06,
+       "r": 0.02,
+       "id": "engine-cover",
+       "bone": "swing",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.35,
+       "region": "engine",
+       "material": "engine-metal"
+      },
+      {
+       "kind": "rect",
+       "x": -0.955,
+       "y": -0.07,
+       "w": 0.03,
+       "h": 0.14,
+       "r": 0.008,
+       "id": "tail-lamp",
+       "bone": "frame",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "headlamp",
+       "material": "glass"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.095,
+        "z1": 0.125
+       },
+       "id": "stand-leg-l",
+       "bone": "stand",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.125,
+        "z1": -0.095
+       },
+       "id": "stand-leg-r",
+       "bone": "stand",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "fork-l",
+       "bone": "steer",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.014,
+       "r1": 0.014,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.071,
+        "z1": 0.099
+       }
+      },
+      {
+       "id": "fork-r",
+       "bone": "steer",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.014,
+       "r1": 0.014,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.099,
+        "z1": -0.071
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
+      },
+      {
+       "id": "fender-f",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.7054,
+         0.2814
+        ],
+        [
+         0.682,
+         0.2725
+        ],
+        [
+         0.6594,
+         0.2616
+        ],
+        [
+         0.638,
+         0.2488
+        ],
+        [
+         0.6179,
+         0.234
+        ],
+        [
+         0.5991,
+         0.2174
+        ],
+        [
+         0.582,
+         0.1993
+        ],
+        [
+         0.5666,
+         0.1796
+        ],
+        [
+         0.553,
+         0.1587
+        ],
+        [
+         0.5414,
+         0.1366
+        ],
+        [
+         0.5318,
+         0.1135
+        ],
+        [
+         0.5243,
+         0.0896
+        ],
+        [
+         0.5191,
+         0.0652
+        ],
+        [
+         0.5161,
+         0.0404
+        ],
+        [
+         0.5153,
+         0.0154
+        ],
+        [
+         0.5169,
+         -0.0095
+        ],
+        [
+         0.5206,
+         -0.0342
+        ],
+        [
+         0.5267,
+         -0.0585
+        ],
+        [
+         0.5349,
+         -0.0821
+        ],
+        [
+         0.5452,
+         -0.1049
+        ],
+        [
+         0.5575,
+         -0.1266
+        ],
+        [
+         0.5718,
+         -0.1471
+        ],
+        [
+         0.5879,
+         -0.1663
+        ],
+        [
+         0.6056,
+         -0.1839
+        ],
+        [
+         0.6248,
+         -0.1998
+        ],
+        [
+         0.6429,
+         -0.1758
+        ],
+        [
+         0.6258,
+         -0.1617
+        ],
+        [
+         0.61,
+         -0.146
+        ],
+        [
+         0.5956,
+         -0.1289
+        ],
+        [
+         0.5829,
+         -0.1107
+        ],
+        [
+         0.5719,
+         -0.0913
+        ],
+        [
+         0.5627,
+         -0.071
+        ],
+        [
+         0.5555,
+         -0.05
+        ],
+        [
+         0.5501,
+         -0.0284
+        ],
+        [
+         0.5467,
+         -0.0063
+        ],
+        [
+         0.5454,
+         0.0158
+        ],
+        [
+         0.546,
+         0.0381
+        ],
+        [
+         0.5487,
+         0.0602
+        ],
+        [
+         0.5534,
+         0.082
+        ],
+        [
+         0.56,
+         0.1033
+        ],
+        [
+         0.5685,
+         0.1238
+        ],
+        [
+         0.5789,
+         0.1435
+        ],
+        [
+         0.5909,
+         0.1622
+        ],
+        [
+         0.6047,
+         0.1798
+        ],
+        [
+         0.62,
+         0.1959
+        ],
+        [
+         0.6367,
+         0.2106
+        ],
+        [
+         0.6546,
+         0.2238
+        ],
+        [
+         0.6737,
+         0.2353
+        ],
+        [
+         0.6937,
+         0.245
+        ],
+        [
+         0.7146,
+         0.2528
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "id": "cowl",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.0215,
+         -0.1007
+        ],
+        [
+         -0.119,
+         -0.0473
+        ],
+        [
+         -0.1684,
+         0.0306
+        ],
+        [
+         -0.145,
+         0.1071
+        ],
+        [
+         -0.0576,
+         0.1536
+        ],
+        [
+         0.0571,
+         0.1185
+        ],
+        [
+         0.094,
+         0.034
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.18,
+        "z1": 0.18
+       }
+      },
+      {
+       "id": "headlamp",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.9,
+       "region": "headlamp",
+       "material": "glass",
+       "kind": "ellipse",
+       "cx": -0.0457,
+       "cy": 0.0558,
+       "rx": 0.03,
+       "ry": 0.045,
+       "rotationDeg": 73,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.073,
+         -0.017
+        ],
+        [
+         -0.063,
+         0.017
+        ],
+        [
+         -0.096,
+         0.027
+        ],
+        [
+         -0.107,
+         -0.007
+        ]
+       ],
+       "closed": true,
+       "id": "handlebar",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.318,
+        "z1": 0.318
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.062,
+         -0.033
+        ],
+        [
+         -0.045,
+         0.024
+        ],
+        [
+         -0.107,
+         0.043
+        ],
+        [
+         -0.125,
+         -0.014
+        ]
+       ],
+       "closed": true,
+       "id": "grip-l",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "steer-assembly",
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.28,
+        "z1": 0.37
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.062,
+         -0.033
+        ],
+        [
+         -0.045,
+         0.024
+        ],
+        [
+         -0.107,
+         0.043
+        ],
+        [
+         -0.125,
+         -0.014
+        ]
+       ],
+       "closed": true,
+       "id": "grip-r",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "steer-assembly",
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.28
+       }
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Full side elevation with step-through floor, leg shield, hinged seat, fork, tyre, rim, disc and hub rings, engine cover, muffler with heat shield and tail pipe, mudguard band, stand and tail lamp.",
-      "de": "Vollständige Seitenansicht mit Durchstieg, Beinschild, klappbarer Sitzbank, Gabel, Reifen-, Felgen-, Scheiben- und Nabenringen, Motordeckel, Schalldämpfer mit Hitzeschild und Endrohr, Schutzblechband, Ständer und Rücklicht."
+      "en": "Full side elevation with step-through floor, leg shield, hinged seat, fork, tyre, rim, disc and hub rings, engine cover, muffler with heat shield and tail pipe, mudguard band, stand and tail lamp. Front: front tyre, fender, fork legs, hub, leg shield, cowl with headlamp, handlebar with grips and stand legs, rear tyre peeking beside; top: tyres, body with seat, exhaust, engine cover, cowl, fork, fender, handlebar and stand.",
+      "de": "Vollständige Seitenansicht mit Durchstieg, Beinschild, klappbarer Sitzbank, Gabel, Reifen-, Felgen-, Scheiben- und Nabenringen, Motordeckel, Schalldämpfer mit Hitzeschild und Endrohr, Schutzblechband, Ständer und Rücklicht. Vorn: Vorderreifen, Schutzblech, Gabelholme, Nabe, Beinschild, Verkleidung mit Scheinwerfer, Lenker mit Griffen und Ständerbeine, daneben der Hinterreifen; oben: Reifen, Karosserie mit Sitzbank, Auspuff, Motorabdeckung, Verkleidung, Gabel, Schutzblech, Lenker und Ständer."
      },
      "retained": {
       "en": "All printable parts.",
@@ -1148,8 +2513,8 @@
       "de": "Aufbau mittlerer Ton, Sitzbank und Reifen fast schwarz, Felgen und Metall hell; Strichstärken je Rolle des Profils."
      },
      "overlays": {
-      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean.",
-      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel."
+      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean. Front and top shapes carry the regions of the side view. The seat is drawn as three followTip capsules so it shortens when it opens; the stand legs are followTip rects (front) and capsules (top). Seat, engine and tail lamp are hidden behind the leg shield in the front view, the rear tyre is covered by the bodywork in plan. Steering: the steer bone lies along the steering axis (73 degrees), fork, front wheel, apron and handlebar ride on it, and steering is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel. Vorder- und Draufsichtformen tragen die Regionen der Seitenansicht. Die Sitzbank besteht aus drei followTip-Kapseln und verkürzt sich beim Öffnen; die Ständerbeine sind followTip-Rechtecke (vorn) und -Kapseln (oben). Sitzbank, Motor und Rücklicht liegen vorn hinter dem Beinschild, der Hinterreifen liegt oben unter der Karosserie. Lenkung: Der Lenkknochen liegt in der Lenkachse (73 Grad), Gabel, Vorderrad, Schürze und Lenker hängen an ihm, und das Lenken ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    },
@@ -1182,7 +2547,13 @@
        "regions": [
         "tyres"
        ],
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
       },
       {
        "kind": "path",
@@ -1197,7 +2568,13 @@
         "tyres",
         "brake-disc"
        ],
-       "material": "alloy"
+       "material": "alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
       },
       {
        "kind": "ellipse",
@@ -1212,7 +2589,13 @@
        "filled": true,
        "tone": 0.45,
        "region": "brake-disc",
-       "material": "cast-iron"
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
       },
       {
        "kind": "path",
@@ -1452,32 +2835,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.09,
-         -0.05
+         0.0215,
+         -0.1007
         ],
         [
-         -0.08,
-         0.1
+         -0.119,
+         -0.0473
         ],
         [
-         -0.02,
-         0.17
+         -0.1684,
+         0.0306
         ],
         [
-         0.06,
-         0.17
+         -0.145,
+         0.1071
         ],
         [
-         0.13,
-         0.1
+         -0.0576,
+         0.1536
         ],
         [
-         0.13,
-         -0.02
+         0.0571,
+         0.1185
         ],
         [
-         0.06,
-         -0.08
+         0.094,
+         0.034
         ]
        ],
        "closed": true,
@@ -1490,14 +2873,20 @@
        "regions": [
         "steer-assembly"
        ],
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": 0.17
+       }
       },
       {
        "kind": "capsule",
        "x0": 0,
        "y0": 0,
-       "x1": 0.25,
-       "y1": -0.75,
+       "x1": 0.7903,
+       "y1": 0.0198,
        "r0": 0.026,
        "r1": 0.02,
        "id": "fork",
@@ -1507,12 +2896,18 @@
        "filled": true,
        "tone": 0.4,
        "region": "steer-assembly",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
       },
       {
        "kind": "ellipse",
-       "cx": 0.04,
-       "cy": 0.06,
+       "cx": -0.0457,
+       "cy": 0.0558,
        "rx": 0.03,
        "ry": 0.045,
        "id": "headlamp",
@@ -1522,7 +2917,14 @@
        "filled": true,
        "tone": 0.9,
        "region": "headlamp",
-       "material": "glass"
+       "material": "glass",
+       "rotationDeg": 73,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "capsule",
@@ -1560,204 +2962,204 @@
        "kind": "poly",
        "points": [
         [
-         0.4753,
-         -0.5923
+         0.7054,
+         0.2814
         ],
         [
-         0.46,
-         -0.5725
+         0.682,
+         0.2725
         ],
         [
-         0.443,
-         -0.5541
+         0.6594,
+         0.2616
         ],
         [
-         0.4245,
-         -0.5374
+         0.638,
+         0.2488
         ],
         [
-         0.4044,
-         -0.5225
+         0.6179,
+         0.234
         ],
         [
-         0.3831,
-         -0.5094
+         0.5991,
+         0.2174
         ],
         [
-         0.3608,
-         -0.4983
+         0.582,
+         0.1993
         ],
         [
-         0.3374,
-         -0.4893
+         0.5666,
+         0.1796
         ],
         [
-         0.3134,
-         -0.4824
+         0.553,
+         0.1587
         ],
         [
-         0.2889,
-         -0.4778
+         0.5414,
+         0.1366
         ],
         [
-         0.264,
-         -0.4754
+         0.5318,
+         0.1135
         ],
         [
-         0.239,
-         -0.4752
+         0.5243,
+         0.0896
         ],
         [
-         0.2141,
-         -0.4774
+         0.5191,
+         0.0652
         ],
         [
-         0.1895,
-         -0.4817
+         0.5161,
+         0.0404
         ],
         [
-         0.1654,
-         -0.4883
+         0.5153,
+         0.0154
         ],
         [
-         0.142,
-         -0.4971
+         0.5169,
+         -0.0095
         ],
         [
-         0.1195,
-         -0.5079
+         0.5206,
+         -0.0342
         ],
         [
-         0.0981,
-         -0.5208
+         0.5267,
+         -0.0585
         ],
         [
-         0.0779,
-         -0.5355
+         0.5349,
+         -0.0821
         ],
         [
-         0.0591,
-         -0.552
+         0.5452,
+         -0.1049
         ],
         [
-         0.0419,
-         -0.5702
+         0.5575,
+         -0.1266
         ],
         [
-         0.0265,
-         -0.5898
+         0.5718,
+         -0.1471
         ],
         [
-         0.0128,
-         -0.6108
+         0.5879,
+         -0.1663
         ],
         [
-         0.0012,
-         -0.6329
+         0.6056,
+         -0.1839
         ],
         [
-         -0.0084,
-         -0.6559
+         0.6248,
+         -0.1998
         ],
         [
-         0.0198,
-         -0.6662
+         0.6429,
+         -0.1758
         ],
         [
-         0.0283,
-         -0.6457
+         0.6258,
+         -0.1617
         ],
         [
-         0.0387,
-         -0.626
+         0.61,
+         -0.146
         ],
         [
-         0.0509,
-         -0.6073
+         0.5956,
+         -0.1289
         ],
         [
-         0.0646,
-         -0.5898
+         0.5829,
+         -0.1107
         ],
         [
-         0.0799,
-         -0.5736
+         0.5719,
+         -0.0913
         ],
         [
-         0.0966,
-         -0.5589
+         0.5627,
+         -0.071
         ],
         [
-         0.1146,
-         -0.5458
+         0.5555,
+         -0.05
         ],
         [
-         0.1337,
-         -0.5344
+         0.5501,
+         -0.0284
         ],
         [
-         0.1538,
-         -0.5247
+         0.5467,
+         -0.0063
         ],
         [
-         0.1746,
-         -0.5169
+         0.5454,
+         0.0158
         ],
         [
-         0.1961,
-         -0.511
+         0.546,
+         0.0381
         ],
         [
-         0.218,
-         -0.5071
+         0.5487,
+         0.0602
         ],
         [
-         0.2402,
-         -0.5052
+         0.5534,
+         0.082
         ],
         [
-         0.2625,
-         -0.5053
+         0.56,
+         0.1033
         ],
         [
-         0.2846,
-         -0.5075
+         0.5685,
+         0.1238
         ],
         [
-         0.3065,
-         -0.5116
+         0.5789,
+         0.1435
         ],
         [
-         0.3279,
-         -0.5177
+         0.5909,
+         0.1622
         ],
         [
-         0.3487,
-         -0.5257
+         0.6047,
+         0.1798
         ],
         [
-         0.3686,
-         -0.5356
+         0.62,
+         0.1959
         ],
         [
-         0.3876,
-         -0.5473
+         0.6367,
+         0.2106
         ],
         [
-         0.4054,
-         -0.5606
+         0.6546,
+         0.2238
         ],
         [
-         0.422,
-         -0.5755
+         0.6737,
+         0.2353
         ],
         [
-         0.4371,
-         -0.5918
+         0.6937,
+         0.245
         ],
         [
-         0.4507,
-         -0.6095
+         0.7146,
+         0.2528
         ]
        ],
        "closed": true,
@@ -1768,7 +3170,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "body-panels",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "capsule",
@@ -1787,20 +3195,1111 @@
        "region": "body-panels",
        "material": "paint"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0,
+       "w": 0.12,
+       "h": 0.46,
+       "r": 0.045,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.15,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.21,
+         0.26
+        ],
+        [
+         0.21,
+         0.26
+        ],
+        [
+         0.2,
+         0.5
+        ],
+        [
+         0.16,
+         0.9
+        ],
+        [
+         0.13,
+         1
+        ],
+        [
+         -0.13,
+         1
+        ],
+        [
+         -0.16,
+         0.9
+        ],
+        [
+         -0.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.095,
+        "z1": 0.125
+       },
+       "id": "stand-leg-l",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.125,
+        "z1": -0.095
+       },
+       "id": "stand-leg-r",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "fork-l",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.016,
+       "r1": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.062,
+        "z1": 0.094
+       }
+      },
+      {
+       "id": "fork-r",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.016,
+       "r1": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.094,
+        "z1": -0.062
+       }
+      },
+      {
+       "id": "cowl",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "steer-assembly"
+       ],
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.0215,
+         -0.1007
+        ],
+        [
+         -0.119,
+         -0.0473
+        ],
+        [
+         -0.1684,
+         0.0306
+        ],
+        [
+         -0.145,
+         0.1071
+        ],
+        [
+         -0.0576,
+         0.1536
+        ],
+        [
+         0.0571,
+         0.1185
+        ],
+        [
+         0.094,
+         0.034
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": 0.17
+       }
+      },
+      {
+       "id": "headlamp",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.9,
+       "region": "headlamp",
+       "material": "glass",
+       "kind": "ellipse",
+       "cx": -0.0457,
+       "cy": 0.0558,
+       "rx": 0.03,
+       "ry": 0.045,
+       "rotationDeg": 73,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.062,
+         -0.033
+        ],
+        [
+         -0.045,
+         0.024
+        ],
+        [
+         -0.107,
+         0.043
+        ],
+        [
+         -0.125,
+         -0.014
+        ]
+       ],
+       "closed": true,
+       "id": "handlebar",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
+      },
+      {
+       "id": "fender-f",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.7054,
+         0.2814
+        ],
+        [
+         0.682,
+         0.2725
+        ],
+        [
+         0.6594,
+         0.2616
+        ],
+        [
+         0.638,
+         0.2488
+        ],
+        [
+         0.6179,
+         0.234
+        ],
+        [
+         0.5991,
+         0.2174
+        ],
+        [
+         0.582,
+         0.1993
+        ],
+        [
+         0.5666,
+         0.1796
+        ],
+        [
+         0.553,
+         0.1587
+        ],
+        [
+         0.5414,
+         0.1366
+        ],
+        [
+         0.5318,
+         0.1135
+        ],
+        [
+         0.5243,
+         0.0896
+        ],
+        [
+         0.5191,
+         0.0652
+        ],
+        [
+         0.5161,
+         0.0404
+        ],
+        [
+         0.5153,
+         0.0154
+        ],
+        [
+         0.5169,
+         -0.0095
+        ],
+        [
+         0.5206,
+         -0.0342
+        ],
+        [
+         0.5267,
+         -0.0585
+        ],
+        [
+         0.5349,
+         -0.0821
+        ],
+        [
+         0.5452,
+         -0.1049
+        ],
+        [
+         0.5575,
+         -0.1266
+        ],
+        [
+         0.5718,
+         -0.1471
+        ],
+        [
+         0.5879,
+         -0.1663
+        ],
+        [
+         0.6056,
+         -0.1839
+        ],
+        [
+         0.6248,
+         -0.1998
+        ],
+        [
+         0.6429,
+         -0.1758
+        ],
+        [
+         0.6258,
+         -0.1617
+        ],
+        [
+         0.61,
+         -0.146
+        ],
+        [
+         0.5956,
+         -0.1289
+        ],
+        [
+         0.5829,
+         -0.1107
+        ],
+        [
+         0.5719,
+         -0.0913
+        ],
+        [
+         0.5627,
+         -0.071
+        ],
+        [
+         0.5555,
+         -0.05
+        ],
+        [
+         0.5501,
+         -0.0284
+        ],
+        [
+         0.5467,
+         -0.0063
+        ],
+        [
+         0.5454,
+         0.0158
+        ],
+        [
+         0.546,
+         0.0381
+        ],
+        [
+         0.5487,
+         0.0602
+        ],
+        [
+         0.5534,
+         0.082
+        ],
+        [
+         0.56,
+         0.1033
+        ],
+        [
+         0.5685,
+         0.1238
+        ],
+        [
+         0.5789,
+         0.1435
+        ],
+        [
+         0.5909,
+         0.1622
+        ],
+        [
+         0.6047,
+         0.1798
+        ],
+        [
+         0.62,
+         0.1959
+        ],
+        [
+         0.6367,
+         0.2106
+        ],
+        [
+         0.6546,
+         0.2238
+        ],
+        [
+         0.6737,
+         0.2353
+        ],
+        [
+         0.6937,
+         0.245
+        ],
+        [
+         0.7146,
+         0.2528
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.06,
+       "w": 0.46,
+       "h": 0.12,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.945,
+         0
+        ],
+        [
+         -0.93,
+         0.1
+        ],
+        [
+         -0.88,
+         0.16
+        ],
+        [
+         -0.7,
+         0.19
+        ],
+        [
+         -0.4,
+         0.19
+        ],
+        [
+         -0.25,
+         0.2
+        ],
+        [
+         -0.05,
+         0.2
+        ],
+        [
+         0.2,
+         0.2
+        ],
+        [
+         0.35,
+         0.17
+        ],
+        [
+         0.5,
+         0.12
+        ],
+        [
+         0.56,
+         0.08
+        ],
+        [
+         0.56,
+         -0.08
+        ],
+        [
+         0.5,
+         -0.12
+        ],
+        [
+         0.35,
+         -0.17
+        ],
+        [
+         0.2,
+         -0.2
+        ],
+        [
+         -0.05,
+         -0.2
+        ],
+        [
+         -0.25,
+         -0.2
+        ],
+        [
+         -0.4,
+         -0.19
+        ],
+        [
+         -0.7,
+         -0.19
+        ],
+        [
+         -0.88,
+         -0.16
+        ],
+        [
+         -0.93,
+         -0.1
+        ],
+        [
+         -0.945,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.12,
+       "w": 0.58,
+       "h": 0.195,
+       "r": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": 0.16
+       },
+       "id": "seat-l",
+       "bone": "seat",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "seat",
+       "material": "seat-vinyl"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.89,
+       "y0": -0.15,
+       "x1": -0.5,
+       "y1": -0.15,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "muffler",
+       "bone": "swing",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "regions": [
+        "exhaust-system",
+        "engine"
+       ],
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.095,
+        "z1": 0.125
+       },
+       "id": "stand-leg-l",
+       "bone": "stand",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.125,
+        "z1": -0.095
+       },
+       "id": "stand-leg-r",
+       "bone": "stand",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "fork",
+       "bone": "steer",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.7903,
+       "y1": 0.0198,
+       "r0": 0.026,
+       "r1": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
+      },
+      {
+       "id": "fender-f",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.55,
+       "region": "body-panels",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.7054,
+         0.2814
+        ],
+        [
+         0.682,
+         0.2725
+        ],
+        [
+         0.6594,
+         0.2616
+        ],
+        [
+         0.638,
+         0.2488
+        ],
+        [
+         0.6179,
+         0.234
+        ],
+        [
+         0.5991,
+         0.2174
+        ],
+        [
+         0.582,
+         0.1993
+        ],
+        [
+         0.5666,
+         0.1796
+        ],
+        [
+         0.553,
+         0.1587
+        ],
+        [
+         0.5414,
+         0.1366
+        ],
+        [
+         0.5318,
+         0.1135
+        ],
+        [
+         0.5243,
+         0.0896
+        ],
+        [
+         0.5191,
+         0.0652
+        ],
+        [
+         0.5161,
+         0.0404
+        ],
+        [
+         0.5153,
+         0.0154
+        ],
+        [
+         0.5169,
+         -0.0095
+        ],
+        [
+         0.5206,
+         -0.0342
+        ],
+        [
+         0.5267,
+         -0.0585
+        ],
+        [
+         0.5349,
+         -0.0821
+        ],
+        [
+         0.5452,
+         -0.1049
+        ],
+        [
+         0.5575,
+         -0.1266
+        ],
+        [
+         0.5718,
+         -0.1471
+        ],
+        [
+         0.5879,
+         -0.1663
+        ],
+        [
+         0.6056,
+         -0.1839
+        ],
+        [
+         0.6248,
+         -0.1998
+        ],
+        [
+         0.6429,
+         -0.1758
+        ],
+        [
+         0.6258,
+         -0.1617
+        ],
+        [
+         0.61,
+         -0.146
+        ],
+        [
+         0.5956,
+         -0.1289
+        ],
+        [
+         0.5829,
+         -0.1107
+        ],
+        [
+         0.5719,
+         -0.0913
+        ],
+        [
+         0.5627,
+         -0.071
+        ],
+        [
+         0.5555,
+         -0.05
+        ],
+        [
+         0.5501,
+         -0.0284
+        ],
+        [
+         0.5467,
+         -0.0063
+        ],
+        [
+         0.5454,
+         0.0158
+        ],
+        [
+         0.546,
+         0.0381
+        ],
+        [
+         0.5487,
+         0.0602
+        ],
+        [
+         0.5534,
+         0.082
+        ],
+        [
+         0.56,
+         0.1033
+        ],
+        [
+         0.5685,
+         0.1238
+        ],
+        [
+         0.5789,
+         0.1435
+        ],
+        [
+         0.5909,
+         0.1622
+        ],
+        [
+         0.6047,
+         0.1798
+        ],
+        [
+         0.62,
+         0.1959
+        ],
+        [
+         0.6367,
+         0.2106
+        ],
+        [
+         0.6546,
+         0.2238
+        ],
+        [
+         0.6737,
+         0.2353
+        ],
+        [
+         0.6937,
+         0.245
+        ],
+        [
+         0.7146,
+         0.2528
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "id": "cowl",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.0215,
+         -0.1007
+        ],
+        [
+         -0.119,
+         -0.0473
+        ],
+        [
+         -0.1684,
+         0.0306
+        ],
+        [
+         -0.145,
+         0.1071
+        ],
+        [
+         -0.0576,
+         0.1536
+        ],
+        [
+         0.0571,
+         0.1185
+        ],
+        [
+         0.094,
+         0.034
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.18,
+        "z1": 0.18
+       }
+      },
+      {
+       "id": "headlamp",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.9,
+       "region": "headlamp",
+       "material": "glass",
+       "kind": "ellipse",
+       "cx": -0.0457,
+       "cy": 0.0558,
+       "rx": 0.03,
+       "ry": 0.045,
+       "rotationDeg": 73,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.062,
+         -0.033
+        ],
+        [
+         -0.045,
+         0.024
+        ],
+        [
+         -0.107,
+         0.043
+        ],
+        [
+         -0.125,
+         -0.014
+        ]
+       ],
+       "closed": true,
+       "id": "handlebar",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Wheel rings with rim and hub, body, seat, cowl, fork, lamp, muffler with tail pipe, engine cover, front mudguard, stand and tail lamp.",
-      "de": "Radringe mit Felge und Nabe, Karosserie, Sitzbank, Verkleidung, Gabel, Lampe, Schalldämpfer mit Endrohr, Motordeckel, Vorderradschutzblech, Ständer und Rücklicht."
+      "en": "Wheel rings with rim and hub, body, seat, cowl, fork, lamp, muffler with tail pipe, engine cover, front mudguard, stand and tail lamp. Front and top as articulated masses: tyres, fender, fork, leg shield or body, seat, exhaust with engine, cowl with headlamp, handlebar and stand.",
+      "de": "Radringe mit Felge und Nabe, Karosserie, Sitzbank, Verkleidung, Gabel, Lampe, Schalldämpfer mit Endrohr, Motordeckel, Vorderradschutzblech, Ständer und Rücklicht. Vorder- und Draufsicht als gegliederte Massen: Reifen, Schutzblech, Gabel, Beinschild beziehungsweise Karosserie, Sitzbank, Auspuff mit Motor, Verkleidung mit Scheinwerfer, Lenker und Ständer."
      },
      "retained": {
       "en": "All visible parts down to 0.05 m.",
       "de": "Alle sichtbaren Teile bis 0,05 m."
      },
      "merged": {
-      "en": "Disc, caliper and drum merge into the hub; stand is a stroke.",
-      "de": "Scheibe, Sattel und Trommel gehen in der Nabe auf; der Ständer ist ein Strich."
+      "en": "Disc, caliper and drum merge into the hub; stand is a stroke. Grips and handlebar tube, hub and tyre, muffler with engine cover and tail pipe, and tail lamp with the body are merged in front and top.",
+      "de": "Scheibe, Sattel und Trommel gehen in der Nabe auf; der Ständer ist ein Strich. Griffe und Lenkerrohr, Nabe und Reifen, Auspuff mit Motorabdeckung und Endrohr sowie Rücklicht und Karosserie sind vorn und oben zusammengefasst."
      },
      "omitted": {
       "en": "Mirror, grips, footrests, cables, tyre tread.",
@@ -1819,8 +4318,8 @@
       "de": "Aufbau mittlerer Ton, Sitzbank und Reifen fast schwarz, Felgen und Metall hell; Strichstärken je Rolle des Profils."
      },
      "overlays": {
-      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean.",
-      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel."
+      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean. Steering: the steer bone lies along the steering axis (73 degrees), fork, front wheel, apron and handlebar ride on it, and steering is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel. Lenkung: Der Lenkknochen liegt in der Lenkachse (73 Grad), Gabel, Vorderrad, Schürze und Lenker hängen an ihm, und das Lenken ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    },
@@ -1857,7 +4356,13 @@
         "tyres",
         "brake-disc"
        ],
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "ellipse",
@@ -1874,7 +4379,13 @@
        "regions": [
         "brake-disc"
        ],
-       "material": "alloy"
+       "material": "alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "ellipse",
@@ -2107,32 +4618,32 @@
        "kind": "poly",
        "points": [
         [
-         -0.09,
-         -0.05
+         0.0215,
+         -0.1007
         ],
         [
-         -0.08,
-         0.1
+         -0.119,
+         -0.0473
         ],
         [
-         -0.02,
-         0.17
+         -0.1684,
+         0.0306
         ],
         [
-         0.06,
-         0.17
+         -0.145,
+         0.1071
         ],
         [
-         0.13,
-         0.1
+         -0.0576,
+         0.1536
         ],
         [
-         0.13,
-         -0.02
+         0.0571,
+         0.1185
         ],
         [
-         0.06,
-         -0.08
+         0.094,
+         0.034
         ]
        ],
        "closed": true,
@@ -2146,21 +4657,35 @@
         "steer-assembly",
         "headlamp"
        ],
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.18,
+        "z1": 0.18
+       }
       },
       {
        "kind": "poly",
        "points": [
         [
-         0,
+         -0.001,
+         0.02
+        ],
+        [
+         0.79,
+         0.04
+        ],
+        [
+         0.791,
          0
         ],
         [
-         0.25,
-         -0.75
+         0.001,
+         -0.02
         ]
        ],
-       "closed": false,
+       "closed": true,
        "id": "fork",
        "bone": "steer",
        "role": "body",
@@ -2168,22 +4693,589 @@
        "filled": false,
        "tone": 0.3,
        "region": "steer-assembly",
-       "penMm": 0.2
+       "penMm": 0.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.094,
+        "z1": 0.094
+       }
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0,
+       "w": 0.12,
+       "h": 0.46,
+       "r": 0.04,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.21,
+         0.26
+        ],
+        [
+         0.21,
+         0.26
+        ],
+        [
+         0.2,
+         0.5
+        ],
+        [
+         0.16,
+         0.9
+        ],
+        [
+         0.13,
+         1
+        ],
+        [
+         -0.13,
+         1
+        ],
+        [
+         -0.16,
+         0.9
+        ],
+        [
+         -0.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "body-panels",
+        "engine",
+        "exhaust-system",
+        "seat"
+       ],
+       "material": "paint"
+      },
+      {
+       "id": "fork",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.7903,
+         0.0198
+        ]
+       ],
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.094,
+        "z1": 0.094
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.033,
+         -0.062
+        ],
+        [
+         0.051,
+         -0.005
+        ],
+        [
+         -0.16,
+         0.059
+        ],
+        [
+         -0.177,
+         0.002
+        ]
+       ],
+       "closed": true,
+       "id": "cowl-bar",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "steer-assembly",
+        "headlamp"
+       ],
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brake-disc",
+        "body-panels"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.125,
+        "z1": 0.125
+       },
+       "id": "stand",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "id": "wheel-f-top",
+       "bone": "steer",
+       "role": "body",
+       "z": 4.01,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brake-disc",
+        "body-panels"
+       ],
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       },
+       "points": [
+        [
+         0.574,
+         0.065
+        ],
+        [
+         0.5857,
+         0.1033
+        ],
+        [
+         0.5332,
+         0.1193
+        ],
+        [
+         0.5215,
+         0.0811
+        ]
+       ],
+       "closed": true
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.06,
+       "w": 0.46,
+       "h": 0.12,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.945,
+         0
+        ],
+        [
+         -0.93,
+         0.1
+        ],
+        [
+         -0.88,
+         0.16
+        ],
+        [
+         -0.7,
+         0.19
+        ],
+        [
+         -0.4,
+         0.19
+        ],
+        [
+         -0.25,
+         0.2
+        ],
+        [
+         -0.05,
+         0.2
+        ],
+        [
+         0.2,
+         0.2
+        ],
+        [
+         0.35,
+         0.17
+        ],
+        [
+         0.5,
+         0.12
+        ],
+        [
+         0.56,
+         0.08
+        ],
+        [
+         0.56,
+         -0.08
+        ],
+        [
+         0.5,
+         -0.12
+        ],
+        [
+         0.35,
+         -0.17
+        ],
+        [
+         0.2,
+         -0.2
+        ],
+        [
+         -0.05,
+         -0.2
+        ],
+        [
+         -0.25,
+         -0.2
+        ],
+        [
+         -0.4,
+         -0.19
+        ],
+        [
+         -0.7,
+         -0.19
+        ],
+        [
+         -0.88,
+         -0.16
+        ],
+        [
+         -0.93,
+         -0.1
+        ],
+        [
+         -0.945,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "body-panels",
+        "engine",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.12,
+       "w": 0.58,
+       "h": 0.195,
+       "r": 0.06,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "id": "seat",
+       "bone": "seat",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "seat",
+       "material": "seat-vinyl"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.095,
+        "z1": 0.125
+       },
+       "id": "stand-l",
+       "bone": "stand",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.335,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.125,
+        "z1": -0.095
+       },
+       "id": "stand-r",
+       "bone": "stand",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "fork",
+       "bone": "steer",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.7903,
+         0.0198
+        ]
+       ],
+       "closed": false,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brake-disc",
+        "body-panels"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "id": "cowl",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "steer-assembly",
+        "headlamp"
+       ],
+       "material": "paint",
+       "kind": "poly",
+       "points": [
+        [
+         0.0215,
+         -0.1007
+        ],
+        [
+         -0.119,
+         -0.0473
+        ],
+        [
+         -0.1684,
+         0.0306
+        ],
+        [
+         -0.145,
+         0.1071
+        ],
+        [
+         -0.0576,
+         0.1536
+        ],
+        [
+         0.0571,
+         0.1185
+        ],
+        [
+         0.094,
+         0.034
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.18,
+        "z1": 0.18
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.033,
+         -0.062
+        ],
+        [
+         0.051,
+         -0.005
+        ],
+        [
+         -0.16,
+         0.059
+        ],
+        [
+         -0.177,
+         0.002
+        ]
+       ],
+       "closed": true,
+       "id": "handlebar",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
       }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Body, seat, cowl, fork, lamp, muffler and engine cover with two solid wheel discs.",
-      "de": "Karosserie, Sitzbank, Verkleidung, Gabel, Lampe, Schalldämpfer und Motordeckel mit zwei vollen Radscheiben."
+      "en": "Body, seat, cowl, fork, lamp, muffler and engine cover with two solid wheel discs. Front and top keep the main masses: two wheels, body with seat, fork, cowl with handlebar and the stand.",
+      "de": "Karosserie, Sitzbank, Verkleidung, Gabel, Lampe, Schalldämpfer und Motordeckel mit zwei vollen Radscheiben. Vorder- und Draufsicht behalten die Hauptmassen: zwei Räder, Karosserie mit Sitzbank, Gabel, Verkleidung mit Lenker und den Ständer."
      },
      "retained": {
       "en": "All main masses.",
       "de": "Alle Hauptmassen."
      },
      "merged": {
-      "en": "Rim and tyre are one disc per wheel; stand and tail lamp merge into the body.",
-      "de": "Felge und Reifen sind eine Scheibe je Rad; Ständer und Rücklicht gehen im Aufbau auf."
+      "en": "Rim and tyre are one disc per wheel; stand and tail lamp merge into the body. Fender and hub are part of the wheel shapes; engine, exhaust and tail lamp are part of the body; the headlamp is part of the cowl.",
+      "de": "Felge und Reifen sind eine Scheibe je Rad; Ständer und Rücklicht gehen im Aufbau auf. Schutzblech und Nabe gehören zu den Radformen; Motor, Auspuff und Rücklicht zur Karosserie; der Scheinwerfer zur Verkleidung."
      },
      "omitted": {
       "en": "Stand, tail lamp, mudguard, handlebar details, rim.",
@@ -2202,8 +5294,8 @@
       "de": "Aufbau mittlerer Ton, Sitzbank und Reifen fast schwarz, Felgen und Metall hell; Strichstärken je Rolle des Profils."
      },
      "overlays": {
-      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean.",
-      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel."
+      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean. Steering: the steer bone lies along the steering axis (73 degrees), fork, front wheel, apron and handlebar ride on it, and steering is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel. Lenkung: Der Lenkknochen liegt in der Lenkachse (73 Grad), Gabel, Vorderrad, Schürze und Lenker hängen an ihm, und das Lenken ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    },
@@ -2240,7 +5332,13 @@
         "tyres",
         "brake-disc"
        ],
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
       },
       {
        "kind": "ellipse",
@@ -2430,15 +5528,23 @@
        "kind": "poly",
        "points": [
         [
-         0,
-         0
+         -0.001,
+         0.037
         ],
         [
-         0.25,
-         -0.75
+         0.789,
+         0.057
+        ],
+        [
+         0.791,
+         -0.018
+        ],
+        [
+         0.001,
+         -0.037
         ]
        ],
-       "closed": false,
+       "closed": true,
        "id": "fork",
        "bone": "steer",
        "role": "body",
@@ -2446,14 +5552,415 @@
        "filled": false,
        "tone": 0.3,
        "region": "steer-assembly",
-       "penMm": 0.15
+       "penMm": 0.15,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.375,
+        "z1": 0.375
+       }
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0,
+       "w": 0.12,
+       "h": 0.46,
+       "r": 0.04,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.21,
+         0.26
+        ],
+        [
+         0.21,
+         0.26
+        ],
+        [
+         0.2,
+         0.5
+        ],
+        [
+         0.16,
+         0.9
+        ],
+        [
+         0.13,
+         1
+        ],
+        [
+         -0.13,
+         1
+        ],
+        [
+         -0.16,
+         0.9
+        ],
+        [
+         -0.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "body-panels",
+        "engine",
+        "exhaust-system",
+        "seat"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.032,
+         -0.067
+        ],
+        [
+         0.052,
+         0
+        ],
+        [
+         -0.158,
+         0.064
+        ],
+        [
+         -0.179,
+         -0.003
+        ]
+       ],
+       "closed": true,
+       "id": "cowl-bar",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "steer-assembly",
+        "headlamp",
+        "body-panels"
+       ],
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": 0.37
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      }
+     ],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.945,
+         0
+        ],
+        [
+         -0.93,
+         0.1
+        ],
+        [
+         -0.88,
+         0.16
+        ],
+        [
+         -0.7,
+         0.19
+        ],
+        [
+         -0.4,
+         0.19
+        ],
+        [
+         -0.25,
+         0.2
+        ],
+        [
+         -0.05,
+         0.2
+        ],
+        [
+         0.2,
+         0.2
+        ],
+        [
+         0.35,
+         0.17
+        ],
+        [
+         0.5,
+         0.12
+        ],
+        [
+         0.56,
+         0.08
+        ],
+        [
+         0.56,
+         -0.08
+        ],
+        [
+         0.5,
+         -0.12
+        ],
+        [
+         0.35,
+         -0.17
+        ],
+        [
+         0.2,
+         -0.2
+        ],
+        [
+         -0.05,
+         -0.2
+        ],
+        [
+         -0.25,
+         -0.2
+        ],
+        [
+         -0.4,
+         -0.19
+        ],
+        [
+         -0.7,
+         -0.19
+        ],
+        [
+         -0.88,
+         -0.16
+        ],
+        [
+         -0.93,
+         -0.1
+        ],
+        [
+         -0.945,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "body-panels",
+        "engine",
+        "exhaust-system",
+        "headlamp"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.12,
+       "w": 0.58,
+       "h": 0.195,
+       "r": 0.06,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "id": "seat",
+       "bone": "seat",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.15,
+       "region": "seat",
+       "material": "seat-vinyl"
+      },
+      {
+       "kind": "ellipse",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "brake-disc",
+        "body-panels"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.23,
+       "ry": 0.23,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.065,
+        "z1": 0.065
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.33,
+         -0.18
+        ],
+        [
+         0.55,
+         -0.18
+        ],
+        [
+         0.55,
+         -0.034
+        ],
+        [
+         0.45,
+         -0.034
+        ],
+        [
+         0.45,
+         0.034
+        ],
+        [
+         0.55,
+         0.034
+        ],
+        [
+         0.55,
+         0.18
+        ],
+        [
+         0.33,
+         0.18
+        ]
+       ],
+       "closed": true,
+       "id": "cowl",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "steer-assembly",
+        "headlamp"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.032,
+         -0.067
+        ],
+        [
+         0.052,
+         0
+        ],
+        [
+         -0.158,
+         0.064
+        ],
+        [
+         -0.179,
+         -0.003
+        ]
+       ],
+       "closed": true,
+       "id": "handlebar",
+       "bone": "steer",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.375,
+        "z1": 0.375
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.06,
+       "w": 0.46,
+       "h": 0.12,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
       }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "One composed body silhouette with the seat, two solid wheel discs and no internal edge.",
-      "de": "Eine zusammengesetzte Karosseriesilhouette mit Sitzbank, zwei vollen Radscheiben und ohne innere Kante."
+      "en": "One composed body silhouette with the seat, two solid wheel discs and no internal edge. Front and top are composed silhouettes of a few masses: wheels, body with seat, cowl and handlebar; the stand is omitted.",
+      "de": "Eine zusammengesetzte Karosseriesilhouette mit Sitzbank, zwei vollen Radscheiben und ohne innere Kante. Vorder- und Draufsicht sind komponierte Silhouetten aus wenigen Massen: Räder, Karosserie mit Sitzbank, Verkleidung und Lenker; der Ständer entfällt."
      },
      "retained": {
       "en": "Body, seat, two wheels.",
@@ -2480,22 +5987,22 @@
       "de": "Aufbau mittlerer Ton, Sitzbank und Reifen fast schwarz, Felgen und Metall hell; Strichstärken je Rolle des Profils."
      },
      "overlays": {
-      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean.",
-      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel."
+      "en": "Regions paint their own shapes where drawn; merged shapes list their regions and paint the area-weighted mean. Steering: the steer bone lies along the steering axis (73 degrees), fork, front wheel, apron and handlebar ride on it, and steering is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Regionen färben ihre eigenen Formen; zusammengefasste Formen führen ihre Regionen und zeigen das flächengewichtete Mittel. Lenkung: Der Lenkknochen liegt in der Lenkachse (73 Grad), Gabel, Vorderrad, Schürze und Lenker hängen an ihm, und das Lenken ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    }
   },
   "symbols": [
    {
-    "id": "scooter-plan",
+    "id": "scooter-symbol",
     "title": {
-     "en": "Motor scooter plan symbol",
-     "de": "Motorroller-Grundrisszeichen"
+     "en": "Motor scooter symbol",
+     "de": "Motorrollerzeichen"
     },
     "description": {
-     "en": "True-extent plan: body, both wheels edge-on and handlebar width.",
-     "de": "Grundriss in wahrer Ausdehnung: Aufbau, beide Räder von der Kante und Lenkerbreite."
+     "en": "True-extent symbol of the motor scooter in side, front and top view: body, seat, both wheels, steering fork, cowl and handlebar.",
+     "de": "Zeichen des Motorrollers in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Karosserie, Sitz, beide Räder, Gabel, Lenkerverkleidung und Lenker."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -2512,8 +6019,224 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0.67,
+       "cy": 0.23,
+       "rx": 0.23,
+       "ry": 0.23,
+       "id": "elevation-wheel-f",
+       "bone": "frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.67,
+       "cy": 0.23,
+       "rx": 0.23,
+       "ry": 0.23,
+       "id": "elevation-wheel-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.94,
+         0.4
+        ],
+        [
+         -0.9,
+         0.95
+        ],
+        [
+         -0.45,
+         1
+        ],
+        [
+         -0.2,
+         0.87
+        ],
+        [
+         0,
+         0.3
+        ],
+        [
+         0.45,
+         0.26
+        ],
+        [
+         0.56,
+         0.6
+        ],
+        [
+         0.4,
+         0.9
+        ],
+        [
+         -0.2,
+         0.7
+        ]
+       ],
+       "closed": true,
+       "id": "elevation-body",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.82,
+       "y": 0.67,
+       "w": 0.6,
+       "h": 0.2,
+       "id": "elevation-seat",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.67,
+         0.23
+        ],
+        [
+         0.42,
+         0.98
+        ]
+       ],
+       "closed": false,
+       "id": "elevation-fork",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.33,
+         0.9
+        ],
+        [
+         0.55,
+         0.9
+        ],
+        [
+         0.5,
+         1.15
+        ],
+        [
+         0.36,
+         1.15
+        ]
+       ],
+       "closed": true,
+       "id": "elevation-cowl",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0,
+       "w": 0.12,
+       "h": 0.46,
+       "id": "front-wheel",
+       "bone": "frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.21,
+       "y": 0.26,
+       "w": 0.42,
+       "h": 0.74,
+       "id": "front-body",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.09,
+       "y": 0.23,
+       "w": 0.18,
+       "h": 0.75,
+       "id": "front-fork",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 0.93,
+       "w": 0.74,
+       "h": 0.22,
+       "id": "front-cowl-bar",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
      "plan": [
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.06,
+       "w": 0.46,
+       "h": 0.12,
+       "id": "plan-wheel-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": 0.44,
+       "y": -0.07,
+       "w": 0.46,
+       "h": 0.14,
+       "id": "plan-wheel-f",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
       {
        "kind": "poly",
        "points": [
@@ -2522,19 +6245,27 @@
          -0.17
         ],
         [
-         0,
+         -0.5,
          -0.2
         ],
         [
-         0.34,
-         -0.13
+         0.3,
+         -0.2
         ],
         [
-         0.34,
-         0.13
+         0.56,
+         -0.1
         ],
         [
-         0,
+         0.56,
+         0.1
+        ],
+        [
+         0.3,
+         0.2
+        ],
+        [
+         -0.5,
          0.2
         ],
         [
@@ -2548,94 +6279,39 @@
        "role": "body",
        "z": 3,
        "filled": true,
-       "tone": 0.5,
-       "material": "paint"
+       "tone": 0.5
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         0.44,
-         -0.055
-        ],
-        [
-         0.9,
-         -0.055
-        ],
-        [
-         0.9,
-         0.055
-        ],
-        [
-         0.44,
-         0.055
-        ]
-       ],
-       "closed": true,
-       "id": "plan-wheel-f",
-       "bone": "frame",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.1,
-       "material": "rubber"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.9,
-         -0.06
-        ],
-        [
-         -0.44,
-         -0.06
-        ],
-        [
-         -0.44,
-         0.06
-        ],
-        [
-         -0.9,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "plan-wheel-r",
-       "bone": "frame",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.1,
-       "material": "rubber"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.4,
-         -0.37
-        ],
-        [
-         0.4,
-         0.37
-        ]
-       ],
-       "closed": false,
-       "id": "plan-bars",
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.15,
+       "w": 0.58,
+       "h": 0.3,
+       "id": "plan-seat",
        "bone": "frame",
        "role": "body",
        "z": 4,
-       "filled": false,
-       "tone": 0.4,
-       "material": "paint",
-       "penMm": 0.18
+       "filled": true,
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": 0.37,
+       "y": -0.37,
+       "w": 0.06,
+       "h": 0.74,
+       "id": "plan-handlebar",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4
       }
      ]
     },
     "dimensionalNote": {
-     "en": "Model metres: length 1.85 m, width 0.74 m.",
-     "de": "Modellmeter: Länge 1,85 m, Breite 0,74 m."
+     "en": "Model metres: length 1.85 m, handlebar width 0.74 m, height 1.15 m; side, front and top view.",
+     "de": "Modellmeter: Länge 1,85 m, Lenkerbreite 0,74 m, Höhe 1,15 m; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -2956,7 +6632,7 @@
     "id": "loop-start",
     "title": {
      "en": "Ride loop start",
-     "de": "Fahrschleife start"
+     "de": "Fahrschleife Start"
     },
     "description": {
      "en": "Technical key of the ride loop: wheels have turned theta = -x / r.",
@@ -3418,6 +7094,81 @@
      },
      "emitters": {
       "tailpipe": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "turning-left",
+    "title": {
+     "en": "Turning left at 15 km/h",
+     "de": "Linkskurve mit 15 km/h"
+    },
+    "description": {
+     "en": "Stand up, both wheels on the ground, handlebar turned 14 degrees to the left, engine at part load.",
+     "de": "Ständer oben, beide Räder am Boden, Lenker 14 Grad nach links eingeschlagen, Motor im Teillastbetrieb."
+    },
+    "bones": {
+     "steer": {
+      "twistDeg": -14
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "rolling": 0.6,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "headlamp": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "seat": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "engine": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.1
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.1
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.008,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.05
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
      }
     },
     "loads": []
@@ -4171,10 +7922,7 @@
   "presentation": {
    "defaultPose": "cruising",
    "defaultClip": "ride-loop",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

@@ -1,0 +1,15 @@
+{
+  "tr": [
+    {"language": "en", "en": "Light", "de": "Licht", "expected": "Light"},
+    {"language": "de", "en": "Light", "de": "Licht", "expected": "Licht"}
+  ],
+  "numbers": [
+    {"value": 1250.5, "digits": 1, "en": "1\\,250.5", "de": "1\\,250{,}5"},
+    {"value": 0.15, "digits": 2, "en": "0.15", "de": "0{,}15"},
+    {"value": 57, "digits": 0, "en": "57", "de": "57"},
+    {"value": 3000, "digits": 0, "en": "3\\,000", "de": "3\\,000"}
+  ],
+  "unit": {"value": "16", "unit": "°C", "expected": "16 °C"},
+  "invalid_languages": ["", "fr", "EN"],
+  "devices_differ_between_languages": ["heater", "person", "seated", "sun"]
+}

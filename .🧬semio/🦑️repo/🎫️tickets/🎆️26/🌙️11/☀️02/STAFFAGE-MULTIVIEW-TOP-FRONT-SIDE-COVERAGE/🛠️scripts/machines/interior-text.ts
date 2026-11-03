@@ -1,0 +1,14 @@
+import { load, save, rep } from "./lib.ts";
+const d = load("city-car");
+const r100 = rep(d, 100).decisions, r200 = rep(d, 200).decisions, r500 = rep(d, 500).decisions;
+r100.omitted.en = r100.omitted.en.replace("seats, steering wheel, ", "rear seats, ");
+r100.omitted.de = r100.omitted.de.replace("Sitze, Lenkrad, ", "hintere Sitze, ");
+r100.retained.en = r100.retained.en.replace(/\.$/, "") + "; driver side of the left-hand-drive car: steering wheel (0.17 m = 1.7 mm) and the front seat headrests (1.8 mm) in all three views.";
+r100.retained.de = r100.retained.de.replace(/\.$/, "") + "; Fahrerseite des Linkslenkers: Lenkrad (0,17 m = 1,7 mm) und Kopfstützen der Vordersitze (1,8 mm) in allen drei Ansichten.";
+r200.omitted.en = r200.omitted.en.replace("seats, steering wheel, ", "rear seats, ");
+r200.omitted.de = r200.omitted.de.replace("Sitze, Lenkrad, ", "hintere Sitze, ");
+r200.retained.en = r200.retained.en.replace(/\.$/, "") + "; driver side of the left-hand-drive car: steering wheel (0.85 mm) and front seat headrests (0.9 mm), above the 0.2 mm print minimum.";
+r200.retained.de = r200.retained.de.replace(/\.$/, "") + "; Fahrerseite des Linkslenkers: Lenkrad (0,85 mm) und Kopfstützen der Vordersitze (0,9 mm), über dem Druckminimum von 0,2 mm.";
+for (const t of ["en", "de"] as const) if (!r500.omitted[t].includes(t === "en" ? "steering wheel" : "Lenkrad")) r500.omitted[t] = r500.omitted[t].replace(/\.$/, "") + (t === "en" ? "; steering wheel and headrests (0.17 m = 0.34 mm, below the 0.4 mm feature minimum of the line pens)." : "; Lenkrad und Kopfstützen (0,17 m = 0,34 mm, unter dem Merkmalsminimum der Linienstifte von 0,4 mm).");
+console.log(r100.omitted.en, "|", r500.omitted.en);
+save("city-car", d);

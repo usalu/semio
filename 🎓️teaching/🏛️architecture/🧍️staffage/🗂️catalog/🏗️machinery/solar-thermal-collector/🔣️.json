@@ -1,0 +1,3584 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "solar-thermal-collector",
+  "category": "machinery",
+  "title": {
+   "en": "Flat-Plate Solar Thermal Collector",
+   "de": "Flachkollektor (Solarthermie)"
+  },
+  "summary": {
+   "en": "A 2.0 m by 1.0 m glazed flat-plate solar thermal collector of 40 kg, tilted by 35 degrees on a steel stand: aluminium tray with mineral wool, solar glass, selective absorber with nine risers, inlet and outlet headers.",
+   "de": "Ein verglaster Flachkollektor von 2,0 m mal 1,0 m und 40 kg, 35 Grad geneigt auf einem Stahlgestell: Aluminiumwanne mit Mineralwolle, Solarglas, selektiver Absorber mit neun Steigrohren, Vor- und Rücklauf-Sammler."
+  },
+  "tags": [
+   "solar-thermal",
+   "flat-plate-collector",
+   "collector",
+   "absorber",
+   "stagnation",
+   "dec",
+   "solar-heat",
+   "machinery"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (G2)",
+   "method": "handcrafted",
+   "created": "2026-11-01",
+   "references": [
+    {
+     "id": "iso-9806-2017",
+     "citation": "ISO 9806:2017 Solar energy - Solar thermal collectors - Test methods (peak efficiency, loss coefficients a1 and a2, stagnation temperature)."
+    },
+    {
+     "id": "duffie-beckman-2013",
+     "citation": "Duffie, J. A., Beckman, W. A. (2013). Solar Engineering of Thermal Processes, 4th ed., Wiley (flat-plate collector construction, loss coefficients, stagnation)."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+    }
+   ],
+   "notes": {
+    "en": "A typical glazed flat-plate collector of 2.0 m by 1.0 m by 0.1 m (gross area 2.0 m2, absorber area 1.8 m2) and 40 kg: a 1.5 mm anodised aluminium tray with 26 mm of mineral wool, a 4 mm low-iron solar glass cover, a selective absorber sheet of 0.5 mm with nine 10 mm copper risers at 0.1 m pitch and two 22 mm copper headers (inlet below, outlet above), mounted at 35 degrees on a 6.4 kg steel stand. The masses are tray 10 kg, glass 14 kg, absorber 8 kg, headers 1.6 kg and stand 6.4 kg. The optical efficiency is 0.78 and the loss coefficients a1 = 3.6 W/(m2 K) and a2 = 0.015 W/(m2 K2), so the stagnation temperature at 1000 W/m2 is about 150 degC and the useful gain at 60 degC mean fluid temperature about 1 kW (ISO 9806 style). In the thermal model the absorber takes the solar share from the environment (effective absorptivity 0.86 behind the glass), and the operating key flow removes 620 W at the pumped state, which is the mean useful gain under the model's solar geometry factor; the key fluid heats the headers (inlet 8 W, outlet 22 W, three times that when the fluid stands and vapour fills them). Reference environment for the thermal view: summer-heatwave-calm. The elevation is the section through the slope, the front view looks at the low edge, the plan from above. The origin is the centre of the base rails on the roof.",
+    "de": "Ein typischer verglaster Flachkollektor von 2,0 m mal 1,0 m mal 0,1 m (Bruttofläche 2,0 m2, Absorberfläche 1,8 m2) und 40 kg: eine 1,5 mm dicke eloxierte Aluminiumwanne mit 26 mm Mineralwolle, eine 4 mm dicke eisenarme Solarglasabdeckung, ein selektives Absorberblech von 0,5 mm mit neun 10 mm dicken Kupfer-Steigrohren im Abstand von 0,1 m und zwei 22 mm dicken Kupfer-Sammelrohren (Vorlauf unten, Rücklauf oben), mit 35 Grad Neigung auf einem 6,4 kg schweren Stahlgestell montiert. Die Massen sind Wanne 10 kg, Glas 14 kg, Absorber 8 kg, Sammler 1,6 kg und Gestell 6,4 kg. Der optische Wirkungsgrad beträgt 0,78 und die Verlustkoeffizienten a1 = 3,6 W/(m2 K) und a2 = 0,015 W/(m2 K2), sodass die Stillstandstemperatur bei 1000 W/m2 etwa 150 degC und der Nutzgewinn bei 60 degC mittlerer Fluidtemperatur etwa 1 kW beträgt (Auslegung nach ISO 9806). Im Thermalmodell nimmt der Absorber den Solaranteil aus der Umgebung auf (wirksamer Absorptionsgrad 0,86 hinter dem Glas), und der Betriebsschlüssel flow entzieht 620 W im gepumpten Zustand, dem mittleren Nutzgewinn bei dem Solargeometriefaktor des Modells; der Schlüssel fluid heizt die Sammler (Vorlauf 8 W, Rücklauf 22 W, das Dreifache bei stehendem Fluid und Dampf in den Sammlern). Bezugsumgebung für die Thermalansicht: summer-heatwave-calm. Die Ansicht ist der Schnitt durch die Neigungsebene, die Vorderansicht blickt auf die untere Kante, der Grundriss von oben. Der Ursprung ist die Mitte der Fußschienen auf dem Dach."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.4091,
+   "widthM": 1.6957,
+   "depthM": 1,
+   "massKg": 40
+  },
+  "materials": [
+   {
+    "id": "anodised-aluminium",
+    "title": {
+     "en": "Anodised aluminium",
+     "de": "Eloxiertes Aluminium"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 2700,
+    "conductivityWmK": 237,
+    "specificHeatJKgK": 900,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "solar-glass",
+    "title": {
+     "en": "Low-iron solar glass",
+     "de": "Eisenarmes Solarglas"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.05,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1,
+    "specificHeatJKgK": 750,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "selective-absorber",
+    "title": {
+     "en": "Selective absorber coating behind glass",
+     "de": "Selektive Absorberbeschichtung hinter Glas"
+    },
+    "emissivity": 0.12,
+    "solarAbsorptivity": 0.86,
+    "densityKgM3": 2700,
+    "conductivityWmK": 237,
+    "specificHeatJKgK": 900,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "copper",
+    "title": {
+     "en": "Copper tube",
+     "de": "Kupferrohr"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 8900,
+    "conductivityWmK": 390,
+    "specificHeatJKgK": 385,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "mineral-wool",
+    "title": {
+     "en": "Mineral wool",
+     "de": "Mineralwolle"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 50,
+    "conductivityWmK": 0.035,
+    "specificHeatJKgK": 840,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "Galvanised steel",
+     "de": "Verzinkter Stahl"
+    },
+    "emissivity": 0.25,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7800,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 480,
+    "source": "literature",
+    "reference": "incropera-2018"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "stand",
+   "bones": [
+    {
+     "id": "stand",
+     "parent": null,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "title": {
+      "en": "Mounting stand with base rails",
+      "de": "Montagegestell mit Fußschienen"
+     },
+     "lengthM": 1.5,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 6.4,
+      "comX": 0,
+      "comY": 0.35,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "housing",
+     "parent": "stand",
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "title": {
+      "en": "Collector housing with insulation",
+      "de": "Kollektorwanne mit Dämmung"
+     },
+     "lengthM": 2,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 10,
+      "comX": 0.02294,
+      "comY": 0.76177,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "glass",
+     "parent": "stand",
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "title": {
+      "en": "Solar glass cover",
+      "de": "Solarglasabdeckung"
+     },
+     "lengthM": 2,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 14,
+      "comX": -0.02581,
+      "comY": 0.8314,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "absorber",
+     "parent": "stand",
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "title": {
+      "en": "Absorber sheet with risers",
+      "de": "Absorberblech mit Steigrohren"
+     },
+     "lengthM": 2,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8,
+      "comX": 0,
+      "comY": 0.79453,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "headers",
+     "parent": "stand",
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "title": {
+      "en": "Inlet and outlet headers",
+      "de": "Sammelrohre Vor- und Rücklauf"
+     },
+     "lengthM": 2,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 1.6,
+      "comX": 0.00115,
+      "comY": 0.7929,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "base-contact",
+    "bone": "stand",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Base on the surface",
+     "de": "Fuß auf der Unterlage"
+    },
+    "support": "contact",
+    "footprintLengthM": 1.5,
+    "footprintWidthM": 0.9,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "glass-top",
+    "bone": "glass",
+    "x": 0.70856,
+    "y": 1.35171,
+    "kind": "emitter",
+    "title": {
+     "en": "Upper edge of the glass",
+     "de": "Oberkante des Glases"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "insulation",
+      "title": {
+       "en": "Mineral wool in section",
+       "de": "Mineralwolle im Schnitt"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.5,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "base-rail",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.75,
+       "y": 0,
+       "w": 1.5,
+       "h": 0.05,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.57,
+         0.04
+        ],
+        [
+         -0.53,
+         0.04
+        ],
+        [
+         -0.53,
+         0.37439
+        ],
+        [
+         -0.57,
+         0.34638
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "rear-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.53,
+         0.04
+        ],
+        [
+         0.57,
+         0.04
+        ],
+        [
+         0.57,
+         1.14461
+        ],
+        [
+         0.53,
+         1.11661
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "tray",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.84783,
+         0.26192
+        ],
+        [
+         -0.79047,
+         0.18
+        ],
+        [
+         0.84783,
+         1.32715
+        ],
+        [
+         0.79047,
+         1.40907
+        ],
+        [
+         0.77409,
+         1.3976
+        ],
+        [
+         0.82456,
+         1.32551
+        ],
+        [
+         -0.78097,
+         0.2013
+        ],
+        [
+         -0.83145,
+         0.27339
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "insulation",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         -0.79671,
+         0.22203
+        ],
+        [
+         -0.78065,
+         0.19909
+        ],
+        [
+         0.82653,
+         1.32445
+        ],
+        [
+         0.81047,
+         1.34738
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "mineral-wool",
+       "hatch": "insulation"
+      },
+      {
+       "id": "glass",
+       "bone": "glass",
+       "role": "glazing",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "poly",
+       "points": [
+        [
+         -0.83227,
+         0.27281
+        ],
+        [
+         -0.82653,
+         0.26462
+        ],
+        [
+         0.78065,
+         1.38998
+        ],
+        [
+         0.77491,
+         1.39817
+        ]
+       ],
+       "closed": true,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "absorber-plate",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.77459,
+         0.26193
+        ],
+        [
+         -0.77,
+         0.25537
+        ],
+        [
+         0.77,
+         1.3337
+        ],
+        [
+         0.76541,
+         1.34025
+        ]
+       ],
+       "closed": true,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "riser-strip",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         -0.77,
+         0.25537
+        ],
+        [
+         -0.76312,
+         0.24554
+        ],
+        [
+         0.77689,
+         1.32387
+        ],
+        [
+         0.77,
+         1.3337
+        ]
+       ],
+       "closed": true,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "header-lower",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": -0.76886,
+       "cy": 0.25373,
+       "rx": 0.0165,
+       "ry": 0.0165,
+       "region": "header-lower",
+       "material": "copper"
+      },
+      {
+       "id": "header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": 0.77115,
+       "cy": 1.33206,
+       "rx": 0.0165,
+       "ry": 0.0165,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ],
+     "front": [
+      {
+       "id": "front-feet-left",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.425,
+       "y": 0,
+       "w": 0.05,
+       "h": 0.18,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-feet-right",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.375,
+       "y": 0,
+       "w": 0.05,
+       "h": 0.18,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-end-face",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.09892,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-side-left",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.26192,
+       "w": 0.03,
+       "h": 1.14715,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-side-right",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.47,
+       "y": 0.26192,
+       "w": 0.03,
+       "h": 1.14715,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-top-rail",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.47,
+       "y": 1.39207,
+       "w": 0.94,
+       "h": 0.017,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-glass",
+       "bone": "glass",
+       "role": "glazing",
+       "z": 3.3000000000000003,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "rect",
+       "x": -0.47,
+       "y": 0.27892,
+       "w": 0.94,
+       "h": 1.11315,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "front-absorber",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.4000000000000004,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.455,
+       "y": 0.28492,
+       "w": 0.91,
+       "h": 1.08315,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "front-riser-1",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.406,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-2",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.306,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-3",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.206,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-4",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.106,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-5",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.006,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-6",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.094,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-7",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.194,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-8",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.294,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-9",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.394,
+       "y": 0.29092,
+       "w": 0.012,
+       "h": 1.07115,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.44,
+       "y": 1.31556,
+       "w": 0.88,
+       "h": 0.033,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-box",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.84783,
+       "y": -0.5,
+       "w": 1.69566,
+       "h": 1,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "plan-glass",
+       "bone": "glass",
+       "role": "glazing",
+       "z": 3.3000000000000003,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "rect",
+       "x": -0.83145,
+       "y": -0.47,
+       "w": 1.60554,
+       "h": 0.94,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "plan-absorber",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.4000000000000004,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.7723,
+       "y": -0.455,
+       "w": 1.54001,
+       "h": 0.91,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "plan-riser-1",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.406,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-2",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.306,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-3",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.206,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-4",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.106,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-5",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.006,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-6",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.094,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-7",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.194,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-8",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.294,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-9",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.394,
+       "w": 1.54001,
+       "h": 0.012,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-header-lower",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.78536,
+       "y": -0.44,
+       "w": 0.033,
+       "h": 0.88,
+       "region": "header-lower",
+       "material": "copper"
+      },
+      {
+       "id": "plan-header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.75465,
+       "y": -0.44,
+       "w": 0.033,
+       "h": 0.88,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A 2.0 m by 1.0 m flat-plate collector tilted by 35 degrees on a steel stand, 34 mm wide and 28 mm tall on paper: the section through the slope shows the aluminium tray with insulation, the glass cover, the absorber sheet with its riser strip and a header circle at each end.",
+      "de": "Ein 2,0 m mal 1,0 m großer Flachkollektor, 35 Grad geneigt auf einem Stahlgestell, auf Papier 34 mm breit und 28 mm hoch: der Schnitt durch die Neigungsebene zeigt die Aluminiumwanne mit Dämmung, die Glasabdeckung, das Absorberblech mit Steigrohrstreifen und je einen Sammlerkreis an den Enden."
+     },
+     "retained": {
+      "en": "Tray with end walls, mineral wool with hatch, glass, absorber sheet, riser strip, both headers, base rail and two struts. Front and plan add the frame ring, nine risers and the headers.",
+      "de": "Wanne mit Stirnwänden, Mineralwolle mit Schraffur, Glas, Absorberblech, Steigrohrstreifen, beide Sammler, Fußschiene und zwei Stützen. Vorderansicht und Grundriss ergänzen den Rahmenring, neun Steigrohre und die Sammler."
+     },
+     "merged": {
+      "en": "Nothing is merged; the nine risers share the strip of the section.",
+      "de": "Nichts ist zusammengeführt; die neun Steigrohre teilen sich den Streifen im Schnitt."
+     },
+     "omitted": {
+      "en": "The 3 mm tray sheet joints, the sealing gasket, the back rail brackets and the absorber coating.",
+      "de": "Die Blechstöße der 3 mm Wanne, die Dichtung, die Halterungen der Rückschiene und die Absorberbeschichtung."
+     },
+     "thinElements": {
+      "en": "The 4 mm glass is drawn 10 mm thick, the 0.5 mm absorber sheet 8 mm, the 1.5 mm tray sheet 12 to 20 mm, the 10 mm risers 12 mm; the 40 mm struts are real size.",
+      "de": "Das 4 mm Glas ist 10 mm dick gezeichnet, das 0,5 mm Absorberblech 8 mm, das 1,5 mm Wannenblech 12 bis 20 mm, die 10 mm Steigrohre 12 mm; die 40 mm Stützen haben reale Größe."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+      "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+     },
+     "overlays": {
+      "en": "Housing, glazing, absorber, two headers and stand are six regions: in the thermal view the absorber and the upper header glow hot behind the cooler glass, the lower header stays cooler while the pump runs.",
+      "de": "Wanne, Glas, Absorber, zwei Sammler und Gestell sind sechs Regionen: in der Thermalansicht glühen Absorber und oberer Sammler heiß hinter dem kühleren Glas, der untere Sammler bleibt bei laufender Pumpe kühler."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "base-rail",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.75,
+       "y": 0,
+       "w": 1.5,
+       "h": 0.06,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.575,
+         0.04
+        ],
+        [
+         -0.525,
+         0.04
+        ],
+        [
+         -0.525,
+         0.37789
+        ],
+        [
+         -0.575,
+         0.34288
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "rear-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.525,
+         0.04
+        ],
+        [
+         0.575,
+         0.04
+        ],
+        [
+         0.575,
+         1.14811
+        ],
+        [
+         0.525,
+         1.1131
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "tray",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.84783,
+         0.26192
+        ],
+        [
+         -0.79047,
+         0.18
+        ],
+        [
+         0.84783,
+         1.32715
+        ],
+        [
+         0.79047,
+         1.40907
+        ],
+        [
+         0.76999,
+         1.39473
+        ],
+        [
+         0.81875,
+         1.3251
+        ],
+        [
+         -0.7786,
+         0.20663
+        ],
+        [
+         -0.82735,
+         0.27625
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "insulation",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         -0.79032,
+         0.22162
+        ],
+        [
+         -0.77942,
+         0.20605
+        ],
+        [
+         0.81957,
+         1.32567
+        ],
+        [
+         0.80867,
+         1.34124
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "mineral-wool"
+      },
+      {
+       "id": "glass",
+       "bone": "glass",
+       "role": "glazing",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "poly",
+       "points": [
+        [
+         -0.82817,
+         0.27568
+        ],
+        [
+         -0.82129,
+         0.26585
+        ],
+        [
+         0.7777,
+         1.38547
+        ],
+        [
+         0.77081,
+         1.3953
+        ]
+       ],
+       "closed": true,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "absorber-strip",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.77574,
+         0.26356
+        ],
+        [
+         -0.76312,
+         0.24554
+        ],
+        [
+         0.77689,
+         1.32387
+        ],
+        [
+         0.76427,
+         1.34189
+        ]
+       ],
+       "closed": true,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "header-lower",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": -0.76886,
+       "cy": 0.25373,
+       "rx": 0.022,
+       "ry": 0.022,
+       "region": "header-lower",
+       "material": "copper"
+      },
+      {
+       "id": "header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": 0.77115,
+       "cy": 1.33206,
+       "rx": 0.022,
+       "ry": 0.022,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ],
+     "front": [
+      {
+       "id": "front-feet-left",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.425,
+       "y": 0,
+       "w": 0.05,
+       "h": 0.18,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-feet-right",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.375,
+       "y": 0,
+       "w": 0.05,
+       "h": 0.18,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-end-face",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.10192,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-side-left",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.26192,
+       "w": 0.035,
+       "h": 1.14715,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-side-right",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.465,
+       "y": 0.26192,
+       "w": 0.035,
+       "h": 1.14715,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-top-rail",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.465,
+       "y": 1.38907,
+       "w": 0.93,
+       "h": 0.02,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-glass",
+       "bone": "glass",
+       "role": "glazing",
+       "z": 3.3000000000000003,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "rect",
+       "x": -0.465,
+       "y": 0.28192,
+       "w": 0.93,
+       "h": 1.10715,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "front-absorber",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.4000000000000004,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.28792,
+       "w": 0.9,
+       "h": 1.07715,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "front-riser-1",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.41,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-2",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.31,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-3",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.21,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-4",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.11,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-5",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.01,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-6",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.09,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-7",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.19,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-8",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.29,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-riser-9",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.39,
+       "y": 0.29392,
+       "w": 0.02,
+       "h": 1.06515,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "front-header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.435,
+       "y": 1.31006,
+       "w": 0.87,
+       "h": 0.044,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-box",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.84783,
+       "y": -0.5,
+       "w": 1.69566,
+       "h": 1,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "plan-glass",
+       "bone": "glass",
+       "role": "glazing",
+       "z": 3.3000000000000003,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "rect",
+       "x": -0.82735,
+       "y": -0.465,
+       "w": 1.59735,
+       "h": 0.93,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "plan-absorber",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.4000000000000004,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.7723,
+       "y": -0.45,
+       "w": 1.54001,
+       "h": 0.9,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "plan-riser-1",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.41,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-2",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.31,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-3",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.21,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-4",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.11,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-5",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": -0.01,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-6",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.09,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-7",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.19,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-8",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.29,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-riser-9",
+       "bone": "absorber",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.76656,
+       "y": 0.39,
+       "w": 1.54001,
+       "h": 0.02,
+       "region": "absorber",
+       "material": "copper"
+      },
+      {
+       "id": "plan-header-lower",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.79086,
+       "y": -0.435,
+       "w": 0.044,
+       "h": 0.87,
+       "region": "header-lower",
+       "material": "copper"
+      },
+      {
+       "id": "plan-header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.74915,
+       "y": -0.435,
+       "w": 0.044,
+       "h": 0.87,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A 17 mm by 14 mm collector: tray, glass, one absorber strip and a header circle at each end on two struts.",
+      "de": "Ein 17 mm mal 14 mm großer Kollektor: Wanne, Glas, ein Absorberstreifen und je ein Sammlerkreis an den Enden auf zwei Stützen."
+     },
+     "retained": {
+      "en": "Tray, plain insulation block, glass, absorber strip, both headers, base rail and struts.",
+      "de": "Wanne, einfacher Dämmblock, Glas, Absorberstreifen, beide Sammler, Fußschiene und Stützen."
+     },
+     "merged": {
+      "en": "Absorber sheet and risers are one strip of 22 mm.",
+      "de": "Absorberblech und Steigrohre sind ein Streifen von 22 mm."
+     },
+     "omitted": {
+      "en": "The insulation hatch, gasket and brackets.",
+      "de": "Die Dämmschraffur, die Dichtung und die Halterungen."
+     },
+     "thinElements": {
+      "en": "Glass 12 mm, tray walls 25 mm and back 15 mm, headers 44 mm across, struts 50 mm.",
+      "de": "Glas 12 mm, Wannenwände 25 mm und Rücken 15 mm, Sammler 44 mm weit, Stützen 50 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.25 mm.",
+      "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.25 mm."
+     },
+     "overlays": {
+      "en": "Same six regions as at 1:50.",
+      "de": "Dieselben sechs Regionen wie bei 1:50."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "base-rail",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.75,
+       "y": 0,
+       "w": 1.5,
+       "h": 0.08,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.59,
+         0.04
+        ],
+        [
+         -0.51,
+         0.04
+        ],
+        [
+         -0.51,
+         0.38839
+        ],
+        [
+         -0.59,
+         0.33237
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "rear-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.51,
+         0.04
+        ],
+        [
+         0.59,
+         0.04
+        ],
+        [
+         0.59,
+         1.15862
+        ],
+        [
+         0.51,
+         1.1026
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "collector-box",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.84783,
+         0.26192
+        ],
+        [
+         -0.79047,
+         0.18
+        ],
+        [
+         0.84783,
+         1.32715
+        ],
+        [
+         0.79047,
+         1.40907
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "housing",
+        "glazing",
+        "absorber",
+        "header-lower",
+        "header-upper"
+       ],
+       "material": "anodised-aluminium"
+      }
+     ],
+     "front": [
+      {
+       "id": "front-feet-left",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.425,
+       "y": 0,
+       "w": 0.05,
+       "h": 0.18,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-feet-right",
+       "bone": "stand",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.375,
+       "y": 0,
+       "w": 0.05,
+       "h": 0.18,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-end-face",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.12192,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-side-left",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.26192,
+       "w": 0.05,
+       "h": 1.14715,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-side-right",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.45,
+       "y": 0.26192,
+       "w": 0.05,
+       "h": 1.14715,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-top-rail",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 1.36907,
+       "w": 0.9,
+       "h": 0.04,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "front-glass",
+       "bone": "glass",
+       "role": "body",
+       "z": 3.3000000000000003,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.30192,
+       "w": 0.9,
+       "h": 1.06715,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "front-absorber",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.4000000000000004,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.435,
+       "y": 0.30792,
+       "w": 0.87,
+       "h": 1.03715,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "front-header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.42,
+       "y": 1.30956,
+       "w": 0.84,
+       "h": 0.045,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-box",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.84783,
+       "y": -0.5,
+       "w": 1.69566,
+       "h": 1,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
+       "id": "plan-glass",
+       "bone": "glass",
+       "role": "body",
+       "z": 3.3000000000000003,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "rect",
+       "x": -0.81506,
+       "y": -0.45,
+       "w": 1.57277,
+       "h": 0.9,
+       "region": "glazing",
+       "material": "solar-glass"
+      },
+      {
+       "id": "plan-absorber",
+       "bone": "absorber",
+       "role": "body",
+       "z": 3.4000000000000004,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.7723,
+       "y": -0.435,
+       "w": 1.54001,
+       "h": 0.87,
+       "region": "absorber",
+       "material": "selective-absorber"
+      },
+      {
+       "id": "plan-header-lower",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.79136,
+       "y": -0.42,
+       "w": 0.045,
+       "h": 0.84,
+       "region": "header-lower",
+       "material": "copper"
+      },
+      {
+       "id": "plan-header-upper",
+       "bone": "headers",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.74865,
+       "y": -0.42,
+       "w": 0.045,
+       "h": 0.84,
+       "region": "header-upper",
+       "material": "copper"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "An 8 mm by 7 mm collector: one tilted slab on two struts and a base rail.",
+      "de": "Ein 8 mm mal 7 mm großer Kollektor: eine geneigte Platte auf zwei Stützen und einer Fußschiene."
+     },
+     "retained": {
+      "en": "Slab, base rail and two struts; front and plan add the glass field, absorber and upper header.",
+      "de": "Platte, Fußschiene und zwei Stützen; Vorderansicht und Grundriss ergänzen Glasfeld, Absorber und oberen Sammler."
+     },
+     "merged": {
+      "en": "Housing, glass, absorber and both headers are one slab (merged regions).",
+      "de": "Wanne, Glas, Absorber und beide Sammler sind eine Platte (zusammengeführte Regionen)."
+     },
+     "omitted": {
+      "en": "Insulation, risers, glass edge and all section detail.",
+      "de": "Dämmung, Steigrohre, Glaskante und alle Schnittdetails."
+     },
+     "thinElements": {
+      "en": "Struts are 80 mm, the rail 80 mm high.",
+      "de": "Die Stützen sind 80 mm, die Schiene 80 mm hoch."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail none mm, ground 0.25 mm.",
+      "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail keiner mm, Boden 0.25 mm."
+     },
+     "overlays": {
+      "en": "The slab lists five regions as one merged form.",
+      "de": "Die Platte führt fünf Regionen als eine zusammengeführte Form."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "base-rail",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.75,
+       "y": 0,
+       "w": 1.5,
+       "h": 0.08,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "front-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.59,
+         0.04
+        ],
+        [
+         -0.51,
+         0.04
+        ],
+        [
+         -0.51,
+         0.38839
+        ],
+        [
+         -0.59,
+         0.33237
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "rear-strut",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.51,
+         0.04
+        ],
+        [
+         0.59,
+         0.04
+        ],
+        [
+         0.59,
+         1.15862
+        ],
+        [
+         0.51,
+         1.1026
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "collector-box",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.84783,
+         0.26192
+        ],
+        [
+         -0.79047,
+         0.18
+        ],
+        [
+         0.84783,
+         1.32715
+        ],
+        [
+         0.79047,
+         1.40907
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "housing",
+        "glazing",
+        "absorber",
+        "header-lower",
+        "header-upper"
+       ],
+       "material": "anodised-aluminium"
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.425,
+       "y": 0,
+       "w": 0.85,
+       "h": 0.18,
+       "id": "front-foot-block",
+       "bone": "stand",
+       "role": "body",
+       "filled": true,
+       "z": 2.7,
+       "tone": 0.5,
+       "region": "stand",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 1.22907,
+       "id": "front-box",
+       "bone": "housing",
+       "role": "body",
+       "filled": true,
+       "z": 3.2,
+       "tone": 0.4,
+       "regions": [
+        "housing",
+        "glazing",
+        "absorber",
+        "header-lower",
+        "header-upper"
+       ],
+       "material": "anodised-aluminium"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.84783,
+       "y": -0.5,
+       "w": 1.69566,
+       "h": 1,
+       "id": "plan-box",
+       "bone": "housing",
+       "role": "body",
+       "filled": true,
+       "z": 3.2,
+       "tone": 0.4,
+       "regions": [
+        "housing",
+        "glazing",
+        "absorber",
+        "header-lower",
+        "header-upper"
+       ],
+       "material": "anodised-aluminium"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A 3.4 mm by 2 mm by 2.8 mm collector: one merged tilted slab on a base rail and two struts in the side view, one merged block on a foot block in the front view and one merged rectangle in the top view.",
+      "de": "Ein 3,4 mm mal 2 mm mal 2,8 mm grosser Kollektor: eine zusammengeführte geneigte Platte auf Fussschiene und zwei Stützen in der Seitenansicht, ein zusammengeführter Block auf einem Fussblock in der Vorderansicht und ein zusammengeführtes Rechteck in der Draufsicht."
+     },
+     "retained": {
+      "en": "Slab, base rail and both struts in the side view; foot block and slab face in the front view; the full footprint in the top view. The tilt and the three real dimensions of 1.70 m, 1.00 m and 1.41 m are kept.",
+      "de": "Platte, Fussschiene und beide Stützen in der Seitenansicht; Fussblock und Plattenfläche in der Vorderansicht; die volle Grundfläche in der Draufsicht. Die Neigung und die drei wahren Masse 1,70 m, 1,00 m und 1,41 m bleiben erhalten."
+     },
+     "merged": {
+      "en": "Housing, glass, absorber and both headers are one form listing five regions; the two foot pads of the front view are one block.",
+      "de": "Wanne, Glas, Absorber und beide Sammler sind eine Form mit fünf Regionen; die beiden Fussplatten der Vorderansicht sind ein Block."
+     },
+     "omitted": {
+      "en": "Glass field, absorber outline, headers, insulation, risers and all section detail.",
+      "de": "Glasfeld, Absorberumriss, Sammler, Dämmung, Steigrohre und alle Schnittdetails."
+     },
+     "thinElements": {
+      "en": "Struts are 0.08 m (0.16 mm) and the rail 0.08 m high; they are the thinnest drawn parts.",
+      "de": "Die Stützen sind 0,08 m (0,16 mm) und die Schiene 0,08 m hoch; es sind die dünnsten gezeichneten Teile."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body pen 0.13 mm, ground 0.25 mm; darker tones carry the housing, lighter tones the thin parts.",
+      "de": "Körperstift 0,13 mm, Boden 0,25 mm; dunklere Töne tragen die Wanne, hellere Töne die dünnen Teile."
+     },
+     "overlays": {
+      "en": "The slab lists five regions as one merged form in every view.",
+      "de": "Die Platte führt in jeder Ansicht fünf Regionen als eine zusammengeführte Form."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "night-idle",
+    "title": {
+     "en": "Night, idle",
+     "de": "Nacht, ruhend"
+    },
+    "description": {
+     "en": "No sun and no flow: the whole collector sits at the air temperature.",
+     "de": "Keine Sonne und kein Durchfluss: der ganze Kollektor hat Lufttemperatur."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "base-contact"
+    ],
+    "thermal": {
+     "regions": {
+      "housing": {
+       "sunlitFraction": 0,
+       "exposedFraction": 0.7
+      },
+      "glazing": {
+       "sunlitFraction": 0,
+       "exposedFraction": 1
+      },
+      "absorber": {
+       "sunlitFraction": 0,
+       "exposedFraction": 1
+      },
+      "header-lower": {
+       "sunlitFraction": 0,
+       "exposedFraction": 0.5
+      },
+      "header-upper": {
+       "sunlitFraction": 0,
+       "exposedFraction": 0.5
+      },
+      "stand": {
+       "sunlitFraction": 0,
+       "exposedFraction": 1
+      }
+     },
+     "emitters": {
+      "absorber-plume": 0
+     },
+     "operating": {
+      "flow": 0,
+      "fluid": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "Operating",
+     "de": "Betrieb"
+    },
+    "description": {
+     "en": "The sun shines and the pump runs: the fluid carries the heat away, the absorber stays near 75 degC and the outlet header runs warmer than the inlet header.",
+     "de": "Die Sonne scheint und die Pumpe läuft: das Fluid führt die Wärme ab, der Absorber bleibt bei etwa 75 degC und der Rücklauf-Sammler ist wärmer als der Vorlauf-Sammler."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "base-contact"
+    ],
+    "thermal": {
+     "regions": {
+      "housing": {
+       "sunlitFraction": 0.6,
+       "exposedFraction": 0.7
+      },
+      "glazing": {
+       "sunlitFraction": 1,
+       "exposedFraction": 1
+      },
+      "absorber": {
+       "sunlitFraction": 1,
+       "exposedFraction": 1
+      },
+      "header-lower": {
+       "sunlitFraction": 0.6,
+       "exposedFraction": 0.5
+      },
+      "header-upper": {
+       "sunlitFraction": 0.6,
+       "exposedFraction": 0.5
+      },
+      "stand": {
+       "sunlitFraction": 0.3,
+       "exposedFraction": 1
+      }
+     },
+     "emitters": {
+      "absorber-plume": 0.5
+     },
+     "operating": {
+      "flow": 1,
+      "fluid": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "stagnation",
+    "title": {
+     "en": "Stagnation",
+     "de": "Stillstand"
+    },
+    "description": {
+     "en": "The sun shines but the pump has stopped: nothing carries the heat away, the absorber heats towards its stagnation temperature and the fluid in the headers turns to vapour.",
+     "de": "Die Sonne scheint, aber die Pumpe steht: nichts führt die Wärme ab, der Absorber erwärmt sich auf seine Stillstandstemperatur und das Fluid in den Sammlern verdampft."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "base-contact"
+    ],
+    "thermal": {
+     "regions": {
+      "housing": {
+       "sunlitFraction": 0.6,
+       "exposedFraction": 0.7
+      },
+      "glazing": {
+       "sunlitFraction": 1,
+       "exposedFraction": 1
+      },
+      "absorber": {
+       "sunlitFraction": 1,
+       "exposedFraction": 1
+      },
+      "header-lower": {
+       "sunlitFraction": 0.6,
+       "exposedFraction": 0.5
+      },
+      "header-upper": {
+       "sunlitFraction": 0.6,
+       "exposedFraction": 0.5
+      },
+      "stand": {
+       "sunlitFraction": 0.3,
+       "exposedFraction": 1
+      }
+     },
+     "emitters": {
+      "absorber-plume": 1
+     },
+     "operating": {
+      "flow": 0,
+      "fluid": 3
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "stagnation",
+    "title": {
+     "en": "Stagnation",
+     "de": "Stillstand"
+    },
+    "description": {
+     "en": "The sun comes up with the pump off: the cold collector heats towards its stagnation temperature within five minutes.",
+     "de": "Die Sonne geht auf bei stehender Pumpe: der kalte Kollektor erwärmt sich binnen fünf Minuten auf seine Stillstandstemperatur."
+    },
+    "durationS": 300,
+    "fps": 1,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "night-idle",
+      "ease": "step"
+     },
+     {
+      "t": 5,
+      "pose": "stagnation",
+      "ease": "step"
+     },
+     {
+      "t": 300,
+      "pose": "stagnation",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "base-contact",
+      "fromS": 0,
+      "toS": 300
+     }
+    ],
+    "phases": [
+     {
+      "id": "dark",
+      "fromS": 0,
+      "toS": 5,
+      "title": {
+       "en": "Dark",
+       "de": "Dunkel"
+      }
+     },
+     {
+      "id": "stagnating",
+      "fromS": 5,
+      "toS": 300,
+      "title": {
+       "en": "Stagnating",
+       "de": "Stillstand"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 5,
+      "kind": "thermal",
+      "title": {
+       "en": "Sun on the glass",
+       "de": "Sonne auf dem Glas"
+      },
+      "target": "flow"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:housing:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:glazing:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:absorber:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:header-lower:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:header-upper:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:stand:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:flow",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 300,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:fluid",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 200,
+        "v": 3
+       }
+      ]
+     },
+     {
+      "target": "emitter:absorber-plume",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 200,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "start-up",
+    "title": {
+     "en": "Start-up",
+     "de": "Anlaufen"
+    },
+    "description": {
+     "en": "The sun comes up, the pump starts after a few seconds and the collector settles at its operating temperature while the outlet header runs warmer than the inlet header.",
+     "de": "Die Sonne geht auf, die Pumpe startet nach wenigen Sekunden und der Kollektor stellt sich auf seine Betriebstemperatur ein, während der Rücklauf-Sammler wärmer läuft als der Vorlauf-Sammler."
+    },
+    "durationS": 300,
+    "fps": 1,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "night-idle",
+      "ease": "step"
+     },
+     {
+      "t": 5,
+      "pose": "operating",
+      "ease": "step"
+     },
+     {
+      "t": 300,
+      "pose": "operating",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "base-contact",
+      "fromS": 0,
+      "toS": 300
+     }
+    ],
+    "phases": [
+     {
+      "id": "dark",
+      "fromS": 0,
+      "toS": 5,
+      "title": {
+       "en": "Dark",
+       "de": "Dunkel"
+      }
+     },
+     {
+      "id": "pumping",
+      "fromS": 5,
+      "toS": 300,
+      "title": {
+       "en": "Pumping",
+       "de": "Pumpen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 5,
+      "kind": "operating",
+      "title": {
+       "en": "Pump starts",
+       "de": "Pumpe startet"
+      },
+      "target": "flow"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:housing:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:glazing:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:absorber:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:header-lower:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:header-upper:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:stand:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:flow",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:fluid",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 30,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:absorber-plume",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 120,
+        "v": 0.5
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "Pump starts",
+     "de": "Pumpe startet"
+    },
+    "description": {
+     "en": "The hot, stagnating collector gets its flow back: the absorber cools from the stagnation temperature to the operating temperature as the fluid carries the heat away.",
+     "de": "Der heiße, stillstehende Kollektor bekommt seinen Durchfluss zurück: der Absorber kühlt von der Stillstandstemperatur auf die Betriebstemperatur ab, weil das Fluid die Wärme abführt."
+    },
+    "durationS": 300,
+    "fps": 1,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stagnation",
+      "ease": "step"
+     },
+     {
+      "t": 10,
+      "pose": "operating",
+      "ease": "step"
+     },
+     {
+      "t": 300,
+      "pose": "operating",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "base-contact",
+      "fromS": 0,
+      "toS": 300
+     }
+    ],
+    "phases": [
+     {
+      "id": "stagnating",
+      "fromS": 0,
+      "toS": 10,
+      "title": {
+       "en": "Stagnating",
+       "de": "Stillstand"
+      }
+     },
+     {
+      "id": "pumping",
+      "fromS": 10,
+      "toS": 300,
+      "title": {
+       "en": "Pumping",
+       "de": "Pumpen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 10,
+      "kind": "operating",
+      "title": {
+       "en": "Pump starts",
+       "de": "Pumpe startet"
+      },
+      "target": "flow"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:flow",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 10,
+        "v": 0
+       },
+       {
+        "t": 11,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:fluid",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 3
+       },
+       {
+        "t": 10,
+        "v": 3
+       },
+       {
+        "t": 60,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:absorber-plume",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 10,
+        "v": 1
+       },
+       {
+        "t": 120,
+        "v": 0.5
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "referenceEnvironment": "summer-heatwave-calm",
+   "environment": {
+    "airTempC": 21,
+    "meanRadiantTempC": 21,
+    "relativeHumidity": 0.5,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 0,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "flow",
+     "title": {
+      "en": "Pump flow",
+      "de": "Pumpendurchfluss"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Pump off (stagnation)",
+        "de": "Pumpe aus (Stillstand)"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Pump running",
+        "de": "Pumpe läuft"
+       }
+      }
+     ]
+    },
+    {
+     "id": "fluid",
+     "title": {
+      "en": "Fluid state in the headers",
+      "de": "Fluidzustand in den Sammlern"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Cold",
+        "de": "Kalt"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Pumped liquid",
+        "de": "Gepumpte Flüssigkeit"
+       }
+      },
+      {
+       "v": 3,
+       "title": {
+        "en": "Stagnation vapour",
+        "de": "Stillstandsdampf"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "housing",
+     "title": {
+      "en": "Housing with insulation",
+      "de": "Wanne mit Dämmung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "anodised-aluminium",
+     "areaM2": 0.8,
+     "characteristicLengthM": 1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "housing-skin",
+       "title": {
+        "en": "Housing with insulation",
+        "de": "Wanne mit Dämmung"
+       },
+       "kind": "metal",
+       "material": "anodised-aluminium",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 5000,
+       "source": "authored-estimate",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 5000,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "glazing",
+     "title": {
+      "en": "Glass cover",
+      "de": "Glasabdeckung"
+     },
+     "kind": "glazing",
+     "model": "passive",
+     "material": "solar-glass",
+     "areaM2": 1.8,
+     "characteristicLengthM": 1.9,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "glazing-skin",
+       "title": {
+        "en": "Low-iron solar glass 4 mm",
+        "de": "Eisenarmes Solarglas 4 mm"
+       },
+       "kind": "glass",
+       "material": "solar-glass",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.004,
+       "heatCapacityJM2K": 7500,
+       "source": "authored-estimate",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 7500,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "absorber",
+     "title": {
+      "en": "Absorber with risers",
+      "de": "Absorber mit Steigrohren"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "selective-absorber",
+     "areaM2": 1.8,
+     "characteristicLengthM": 1.9,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "absorber-skin",
+       "title": {
+        "en": "Absorber with risers",
+        "de": "Absorber mit Steigrohren"
+       },
+       "kind": "metal",
+       "material": "selective-absorber",
+       "thicknessM": 0.0005,
+       "resistanceM2KW": 0.00001,
+       "heatCapacityJM2K": 6000,
+       "source": "authored-estimate",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "operating": {
+      "key": "flow",
+      "heatW": -620
+     },
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "header-lower",
+     "title": {
+      "en": "Inlet header",
+      "de": "Vorlauf-Sammler"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "copper",
+     "areaM2": 0.066,
+     "characteristicLengthM": 0.033,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "header-lower-skin",
+       "title": {
+        "en": "Inlet header",
+        "de": "Vorlauf-Sammler"
+       },
+       "kind": "metal",
+       "material": "copper",
+       "thicknessM": 0.001,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 12000,
+       "source": "authored-estimate",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 12000,
+     "operating": {
+      "key": "fluid",
+      "heatW": 8
+     },
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "header-upper",
+     "title": {
+      "en": "Outlet header",
+      "de": "Rücklauf-Sammler"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "copper",
+     "areaM2": 0.066,
+     "characteristicLengthM": 0.033,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "header-upper-skin",
+       "title": {
+        "en": "Outlet header",
+        "de": "Rücklauf-Sammler"
+       },
+       "kind": "metal",
+       "material": "copper",
+       "thicknessM": 0.001,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 12000,
+       "source": "authored-estimate",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 12000,
+     "operating": {
+      "key": "fluid",
+      "heatW": 22
+     },
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "stand",
+     "title": {
+      "en": "Mounting stand",
+      "de": "Montagegestell"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "galvanised-steel",
+     "areaM2": 0.45,
+     "characteristicLengthM": 0.6,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "stand-skin",
+       "title": {
+        "en": "Mounting stand",
+        "de": "Montagegestell"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.00004,
+       "heatCapacityJM2K": 4000,
+       "source": "authored-estimate",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 4000,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "absorber-plume",
+     "kind": "plume",
+     "title": {
+      "en": "Plume above the glass",
+      "de": "Fahne über dem Glas"
+     },
+     "anchor": "glass-top",
+     "directionDeg": 90,
+     "diameterM": 0.5,
+     "region": "absorber",
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "The glass cover, the 25 mm air gap and the radiation shield are not solved as layers: the absorber takes the sun and the convective loss of an open surface, so the stagnation temperature is lower than the 150 degC of a tested collector unless the environment is calm and hot.",
+     "de": "Glasabdeckung, 25 mm Luftspalt und Strahlungsschirm sind nicht als Schichten gelöst: der Absorber nimmt Sonne und konvektiven Verlust einer offenen Fläche auf, sodass die Stillstandstemperatur unter den 150 degC eines geprüften Kollektors liegt, außer die Umgebung ist ruhig und heiß."
+    },
+    {
+     "en": "The heat carrier is not an emitter: the model carries air and vapour only, so the pump flow shows as the cooler absorber and the cooler inlet header against the warmer outlet header.",
+     "de": "Der Wärmeträger ist kein Emitter: das Modell führt nur Luft und Dampf, daher zeigt sich der Pumpendurchfluss als kühlerer Absorber und kühlerer Vorlauf-Sammler gegen den wärmeren Rücklauf-Sammler."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "base-contact"
+   ],
+   "assumptions": [
+    {
+     "en": "The 40 kg collector with its stand rests on two base rails: a unilateral contact of 1.5 m by 0.9 m carries the weight; wind and snow loads are not part of the asset.",
+     "de": "Der 40 kg schwere Kollektor mit Gestell ruht auf zwei Fußschienen: ein einseitiger Kontakt von 1,5 m mal 0,9 m trägt das Gewicht; Wind- und Schneelasten gehören nicht zum Asset."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "operating",
+   "defaultClip": "operating",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

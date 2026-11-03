@@ -153,16 +153,16 @@
             "en": "Bowl with tripod legs and ash catcher",
             "de": "Kessel mit Dreibein und Aschefänger"
           },
-          "x": 0.0,
-          "y": 0.0,
+          "x": 0,
+          "y": 0,
           "angleDeg": 0,
           "lengthM": 0.74,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 8.0,
-            "comX": 0.0,
+            "kg": 8,
+            "comX": 0,
             "comY": 0.42,
             "distribution": "point",
             "source": "authored-estimate",
@@ -176,7 +176,7 @@
             "en": "Cooking grate",
             "de": "Grillrost"
           },
-          "x": 0.0,
+          "x": 0,
           "y": 0.7,
           "angleDeg": 0,
           "lengthM": 0.39,
@@ -185,8 +185,8 @@
           },
           "mass": {
             "kg": 1.3,
-            "comX": 0.0,
-            "comY": 0.0,
+            "comX": 0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -198,7 +198,7 @@
             "en": "Charcoal bed (initial charge 1.5 kg)",
             "de": "Holzkohlebett (Erstfüllung 1,5 kg)"
           },
-          "x": 0.0,
+          "x": 0,
           "y": 0.58,
           "angleDeg": 0,
           "lengthM": 0.39,
@@ -207,8 +207,8 @@
           },
           "mass": {
             "kg": 1.5,
-            "comX": 0.0,
-            "comY": 0.0,
+            "comX": 0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "turns-2012"
@@ -231,7 +231,7 @@
             "maxDeg": 115
           },
           "mass": {
-            "kg": 3.0,
+            "kg": 3,
             "comX": 0.2925,
             "comY": 0.07,
             "distribution": "point",
@@ -247,7 +247,7 @@
           },
           "x": 0.2925,
           "y": 0.2,
-          "angleDeg": 0,
+          "angleDeg": 90,
           "lengthM": 0.07,
           "joint": {
             "type": "revolute",
@@ -256,8 +256,8 @@
           },
           "mass": {
             "kg": 0.1,
-            "comX": 0.0,
-            "comY": 0.01,
+            "comX": 0.01,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -269,7 +269,7 @@
             "en": "Bottom air damper",
             "de": "Unterluft-Schieber"
           },
-          "x": 0.0,
+          "x": 0,
           "y": 0.495,
           "angleDeg": 0,
           "lengthM": 0.1,
@@ -280,8 +280,8 @@
           },
           "mass": {
             "kg": 0.1,
-            "comX": 0.0,
-            "comY": 0.0,
+            "comX": 0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -290,40 +290,74 @@
     },
     "anchors": [
       {
-        "id": "leg-left",
+        "id": "leg-rear-left",
         "bone": "bowl",
-        "x": -0.27,
-        "y": 0.0,
+        "x": -0.275,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Left leg foot",
-          "de": "Fuß linkes Bein"
+          "en": "Rear left foot",
+          "de": "Hinterer linker Fuß"
         },
         "support": "contact",
         "footprintLengthM": 0.04,
         "footprintWidthM": 0.04,
-        "frictionCoefficient": 0.5
+        "frictionCoefficient": 0.5,
+        "z": 0.145
       },
       {
-        "id": "leg-right",
+        "id": "leg-rear-right",
         "bone": "bowl",
-        "x": 0.27,
-        "y": 0.0,
+        "x": -0.275,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Right leg foot (with wheel)",
-          "de": "Fuß rechtes Bein (mit Rad)"
+          "en": "Rear right foot",
+          "de": "Hinterer rechter Fuß"
         },
         "support": "contact",
         "footprintLengthM": 0.04,
         "footprintWidthM": 0.04,
-        "frictionCoefficient": 0.5
+        "frictionCoefficient": 0.5,
+        "z": -0.145
+      },
+      {
+        "id": "wheel-left",
+        "bone": "bowl",
+        "x": 0.27,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left wheel",
+          "de": "Linkes Rad"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.02,
+        "frictionCoefficient": 0.5,
+        "z": 0.14
+      },
+      {
+        "id": "wheel-right",
+        "bone": "bowl",
+        "x": 0.27,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right wheel",
+          "de": "Rechtes Rad"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.02,
+        "frictionCoefficient": 0.5,
+        "z": -0.14
       },
       {
         "id": "grate-point",
         "bone": "grate",
-        "x": 0.0,
-        "y": 0.0,
+        "x": 0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Food on the grate",
@@ -333,8 +367,8 @@
       {
         "id": "vent-top",
         "bone": "lid-vent",
-        "x": 0.0,
-        "y": 0.025,
+        "x": 0.025,
+        "y": 0,
         "kind": "emitter",
         "title": {
           "en": "Lid vent opening",
@@ -344,7 +378,7 @@
       {
         "id": "bowl-mouth",
         "bone": "bowl",
-        "x": 0.0,
+        "x": 0,
         "y": 0.74,
         "kind": "emitter",
         "title": {
@@ -399,10 +433,9 @@
                 "bowl-shell",
                 "ash-catcher"
               ],
-              "material": "enamel-steel"
-            ,
+              "material": "enamel-steel",
               "penMm": 0.256
-             },
+            },
             {
               "id": "leg-0",
               "bone": "bowl",
@@ -414,7 +447,7 @@
               "points": [
                 [
                   -0.27,
-                  0.0
+                  0
                 ],
                 [
                   -0.17,
@@ -436,7 +469,7 @@
               "points": [
                 [
                   0.27,
-                  0.0
+                  0
                 ],
                 [
                   0.17,
@@ -469,12 +502,393 @@
               "region": "handle-wood",
               "penMm": 0.256
             }
+          ],
+          "front": [
+            {
+              "id": "leg-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.14,
+                  0
+                ],
+                [
+                  0.1,
+                  0.58
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "leg-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0
+                ],
+                [
+                  -0.1,
+                  0.58
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.735 C -0.2925 0.6 -0.18 0.46 0 0.46 C 0.18 0.46 0.2925 0.6 0.2925 0.735 Z",
+              "penMm": 0.256,
+              "regions": [
+                "bowl-shell",
+                "ash-catcher"
+              ],
+              "material": "enamel-steel"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06491
+                ],
+                [
+                  0.03806,
+                  0.11926
+                ],
+                [
+                  0.0825,
+                  0.1625
+                ],
+                [
+                  0.14111,
+                  0.19407
+                ],
+                [
+                  0.21181,
+                  0.21343
+                ],
+                [
+                  0.2925,
+                  0.22
+                ],
+                [
+                  0.37319,
+                  0.21343
+                ],
+                [
+                  0.44389,
+                  0.19407
+                ],
+                [
+                  0.5025,
+                  0.1625
+                ],
+                [
+                  0.54694,
+                  0.11926
+                ],
+                [
+                  0.57514,
+                  0.06491
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": true
+              },
+              "closed": true,
+              "regions": [
+                "lid-shell",
+                "vents-alu"
+              ],
+              "material": "enamel-steel"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.2925,
+              "y": 0.71,
+              "w": 0.0275,
+              "h": 0.04,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.32,
+              "y": 0.71,
+              "w": 0.0275,
+              "h": 0.04,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5475,
+              "y": 0.08,
+              "w": 0.13,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "penMm": 0.25,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            }
+          ],
+          "plan": [
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2925,
+              "ry": 0.2925,
+              "penMm": 0.256,
+              "regions": [
+                "bowl-shell",
+                "ash-catcher"
+              ],
+              "material": "enamel-steel"
+            },
+            {
+              "id": "charcoal-bed",
+              "bone": "charcoal",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.24,
+              "ry": 0.24,
+              "region": "charcoal-bed"
+            },
+            {
+              "id": "cooking-grate",
+              "bone": "grate",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.27,
+              "ry": 0.27,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.2925,
+              "w": 0.08,
+              "h": 0.0275,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.32,
+              "w": 0.08,
+              "h": 0.0275,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06491
+                ],
+                [
+                  0.03806,
+                  0.11926
+                ],
+                [
+                  0.0825,
+                  0.1625
+                ],
+                [
+                  0.14111,
+                  0.19407
+                ],
+                [
+                  0.21181,
+                  0.21343
+                ],
+                [
+                  0.2925,
+                  0.22
+                ],
+                [
+                  0.37319,
+                  0.21343
+                ],
+                [
+                  0.44389,
+                  0.19407
+                ],
+                [
+                  0.5025,
+                  0.1625
+                ],
+                [
+                  0.54694,
+                  0.11926
+                ],
+                [
+                  0.57514,
+                  0.06491
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": false
+              },
+              "closed": true,
+              "regions": [
+                "lid-shell",
+                "vents-alu"
+              ],
+              "material": "enamel-steel"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5475,
+              "y": 0.08,
+              "w": 0.13,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "penMm": 0.25,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A kettle sign 1.3 mm wide and 1.9 mm high: a dark lid dome over a bowl cup on two leg strokes, with a handle stroke to the right.",
-            "de": "Ein Kesselzeichen, 1,3 mm breit und 1,9 mm hoch: eine dunkle Deckelkuppel über einem Kesselnapf auf zwei Beinstrichen, mit einem Griffstrich nach rechts."
+            "en": "A kettle sign 1.3 mm wide and 1.9 mm high: a dark lid dome over a bowl cup on two leg strokes, with a handle stroke to the right. Front: the bowl profile, the lid dome that lifts with the lid and the two leg pairs as single strokes; plan: the bowl disc, the lid disc that swings back with the lid and the handle stroke.",
+            "de": "Ein Kesselzeichen, 1,3 mm breit und 1,9 mm hoch: eine dunkle Deckelkuppel über einem Kesselnapf auf zwei Beinstrichen, mit einem Griffstrich nach rechts. Vorderansicht: das Schalenprofil, die Deckelkuppel, die mit dem Deckel hochgeht, und die beiden Beinpaare als Einzelstriche; Draufsicht: die Schalenscheibe, die Deckelscheibe, die mit dem Deckel zurückschwingt, und der Griffstrich."
           },
           "retained": {
             "en": "Lid and bowl at their real diameter 0.585 m, the tripod legs at their real spread, the lid handle reaching to 0.38 m, the dial on the lid top.",
@@ -485,8 +899,8 @@
             "de": "Deckel und Lüftungsscheibe bilden einen Körper; Kessel und Aschefänger bilden einen Körper; der Randwulst geht in der Deckel-Kessel-Fuge auf."
           },
           "omitted": {
-            "en": "Grate, charcoal bed, damper, wheel, side handle, leg ring (the grate and bed are hidden anyway).",
-            "de": "Rost, Kohlebett, Schieber, Rad, Seitengriff, Beinring (Rost und Bett sind ohnehin verdeckt)."
+            "en": "Grate, charcoal bed, damper, wheel, side handle, leg ring (the grate and bed are hidden anyway). Wheels, vent dial and ash catcher are merged into the bowl and lid masses in front and plan.",
+            "de": "Rost, Kohlebett, Schieber, Rad, Seitengriff, Beinring (Rost und Bett sind ohnehin verdeckt). Räder, Lüftungsscheibe und Aschefänger gehen in der Vorder- und Draufsicht in den Schalen- und Deckelmassen auf."
           },
           "thinElements": {
             "en": "The 0.02 m legs (0.04 mm) and the 0.03 m handle are single 0.13 mm strokes, inflation 3 to 4 times; lid and bowl overlap by 0.01 m so they print as one joined sign.",
@@ -543,10 +957,10 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": -0.04,
-              "y": -0.005,
-              "w": 0.08,
-              "h": 0.035,
+              "x": -0.005,
+              "y": -0.04,
+              "w": 0.035,
+              "h": 0.08,
               "region": "vents-alu",
               "material": "alu-cast"
             },
@@ -588,7 +1002,7 @@
               "points": [
                 [
                   -0.27,
-                  0.0
+                  0
                 ],
                 [
                   -0.17,
@@ -610,7 +1024,7 @@
               "points": [
                 [
                   0.27,
-                  0.0
+                  0
                 ],
                 [
                   0.17,
@@ -657,12 +1071,564 @@
               "closed": false,
               "region": "bowl-shell"
             }
+          ],
+          "front": [
+            {
+              "id": "leg-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.14,
+                  0
+                ],
+                [
+                  0.1,
+                  0.58
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "leg-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0
+                ],
+                [
+                  -0.1,
+                  0.58
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.74 C -0.2925 0.6 -0.18 0.5 0 0.5 C 0.18 0.5 0.2925 0.6 0.2925 0.74 Z",
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "ash-catcher",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.12 0.5 L -0.12 0.43 L 0.12 0.43 L 0.12 0.5 Z",
+              "region": "ash-catcher",
+              "material": "alu-cast"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.2925,
+              "y": 0.715,
+              "w": 0.0275,
+              "h": 0.03,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.32,
+              "y": 0.715,
+              "w": 0.0275,
+              "h": 0.03,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06343
+                ],
+                [
+                  0.03806,
+                  0.11407
+                ],
+                [
+                  0.0825,
+                  0.1525
+                ],
+                [
+                  0.14111,
+                  0.17926
+                ],
+                [
+                  0.21181,
+                  0.19491
+                ],
+                [
+                  0.2925,
+                  0.2
+                ],
+                [
+                  0.37319,
+                  0.19491
+                ],
+                [
+                  0.44389,
+                  0.17926
+                ],
+                [
+                  0.5025,
+                  0.1525
+                ],
+                [
+                  0.54694,
+                  0.11407
+                ],
+                [
+                  0.57514,
+                  0.06343
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": true
+              },
+              "closed": true,
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.005,
+              "y": -0.04,
+              "w": 0.035,
+              "h": 0.08,
+              "region": "vents-alu",
+              "material": "alu-cast",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.04,
+                "z1": 0.04
+              }
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5475,
+              "y": 0.08,
+              "w": 0.13,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "rim-line",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2925,
+                  0.74
+                ],
+                [
+                  0.2925,
+                  0.74
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            }
+          ],
+          "plan": [
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2925,
+              "ry": 0.2925,
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "charcoal-bed",
+              "bone": "charcoal",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.24,
+              "ry": 0.24,
+              "region": "charcoal-bed"
+            },
+            {
+              "id": "cooking-grate",
+              "bone": "grate",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.27,
+              "ry": 0.27,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-0",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2012,
+                  -0.18
+                ],
+                [
+                  0.2012,
+                  -0.18
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-1",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2546,
+                  -0.09
+                ],
+                [
+                  0.2546,
+                  -0.09
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-2",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0
+                ],
+                [
+                  0.27,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-3",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2546,
+                  0.09
+                ],
+                [
+                  0.2546,
+                  0.09
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-4",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2012,
+                  0.18
+                ],
+                [
+                  0.2012,
+                  0.18
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "rim-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2925,
+              "ry": 0.2925,
+              "region": "bowl-shell"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.2925,
+              "w": 0.08,
+              "h": 0.0275,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.32,
+              "w": 0.08,
+              "h": 0.0275,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06343
+                ],
+                [
+                  0.03806,
+                  0.11407
+                ],
+                [
+                  0.0825,
+                  0.1525
+                ],
+                [
+                  0.14111,
+                  0.17926
+                ],
+                [
+                  0.21181,
+                  0.19491
+                ],
+                [
+                  0.2925,
+                  0.2
+                ],
+                [
+                  0.37319,
+                  0.19491
+                ],
+                [
+                  0.44389,
+                  0.17926
+                ],
+                [
+                  0.5025,
+                  0.1525
+                ],
+                [
+                  0.54694,
+                  0.11407
+                ],
+                [
+                  0.57514,
+                  0.06343
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": false
+              },
+              "closed": true,
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5475,
+              "y": 0.08,
+              "w": 0.13,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "region": "handle-wood",
+              "material": "wood-handle"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A kettle grill 3.4 mm wide and 4.9 mm high: black lid dome with a dial, a bowl with ash catcher, two leg strokes, a wooden lid handle and the rim line.",
-            "de": "Ein Kugelgrill 3,4 mm breit und 4,9 mm hoch: schwarze Deckelkuppel mit Scheibe, ein Kessel mit Aschefänger, zwei Beinstriche, ein Holzgriff am Deckel und die Randlinie."
+            "en": "A kettle grill 3.4 mm wide and 4.9 mm high: black lid dome with a dial, a bowl with ash catcher, two leg strokes, a wooden lid handle and the rim line. Front: legs, bowl profile with ash catcher and rim line, the lid dome that rises with the lid, vent dial and handle; plan: bowl disc with rim ring and two side handles, lid disc with vent dial and handle.",
+            "de": "Ein Kugelgrill 3,4 mm breit und 4,9 mm hoch: schwarze Deckelkuppel mit Scheibe, ein Kessel mit Aschefänger, zwei Beinstriche, ein Holzgriff am Deckel und die Randlinie. Vorderansicht: Beine, Schalenprofil mit Aschefänger und Randlinie, die Deckelkuppel, die mit dem Deckel steigt, Lüftungsscheibe und Griff; Draufsicht: Schalenscheibe mit Randring und zwei Seitengriffen, Deckelscheibe mit Lüftungsscheibe und Griff."
           },
           "retained": {
             "en": "Dome and bowl profile, lid dial, ash catcher under the bowl, leg spread, handle, rim joint line.",
@@ -673,8 +1639,8 @@
             "de": "Griffhalter und Hitzeschild gehen im Griffblock auf; der Kesselwulst geht in der Randlinie auf."
           },
           "omitted": {
-            "en": "Wheel, leg ring, side handle, grate, charcoal bed.",
-            "de": "Rad, Beinring, Seitengriff, Rost, Kohlebett."
+            "en": "Wheel, leg ring, side handle, grate, charcoal bed. Wheels, feet and the ash catcher are not drawn in plan (hidden under the bowl or too small).",
+            "de": "Rad, Beinring, Seitengriff, Rost, Kohlebett. Räder, Füße und der Aschefänger werden in der Draufsicht nicht gezeichnet (unter der Schale verdeckt oder zu klein)."
           },
           "thinElements": {
             "en": "Legs are 0.13 mm strokes (real 0.02 m = 0.1 mm); the lid dial is 0.35 mm tall.",
@@ -731,10 +1697,10 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": -0.04,
-              "y": -0.005,
-              "w": 0.08,
-              "h": 0.035,
+              "x": -0.005,
+              "y": -0.04,
+              "w": 0.035,
+              "h": 0.08,
               "region": "vents-alu",
               "material": "alu-cast"
             },
@@ -898,16 +1864,722 @@
               "closed": false,
               "region": "lid-shell"
             }
+          ],
+          "front": [
+            {
+              "id": "leg-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.14,
+                  0.012
+                ],
+                [
+                  0.1,
+                  0.58
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "leg-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0.012
+                ],
+                [
+                  -0.1,
+                  0.58
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "wheel-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.1,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.1,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.125,
+                  0.22
+                ],
+                [
+                  0.125,
+                  0.22
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.74 C -0.2925 0.6 -0.18 0.5 0 0.5 C 0.18 0.5 0.2925 0.6 0.2925 0.74 Z",
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "ash-catcher",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.12 0.5 L -0.12 0.44 C -0.12 0.425 -0.09 0.42 -0.08 0.42 L 0.08 0.42 C 0.09 0.42 0.12 0.425 0.12 0.44 L 0.12 0.5 Z",
+              "region": "ash-catcher",
+              "material": "alu-cast"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.2925,
+              "y": 0.715,
+              "w": 0.03,
+              "h": 0.03,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3225,
+              "y": 0.715,
+              "w": 0.03,
+              "h": 0.03,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06343
+                ],
+                [
+                  0.03806,
+                  0.11407
+                ],
+                [
+                  0.0825,
+                  0.1525
+                ],
+                [
+                  0.14111,
+                  0.17926
+                ],
+                [
+                  0.21181,
+                  0.19491
+                ],
+                [
+                  0.2925,
+                  0.2
+                ],
+                [
+                  0.37319,
+                  0.19491
+                ],
+                [
+                  0.44389,
+                  0.17926
+                ],
+                [
+                  0.5025,
+                  0.1525
+                ],
+                [
+                  0.54694,
+                  0.11407
+                ],
+                [
+                  0.57514,
+                  0.06343
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": true
+              },
+              "closed": true,
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.005,
+              "y": -0.04,
+              "w": 0.035,
+              "h": 0.08,
+              "region": "vents-alu",
+              "material": "alu-cast",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.04,
+                "z1": 0.04
+              }
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5475,
+              "y": 0.08,
+              "w": 0.13,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "rim-line",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2925,
+                  0.74
+                ],
+                [
+                  0.2925,
+                  0.74
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            }
+          ],
+          "plan": [
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2925,
+              "ry": 0.2925,
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "charcoal-bed",
+              "bone": "charcoal",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.24,
+              "ry": 0.24,
+              "region": "charcoal-bed"
+            },
+            {
+              "id": "cooking-grate",
+              "bone": "grate",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.27,
+              "ry": 0.27,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-0",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2012,
+                  -0.18
+                ],
+                [
+                  0.2012,
+                  -0.18
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-1",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2546,
+                  -0.09
+                ],
+                [
+                  0.2546,
+                  -0.09
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-2",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0
+                ],
+                [
+                  0.27,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-3",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2546,
+                  0.09
+                ],
+                [
+                  0.2546,
+                  0.09
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-4",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2012,
+                  0.18
+                ],
+                [
+                  0.2012,
+                  0.18
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "rim-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.28,
+              "ry": 0.28,
+              "region": "bowl-shell"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.2925,
+              "w": 0.07,
+              "h": 0.03,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.035,
+              "y": -0.3225,
+              "w": 0.07,
+              "h": 0.03,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "wheel-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.22,
+              "y": 0.13,
+              "w": 0.1,
+              "h": 0.025,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.22,
+              "y": -0.155,
+              "w": 0.1,
+              "h": 0.025,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "foot-bl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": 0.14,
+              "rx": 0.015,
+              "ry": 0.015,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "foot-br",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": -0.14,
+              "rx": 0.015,
+              "ry": 0.015,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06343
+                ],
+                [
+                  0.03806,
+                  0.11407
+                ],
+                [
+                  0.0825,
+                  0.1525
+                ],
+                [
+                  0.14111,
+                  0.17926
+                ],
+                [
+                  0.21181,
+                  0.19491
+                ],
+                [
+                  0.2925,
+                  0.2
+                ],
+                [
+                  0.37319,
+                  0.19491
+                ],
+                [
+                  0.44389,
+                  0.17926
+                ],
+                [
+                  0.5025,
+                  0.1525
+                ],
+                [
+                  0.54694,
+                  0.11407
+                ],
+                [
+                  0.57514,
+                  0.06343
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": false
+              },
+              "closed": true,
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "lid-rim-ring",
+              "bone": "lid",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0225,
+                  0
+                ],
+                [
+                  0.5625,
+                  0
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": false
+              },
+              "closed": false,
+              "region": "lid-shell"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "vent-hole",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.012,
+              "ry": 0.012,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5475,
+              "y": 0.08,
+              "w": 0.13,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "region": "handle-wood",
+              "material": "wood-handle"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A kettle grill 6.7 mm wide and 9.7 mm high: lid dome with dial and highlight line, bowl with rim line and ash catcher, two legs with a ring and a wheel, a stepped lid handle and a side handle.",
-            "de": "Ein Kugelgrill 6,7 mm breit und 9,7 mm hoch: Deckelkuppel mit Scheibe und Lichtlinie, Kessel mit Randlinie und Aschefänger, zwei Beine mit Ring und Rad, ein abgesetzter Deckelgriff und ein Seitengriff."
+            "en": "A kettle grill 6.7 mm wide and 9.7 mm high: lid dome with dial and highlight line, bowl with rim line and ash catcher, two legs with a ring and a wheel, a stepped lid handle and a side handle. Front: leg pairs with wheels and ring, the bowl profile with ash catcher and side handles, the lid dome with vent dial and handle that rise with the lid; plan: bowl disc with rim ring, side handles, wheels and feet at the rim, the lid disc with ring, vent dial and handle.",
+            "de": "Ein Kugelgrill 6,7 mm breit und 9,7 mm hoch: Deckelkuppel mit Scheibe und Lichtlinie, Kessel mit Randlinie und Aschefänger, zwei Beine mit Ring und Rad, ein abgesetzter Deckelgriff und ein Seitengriff. Vorderansicht: Beinpaare mit Rädern und Ring, das Schalenprofil mit Aschefänger und Seitengriffen, die Deckelkuppel mit Lüftungsscheibe und Griff, die mit dem Deckel steigen; Draufsicht: Schalenscheibe mit Randring, Seitengriffen, Rädern und Füßen am Rand, die Deckelscheibe mit Ring, Lüftungsscheibe und Griff."
           },
           "retained": {
-            "en": "Lid, dial, bowl, rim, ash catcher, leg tubes at real 0.024 m, leg ring, wheel, both handles.",
-            "de": "Deckel, Scheibe, Kessel, Rand, Aschefänger, Beinrohre in realen 0,024 m, Beinring, Rad, beide Griffe."
+            "en": "Lid, dial, bowl, rim, ash catcher, leg tubes at real 0.024 m, leg ring, wheel, both handles. The lid, its handle and its vent dial are bound to the lid bones, so front and plan follow every lid pose and clip.",
+            "de": "Deckel, Scheibe, Kessel, Rand, Aschefänger, Beinrohre in realen 0,024 m, Beinring, Rad, beide Griffe. Deckel, Griff und Lüftungsscheibe sind an die Deckelknochen gebunden, Vorder- und Draufsicht folgen daher jeder Deckelpose und jedem Clip."
           },
           "merged": {
             "en": "Third leg hidden behind the pair; heat shield and bracket merge into the handle.",
@@ -1011,7 +2683,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.012
                 ],
                 [
@@ -1020,10 +2692,9 @@
                 ]
               ],
               "closed": false,
-              "region": "lid-shell"
-            ,
+              "region": "lid-shell",
               "penMm": 0.246
-             },
+            },
             {
               "id": "vent-dial",
               "bone": "lid-vent",
@@ -1032,10 +2703,10 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": -0.04,
-              "y": -0.005,
-              "w": 0.08,
-              "h": 0.035,
+              "x": -0.005,
+              "y": -0.04,
+              "w": 0.035,
+              "h": 0.08,
               "r": 0.006,
               "region": "vents-alu",
               "material": "alu-cast"
@@ -1048,8 +2719,8 @@
               "filled": true,
               "tone": 0.1,
               "kind": "ellipse",
-              "cx": -0.022,
-              "cy": 0.0125,
+              "cx": 0.0125,
+              "cy": 0.022,
               "rx": 0.006,
               "ry": 0.006,
               "region": "vents-alu"
@@ -1062,8 +2733,8 @@
               "filled": true,
               "tone": 0.1,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0125,
+              "cx": 0.0125,
+              "cy": 0,
               "rx": 0.006,
               "ry": 0.006,
               "region": "vents-alu"
@@ -1076,8 +2747,8 @@
               "filled": true,
               "tone": 0.1,
               "kind": "ellipse",
-              "cx": 0.022,
-              "cy": 0.0125,
+              "cx": 0.0125,
+              "cy": -0.022,
               "rx": 0.006,
               "ry": 0.006,
               "region": "vents-alu"
@@ -1113,10 +2784,9 @@
                 ]
               ],
               "closed": false,
-              "region": "bowl-shell"
-            ,
+              "region": "bowl-shell",
               "penMm": 0.246
-             },
+            },
             {
               "id": "bowl-highlight",
               "bone": "bowl",
@@ -1158,7 +2828,7 @@
               "id": "damper",
               "bone": "ash-damper",
               "role": "detail",
-              "z": 3.0,
+              "z": 3,
               "filled": false,
               "tone": 0.8,
               "kind": "path",
@@ -1275,16 +2945,856 @@
               "material": "wood-handle",
               "hatch": "grain"
             }
+          ],
+          "front": [
+            {
+              "id": "leg-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.14,
+              "y0": 0.012,
+              "x1": 0.1,
+              "y1": 0.58,
+              "r0": 0.012,
+              "r1": 0.012,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": -0.14,
+              "y0": 0.012,
+              "x1": -0.1,
+              "y1": 0.58,
+              "r0": 0.012,
+              "r1": 0.012,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.1,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.1,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-hub-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.135,
+              "y": 0.034,
+              "w": 0.01,
+              "h": 0.032,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-hub-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.034,
+              "w": 0.01,
+              "h": 0.032,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.125,
+                  0.22
+                ],
+                [
+                  0.125,
+                  0.22
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.74 C -0.2925 0.6 -0.18 0.5 0 0.5 C 0.18 0.5 0.2925 0.6 0.2925 0.74 Z",
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "ash-catcher",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.12 0.5 L -0.12 0.44 C -0.12 0.425 -0.09 0.42 -0.08 0.42 L 0.08 0.42 C 0.09 0.42 0.12 0.425 0.12 0.44 L 0.12 0.5 Z",
+              "region": "ash-catcher",
+              "material": "alu-cast"
+            },
+            {
+              "id": "damper",
+              "bone": "ash-damper",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.05 0.495 L 0.05 0.495 L 0.05 0.47 L -0.05 0.47 Z",
+              "region": "vents-alu"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.2925,
+              "y": 0.715,
+              "w": 0.03,
+              "h": 0.03,
+              "hatch": "grain",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3225,
+              "y": 0.715,
+              "w": 0.03,
+              "h": 0.03,
+              "hatch": "grain",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06343
+                ],
+                [
+                  0.03806,
+                  0.11407
+                ],
+                [
+                  0.0825,
+                  0.1525
+                ],
+                [
+                  0.14111,
+                  0.17926
+                ],
+                [
+                  0.21181,
+                  0.19491
+                ],
+                [
+                  0.2925,
+                  0.2
+                ],
+                [
+                  0.37319,
+                  0.19491
+                ],
+                [
+                  0.44389,
+                  0.17926
+                ],
+                [
+                  0.5025,
+                  0.1525
+                ],
+                [
+                  0.54694,
+                  0.11407
+                ],
+                [
+                  0.57514,
+                  0.06343
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": true
+              },
+              "closed": true,
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.005,
+              "y": -0.04,
+              "w": 0.035,
+              "h": 0.08,
+              "r": 0.006,
+              "region": "vents-alu",
+              "material": "alu-cast",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.04,
+                "z1": 0.04
+              }
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.5475 0.095 L 0.5925 0.1 L 0.5925 0.08 L 0.6775 0.08 L 0.6775 0.14 L 0.5925 0.14 L 0.5925 0.125 L 0.5475 0.13 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "hatch": "grain",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "rim-line",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2925,
+                  0.74
+                ],
+                [
+                  0.2925,
+                  0.74
+                ]
+              ],
+              "penMm": 0.246,
+              "closed": false,
+              "region": "bowl-shell"
+            },
+            {
+              "id": "bowl-highlight",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.68
+                ],
+                [
+                  -0.17,
+                  0.585
+                ],
+                [
+                  -0.08,
+                  0.535
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            }
+          ],
+          "plan": [
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2925,
+              "ry": 0.2925,
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "charcoal-bed",
+              "bone": "charcoal",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.24,
+              "ry": 0.24,
+              "region": "charcoal-bed"
+            },
+            {
+              "id": "cooking-grate",
+              "bone": "grate",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.27,
+              "ry": 0.27,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-0",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2012,
+                  -0.18
+                ],
+                [
+                  0.2012,
+                  -0.18
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-1",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2546,
+                  -0.09
+                ],
+                [
+                  0.2546,
+                  -0.09
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-2",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0
+                ],
+                [
+                  0.27,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-3",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2546,
+                  0.09
+                ],
+                [
+                  0.2546,
+                  0.09
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "cooking-grate-bar-4",
+              "bone": "grate",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2012,
+                  0.18
+                ],
+                [
+                  0.2012,
+                  0.18
+                ]
+              ],
+              "closed": false,
+              "region": "cooking-grate"
+            },
+            {
+              "id": "rim-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.28,
+              "ry": 0.28,
+              "penMm": 0.246,
+              "region": "bowl-shell"
+            },
+            {
+              "id": "ash-vent-ring",
+              "bone": "ash-damper",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "vents-alu"
+            },
+            {
+              "id": "side-handle-l",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.2925,
+              "w": 0.07,
+              "h": 0.03,
+              "hatch": "grain",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle-r",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.035,
+              "y": -0.3225,
+              "w": 0.07,
+              "h": 0.03,
+              "hatch": "grain",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "wheel-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.22,
+              "y": 0.13,
+              "w": 0.1,
+              "h": 0.025,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.22,
+              "y": -0.155,
+              "w": 0.1,
+              "h": 0.025,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-hub-fl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": 0.1425,
+              "rx": 0.01,
+              "ry": 0.01,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-hub-fr",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": -0.1425,
+              "rx": 0.01,
+              "ry": 0.01,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "foot-bl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": 0.14,
+              "rx": 0.015,
+              "ry": 0.015,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "foot-br",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": -0.14,
+              "rx": 0.015,
+              "ry": 0.015,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.005
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.00986,
+                  0.06343
+                ],
+                [
+                  0.03806,
+                  0.11407
+                ],
+                [
+                  0.0825,
+                  0.1525
+                ],
+                [
+                  0.14111,
+                  0.17926
+                ],
+                [
+                  0.21181,
+                  0.19491
+                ],
+                [
+                  0.2925,
+                  0.2
+                ],
+                [
+                  0.37319,
+                  0.19491
+                ],
+                [
+                  0.44389,
+                  0.17926
+                ],
+                [
+                  0.5025,
+                  0.1525
+                ],
+                [
+                  0.54694,
+                  0.11407
+                ],
+                [
+                  0.57514,
+                  0.06343
+                ],
+                [
+                  0.585,
+                  0
+                ],
+                [
+                  0.585,
+                  -0.005
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": false
+              },
+              "closed": true,
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "lid-rim-ring",
+              "bone": "lid",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0225,
+                  0
+                ],
+                [
+                  0.5625,
+                  0
+                ]
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "lid",
+                "axis": "v",
+                "axisX": 0.2925,
+                "mirror": false
+              },
+              "penMm": 0.246,
+              "closed": false,
+              "region": "lid-shell"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "vent-hole-0",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.022,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "vent-hole-1",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "vent-hole-2",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.022,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.5475 0.095 L 0.5925 0.1 L 0.5925 0.08 L 0.6775 0.08 L 0.6775 0.14 L 0.5925 0.14 L 0.5925 0.125 L 0.5475 0.13 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.03,
+                "z1": 0.03
+              },
+              "hatch": "grain",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A kettle grill 13.4 mm wide and 19.4 mm high with its construction: lid with rim, bead, dial with three air holes, bowl with rim, highlight and ash catcher with damper, tubular legs with ring and wheel hub, wooden lid and side handles with grain.",
-            "de": "Ein Kugelgrill 13,4 mm breit und 19,4 mm hoch mit seiner Konstruktion: Deckel mit Rand, Wulst, Scheibe mit drei Luftlöchern, Kessel mit Rand, Lichtlinie und Aschefänger mit Schieber, Rohrbeine mit Ring und Radnabe, hölzerne Deckel- und Seitengriffe mit Maserung."
+            "en": "A kettle grill 13.4 mm wide and 19.4 mm high with its construction: lid with rim, bead, dial with three air holes, bowl with rim, highlight and ash catcher with damper, tubular legs with ring and wheel hub, wooden lid and side handles with grain. Front: both leg pairs as tubes, wheels with hubs, ring, bowl with ash catcher, ash damper, side handles with grain, the lid dome with rim, vent dial and holes, and the grained handle, all lifting with the lid; plan: bowl with rim ring, ash vent ring, side handles, wheels, feet, the lid disc with rim ring, vent dial with three holes and the grained handle.",
+            "de": "Ein Kugelgrill 13,4 mm breit und 19,4 mm hoch mit seiner Konstruktion: Deckel mit Rand, Wulst, Scheibe mit drei Luftlöchern, Kessel mit Rand, Lichtlinie und Aschefänger mit Schieber, Rohrbeine mit Ring und Radnabe, hölzerne Deckel- und Seitengriffe mit Maserung. Vorderansicht: beide Beinpaare als Rohre, Räder mit Naben, Ring, Schale mit Aschefänger, Ascheschieber, Seitengriffe mit Maserung, die Deckelkuppel mit Rand, Lüftungsscheibe und Löchern sowie der gemaserte Griff, alle mit dem Deckel steigend; Draufsicht: Schale mit Randring, Aschelüftungsring, Seitengriffen, Rädern, Füßen, die Deckelscheibe mit Randring, Lüftungsscheibe mit drei Löchern und der gemaserte Griff."
           },
           "retained": {
-            "en": "Every visible part at real size; the dial turns with the lid-vent bone, the damper with the ash-damper bone.",
-            "de": "Jedes sichtbare Teil in realer Größe; die Scheibe dreht mit dem Lid-Vent-Knochen, der Schieber mit dem Ash-Damper-Knochen."
+            "en": "Every visible part at real size; the dial turns with the lid-vent bone, the damper with the ash-damper bone. Lid dome, handle, vent dial and the lid disc follow every lid pose and clip through the lid bone itself.",
+            "de": "Jedes sichtbare Teil in realer Größe; die Scheibe dreht mit dem Lid-Vent-Knochen, der Schieber mit dem Ash-Damper-Knochen. Deckelkuppel, Griff, Lüftungsscheibe und Deckelscheibe folgen jeder Deckelpose und jedem Clip über den Deckelknochen selbst."
           },
           "merged": {
             "en": "The third leg and the far wheel are hidden behind the near ones; grate and bed are inside the bowl.",
@@ -1328,42 +3838,44 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-rear-left",
+          "leg-rear-right",
+          "wheel-left",
+          "wheel-right"
         ],
         "thermal": {
           "regions": {
             "bowl-shell": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "lid-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "legs-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "ash-catcher": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "vents-alu": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "handle-wood": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "cooking-grate": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "charcoal-bed": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {
@@ -1394,42 +3906,44 @@
         },
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-rear-left",
+          "leg-rear-right",
+          "wheel-left",
+          "wheel-right"
         ],
         "thermal": {
           "regions": {
             "bowl-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "lid-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs-steel": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "ash-catcher": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "vents-alu": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "handle-wood": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "cooking-grate": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "charcoal-bed": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {
@@ -1456,42 +3970,44 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-rear-left",
+          "leg-rear-right",
+          "wheel-left",
+          "wheel-right"
         ],
         "thermal": {
           "regions": {
             "bowl-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "lid-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs-steel": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "ash-catcher": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "vents-alu": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "handle-wood": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "cooking-grate": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "charcoal-bed": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {
@@ -1539,42 +4055,44 @@
         },
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-rear-left",
+          "leg-rear-right",
+          "wheel-left",
+          "wheel-right"
         ],
         "thermal": {
           "regions": {
             "bowl-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "lid-shell": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs-steel": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "ash-catcher": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "vents-alu": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "handle-wood": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "cooking-grate": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "charcoal-bed": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {
@@ -1628,12 +4146,22 @@
         ],
         "contacts": [
           {
-            "anchor": "leg-left",
+            "anchor": "leg-rear-left",
             "fromS": 0,
             "toS": 1800
           },
           {
-            "anchor": "leg-right",
+            "anchor": "leg-rear-right",
+            "fromS": 0,
+            "toS": 1800
+          },
+          {
+            "anchor": "wheel-left",
+            "fromS": 0,
+            "toS": 1800
+          },
+          {
+            "anchor": "wheel-right",
             "fromS": 0,
             "toS": 1800
           }
@@ -1767,12 +4295,22 @@
         ],
         "contacts": [
           {
-            "anchor": "leg-left",
+            "anchor": "leg-rear-left",
             "fromS": 0,
             "toS": 20
           },
           {
-            "anchor": "leg-right",
+            "anchor": "leg-rear-right",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "wheel-left",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "wheel-right",
             "fromS": 0,
             "toS": 20
           }
@@ -2198,7 +4736,7 @@
             "de": "Rauch und Abgas durch die Deckelöffnung"
           },
           "anchor": "vent-top",
-          "directionDeg": 90,
+          "directionDeg": 0,
           "diameterM": 0.05,
           "operatingKey": "charcoal",
           "volumeFlowM3S": 0.0086,
@@ -2240,13 +4778,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "leg-left",
-        "leg-right"
+        "leg-rear-left",
+        "leg-rear-right",
+        "wheel-left",
+        "wheel-right"
       ],
       "assumptions": [
         {
-          "en": "A rigid tripod body on two leg supports in the plane (the third leg coincides with the pair in elevation); the raised lid shifts the centre of mass by less than the leg span.",
-          "de": "Ein starrer Dreibeinkörper auf zwei Beinauflagern in der Ebene (das dritte Bein fällt in der Ansicht mit dem Paar zusammen); der angehobene Deckel verschiebt den Schwerpunkt weniger als die Beinspreizung."
+          "en": "A rigid kettle body on four ground contacts: two rear feet (x = -0.275 m) and two wheels (x = +0.27 m) at z = +-0.145 m; the raised lid shifts the centre of mass by less than the foot span.",
+          "de": "Ein starrer Kesselkörper auf vier Bodenkontakten: zwei hinteren Füßen (x = -0,275 m) und zwei Rädern (x = +0,27 m) bei z = +-0,145 m; der angehobene Deckel verschiebt den Schwerpunkt weniger als die Fußspreizung."
         },
         {
           "en": "Food load 5 kg on the grate is an authored estimate.",
@@ -2258,10 +4798,7 @@
     "presentation": {
       "defaultPose": "grilling-closed",
       "defaultClip": "light-and-close",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

@@ -1,0 +1,2 @@
+import { readFileSync } from "node:fs"; import { path } from "./sy.ts";
+for (const id of process.argv.slice(2)) { const a = JSON.parse(readFileSync(path(id),"utf8")).asset; for (const e of a.thermal.emitters ?? []) { const an=a.anchors.find((x:any)=>x.id===e.anchor); const b=a.rig.bones.find((x:any)=>x.id===an?.bone); console.log(id.padEnd(22), e.id.padEnd(22), e.kind, "dir", e.directionDeg, "anchorBone", an?.bone, "boneAngle", b?.angleDeg, "tilt?", e.elevationDeg, e.azimuthDeg); } }

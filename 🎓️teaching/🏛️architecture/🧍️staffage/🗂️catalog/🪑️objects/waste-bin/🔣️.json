@@ -152,36 +152,72 @@
     },
     "anchors": [
       {
-        "id": "foot-left",
+        "id": "foot-rear-left",
         "bone": "body",
-        "x": -0.2,
+        "x": -0.175,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Left pedestal foot",
-          "de": "Linker Sockelfuß"
+          "en": "Rear left pedestal foot",
+          "de": "Hinterer linker Sockelfuß"
         },
         "support": "contact",
         "normalDeg": 90,
-        "footprintLengthM": 0.12,
-        "footprintWidthM": 0.03,
-        "frictionCoefficient": 0.5
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": 0.175
       },
       {
-        "id": "foot-right",
+        "id": "foot-rear-right",
         "bone": "body",
-        "x": 0.2,
+        "x": -0.175,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Right pedestal foot",
-          "de": "Rechter Sockelfuß"
+          "en": "Rear right pedestal foot",
+          "de": "Hinterer rechter Sockelfuß"
         },
         "support": "contact",
         "normalDeg": 90,
-        "footprintLengthM": 0.12,
-        "footprintWidthM": 0.03,
-        "frictionCoefficient": 0.5
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": -0.175
+      },
+      {
+        "id": "foot-front-left",
+        "bone": "body",
+        "x": 0.175,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front left pedestal foot",
+          "de": "Vorderer linker Sockelfuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": 0.175
+      },
+      {
+        "id": "foot-front-right",
+        "bone": "body",
+        "x": 0.175,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front right pedestal foot",
+          "de": "Vorderer rechter Sockelfuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": -0.175
       }
     ],
     "representations": {
@@ -264,24 +300,218 @@
               "region": "lid-hdpe",
               "material": "hdpe-plastic"
             }
+          ],
+          "front": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "regions": [
+                "bin-hdpe",
+                "bin-ribs",
+                "liner-film"
+              ],
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0
+                ],
+                [
+                  0.2,
+                  0
+                ],
+                [
+                  0.2,
+                  0.025
+                ],
+                [
+                  0.25,
+                  0.94
+                ],
+                [
+                  0.25,
+                  0.98
+                ],
+                [
+                  -0.25,
+                  0.98
+                ],
+                [
+                  -0.25,
+                  0.94
+                ],
+                [
+                  -0.2,
+                  0.025
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.52,
+              "h": 0.04
+            }
+          ],
+          "plan": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "regions": [
+                "bin-hdpe",
+                "bin-ribs",
+                "liner-film"
+              ],
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.255,
+              "y": -0.25,
+              "w": 0.51,
+              "h": 0.5,
+              "r": 0.04
+            },
+            {
+              "id": "lid-corner-a0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24646,
+                "z1": 0.24646
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24646,
+                "z1": 0.24646
+              },
+              "kind": "rect",
+              "x": 0.5,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-a1",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b1",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.48,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.038
+            },
+            {
+              "id": "lid-span",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.038
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Composed bin sign 1.0 x 2.1 mm: one flared body with rim and a separate lid slab on top.",
-            "de": "Zusammengesetztes Behälterzeichen 1,0 x 2,1 mm: ein aufgeweiteter Korpus mit Rand und eine getrennte Deckelplatte obenauf."
+            "en": "Composed bin sign 1.0 x 2.1 mm: one flared body with rim and a separate lid slab on top. Front view: one body silhouette 1.0 mm wide and the lid as a single thin plate. Plan view: the bin top as one rounded square and the lid as a rectangle with the rim's rounded corners, stepped from extruded strips. The lid is an extruded solid on its hinge bone: an open lid stands up as a tall plate in the front view and collapses to a thin strip at the hinge in the plan.",
+            "de": "Zusammengesetztes Behälterzeichen 1,0 x 2,1 mm: ein aufgeweiteter Korpus mit Rand und eine getrennte Deckelplatte obenauf. Vorderansicht: eine einzige Körperkontur von 1,0 mm Breite und der Deckel als dünne Platte. Draufsicht: die Behälteröffnung als ein abgerundetes Quadrat und der Deckel als Rechteck mit den gerundeten Ecken des Rands, aus extrudierten Streifen gestuft. Der Deckel ist ein extrudierter Körper am Scharnierknochen: ein offener Deckel steht in der Vorderansicht als hohe Platte und fällt in der Draufsicht zu einem dünnen Streifen am Scharnier zusammen."
           },
           "retained": {
-            "en": "Height, width, flare of the shell, the lid as a separate slab (it is the part that moves).",
-            "de": "Höhe, Breite, Aufweitung der Schale, der Deckel als eigene Platte (er ist das bewegte Teil)."
+            "en": "Height, width, flare of the shell, the lid as a separate slab (it is the part that moves). Front view: body outline, lid. Plan view: top outline, lid.",
+            "de": "Höhe, Breite, Aufweitung der Schale, der Deckel als eigene Platte (er ist das bewegte Teil). Vorderansicht: Körperkontur, Deckel. Draufsicht: Öffnungskontur, Deckel."
           },
           "merged": {
-            "en": "Pedestal, shell, bands, rim, hinge bracket and liner collar become one body shape listing bin-hdpe, bin-ribs and liner-film; skirt and handle merge into the lid slab.",
-            "de": "Sockel, Schale, Bänder, Rand, Scharnierbock und Sackkragen werden eine Korpusform mit bin-hdpe, bin-ribs und liner-film; Schürze und Griff gehen in der Deckelplatte auf."
+            "en": "Pedestal, shell, bands, rim, hinge bracket and liner collar become one body shape listing bin-hdpe, bin-ribs and liner-film; skirt and handle merge into the lid slab. Front and plan view: shell, rim and liner share one outline.",
+            "de": "Sockel, Schale, Bänder, Rand, Scharnierbock und Sackkragen werden eine Korpusform mit bin-hdpe, bin-ribs und liner-film; Schürze und Griff gehen in der Deckelplatte auf. Vorder- und Draufsicht: Schale, Rand und Beutel teilen sich eine Kontur."
           },
           "omitted": {
-            "en": "Bands, feet, handle, hinge, texture, collar - all below 0.05 m.",
-            "de": "Bänder, Füße, Griff, Scharnier, Textur, Kragen - alle unter 0,05 m."
+            "en": "Bands, feet, handle, hinge, texture, collar - all below 0.05 m. Front and plan view: bands, hinge and handle are not drawn.",
+            "de": "Bänder, Füße, Griff, Scharnier, Textur, Kragen - alle unter 0,05 m. Vorder- und Draufsicht: Bänder, Scharnier und Griff sind nicht gezeichnet."
           },
           "thinElements": {
             "en": "The 0.025 m pedestal step is merged into the outline; the lid (0.04 m = 0.08 mm) is shown as a 0.04 m slab whose outline pen (0.18 mm) makes it 0.26 mm; no hairlines.",
@@ -471,24 +701,358 @@
               "region": "lid-hdpe",
               "material": "hdpe-plastic"
             }
+          ],
+          "front": [
+            {
+              "id": "body-silhouette",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0
+                ],
+                [
+                  0.2,
+                  0
+                ],
+                [
+                  0.2,
+                  0.025
+                ],
+                [
+                  0.248,
+                  0.94
+                ],
+                [
+                  -0.248,
+                  0.94
+                ],
+                [
+                  -0.2,
+                  0.025
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "band-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.206,
+                  0.15
+                ],
+                [
+                  0.206,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.222,
+                  0.45
+                ],
+                [
+                  0.222,
+                  0.45
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.236,
+                  0.72
+                ],
+                [
+                  0.236,
+                  0.72
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0.94,
+              "w": 0.5,
+              "h": 0.04
+            },
+            {
+              "id": "liner-collar",
+              "bone": "body",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.5,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.925
+                ],
+                [
+                  0.2,
+                  0.925
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "path",
+              "d": "M 0 -0.02 L 0.52 -0.02 L 0.52 0.006 C 0.52 0.03 0.45 0.04 0.4 0.038 L 0.12 0.038 C 0.05 0.04 0 0.03 0 0.006 Z"
+            }
+          ],
+          "plan": [
+            {
+              "id": "body-silhouette",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.255,
+              "y": -0.25,
+              "w": 0.51,
+              "h": 0.5,
+              "r": 0.04
+            },
+            {
+              "id": "opening",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.15,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.2,
+              "w": 0.4,
+              "h": 0.4,
+              "r": 0.03
+            },
+            {
+              "id": "lid-corner-a0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24211,
+                "z1": 0.24211
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.01333,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24211,
+                "z1": 0.24211
+              },
+              "kind": "rect",
+              "x": 0.50667,
+              "y": 0,
+              "w": 0.01333,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-a1",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.01333,
+              "y": 0,
+              "w": 0.01333,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b1",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.49333,
+              "y": 0,
+              "w": 0.01333,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-a2",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.02667,
+              "y": 0,
+              "w": 0.01333,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b2",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.48,
+              "y": 0,
+              "w": 0.01333,
+              "h": 0.038
+            },
+            {
+              "id": "lid-span",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.038
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 2.6 x 5.2 mm: one flared body block on a pedestal, a rim, a lid slab, three band lines and a collar line.",
-            "de": "Seitenansicht 2,6 x 5,2 mm: ein sich öffnender Korpusblock auf Sockel, ein Rand, eine Deckelplatte, drei Bandlinien und eine Kragenlinie."
+            "en": "Side elevation 2.6 x 5.2 mm: one flared body block on a pedestal, a rim, a lid slab, three band lines and a collar line. Front view: the tapering shell with three ribs, rim, liner collar and the lid plate. Plan view: the square rim, the dark bin opening and the lid as a rectangle with the rim's rounded corners, stepped from extruded strips. The lid is an extruded solid on its hinge bone, so an open lid rises as a tall plate in the front view and leaves the opening free in the plan.",
+            "de": "Seitenansicht 2,6 x 5,2 mm: ein sich öffnender Korpusblock auf Sockel, ein Rand, eine Deckelplatte, drei Bandlinien und eine Kragenlinie. Vorderansicht: die konische Schale mit drei Rippen, Rand, Beutelkragen und die Deckelplatte. Draufsicht: der quadratische Rand, die dunkle Behälteröffnung und der Deckel als Rechteck mit den gerundeten Ecken des Rands, aus extrudierten Streifen gestuft. Der Deckel ist ein extrudierter Körper am Scharnierknochen, ein offener Deckel steigt in der Vorderansicht als hohe Platte auf und gibt in der Draufsicht die Öffnung frei."
           },
           "retained": {
-            "en": "Overall size, flared shell, rim, lid, bands.",
-            "de": "Gesamtgröße, aufgeweitete Schale, Rand, Deckel, Bänder."
+            "en": "Overall size, flared shell, rim, lid, bands. Front view: three ribs, liner collar, lid. Plan view: opening, lid.",
+            "de": "Gesamtgröße, aufgeweitete Schale, Rand, Deckel, Bänder. Vorderansicht: drei Rippen, Beutelkragen, Deckel. Draufsicht: Öffnung, Deckel."
           },
           "merged": {
-            "en": "Pedestal and shell are one outline (the 0.025 m pedestal step is 0.13 mm); skirt, handle and lid top become one lid slab; hinge bracket and barrel merge into the rim.",
-            "de": "Sockel und Schale sind eine Kontur (die 0,025 m hohe Sockelstufe ist 0,13 mm); Schürze, Griff und Deckeloberseite werden eine Deckelplatte; Scharnierbock und -rolle gehen im Rand auf."
+            "en": "Pedestal and shell are one outline (the 0.025 m pedestal step is 0.13 mm); skirt, handle and lid top become one lid slab; hinge bracket and barrel merge into the rim. Plan view: the lid corners follow the 0.04 m rim radius in steps no finer than the print profile allows.",
+            "de": "Sockel und Schale sind eine Kontur (die 0,025 m hohe Sockelstufe ist 0,13 mm); Schürze, Griff und Deckeloberseite werden eine Deckelplatte; Scharnierbock und -rolle gehen im Rand auf. Draufsicht: die Deckelecken folgen dem Randradius von 0,04 m in Stufen, die nicht feiner sind als das Druckprofil erlaubt."
           },
           "omitted": {
-            "en": "Handle bump, hinge, feet, texture, inner lines, beads.",
-            "de": "Griffwölbung, Scharnier, Füße, Textur, Innenlinien, Wülste."
+            "en": "Handle bump, hinge, feet, texture, inner lines, beads. Front and plan view: no hinge brackets, no handle.",
+            "de": "Griffwölbung, Scharnier, Füße, Textur, Innenlinien, Wülste. Vorder- und Draufsicht: keine Scharnierwinkel, kein Griff."
           },
           "thinElements": {
             "en": "Bands and the collar are single 0.13 mm strokes; the 0.04 m rim is a 0.2 mm solid with outline; the 0.04 m lid slab a 0.2 mm solid.",
@@ -701,24 +1265,403 @@
               "region": "lid-hdpe",
               "material": "hdpe-plastic"
             }
+          ],
+          "front": [
+            {
+              "id": "pedestal",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.025
+            },
+            {
+              "id": "shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.025
+                ],
+                [
+                  0.2,
+                  0.025
+                ],
+                [
+                  0.248,
+                  0.94
+                ],
+                [
+                  -0.248,
+                  0.94
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "band-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.206,
+                  0.15
+                ],
+                [
+                  0.206,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.222,
+                  0.45
+                ],
+                [
+                  0.222,
+                  0.45
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.236,
+                  0.72
+                ],
+                [
+                  0.236,
+                  0.72
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0.94,
+              "w": 0.5,
+              "h": 0.04,
+              "r": 0.008
+            },
+            {
+              "id": "liner-collar",
+              "bone": "body",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.5,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.24,
+                  0.925
+                ],
+                [
+                  0.24,
+                  0.925
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "hinge-bracket-r",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.925,
+              "w": 0.026,
+              "h": 0.065
+            },
+            {
+              "id": "hinge-bracket-l",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": 0.174,
+              "y": 0.925,
+              "w": 0.026,
+              "h": 0.065
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "path",
+              "d": "M 0 0 L 0.52 0 L 0.52 0.006 C 0.52 0.03 0.45 0.04 0.4 0.038 L 0.12 0.038 C 0.05 0.04 0 0.03 0 0.006 Z"
+            },
+            {
+              "id": "lid-skirt",
+              "bone": "lid",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": -0.028,
+              "w": 0.52,
+              "h": 0.03,
+              "r": 0.006
+            }
+          ],
+          "plan": [
+            {
+              "id": "shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.255,
+              "y": -0.25,
+              "w": 0.51,
+              "h": 0.5,
+              "r": 0.04
+            },
+            {
+              "id": "rim-inner",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.235,
+              "y": -0.235,
+              "w": 0.47,
+              "h": 0.47,
+              "r": 0.035
+            },
+            {
+              "id": "opening",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.15,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.2,
+              "w": 0.4,
+              "h": 0.4,
+              "r": 0.03
+            },
+            {
+              "id": "hinge-bracket-l",
+              "bone": "body",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.268,
+              "y": 0.16,
+              "w": 0.026,
+              "h": 0.06
+            },
+            {
+              "id": "hinge-bracket-r",
+              "bone": "body",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.268,
+              "y": -0.22,
+              "w": 0.026,
+              "h": 0.06
+            },
+            {
+              "id": "lid-corner-a0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.244,
+                "z1": 0.244
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.008,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.244,
+                "z1": 0.244
+              },
+              "kind": "rect",
+              "x": 0.512,
+              "y": 0,
+              "w": 0.008,
+              "h": 0.038
+            },
+            {
+              "id": "lid-span",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.008,
+              "y": 0,
+              "w": 0.504,
+              "h": 0.038
+            },
+            {
+              "id": "lid-skirt",
+              "bone": "lid",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": -0.028,
+              "w": 0.52,
+              "h": 0.03
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 5.2 x 10.3 mm: a pedestal slab, a flaring shell with three band lines, a rim, a liner collar line, hinge bracket and a lid with skirt and handle bump.",
-            "de": "Seitenansicht 5,2 x 10,3 mm: eine Sockelplatte, eine sich öffnende Schale mit drei Bandlinien, ein Rand, eine Sackkragenlinie, Scharnierbock und ein Deckel mit Schürze und Griffwölbung."
+            "en": "Side elevation 5.2 x 10.3 mm: a pedestal slab, a flaring shell with three band lines, a rim, a liner collar line, hinge bracket and a lid with skirt and handle bump. Front view: pedestal, tapering shell with three ribs, rim, liner collar, both hinge brackets behind the rim, the lid skirt and the lid plate. Plan view: rim with inner rim line, the dark opening, both hinge brackets, and the lid with its skirt as two stacked rectangles whose corners follow the rim radius in one step. Lid plate and skirt are extruded solids on the hinge bone: open, the plate stands tall in the front view and shrinks to a narrow band behind the hinge in the plan.",
+            "de": "Seitenansicht 5,2 x 10,3 mm: eine Sockelplatte, eine sich öffnende Schale mit drei Bandlinien, ein Rand, eine Sackkragenlinie, Scharnierbock und ein Deckel mit Schürze und Griffwölbung. Vorderansicht: Sockel, konische Schale mit drei Rippen, Rand, Beutelkragen, beide Scharnierwinkel hinter dem Rand, die Deckelschürze und die Deckelplatte. Draufsicht: Rand mit innerer Randlinie, die dunkle Öffnung, beide Scharnierwinkel und der Deckel mit Schürze als zwei übereinanderliegende Rechtecke, deren Ecken dem Randradius in einer Stufe folgen. Deckelplatte und Schürze sind extrudierte Körper am Scharnierknochen: offen steht die Platte in der Vorderansicht hoch und schrumpft in der Draufsicht zu einem schmalen Band hinter dem Scharnier."
           },
           "retained": {
-            "en": "Pedestal, shell, bands, rim, liner collar as a line, bracket, lid.",
-            "de": "Sockel, Schale, Bänder, Rand, Sackkragen als Linie, Bock, Deckel."
+            "en": "Pedestal, shell, bands, rim, liner collar as a line, bracket, lid. Front view: bands, liner collar, brackets, skirt. Plan view: inner rim line, opening, brackets, skirt.",
+            "de": "Sockel, Schale, Bänder, Rand, Sackkragen als Linie, Bock, Deckel. Vorderansicht: Bänder, Beutelkragen, Winkel, Schürze. Draufsicht: innere Randlinie, Öffnung, Winkel, Schürze."
           },
           "merged": {
-            "en": "Lid top and skirt become one lid silhouette (0.66 mm); pedestal feet merge into the pedestal slab; band beads merge into the band lines.",
-            "de": "Deckeloberseite und Schürze werden eine Deckelsilhouette (0,66 mm); Sockelfüße gehen in der Sockelplatte auf; Wulstlinien gehen in den Bandlinien auf."
+            "en": "Lid top and skirt become one lid silhouette (0.66 mm); pedestal feet merge into the pedestal slab; band beads merge into the band lines. Plan view: lid and skirt overlap as one footprint.",
+            "de": "Deckeloberseite und Schürze werden eine Deckelsilhouette (0,66 mm); Sockelfüße gehen in der Sockelplatte auf; Wulstlinien gehen in den Bandlinien auf. Draufsicht: Deckel und Schürze überlagern sich zu einer Grundfläche."
           },
           "omitted": {
-            "en": "Shell texture, rim inner line, liner ring, barrel, skirt line, handle recess, feet.",
-            "de": "Schalentextur, Randinnenlinie, Sackring, Rolle, Schürzenlinie, Griffmulde, Füße."
+            "en": "Shell texture, rim inner line, liner ring, barrel, skirt line, handle recess, feet. Front and plan view: handle, bead lines and shell texture are not drawn.",
+            "de": "Schalentextur, Randinnenlinie, Sackring, Rolle, Schürzenlinie, Griffmulde, Füße. Vorder- und Draufsicht: Griff, Wulstlinien und Schalentextur sind nicht gezeichnet."
           },
           "thinElements": {
             "en": "The 0.025 m pedestal is a 0.25 mm solid; band and collar lines are 0.18 mm strokes; the 0.012 m liner collar is only a stroke.",
@@ -782,10 +1725,9 @@
               "h": 0.008,
               "r": 0.002,
               "region": "bin-hdpe",
-              "material": "hdpe-plastic"
-            ,
+              "material": "hdpe-plastic",
               "penMm": 0.323
-             },
+            },
             {
               "id": "pedestal-foot-r",
               "bone": "body",
@@ -1129,24 +2071,664 @@
               "region": "lid-hdpe",
               "material": "hdpe-plastic"
             }
+          ],
+          "front": [
+            {
+              "id": "pedestal",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.012 C 0.2 0.02 0.196 0.025 0.19 0.025 L -0.19 0.025 C -0.196 0.025 -0.2 0.02 -0.2 0.012 Z"
+            },
+            {
+              "id": "pedestal-foot-l",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.008,
+              "r": 0.002
+            },
+            {
+              "id": "pedestal-foot-r",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": 0.15,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.008,
+              "r": 0.002
+            },
+            {
+              "id": "shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.422,
+              "kind": "path",
+              "d": "M -0.2 0.025 L 0.2 0.025 C 0.215 0.3 0.235 0.7 0.248 0.955 L -0.248 0.955 C -0.235 0.7 -0.215 0.3 -0.2 0.025 Z"
+            },
+            {
+              "id": "band-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2085,
+                  0.15
+                ],
+                [
+                  0.2085,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-0-bead",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2097,
+                  0.168
+                ],
+                [
+                  0.2097,
+                  0.168
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2267,
+                  0.45
+                ],
+                [
+                  0.2267,
+                  0.45
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-1-bead",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2277,
+                  0.468
+                ],
+                [
+                  0.2277,
+                  0.468
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2402,
+                  0.72
+                ],
+                [
+                  0.2402,
+                  0.72
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "band-2-bead",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.241,
+                  0.738
+                ],
+                [
+                  0.241,
+                  0.738
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "shell-texture",
+              "bone": "body",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "path",
+              "d": "M -0.15 0.30 C -0.05 0.31 0.05 0.29 0.15 0.30 M -0.14 0.58 C -0.05 0.59 0.06 0.57 0.14 0.58 M -0.12 0.85 C -0.04 0.86 0.05 0.84 0.12 0.85"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0.94,
+              "w": 0.5,
+              "h": 0.04,
+              "r": 0.008
+            },
+            {
+              "id": "rim-inner",
+              "bone": "body",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.235,
+                  0.955
+                ],
+                [
+                  0.235,
+                  0.955
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "liner-collar",
+              "bone": "body",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.5,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "path",
+              "d": "M -0.245 0.945 C -0.20 0.915 -0.10 0.930 0.0 0.918 C 0.10 0.930 0.20 0.915 0.245 0.945"
+            },
+            {
+              "id": "liner-ring",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.2458,
+              "y": 0.895,
+              "w": 0.4915,
+              "h": 0.012
+            },
+            {
+              "id": "hinge-bracket-r",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.925,
+              "w": 0.026,
+              "h": 0.065,
+              "r": 0.004
+            },
+            {
+              "id": "hinge-bracket-l",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": 0.174,
+              "y": 0.925,
+              "w": 0.026,
+              "h": 0.065,
+              "r": 0.004
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "path",
+              "d": "M 0 0 L 0.52 0 L 0.52 0.006 C 0.52 0.03 0.45 0.04 0.4 0.038 L 0.12 0.038 C 0.05 0.04 0 0.03 0 0.006 Z"
+            },
+            {
+              "id": "lid-skirt",
+              "bone": "lid",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": -0.028,
+              "w": 0.52,
+              "h": 0.03,
+              "r": 0.006
+            },
+            {
+              "id": "lid-handle",
+              "bone": "lid",
+              "role": "detail",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.05,
+                "z1": 0.05
+              },
+              "kind": "path",
+              "d": "M 0.38 0.038 C 0.39 0.058 0.47 0.058 0.48 0.038 Z"
+            },
+            {
+              "id": "hinge-barrel",
+              "bone": "lid",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.13,
+                "z1": 0.13
+              },
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.004,
+              "rx": 0.014,
+              "ry": 0.014
+            }
+          ],
+          "plan": [
+            {
+              "id": "shell",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": -0.255,
+              "y": -0.25,
+              "w": 0.51,
+              "h": 0.5,
+              "r": 0.04
+            },
+            {
+              "id": "rim-inner",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bin-ribs",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.235,
+              "y": -0.235,
+              "w": 0.47,
+              "h": 0.47,
+              "r": 0.035
+            },
+            {
+              "id": "liner-collar",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "rect",
+              "x": -0.22,
+              "y": -0.22,
+              "w": 0.44,
+              "h": 0.44,
+              "r": 0.032
+            },
+            {
+              "id": "opening",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.15,
+              "region": "liner-film",
+              "material": "ldpe-film",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.2,
+              "w": 0.4,
+              "h": 0.4,
+              "r": 0.03
+            },
+            {
+              "id": "hinge-bracket-l",
+              "bone": "body",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.268,
+              "y": 0.16,
+              "w": 0.026,
+              "h": 0.06,
+              "r": 0.004
+            },
+            {
+              "id": "hinge-bracket-r",
+              "bone": "body",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bin-hdpe",
+              "material": "hdpe-plastic",
+              "kind": "rect",
+              "x": -0.268,
+              "y": -0.22,
+              "w": 0.026,
+              "h": 0.06,
+              "r": 0.004
+            },
+            {
+              "id": "lid-corner-a0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.014,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b0",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "rect",
+              "x": 0.506,
+              "y": 0,
+              "w": 0.014,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-a1",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.014,
+              "y": 0,
+              "w": 0.016,
+              "h": 0.038
+            },
+            {
+              "id": "lid-corner-b1",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.49,
+              "y": 0,
+              "w": 0.016,
+              "h": 0.038
+            },
+            {
+              "id": "lid-span",
+              "bone": "lid",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0,
+              "w": 0.46,
+              "h": 0.038
+            },
+            {
+              "id": "lid-skirt",
+              "bone": "lid",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              },
+              "kind": "rect",
+              "x": 0,
+              "y": -0.028,
+              "w": 0.52,
+              "h": 0.03
+            },
+            {
+              "id": "lid-handle",
+              "bone": "lid",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.05,
+                "z1": 0.05
+              },
+              "kind": "path",
+              "d": "M 0.38 0.038 C 0.39 0.058 0.47 0.058 0.48 0.038 Z",
+              "penMm": 0.25
+            },
+            {
+              "id": "hinge-barrel",
+              "bone": "lid",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "lid-hdpe",
+              "material": "hdpe-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.13,
+                "z1": 0.13
+              },
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.004,
+              "rx": 0.014,
+              "ry": 0.014
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 10.2 x 20.6 mm: a pedestal on two feet, a flaring HDPE shell with three moulded bands, a rim with a hanging liner collar, a hinge bracket and a lid with skirt and handle.",
-            "de": "Seitenansicht 10,2 x 20,6 mm: ein Sockel auf zwei Füßen, eine sich öffnende HDPE-Schale mit drei angeformten Bändern, ein Rand mit überhängendem Sackkragen, ein Scharnierbock und ein Deckel mit Schürze und Griff."
+            "en": "Side elevation 10.2 x 20.6 mm: a pedestal on two feet, a flaring HDPE shell with three moulded bands, a rim with a hanging liner collar, a hinge bracket and a lid with skirt and handle. Front view: pedestal with feet, tapering shell with ribs, beads and texture, rim, liner collar and ring, hinge brackets, lid skirt, lid plate, handle and hinge barrel. Plan view: shell, rim line, liner collar, dark opening, hinge brackets, lid with skirt (corners following the rim radius in two steps), the 0.10 m handle and the 0.26 m hinge barrel. Plate, skirt, handle and barrel are extruded solids on the lid bone, so an open lid stands up as a tall plate in the front view and folds onto the hinge in the plan.",
+            "de": "Seitenansicht 10,2 x 20,6 mm: ein Sockel auf zwei Füßen, eine sich öffnende HDPE-Schale mit drei angeformten Bändern, ein Rand mit überhängendem Sackkragen, ein Scharnierbock und ein Deckel mit Schürze und Griff. Vorderansicht: Sockel mit Füßen, konische Schale mit Rippen, Wülsten und Textur, Rand, Beutelkragen und -ring, Scharnierwinkel, Deckelschürze, Deckelplatte, Griff und Scharnierwalze. Draufsicht: Schale, Randlinie, Beutelkragen, dunkle Öffnung, Scharnierwinkel, Deckel mit Schürze (Ecken dem Randradius in zwei Stufen folgend), der 0,10 m breite Griff und die 0,26 m lange Scharnierwalze. Platte, Schürze, Griff und Walze sind extrudierte Körper am Deckelknochen: ein offener Deckel steht in der Vorderansicht als hohe Platte und klappt in der Draufsicht auf das Scharnier."
           },
           "retained": {
-            "en": "Pedestal with feet, shell, three bands each with a bead line, shell texture strokes, rim with inner line, liner collar and ring, hinge bracket and barrel, lid with skirt, skirt line and handle.",
-            "de": "Sockel mit Füßen, Schale, drei Bänder mit je einer Wulstlinie, Texturstriche der Schale, Rand mit Innenlinie, Sackkragen und Ring, Scharnierbock und -rolle, Deckel mit Schürze, Schürzenlinie und Griff."
+            "en": "Pedestal with feet, shell, three bands each with a bead line, shell texture strokes, rim with inner line, liner collar and ring, hinge bracket and barrel, lid with skirt, skirt line and handle. Front view: feet, beads, texture, liner ring, hinge barrel, handle. Plan view: rim line, liner collar, opening, handle, hinge barrel.",
+            "de": "Sockel mit Füßen, Schale, drei Bänder mit je einer Wulstlinie, Texturstriche der Schale, Rand mit Innenlinie, Sackkragen und Ring, Scharnierbock und -rolle, Deckel mit Schürze, Schürzenlinie und Griff. Vorderansicht: Füße, Wülste, Textur, Beutelring, Scharnierwalze, Griff. Draufsicht: Randlinie, Beutelkragen, Öffnung, Griff, Scharnierwalze."
           },
           "merged": {
-            "en": "Nothing merged.",
-            "de": "Nichts verschmolzen."
+            "en": "Nothing merged. Plan view: lid plate and skirt overlap as one footprint.",
+            "de": "Nichts verschmolzen. Draufsicht: Deckelplatte und Schürze überlagern sich zu einer Grundfläche."
           },
           "omitted": {
-            "en": "Hinge pin (0.2 mm dot), liner fold marks and the handle recess (0.1 mm).",
-            "de": "Scharnierstift (0,2-mm-Punkt), Sackfalten und die Griffmulde (0,1 mm)."
+            "en": "Hinge pin (0.2 mm dot), liner fold marks and the handle recess (0.1 mm). Plan view: the feet below the shell and the skirt line are not drawn.",
+            "de": "Scharnierstift (0,2-mm-Punkt), Sackfalten und die Griffmulde (0,1 mm). Draufsicht: die Füße unter der Schale und die Schürzenlinie sind nicht gezeichnet."
           },
           "thinElements": {
             "en": "Bands, beads, rim line and skirt line are single 0.13 mm strokes (6 mm real); the 0.012 m liner ring is a 0.24 mm solid; the hinge barrel (0.028 m) a 0.56 mm ring.",
@@ -1182,25 +2764,27 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "bin-hdpe": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "lid-hdpe": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "liner-film": {
               "exposedFraction": 0.8,
               "sunlitFraction": 0.3
             },
             "bin-ribs": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             }
           },
@@ -1225,25 +2809,27 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "bin-hdpe": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "lid-hdpe": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.8
             },
             "liner-film": {
               "exposedFraction": 0.8,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "bin-ribs": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             }
           },
@@ -1264,25 +2850,27 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "bin-hdpe": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "lid-hdpe": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "liner-film": {
               "exposedFraction": 0.8,
               "sunlitFraction": 0.3
             },
             "bin-ribs": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             }
           },
@@ -1344,12 +2932,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-rear-left",
             "fromS": 0,
             "toS": 3
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-rear-right",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "foot-front-right",
             "fromS": 0,
             "toS": 3
           }
@@ -1414,12 +3012,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-rear-left",
             "fromS": 0,
             "toS": 6
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-rear-right",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "foot-front-right",
             "fromS": 0,
             "toS": 6
           }
@@ -1629,13 +3237,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "foot-left",
-        "foot-right"
+        "foot-rear-left",
+        "foot-rear-right",
+        "foot-front-left",
+        "foot-front-right"
       ],
       "assumptions": [
         {
-          "en": "Rigid bin on two pedestal feet; the waste load is a distributed floor load; the hinge carries only the lid's own weight.",
-          "de": "Starrer Behälter auf zwei Sockelfüßen; die Abfalllast ist eine verteilte Bodenlast; das Scharnier trägt nur das Deckeleigengewicht."
+          "en": "Rigid bin on four pedestal feet (x and z = +-0.175 m); the waste load is a distributed floor load; the hinge carries only the lid's own weight.",
+          "de": "Starrer Behälter auf vier Sockelfüßen (x und z = +-0,175 m); die Abfalllast ist eine verteilte Bodenlast; das Scharnier trägt nur das Deckeleigengewicht."
         }
       ],
       "clinical": false
@@ -1643,9 +3253,6 @@
     "presentation": {
       "defaultPose": "closed-empty",
       "defaultClip": "lid-open-close",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

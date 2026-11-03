@@ -1,0 +1,1319 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "evaporative-humidifier",
+    "category": "machinery",
+    "title": {
+      "en": "Evaporative Cooling Humidifier",
+      "de": "Verdunstungsbefeuchter"
+    },
+    "summary": {
+      "en": "A 0.5 m by 0.6 m evaporative humidifier of an air handler, cut open: water drips from a trough over a fluted cellulose pad into a sump, and the evaporating water cools the pad and the passing air.",
+      "de": "Ein aufgeschnittener Verdunstungsbefeuchter von 0,5 m mal 0,6 m eines Lüftungsgeräts: Wasser tropft aus einer Rinne über eine gewellte Cellulosematte in eine Wanne, und das verdunstende Wasser kühlt die Matte und die vorbeiströmende Luft."
+    },
+    "tags": [
+      "humidifier",
+      "evaporative-cooling",
+      "dec",
+      "pad",
+      "latent-heat",
+      "air-handling",
+      "appliance"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "vdi-3803-2010",
+          "citation": "VDI 3803 Part 1:2010 Air-conditioning - Central air-handling units - Structural and technical principles."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A pad-type evaporative humidifier of the 1000 m3/h class: a galvanised casing of 0.5 m by 0.6 m, a 0.1 m deep flute cellulose pad of 0.4 m by 0.4 m, a polypropylene distribution trough on top with 0.5 L/min, a stainless sump tray of 6 L under the pad and a recirculation pump (not drawn). Mass 14 kg with the full sump (casing 4, pad 3, trough 0.8, water 6) and a drift-free pad of 3 kg. Adiabatic saturation takes the latent heat of the evaporating water (about 2.45 MJ/kg) from the air: at 90 percent efficiency the 22 degC room air (50 percent) leaves at about 16 degC and about 95 percent humidity, 6 K cooler and 2.4 g/kg moister (0.28 m3/s: -2.0 kW sensible, +2.0 kW latent, 0.8 g/s or 2.9 L/h of water). The wetted pad and the sump water sit at the wet-bulb temperature of the room air (15 degC, lifted to about 18 degC by the radiation of the warm room), never below it: they carry no heat source, the evaporation is their only sink. The origin is the centre of the base on the surface.",
+        "de": "Ein Matten-Verdunstungsbefeuchter der Klasse 1000 m3/h: ein verzinktes Gehäuse von 0,5 m mal 0,6 m, eine 0,1 m tiefe Cellulose-Wellenmatte von 0,4 m mal 0,4 m, oben eine Polypropylen-Verteilrinne mit 0,5 l/min, unter der Matte eine Edelstahlwanne von 6 l und eine Umwälzpumpe (nicht gezeichnet). Die Masse beträgt 14 kg mit gefüllter Wanne (Gehäuse 4, Matte 3, Rinne 0,8, Wasser 6) und einer tropfenfreien Matte von 3 kg. Die adiabate Sättigung entzieht der Luft die Verdunstungswärme des Wassers (etwa 2,45 MJ/kg): bei 90 Prozent Wirkungsgrad verlässt die 22 degC warme Raumluft (50 Prozent) das Gerät mit etwa 16 degC und etwa 95 Prozent Feuchte, 6 K kühler und 2,4 g/kg feuchter (0,28 m3/s: -2,0 kW fühlbar, +2,0 kW latent, 0,8 g/s oder 2,9 l/h Wasser). Die benetzte Matte und das Wannenwasser liegen auf der Kühlgrenztemperatur der Raumluft (15 degC, durch die Strahlung des warmen Raums auf etwa 18 degC angehoben), nie darunter: sie haben keine Wärmequelle, die Verdunstung ist ihre einzige Senke. Der Ursprung ist die Mitte des Fußes auf der Unterlage."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.6,
+      "widthM": 0.5,
+      "depthM": 0.4,
+      "massKg": 13.8
+    },
+    "materials": [
+      {
+        "id": "galvanised-steel",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 480,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "cellulose",
+        "title": {
+          "en": "Fluted cellulose pad",
+          "de": "Cellulose-Wellenmatte"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 150,
+        "conductivityWmK": 0.08,
+        "specificHeatJKgK": 1500,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "pp-plastic",
+        "title": {
+          "en": "Polypropylene",
+          "de": "Polypropylen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 900,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "Water",
+          "de": "Wasser"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 1000,
+        "conductivityWmK": 0.6,
+        "specificHeatJKgK": 4190,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "casing",
+      "bones": [
+        {
+          "id": "casing",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Casing with sump",
+            "de": "Gehäuse mit Wanne"
+          },
+          "lengthM": 0.6,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 4,
+            "comX": 0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "pad",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.08,
+          "angleDeg": 0,
+          "title": {
+            "en": "Cellulose evaporation pad",
+            "de": "Cellulose-Verdunstungsmatte"
+          },
+          "lengthM": 0.4,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3,
+            "comX": 0,
+            "comY": 0.21,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "trough",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.48,
+          "angleDeg": 0,
+          "title": {
+            "en": "Water distribution trough",
+            "de": "Wasserverteilrinne"
+          },
+          "lengthM": 0.4,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.8,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "water",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.02,
+          "angleDeg": 0,
+          "title": {
+            "en": "Sump water",
+            "de": "Wannenwasser"
+          },
+          "lengthM": 0.44,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 6,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "drip",
+          "parent": "trough",
+          "x": 0,
+          "y": 0.02,
+          "angleDeg": 0,
+          "title": {
+            "en": "Falling drops",
+            "de": "Fallende Tropfen"
+          },
+          "lengthM": 0.02,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.38,
+            "maxM": 0
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "casing",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.5,
+        "footprintWidthM": 0.4,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "outlet",
+        "bone": "casing",
+        "x": 0.25,
+        "y": 0.3,
+        "kind": "emitter",
+        "title": {
+          "en": "Air leaving the pad",
+          "de": "Luftaustritt hinter der Matte"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "flutes",
+            "title": {
+              "en": "Cellulose flutes",
+              "de": "Cellulosewellen"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.05,
+              "region": "sump",
+              "material": "water"
+            },
+            {
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.4,
+              "region": "pad",
+              "material": "cellulose"
+            },
+            {
+              "id": "drop-1",
+              "bone": "drip",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": -0.1,
+              "cy": 0,
+              "rx": 0.01,
+              "ry": 0.013,
+              "region": "pad",
+              "material": "water"
+            },
+            {
+              "id": "drop-2",
+              "bone": "drip",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.01,
+              "ry": 0.013,
+              "region": "pad",
+              "material": "water"
+            },
+            {
+              "id": "drop-3",
+              "bone": "drip",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": 0.1,
+              "cy": 0,
+              "rx": 0.01,
+              "ry": 0.013,
+              "region": "pad",
+              "material": "water"
+            },
+            {
+              "id": "trough",
+              "bone": "trough",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0,
+              "w": 0.42,
+              "h": 0.05,
+              "region": "trough",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "sump-tray",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.24,
+              "y": 0,
+              "w": 0.48,
+              "h": 0.02,
+              "region": "casing",
+              "material": "galvanised-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.5 m by 0.6 m evaporative humidifier cut open, 10 mm by 12 mm on paper: a casing outline around a fluted cellulose pad, a distribution trough above it with three falling drops and a water sump below.",
+            "de": "Ein aufgeschnittener Verdunstungsbefeuchter von 0,5 m mal 0,6 m, auf Papier 10 mm mal 12 mm: eine Gehäusekontur um eine gewellte Cellulosematte, darüber eine Verteilrinne mit drei fallenden Tropfen und unten eine Wasserwanne."
+          },
+          "retained": {
+            "en": "Casing outline, sump tray and water, pad with its flute hatch, trough and three drops.",
+            "de": "Gehäusekontur, Wannenblech und Wasser, Matte mit Wellenschraffur, Rinne und drei Tropfen."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The pump and its hose, the drift eliminator and the float valve.",
+            "de": "Die Pumpe mit Schlauch, der Tropfenabscheider und das Schwimmerventil."
+          },
+          "thinElements": {
+            "en": "The 5 mm flutes of the pad are a 0.5 mm hatch (25 mm real pitch); the drops are 20 mm across.",
+            "de": "Die 5-mm-Wellen der Matte sind eine 0,5-mm-Schraffur (25 mm reale Teilung); die Tropfen sind 20 mm groß."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Casing, pad, trough and sump are four regions: the wet pad cools well below the air, the sump water follows, the drops move with the drip bone.",
+            "de": "Gehäuse, Matte, Rinne und Wanne sind vier Regionen: die nasse Matte kühlt weit unter die Lufttemperatur, das Wannenwasser folgt, die Tropfen bewegen sich mit dem Tropfenknochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [
+          {
+            "id": "flutes",
+            "title": {
+              "en": "Cellulose flutes",
+              "de": "Cellulosewellen"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.05,
+              "region": "sump",
+              "material": "water"
+            },
+            {
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.4,
+              "region": "pad",
+              "material": "cellulose"
+            },
+            {
+              "id": "drop-1",
+              "bone": "drip",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": -0.1,
+              "cy": 0,
+              "rx": 0.014,
+              "ry": 0.0182,
+              "region": "pad",
+              "material": "water"
+            },
+            {
+              "id": "drop-2",
+              "bone": "drip",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.014,
+              "ry": 0.0182,
+              "region": "pad",
+              "material": "water"
+            },
+            {
+              "id": "drop-3",
+              "bone": "drip",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "ellipse",
+              "cx": 0.1,
+              "cy": 0,
+              "rx": 0.014,
+              "ry": 0.0182,
+              "region": "pad",
+              "material": "water"
+            },
+            {
+              "id": "trough",
+              "bone": "trough",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0,
+              "w": 0.42,
+              "h": 0.05,
+              "region": "trough",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "casing",
+              "material": "galvanised-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 5 mm by 6 mm humidifier: casing outline, hatched pad, trough, water and three drops.",
+            "de": "Ein 5 mm mal 6 mm großer Befeuchter: Gehäusekontur, schraffierte Matte, Rinne, Wasser und drei Tropfen."
+          },
+          "retained": {
+            "en": "Casing, pad with hatch, trough, sump water and drops.",
+            "de": "Gehäuse, Matte mit Schraffur, Rinne, Wannenwasser und Tropfen."
+          },
+          "merged": {
+            "en": "The sump tray joins the casing outline.",
+            "de": "Das Wannenblech geht in der Gehäusekontur auf."
+          },
+          "omitted": {
+            "en": "Pump, hose and drift eliminator.",
+            "de": "Pumpe, Schlauch und Tropfenabscheider."
+          },
+          "thinElements": {
+            "en": "The hatch pitch is 50 mm real, the drops 28 mm.",
+            "de": "Die Schraffur hat 50 mm reale Teilung, die Tropfen 28 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail not drawn, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Same four regions as at 1:50.",
+            "de": "Dieselben vier Regionen wie bei 1:50."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.02,
+              "w": 0.44,
+              "h": 0.05,
+              "region": "sump",
+              "material": "water"
+            },
+            {
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.02,
+              "w": 0.4,
+              "h": 0.37,
+              "regions": [
+                "pad"
+              ],
+              "material": "cellulose"
+            },
+            {
+              "id": "trough",
+              "bone": "trough",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0,
+              "w": 0.42,
+              "h": 0.06,
+              "region": "trough",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "casing",
+              "material": "galvanised-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.5 mm by 3 mm humidifier: casing outline, pad, trough and water.",
+            "de": "Ein 2,5 mm mal 3 mm großer Befeuchter: Gehäusekontur, Matte, Rinne und Wasser."
+          },
+          "retained": {
+            "en": "Casing outline, pad block, trough and sump water.",
+            "de": "Gehäusekontur, Mattenblock, Rinne und Wannenwasser."
+          },
+          "merged": {
+            "en": "The drops belong to the pad block (they are not drawn).",
+            "de": "Die Tropfen gehören zum Mattenblock (sie werden nicht gezeichnet)."
+          },
+          "omitted": {
+            "en": "Hatch, drops and pump.",
+            "de": "Schraffur, Tropfen und Pumpe."
+          },
+          "thinElements": {
+            "en": "Trough and sump are 50 to 60 mm thick.",
+            "de": "Rinne und Wanne sind 50 bis 60 mm dick."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail not drawn, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Same four regions as at 1:50.",
+            "de": "Dieselben vier Regionen wie bei 1:50."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the asset is only 1 mm wide on paper and its smallest part, the 0.5 mm drops and the 3 mm trough rim, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 1 mm breit auf Papier und sein kleinstes Teil, die Tropfen und der 3 mm dicke Rinnenrand, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 0.5 mm drops and the 3 mm trough rim",
+          "de": "Die 0,5 mm großen Tropfen und der 3 mm dicke Rinnenrand"
+        },
+        "limitingSizeM": 0.003,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "dry",
+        "title": {
+          "en": "Dry",
+          "de": "Trocken"
+        },
+        "description": {
+          "en": "No water runs: the pad is dry and at room temperature, the drops wait in the trough.",
+          "de": "Es läuft kein Wasser: die Matte ist trocken und hat Raumtemperatur, die Tropfen warten in der Rinne."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "pad": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1,
+              "wettedness": 0
+            },
+            "trough": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "sump": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "outlet-air": 0
+          },
+          "operating": {
+            "water": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "wetting",
+        "title": {
+          "en": "Wetting",
+          "de": "Befeuchten"
+        },
+        "description": {
+          "en": "Water flows over the pad and evaporation starts to cool it.",
+          "de": "Wasser läuft über die Matte und die Verdunstung beginnt sie zu kühlen."
+        },
+        "bones": {
+          "drip": {
+            "dy": -0.12
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "pad": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1,
+              "wettedness": 0.5
+            },
+            "trough": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "sump": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "outlet-air": 0.5
+          },
+          "operating": {
+            "water": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "running",
+        "title": {
+          "en": "Running",
+          "de": "Läuft"
+        },
+        "description": {
+          "en": "The wet pad evaporates water into the passing air: the pad is the coldest part and the air leaves cooler and moister.",
+          "de": "Die nasse Matte verdunstet Wasser in die vorbeiströmende Luft: die Matte ist der kälteste Teil, und die Luft verlässt sie kühler und feuchter."
+        },
+        "bones": {
+          "drip": {
+            "dy": -0.24
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "pad": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1,
+              "wettedness": 1
+            },
+            "trough": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "sump": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "outlet-air": 1
+          },
+          "operating": {
+            "water": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "drip",
+        "title": {
+          "en": "Dripping",
+          "de": "Tropfen"
+        },
+        "description": {
+          "en": "Three drops fall from the trough along the pad.",
+          "de": "Drei Tropfen fallen von der Rinne an der Matte entlang."
+        },
+        "durationS": 1.2,
+        "fps": 15,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "running",
+            "ease": "linear",
+            "bones": {
+              "drip": {
+                "dy": 0
+              }
+            }
+          },
+          {
+            "t": 1.1,
+            "pose": "running",
+            "ease": "step",
+            "bones": {
+              "drip": {
+                "dy": -0.36
+              }
+            }
+          },
+          {
+            "t": 1.2,
+            "pose": "running",
+            "ease": "linear",
+            "bones": {
+              "drip": {
+                "dy": 0
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 1.2
+          }
+        ],
+        "phases": [
+          {
+            "id": "fall",
+            "fromS": 0,
+            "toS": 1.2,
+            "title": {
+              "en": "Falling",
+              "de": "Fallen"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "start-wetting",
+        "title": {
+          "en": "Start wetting",
+          "de": "Befeuchten starten"
+        },
+        "description": {
+          "en": "The pump starts and the pad cools within a few minutes.",
+          "de": "Die Pumpe startet und die Matte kühlt sich binnen weniger Minuten ab."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "dry",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "running",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "running",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "dry",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Dry",
+              "de": "Trocken"
+            }
+          },
+          {
+            "id": "wet",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "Wet and cooling",
+              "de": "Nass und kühlend"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Pump started",
+              "de": "Pumpe gestartet"
+            },
+            "target": "water"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:water",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:outlet-air",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "water",
+          "title": {
+            "en": "Pump and evaporation",
+            "de": "Pumpe und Verdunstung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Dry",
+                "de": "Trocken"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Wetting",
+                "de": "Befeuchten"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Running",
+                "de": "Läuft"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Casing",
+            "de": "Gehäuse"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.6,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "casing-skin",
+              "title": {
+                "en": "Casing",
+                "de": "Gehäuse"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00003,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "pad",
+          "title": {
+            "en": "Wet cellulose pad",
+            "de": "Nasse Cellulosematte"
+          },
+          "kind": "water",
+          "model": "passive",
+          "material": "cellulose",
+          "areaM2": 1.2,
+          "characteristicLengthM": 0.4,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "pad-skin",
+              "title": {
+                "en": "Wet cellulose pad",
+                "de": "Nasse Cellulosematte"
+              },
+              "kind": "polymer",
+              "material": "cellulose",
+              "thicknessM": 0.1,
+              "resistanceM2KW": 0.5,
+              "heatCapacityJM2K": 4000,
+              "source": "illustrative",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "source": "illustrative",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "trough",
+          "title": {
+            "en": "Distribution trough",
+            "de": "Verteilrinne"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pp-plastic",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.42,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "trough-skin",
+              "title": {
+                "en": "Distribution trough",
+                "de": "Verteilrinne"
+              },
+              "kind": "polymer",
+              "material": "pp-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.03,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "sump",
+          "title": {
+            "en": "Sump water",
+            "de": "Wannenwasser"
+          },
+          "kind": "water",
+          "model": "passive",
+          "material": "water",
+          "areaM2": 0.2,
+          "characteristicLengthM": 0.44,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sump-skin",
+              "title": {
+                "en": "Sump water",
+                "de": "Wannenwasser"
+              },
+              "kind": "polymer",
+              "material": "water",
+              "thicknessM": 0.05,
+              "resistanceM2KW": 0.08,
+              "heatCapacityJM2K": 125000,
+              "source": "illustrative",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 125000,
+          "source": "illustrative",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "outlet-air",
+          "kind": "vent",
+          "title": {
+            "en": "Cooled moist air leaving the pad",
+            "de": "Gekühlte feuchte Luft hinter der Matte"
+          },
+          "anchor": "outlet",
+          "directionDeg": 0,
+          "diameterM": 0.3,
+          "operatingKey": "water",
+          "volumeFlowM3S": 0.28,
+          "temperatureRiseK": -6,
+          "vapourKgPerKg": 0.0106,
+          "source": "authored-estimate",
+          "reference": "vdi-3803-2010"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Adiabatic evaporation: the pad and the sump water are passive wet surfaces that settle just above the wet-bulb temperature of the room air without a heat source; the pad is dry in the dry pose and half wet while wetting. The air emitter carries the exchange with the airflow: 0.28 m3/s cooled by 6 K (-2.0 kW sensible) and moistened to 10.6 g/kg (+2.0 kW latent, 2.45 MJ per kg of evaporated water), so the sensible and the latent power balance.",
+          "de": "Adiabate Verdunstung: die Matte und das Wannenwasser sind passive nasse Oberflächen, die sich ohne Wärmequelle knapp über der Kühlgrenztemperatur der Raumluft einstellen; die Matte ist in der Pose „Trocken“ trocken und beim Befeuchten halb nass. Der Luftemitter trägt den Austausch mit dem Luftstrom: 0,28 m3/s um 6 K gekühlt (-2,0 kW fühlbar) und auf 10,6 g/kg befeuchtet (+2,0 kW latent, 2,45 MJ je kg verdunstetes Wasser), fühlbare und latente Leistung sind also ausgeglichen."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 14 kg humidifier stands on its sump tray: a unilateral contact of 0.5 m by 0.4 m carries the weight.",
+          "de": "Der 14 kg schwere Befeuchter steht auf seiner Wanne: ein einseitiger Kontakt von 0,5 m mal 0,4 m trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "running",
+      "defaultClip": "drip",
+      "defaultScale": 50,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

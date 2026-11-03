@@ -12,6 +12,8 @@ import { exportCapabilities, exportFigure, saveExport } from "../../📤️downl
 import type { ExportCapabilities, ExportFormat, ExportHost, ExportResult } from "../../📤️downloads/🟦️.ts";
 import type { DepictionRequest } from "../../🧮️pipeline/🟦️.ts";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
+import { VIEW_NAMES } from "../../🗣️labels/🟦️.ts";
+import { VIEWPOINT_PHRASES } from "../../🔭️viewpoints/🟦️.ts";
 import { Button, Notice, NumberField, ProgressNotice, SelectField, Tag } from "../../🪟️chrome/🟦️.tsx";
 
 const FORMATS: readonly ExportFormat[] = ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm"];
@@ -83,12 +85,12 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
     }
   };
   const offered = FORMATS.filter((format) => asset.exports.includes(format));
-  const snippet = `<staffage-figure asset="${asset.id}" view="${request.view}" scale="${request.scale.denominator}" lang="${language}"></staffage-figure>`;
+  const snippet = `<staffage-figure asset="${asset.id}" view="${request.view}" viewpoint="${request.viewpoint}" scale="${request.scale.denominator}" lang="${language}"></staffage-figure>`;
   const needsClip = query.kind === "pose";
   return (
     <section aria-labelledby="detail-export" className="flex flex-col gap-double" data-section="export">
       <h2 id="detail-export" className="m-0 font-serif text-lg">{t("detail.export.title")}</h2>
-      <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.export.lede", { view: request.view, scale: request.scale.denominator })}</p>
+      <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.export.lede", { representation: VIEW_NAMES[request.view][language], viewpoint: VIEWPOINT_PHRASES[request.viewpoint][language], scale: request.scale.denominator })}</p>
       {probed === null ? <Notice kind="loading" compact title={t("detail.export.probing")} /> : (
         <ul className="m-0 grid list-none gap-double p-0 md:grid-cols-2" data-formats="">
           {offered.map((format) => {

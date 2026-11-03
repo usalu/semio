@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.staffage.cast/v1",
+  "title": "Staffage cast manifest",
+  "description": "Named, figure-only renderings of the staffage archive: one entry per cast id, either a pose (one frame, or a transient thermal timeline) or a clip (one frame per scheduled time).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "casts"],
+  "properties": {
+    "version": { "const": 1 },
+    "casts": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/Slug" },
+      "additionalProperties": { "$ref": "#/$defs/Cast" }
+    }
+  },
+  "$defs": {
+    "Slug": {
+      "description": "A kebab-case identifier.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "Revision": { "description": "A content hash: sha256 and 64 lower-case hex digits.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "Box": { "type": "object", "additionalProperties": false, "required": ["minX", "minY", "maxX", "maxY"], "properties": { "minX": { "type": "number" }, "minY": { "type": "number" }, "maxX": { "type": "number" }, "maxY": { "type": "number" } } },
+    "Provenance": {
+      "description": "Where one rendered cast came from, in every dimension the contract names (T/r3-contract.md). The exporter writes it, the Python loader checks it against the manifest entry and the catalog, scenes read it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "asset", "view", "scale", "state", "clock", "scenario"],
+      "properties": {
+        "version": { "const": 1 },
+        "asset": { "type": "object", "additionalProperties": false, "required": ["id", "category", "revision"], "properties": { "id": { "$ref": "#/$defs/Slug" }, "category": { "$ref": "#/$defs/Slug" }, "revision": { "$ref": "#/$defs/Revision" } } },
+        "view": { "type": "object", "additionalProperties": false, "required": ["style", "viewpoint", "theme", "mirror"], "properties": { "style": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] }, "viewpoint": { "enum": ["elevation", "front", "plan"] }, "theme": { "enum": ["dark", "light"] }, "mirror": { "type": "boolean" } } },
+        "scale": { "type": "object", "additionalProperties": false, "required": ["denominator"], "properties": { "denominator": { "enum": [500, 200, 100, 50] } } },
+        "state": { "type": "object", "additionalProperties": false, "required": ["kind", "id"], "properties": { "kind": { "enum": ["pose", "clip"] }, "id": { "$ref": "#/$defs/Slug" } } },
+        "clock": {
+          "description": "The clock of the frames. rate is not known to the exporter: a scene adds it (staffage_provenance with a rate, or a staffage_motion).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fps", "durationS", "loop", "offsetS", "frames"],
+          "properties": { "fps": { "type": "number", "exclusiveMinimum": 0 }, "durationS": { "type": "number", "minimum": 0 }, "loop": { "type": "boolean" }, "offsetS": { "type": "number", "minimum": 0 }, "frames": { "type": "integer", "minimum": 1 }, "rate": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        "scenario": {
+          "type": "object",
+          "required": ["kind"],
+          "oneOf": [
+            { "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "geometry" } } },
+            { "additionalProperties": false, "required": ["kind", "dynamics", "gravityMS2"], "properties": { "kind": { "const": "structural" }, "dynamics": { "enum": ["quasi-static", "inertial"] }, "gravityMS2": { "type": "number" } } },
+            {
+              "additionalProperties": false,
+              "required": ["kind", "spanK", "transport", "environment"],
+              "properties": {
+                "kind": { "const": "thermal" },
+                "environment": { "type": "object", "additionalProperties": false, "required": ["id", "revision"], "properties": { "id": { "$ref": "#/$defs/Slug" }, "revision": { "$ref": "#/$defs/Revision" } } },
+                "spanK": { "anyOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }] },
+                "transport": { "type": "array", "items": { "enum": ["parcels", "pathlines", "streamlines", "condensation"] } }
+              }
+            },
+            {
+              "additionalProperties": false,
+              "required": ["kind", "spanK", "transport", "timeline"],
+              "properties": {
+                "kind": { "const": "thermal" },
+                "timeline": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["t", "id", "ease", "revision"], "properties": { "t": { "type": "number", "minimum": 0 }, "id": { "$ref": "#/$defs/Slug" }, "ease": { "enum": ["step", "linear"] }, "revision": { "$ref": "#/$defs/Revision" } } } },
+                "spanK": { "anyOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }] },
+                "transport": { "type": "array", "items": { "enum": ["parcels", "pathlines", "streamlines", "condensation"] } }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Structure": {
+      "description": "The structural summary of a forces or moments cast: one entry per frame position in the frame order, in newtons and newton-metres at the world positions the frames use (x ahead, y up, z left; a mirrored cast has x and the y and z components of moments negated). Compression is negative axial force. A moment is a moment of force, never a momentum.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["units", "colors", "frames"],
+      "properties": {
+        "units": { "type": "object", "additionalProperties": false, "required": ["force", "moment"], "properties": { "force": { "const": "N" }, "moment": { "const": "N·m" } } },
+        "colors": { "type": "object", "additionalProperties": false, "required": ["compressionStrong", "compressionWeak", "zero", "tensionWeak", "tensionStrong"], "properties": { "compressionStrong": { "$ref": "#/$defs/Hex" }, "compressionWeak": { "$ref": "#/$defs/Hex" }, "zero": { "$ref": "#/$defs/Hex" }, "tensionWeak": { "$ref": "#/$defs/Hex" }, "tensionStrong": { "$ref": "#/$defs/Hex" } } },
+        "frames": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/StructuralFrame" } }
+      }
+    },
+    "Hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "Point3": { "type": "object", "additionalProperties": false, "required": ["x", "y", "z"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } } },
+    "Action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fxN", "fyN", "fzN", "mxNm", "myNm", "mzNm"],
+      "properties": { "fxN": { "type": "number" }, "fyN": { "type": "number" }, "fzN": { "type": "number" }, "mxNm": { "type": "number" }, "myNm": { "type": "number" }, "mzNm": { "type": "number" } }
+    },
+    "StructuralFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weightN", "centreOfMassM", "loads", "reactions", "members", "residual"],
+      "properties": {
+        "weightN": { "type": "number", "minimum": 0 },
+        "centreOfMassM": { "$ref": "#/$defs/Point3" },
+        "loads": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "kind", "at", "fxN", "fyN", "fzN", "mxNm", "myNm", "mzNm"], "properties": { "id": { "$ref": "#/$defs/Slug" }, "kind": { "type": "string" }, "at": { "$ref": "#/$defs/Point3" }, "fxN": { "type": "number" }, "fyN": { "type": "number" }, "fzN": { "type": "number" }, "mxNm": { "type": "number" }, "myNm": { "type": "number" }, "mzNm": { "type": "number" } } } },
+        "reactions": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["anchor", "at", "fxN", "fyN", "fzN", "mxNm", "myNm", "mzNm"], "properties": { "anchor": { "$ref": "#/$defs/Slug" }, "at": { "$ref": "#/$defs/Point3" }, "fxN": { "type": "number" }, "fyN": { "type": "number" }, "fzN": { "type": "number" }, "mxNm": { "type": "number" }, "myNm": { "type": "number" }, "mzNm": { "type": "number" } } } },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["bone", "maxCompressionN", "maxTensionN", "maxShearN", "maxSaggingNm", "maxHoggingNm", "atMaxMomentM"],
+            "properties": { "bone": { "$ref": "#/$defs/Slug" }, "maxCompressionN": { "type": "number", "minimum": 0 }, "maxTensionN": { "type": "number", "minimum": 0 }, "maxShearN": { "type": "number", "minimum": 0 }, "maxSaggingNm": { "type": "number", "minimum": 0 }, "maxHoggingNm": { "type": "number", "minimum": 0 }, "atMaxMomentM": { "$ref": "#/$defs/Point3" } }
+          }
+        },
+        "residual": { "$ref": "#/$defs/Action" }
+      }
+    },
+    "Index": {
+      "description": "The index the exporter writes next to the frames of one cast.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "cast", "asset", "view", "viewpoint", "frames", "fps", "durationS", "loop", "mmPerMetre", "originMm", "boundsM", "heightM", "provenance"],
+      "properties": {
+        "version": { "const": 1 },
+        "cast": { "$ref": "#/$defs/Slug" },
+        "asset": { "$ref": "#/$defs/Slug" },
+        "view": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] },
+        "viewpoint": { "enum": ["elevation", "front", "plan"] },
+        "section": { "type": "object" },
+        "frames": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[0-9]{4}\\.svg$" } },
+        "fps": { "type": "number", "exclusiveMinimum": 0 },
+        "durationS": { "type": "number", "minimum": 0 },
+        "loop": { "type": "boolean" },
+        "mmPerMetre": { "type": "number", "exclusiveMinimum": 0 },
+        "originMm": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+        "boundsM": { "$ref": "#/$defs/Box" },
+        "figureBoundsM": { "$ref": "#/$defs/Box" },
+        "heightM": { "type": "number", "minimum": 0 },
+        "structure": { "$ref": "#/$defs/Structure" },
+        "provenance": { "$ref": "#/$defs/Provenance" }
+      }
+    },
+    "Cast": {
+      "description": "One cast. Give exactly one of pose and clip. fps needs a clip or a timeline. environment, timeline and thermalSpanK exist for the thermal view only; environment and timeline exclude each other. A cast has no language: it renders figure-only (no text), so its output is the same for every language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset", "view", "theme", "viewpoint", "scale"],
+      "properties": {
+        "asset": { "$ref": "#/$defs/Slug" },
+        "pose": { "$ref": "#/$defs/Slug" },
+        "clip": { "$ref": "#/$defs/Slug" },
+        "view": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] },
+        "theme": { "description": "The ink and palette of the analytic views (thermal, forces, moments); required, no default. Line and solid views carry their theme in the view name.", "enum": ["dark", "light"] },
+        "transport": { "description": "Air-transport layers drawn on the figure (breathing plumes, pathlines); figure-only, so no emitter markers or labels.", "type": "array", "uniqueItems": true, "items": { "enum": ["parcels", "pathlines", "streamlines", "condensation"] } },
+        "transportAgeS": { "description": "Transport layers of a clip only. The longest life of a parcel and of its pathline in seconds; the frames sample the absolute time from this many seconds on, so every frame of the loop already shows the developed field and the loop never restarts from empty air; a looping clip also makes the field periodic with the clip duration, so the seam has no jump (the period is derived, never authored). Absent: parcels live 30 s and the frames start at time 0.", "type": "number", "exclusiveMinimum": 0 },
+        "transportStrokeMm": { "description": "Transport layers only. Paper width of a pathline in millimetres at the cast scale; absent: 0.08 mm, a hairline for print that vanishes when the figure plays at a few hundred pixels.", "type": "number", "exclusiveMinimum": 0 },
+        "transportTrailS": { "description": "Transport layers only. Seconds of each pathline's recent travel that stay visible: the line fades towards its tail, so a jet reads as a dispersing puff instead of a bundle anchored at the nozzle; absent: the whole path from emission to now at constant opacity.", "type": "number", "exclusiveMinimum": 0 },
+        "viewpoint": { "enum": ["elevation", "front", "plan"] },
+        "scale": { "description": "The authored scale variant, required, no default: a preset denominator at which the asset holds an authored representation (the exporter refuses unavailable and derived scales).", "enum": [500, 200, 100, 50] },
+        "fps": { "description": "Frames per second of a clip or timeline; required for both, forbidden for a still pose. A schedule of more than 600 frames is thinned to 600 evenly spaced samples, so the exported index fps may be fractional; play such a cast with a rate in the scene.", "type": "integer", "minimum": 1, "maximum": 120 },
+        "environment": { "$ref": "#/$defs/Slug" },
+        "timeline": {
+          "description": "A transient environment: preset slugs keyed by absolute time in seconds, strictly increasing.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["t", "environment", "ease"],
+            "properties": {
+              "t": { "type": "number", "minimum": 0 },
+              "environment": { "$ref": "#/$defs/Slug" },
+              "ease": { "enum": ["step", "linear"] }
+            }
+          }
+        },
+        "thermalSpanK": { "description": "Thermal view only. A symmetric surface-temperature range of plus and minus this many kelvin around the air temperature of the cast environment (the legend states it). Absent: the absolute shared range of -20 to 60 degC. The course casts use 25 K, one value for all thermal casts that are on screen together (one Scene class) so they stay comparable; the guard test thermal_span checks it.", "type": "number", "exclusiveMinimum": 0 },
+        "mirror": { "description": "Flip the figure about the vertical axis of the world origin; the index bounds are mirrored with it.", "type": "boolean" }
+      },
+      "oneOf": [{ "properties": { "pose": {} }, "required": ["pose"] }, { "properties": { "clip": {} }, "required": ["clip"] }],
+      "allOf": [
+        { "if": { "properties": { "mirror": { "const": true } }, "required": ["mirror"] }, "then": { "properties": { "viewpoint": { "const": "elevation" } } } },
+        { "if": { "anyOf": [{ "properties": { "environment": {} }, "required": ["environment"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }, { "properties": { "thermalSpanK": {} }, "required": ["thermalSpanK"] }] }, "then": { "properties": { "view": { "const": "thermal" } } } },
+        { "if": { "properties": { "environment": {} }, "required": ["environment"] }, "then": { "not": { "properties": { "timeline": {} }, "required": ["timeline"] } } },
+        { "if": { "anyOf": [{ "properties": { "transportAgeS": {} }, "required": ["transportAgeS"] }, { "properties": { "transportStrokeMm": {} }, "required": ["transportStrokeMm"] }, { "properties": { "transportTrailS": {} }, "required": ["transportTrailS"] }] }, "then": { "properties": { "transport": {} }, "required": ["transport"] } },
+        { "if": { "properties": { "transportAgeS": {} }, "required": ["transportAgeS"] }, "then": { "properties": { "clip": {} }, "required": ["clip"] } },
+        { "if": { "properties": { "transport": {} }, "required": ["transport"] }, "then": { "properties": { "view": { "const": "thermal" }, "transportAgeS": {} }, "required": ["transportAgeS"] } },
+        { "if": { "properties": { "view": { "const": "thermal" } }, "required": ["view"] }, "then": { "oneOf": [{ "properties": { "environment": {} }, "required": ["environment"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }] } },
+        { "if": { "anyOf": [{ "properties": { "clip": {} }, "required": ["clip"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }] }, "then": { "properties": { "fps": {} }, "required": ["fps"] } },
+        { "if": { "properties": { "fps": {} }, "required": ["fps"] }, "then": { "anyOf": [{ "properties": { "clip": {} }, "required": ["clip"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }] } }
+      ]
+    }
+  }
+}

@@ -22,7 +22,6 @@ export function DimensionsSection(props: { readonly asset: Asset; readonly row: 
         <Fact term={t("detail.dimensions.width")}>{num(dimensions.widthM, language)} m</Fact>
         <Fact term={t("detail.dimensions.depth")}>{num(dimensions.depthM, language)} m</Fact>
         <Fact term={t("detail.dimensions.mass")}>{num(dimensions.massKg, language)} kg</Fact>
-        <Fact term={t("detail.dimensions.viewpoints")}>{asset.presentation.viewpoints.map((viewpoint) => t(`detail.viewpoint.${viewpoint}`)).join(", ")}</Fact>
         <Fact term={t("detail.dimensions.completion")}>{t(`completion.${asset.completion}`)}</Fact>
         <Fact term={t("detail.dimensions.category")}>{row.entry.category}</Fact>
         <Fact term={t("detail.dimensions.id")}>{asset.id}</Fact>

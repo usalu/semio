@@ -13,9 +13,6 @@ semio_color = _theme_module.color
 import numpy as np
 from manim import *
 
-from pathlib import Path as _Path
-import sys as _sys
-
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
@@ -26,6 +23,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -45,14 +43,14 @@ smooth_path = _manim_module.smooth_path
 flow_guides = _manim_module.flow_guides
 flow_animation = _manim_module.flow_animation
 house_section = _manim_module.house_section
-person_glyph = _manim_module.person_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
 sun_glyph = _manim_module.sun_glyph
 sun_rays = _manim_module.sun_rays
 shine = _manim_module.shine
 pulse_flashes = _manim_module.pulse_flashes
 ripples = _manim_module.ripples
-lamp_glyph = _manim_module.lamp_glyph
-radiator = _manim_module.radiator
 open_window = _manim_module.open_window
 thermometer_glyph = _manim_module.thermometer_glyph
 clock_glyph = _manim_module.clock_glyph
@@ -62,7 +60,7 @@ bind_meter = _manim_module.bind_meter
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 dim_arrow = _manim_module.dim_arrow
 highlight_param = _manim_module.highlight_param
 caption_bar = _manim_module.caption_bar
@@ -70,11 +68,12 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -192,43 +191,41 @@ def _envelope(H, off: float = 0.26, color=P_PRIMARY):
     return DashedVMobject(Polygon(*corners, color=color, stroke_width=2.6), num_dashes=70, dashed_ratio=0.55)
 
 
-def _stand(H, x: float, color=P_ORANGE):
-    """🧍 Occupant at true scale — 70 % of the storey height, feet on the slab's top edge at ``x``."""
-    storey = H["mid_y"] - H["floor_y"]
-    height = 0.7 * storey
-    return person_glyph(np.array([x, H["floor_y"] + height / 2, 0.0]), color=color, scale=height / 0.66)
+def _metre(H) -> float:
+    """🧮 Manim units per real metre at the storey scale."""
+    return room_metre(H["mid_y"] - H["floor_y"])
+
+
+def _stand(H, x: float):
+    """🧍 Breathing thermal occupant at true scale, feet on the slab's top edge at ``x``."""
+    return staffage_motion("shared-person-winter", unit=_metre(H), anchor=np.array([x, H["floor_y"], 0.0]))
 
 
 def _heater(H):
-    """♨️ A 1.3 m wide panel at the same scale as the storey."""
-    metre = (H["mid_y"] - H["floor_y"]) / 2.5
-    return radiator(np.array([H["x_r"] - 0.6, H["floor_y"] + (0.12 + 0.65 / 2) * metre, 0.0]),
-                    color=DEMAND_RED, height=0.65 * metre, width=1.3 * metre)
+    """♨️ Thermal panel radiator seen from the front at the same scale as the storey, like the house sections of primary energy and practice."""
+    return staffage("shared-radiator-front-winter", unit=_metre(H), anchor=np.array([H["x_r"] - 0.8, H["floor_y"], 0.0]))
 
 
 def _gains(H):
     """💡 Occupant, pendant lamp, desk and laptop — the internal sources inside the house."""
     cx, fy, my = H["cx"], H["floor_y"], H["mid_y"]
+    unit = _metre(H)
     person = _stand(H, cx + 0.05)
-    lamp = lamp_glyph(np.array([cx - 0.9, my, 0.0]), drop=0.1, scale=0.6)
-    desk_y = my + 0.3
-    desk = VGroup(
-        Line(np.array([cx + 0.6, desk_y, 0.0]), np.array([cx + 1.4, desk_y, 0.0]), color=P_WHITE, stroke_width=1.5),
-        Line(np.array([cx + 0.7, desk_y, 0.0]), np.array([cx + 0.7, my, 0.0]), color=P_WHITE, stroke_width=1.5),
-        Line(np.array([cx + 1.3, desk_y, 0.0]), np.array([cx + 1.3, my, 0.0]), color=P_WHITE, stroke_width=1.5),
-    )
-    laptop = VGroup(_manim_module.object_silhouette("laptop", color=P_CYAN, width=0.32))
-    laptop.move_to([cx + 0.99, desk_y + 0.02 + laptop.height / 2, 0])
+    lamp_group = staffage("shared-lamp-winter", unit=0.3 / staffage_height("shared-lamp-winter"))
+    lamp_group.shift(np.array([cx - 0.9, my, 0.0]) - lamp_group.get_top())
+    desk_x = H["hs"]["x_l"] + 0.3 * unit
+    desk = staffage("shared-desk", unit=unit, anchor=np.array([desk_x, fy, 0.0]))
+    laptop = staffage("shared-laptop-winter", unit=unit, anchor=np.array([desk_x + 0.3 * unit, fy + 0.72 * unit, 0.0]))
     return {
-        "person": person, "lamp": lamp["group"], "device": VGroup(desk, laptop),
-        "sources": VGroup(person, lamp["group"], desk, laptop),
+        "person": person, "lamp": lamp_group, "device": VGroup(desk, laptop),
+        "sources": VGroup(person, lamp_group, desk, laptop),
         "warm": [person.get_center() + UP * 0.08, laptop.get_center()],
-        "bulbs": [lamp["bulb"].get_center()],
+        "bulbs": [lamp_group.get_bottom() + UP * 0.06],
     }
 
 
 def _gain_heat(G, rt: float, *, color=INT_ORANGE, r_max: float = 0.42):
-    """🌡️ Long-wave heat from every internal source — ripples from person and laptop, down from the lamp."""
+    """🔥 Long-wave heat from every internal source — ripples from person and laptop, down from the lamp."""
     cycles = max(1.0, rt / 1.3)
     return [ripples(G["warm"], r_max=r_max, color=color, cycles=cycles),
             ripples(G["bulbs"], r_max=r_max * 0.6, color=color, down=True, cycles=cycles)]
@@ -350,7 +347,7 @@ def _gauge(sym: str, color, at, tracker, *, length: float = 1.3, digits: int = 2
     set_meter(g, 0.0)
     bind_meter(g, tracker)
     label = math_label(sym, size=BODY_FONT_SIZE, color=color).next_to(g["track"], LEFT, buff=0.14)
-    read = math_readout(lambda: de_num(tracker.get_value(), digits),
+    read = math_readout(lambda: label_number(tracker.get_value(), digits),
                         np.array([g["track"].get_right()[0] + 0.14, float(at[1]) - 0.08, 0.0]),
                         size=LABEL_FONT_SIZE + 1, color=color, edge="left")
     return {"track": g["track"], "fill": g["fill"], "label": label, "read": read,
@@ -361,7 +358,7 @@ def _thermo_pair(x: float, bottom: float, *, height: float = 1.5, gap: float = 0
     """🌡️ Indoor and outdoor thermometer — the Δθ span is the gap between their two column tops, read live."""
     t_in = thermometer_glyph(np.array([x, bottom, 0.0]), height=height, color=INT_ORANGE, level=0.0)
     t_out = thermometer_glyph(np.array([x + gap, bottom, 0.0]), height=height, color=LOSS_BLUE, level=0.0)
-    names = VGroup(body_text("innen", font_size=LABEL_FONT_SIZE, color=INT_ORANGE),
+    names = VGroup(body_text(tr("inside", "innen"), font_size=LABEL_FONT_SIZE, color=INT_ORANGE),
                    body_text("außen", font_size=LABEL_FONT_SIZE, color=LOSS_BLUE))
     names[0].move_to(np.array([x, bottom - 0.33, 0.0]))
     names[1].move_to(np.array([x + gap, bottom - 0.33, 0.0]))
@@ -431,7 +428,7 @@ class Beat1_Bilanzgrenze(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Bilanzgrenze & Energieerhaltung")
+        subtitle = section_heading(tr("System boundary & energy conservation", "Bilanzgrenze & Energieerhaltung"))
         din = _din_ref("DIN V 18599-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -446,9 +443,9 @@ class Beat1_Bilanzgrenze(Scene):
         legend = {"t": np.array([5.3, 1.3, 0.0]), "v": np.array([5.3, 0.7, 0.0]),
                   "s": np.array([-5.3, 1.3, 0.0]), "i": np.array([-5.3, 0.7, 0.0])}
         tag_t = _tag("Transmission", r"Q_{T}", LOSS_BLUE)
-        tag_v = _tag("Lüftung", r"Q_{V}", VENT_BLUE)
-        tag_s = _tag("Solare Gewinne", r"Q_{S}", SOLAR_YELLOW)
-        tag_i = _tag("Interne Gewinne", r"Q_{I}", INT_ORANGE)
+        tag_v = _tag(tr("Ventilation", "Lüftung"), r"Q_{V}", VENT_BLUE)
+        tag_s = _tag(tr("Solar gains", "Solare Gewinne"), r"Q_{S}", SOLAR_YELLOW)
+        tag_i = _tag(tr("Internal gains", "Interne Gewinne"), r"Q_{I}", INT_ORANGE)
         tag_t.move_to(np.array([4.6, 0.55, 0.0]))
         tag_v.move_to(np.array([-4.45, -0.95, 0.0]))
         tag_s.move_to(S["sun"].get_center() + np.array([0.0, -0.75, 0.0]))
@@ -509,7 +506,7 @@ class Beat1_Bilanzgrenze(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rest"))
         rad = _heater(H)
-        tag_h = _tag("Heizwärmebedarf", r"Q_{h}", DEMAND_RED)
+        tag_h = _tag(tr("Heating demand", "Heizwärmebedarf"), r"Q_{h}", DEMAND_RED)
         tag_h.move_to(np.array([4.95, H["floor_y"] + 0.2, 0.0]))
         lead_h = _lead(tag_h, P["supply"][0].point_from_proportion(0.05), side="right", color=DEMAND_RED)
         heat_g = flow_guides(P["supply"], DEMAND_RED, opacity=0.3)
@@ -618,7 +615,7 @@ class Beat2_Verlustseite(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Die Verlustseite: Transmission & Lüftung")
+        subtitle = section_heading(tr("The loss side: transmission & ventilation", "Die Verlustseite: Transmission & Lüftung"))
         din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -632,8 +629,8 @@ class Beat2_Verlustseite(Scene):
         by_surface = {"Außenwand": P["wall"], "Dach": P["roof"], "Fenster": P["win"], "Boden": P["floor"]}
         colors = {n: c for n, _a, _u, _d, c in SURFACES}
 
-        segments = [(n, phi, c) for (n, _a, _u, _d, c), phi in zip(SURFACES, PHI_SURFACES)]
-        segments += [("Wärmebrücken", PHI_WB, P_ORANGE), ("Lüftung", PHI_V, VENT_BLUE)]
+        segments = [(tr({"Außenwand": "Exterior wall", "Dach": "Roof", "Fenster": "Windows", "Boden": "Floor"}[n], n), phi, c) for (n, _a, _u, _d, c), phi in zip(SURFACES, PHI_SURFACES)]
+        segments += [(tr("Thermal bridges", "Wärmebrücken"), PHI_WB, P_ORANGE), (tr("Ventilation", "Lüftung"), PHI_V, VENT_BLUE)]
         stack = stacked_bar(segments, base=np.array([1.35, -1.2, 0.0]), width=1.0, unit=BAR_UNIT)
         labels, leaders = side_labels(
             [(a, name, col) for a, (name, _v, col) in zip(stack["anchors"], segments)],
@@ -676,10 +673,10 @@ class Beat2_Verlustseite(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "u"))
         u_t, a_t = ValueTracker(0.0), ValueTracker(0.0)
         ex = _card("", LOSS_BLUE, [
-            (lambda: rf"U = {de_num(u_t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}", P_ORANGE),
-            (lambda: rf"A = {de_num(a_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+            (lambda: rf"U = {label_number(u_t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}", P_ORANGE),
+            (lambda: rf"A = {label_number(a_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
         ])
-        ex_head = body_text("Außenwand", font_size=LABEL_FONT_SIZE, color=LOSS_BLUE).move_to(ex["head_at"])
+        ex_head = body_text(tr("Exterior wall", "Außenwand"), font_size=LABEL_FONT_SIZE, color=LOSS_BLUE).move_to(ex["head_at"])
         ring_u = highlight_param(it_t, "u", color=P_ORANGE)
         ring_a = highlight_param(it_t, "a", color=P_CYAN)
         self.add(ex["rows"][0])
@@ -695,7 +692,7 @@ class Beat2_Verlustseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "dt"))
         th = _thermo_pair(-1.2, -1.15, height=2.4, gap=1.5)
-        dth_read = math_readout(lambda: rf"\Delta\theta = {de_num(th['d_theta']())}\,\mathrm{{K}}",
+        dth_read = math_readout(lambda: rf"\Delta\theta = {label_number(th['d_theta']())}\,\mathrm{{K}}",
                                 lambda: np.array([th["x_mid"] + 1.15, (th["top"](th["in"]) + th["top"](th["out"])) / 2, 0.0]),
                                 size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
         ring_dt = highlight_param(it_t, "dt", color=P_BLUE)
@@ -710,8 +707,8 @@ class Beat2_Verlustseite(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "t"))
         clk = clock_glyph(np.array([-1.3, -0.1, 0.0]), r=0.85, color=P_PRIMARY)
         t_tr = ValueTracker(0.0)
-        t_card = _card("", P_PRIMARY, [(lambda: rf"t = {de_num(t_tr.get_value())}\,\mathrm{{h}}", P_PRIMARY)], x=0.3, top=0.65)
-        t_head = body_text("Stunden im Monat", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(t_card["head_at"])
+        t_card = _card("", P_PRIMARY, [(lambda: rf"t = {label_number(t_tr.get_value())}\,\mathrm{{h}}", P_PRIMARY)], x=0.3, top=0.65)
+        t_head = body_text(tr("Hours per month", "Stunden im Monat"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(t_card["head_at"])
         ring_t = highlight_param(it_t, "t", color=P_PRIMARY)
         self.add(*t_card["rows"])
         self.play(FadeOut(th["static"]), *[FadeOut(m) for m in (th["in"]["column"], th["out"]["column"], dth_read, th["arrow"])],
@@ -725,10 +722,10 @@ class Beat2_Verlustseite(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wand"))
         u_s, a_s, d_s = ValueTracker(0.0), ValueTracker(0.0), ValueTracker(0.0)
         card = _card("", P_ORANGE, [
-            (lambda: rf"U = {de_num(u_s.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}", P_ORANGE),
-            (lambda: rf"A = {de_num(a_s.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
-            (lambda: rf"\Delta\theta = {de_num(d_s.get_value())}\,\mathrm{{K}}", P_BLUE),
-            (lambda: rf"\Phi = {de_num(u_s.get_value() * a_s.get_value() * d_s.get_value())}\,\mathrm{{W}}", P_WHITE),
+            (lambda: rf"U = {label_number(u_s.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}", P_ORANGE),
+            (lambda: rf"A = {label_number(a_s.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+            (lambda: rf"\Delta\theta = {label_number(d_s.get_value())}\,\mathrm{{K}}", P_BLUE),
+            (lambda: rf"\Phi = {label_number(u_s.get_value() * a_s.get_value() * d_s.get_value())}\,\mathrm{{W}}", P_WHITE),
         ])
         heads = [body_text(n, font_size=LABEL_FONT_SIZE, color=c).move_to(card["head_at"]) for n, _a, _u, _d, c in SURFACES]
         self.add(*card["rows"])
@@ -766,10 +763,10 @@ class Beat2_Verlustseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zuschlag"))
         du_t = ValueTracker(0.0)
-        du_g = meter("Wärmebrücken", length=2.2, thickness=0.26, color=P_ORANGE, vertical=False)
+        du_g = meter(tr("Thermal bridges", "Wärmebrücken"), length=2.2, thickness=0.26, color=P_ORANGE, vertical=False)
         du_g["group"].move_to(np.array([5.65, 1.2, 0.0]))
         bind_meter(du_g, du_t)
-        du_read = math_readout(lambda: rf"\Delta U_{{WB}} = {de_num(du_t.get_value() * 0.15, 2)}",
+        du_read = math_readout(lambda: rf"\Delta U_{{WB}} = {label_number(du_t.get_value() * 0.15, 2)}",
                                np.array([5.65, 0.52, 0.0]), size=LABEL_FONT_SIZE + 1, color=P_ORANGE, edge="center")
         du_unit = math_label(r"\mathrm{W/(m^{2}K)}", np.array([5.65, 0.16, 0.0]), size=LABEL_FONT_SIZE, color=P_ORANGE)
         row_t2, box_t2, it_t2 = math_panel([
@@ -793,12 +790,12 @@ class Beat2_Verlustseite(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lueftung"))
         n_t, v_t, rc_t = ValueTracker(0.0), ValueTracker(0.0), ValueTracker(0.0)
         v_card = _card("", VENT_BLUE, [
-            (lambda: rf"n = {de_num(n_t.get_value(), 1)}\,\mathrm{{h^{{-1}}}}", P_YELLOW),
-            (lambda: rf"V = {de_num(v_t.get_value())}\,\mathrm{{m^{{3}}}}", P_YELLOW),
-            (lambda: rf"\rho c = {de_num(rc_t.get_value(), 2)}\,\mathrm{{Wh/m^{{3}}K}}", P_GREEN),
-            (lambda: rf"\Phi_{{V}} = {de_num(rc_t.get_value() * n_t.get_value() * v_t.get_value() * D_THETA)}\,\mathrm{{W}}", P_WHITE),
+            (lambda: rf"n = {label_number(n_t.get_value(), 1)}\,\mathrm{{h^{{-1}}}}", P_YELLOW),
+            (lambda: rf"V = {label_number(v_t.get_value())}\,\mathrm{{m^{{3}}}}", P_YELLOW),
+            (lambda: rf"\rho c = {label_number(rc_t.get_value(), 2)}\,\mathrm{{Wh/m^{{3}}K}}", P_GREEN),
+            (lambda: rf"\Phi_{{V}} = {label_number(rc_t.get_value() * n_t.get_value() * v_t.get_value() * D_THETA)}\,\mathrm{{W}}", P_WHITE),
         ])
-        v_head = body_text("Lüftung", font_size=LABEL_FONT_SIZE, color=VENT_BLUE).move_to(v_card["head_at"])
+        v_head = body_text(tr("Ventilation", "Lüftung"), font_size=LABEL_FONT_SIZE, color=VENT_BLUE).move_to(v_card["head_at"])
         vol = H["air"].copy().set_fill(VENT_BLUE, opacity=0.3).set_z_index(0)
         row_v, box_v, it_v = math_panel([
             ("qv", r"Q_{V}", VENT_BLUE), (None, "=", P_WHITE),
@@ -937,7 +934,7 @@ class Beat3_Gewinnseite(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Die Gewinnseite & der Ausnutzungsgrad")
+        subtitle = section_heading(tr("The gain side & the utilisation factor", "Die Gewinnseite & der Ausnutzungsgrad"))
         din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -982,11 +979,11 @@ class Beat3_Gewinnseite(Scene):
         g_g = _gauge("g", P_ORANGE, np.array([5.45, 1.85, 0.0]), g_t)
         fs_g = _gauge(r"F_{S}", P_TEAL, np.array([5.45, 1.85, 0.0]), fs_t)
         s_card = _card("", P_YELLOW, [
-            (lambda: rf"A_{{W}} = {de_num(aw_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
-            (lambda: rf"I_{{S}} = {de_num(is_t.get_value())}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
-            (lambda: rf"g = {de_num(g_t.get_value(), 2)}", P_ORANGE),
-            (lambda: rf"F_{{S}} = {de_num(fs_t.get_value(), 2)}", P_TEAL),
-            (lambda: rf"Q_{{S}} = {de_num(qs_t.get_value())}\,\mathrm{{kWh}}", SOLAR_YELLOW),
+            (lambda: rf"A_{{W}} = {label_number(aw_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+            (lambda: rf"I_{{S}} = {label_number(is_t.get_value())}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
+            (lambda: rf"g = {label_number(g_t.get_value(), 2)}", P_ORANGE),
+            (lambda: rf"F_{{S}} = {label_number(fs_t.get_value(), 2)}", P_TEAL),
+            (lambda: rf"Q_{{S}} = {label_number(qs_t.get_value())}\,\mathrm{{kWh}}", SOLAR_YELLOW),
         ], top=1.45)
         glass = VGroup(*[Line(np.array([w["x"], w["sill"], 0.0]), np.array([w["x"], w["lintel"], 0.0]),
                               color=P_CYAN, stroke_width=7.5) for w in (H["lo"], H["up"])])
@@ -1046,10 +1043,10 @@ class Beat3_Gewinnseite(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "intern"))
         q_t, an_t, t_t, qi_t = [ValueTracker(0.0) for _ in range(4)]
         i_card = _card("", INT_ORANGE, [
-            (lambda: rf"q_{{I}} = {de_num(q_t.get_value())}\,\mathrm{{W/m^{{2}}}}", P_ORANGE),
-            (lambda: rf"A_{{N}} = {de_num(an_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
-            (lambda: rf"t = {de_num(t_t.get_value())}\,\mathrm{{h}}", P_PRIMARY),
-            (lambda: rf"Q_{{I}} = {de_num(qi_t.get_value())}\,\mathrm{{kWh}}", INT_ORANGE),
+            (lambda: rf"q_{{I}} = {label_number(q_t.get_value())}\,\mathrm{{W/m^{{2}}}}", P_ORANGE),
+            (lambda: rf"A_{{N}} = {label_number(an_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
+            (lambda: rf"t = {label_number(t_t.get_value())}\,\mathrm{{h}}", P_PRIMARY),
+            (lambda: rf"Q_{{I}} = {label_number(qi_t.get_value())}\,\mathrm{{kWh}}", INT_ORANGE),
         ], top=1.85)
         floors = VGroup(*[Line(np.array([H["x_l"] + 0.12, y + 0.04, 0.0]), np.array([H["x_r"] - 0.12, y + 0.04, 0.0]),
                                color=P_CYAN, stroke_width=6) for y in (H["floor_y"], H["mid_y"])])
@@ -1112,12 +1109,12 @@ class Beat3_Gewinnseite(Scene):
         waste = block(x_gain, Q_USABLE, Q_QUELLE - Q_USABLE, P_RED, 0.6)
         spill = DashedLine(np.array([x_gain - 0.65, base_y + Q_QUELLE * unit, 0.0]),
                            np.array([x_gain + 0.65, base_y + Q_QUELLE * unit, 0.0]), color=P_RED, stroke_width=2)
-        spill_note = body_text("Überhitzung", font_size=LABEL_FONT_SIZE, color=P_RED).move_to(
+        spill_note = body_text(tr("Overheating", "Überhitzung"), font_size=LABEL_FONT_SIZE, color=P_RED).move_to(
             np.array([3.95, base_y + (Q_USABLE + (Q_QUELLE - Q_USABLE) / 2) * unit, 0.0]))
         row_e, box_e, it_e = math_panel([
             ("eta", r"\eta_{h}", ETA_GREEN), (None, r"\cdot", P_WHITE),
             ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW),
-            (None, rf"\approx {de_num(ETA_H, 1)}\cdot {de_num(Q_QUELLE)} \approx {de_num(Q_USABLE)}\;\mathrm{{kWh}}", P_WHITE),
+            (None, rf"\approx {label_number(ETA_H, 1)}\cdot {label_number(Q_QUELLE)} \approx {label_number(Q_USABLE)}\;\mathrm{{kWh}}", P_WHITE),
         ])
         ring_eta = highlight_param(it_e, "eta", color=ETA_GREEN)
         self.add(_veil(row_e), eta_g["read"])
@@ -1217,7 +1214,7 @@ class Beat4_WinterUndSommer(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Dieselbe Bilanz, zwei Jahreszeiten")
+        subtitle = section_heading(tr("The same balance, two seasons", "Dieselbe Bilanz, zwei Jahreszeiten"))
         din = _din_ref("DIN V 18599-2 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1290,14 +1287,14 @@ class Beat4_WinterUndSommer(Scene):
             return sun
 
         sun_live = always_redraw(sun_mob)
-        season_chip = chip("Januar", LOSS_BLUE).move_to(np.array([4.9, 1.7, 0.0]))
-        result_chip = chip("Heizwärmebedarf", DEMAND_RED).move_to(np.array([4.9, 1.0, 0.0]))
-        season_chip_j = chip("Juli", P_RED).move_to(season_chip)
-        result_chip_k = chip("Kühlbedarf", DEMAND_RED).move_to(result_chip)
+        season_chip = chip(tr("January", "Januar"), LOSS_BLUE).move_to(np.array([4.9, 1.7, 0.0]))
+        result_chip = chip(tr("Heating demand", "Heizwärmebedarf"), DEMAND_RED).move_to(np.array([4.9, 1.0, 0.0]))
+        season_chip_j = chip(tr("July", "Juli"), P_RED).move_to(season_chip)
+        result_chip_k = chip(tr("Cooling demand", "Kühlbedarf"), DEMAND_RED).move_to(result_chip)
         eta_g = _gauge(r"\eta", ETA_GREEN, np.array([4.9, 0.1, 0.0]), eta_t)
         card = _card("", P_PRIMARY, [
-            (lambda: rf"\Delta\theta = {de_num(mix(D_THETA, D_THETA_JUL, climate))}\,\mathrm{{K}}", P_BLUE),
-            (lambda: rf"I_{{S}} = {de_num(mix(I_S, I_S_JUL, climate))}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
+            (lambda: rf"\Delta\theta = {label_number(mix(D_THETA, D_THETA_JUL, climate))}\,\mathrm{{K}}", P_BLUE),
+            (lambda: rf"I_{{S}} = {label_number(mix(I_S, I_S_JUL, climate))}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
         ], x=-6.3, top=0.85)
 
         row_w, box_w, it_w = math_panel([
@@ -1357,8 +1354,8 @@ class Beat4_WinterUndSommer(Scene):
         hold_for(self, self.NARRATION, "juli_kuehlen")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "beide"))
-        win_chip = chip("Winter: Verluste > Gewinne", LOSS_BLUE, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.2, 0.0]))
-        sum_chip = chip("Sommer: Gewinne > Verluste", P_RED, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.9, 0.0]))
+        win_chip = chip(tr("Winter: losses > gains", "Winter: Verluste > Gewinne"), LOSS_BLUE, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.2, 0.0]))
+        sum_chip = chip(tr("Summer: gains > losses", "Sommer: Gewinne > Verluste"), P_RED, font_size=LABEL_FONT_SIZE).move_to(np.array([4.6, -0.9, 0.0]))
         self.play(FadeOut(VGroup(card["frame"], eta_g["static"], ring_k)), *[FadeOut(r) for r in card["rows"]],
                   FadeOut(eta_g["read"]), run_time=0.8)
         self.play(FadeIn(win_chip), FadeIn(sum_chip), run_time=1.4)
@@ -1367,8 +1364,8 @@ class Beat4_WinterUndSommer(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "groessen"))
         H = _home(np.array([-1.6, 0.0, 0.0]), 0.9)
         envelope = _envelope(H)
-        sign_h = chip("Heizen: Jahresbedarf", DEMAND_RED).move_to(np.array([4.4, 0.5, 0.0]))
-        sign_k = chip("Kühlen: Auslegungslast", P_CYAN).move_to(np.array([4.4, -0.3, 0.0]))
+        sign_h = chip(tr("Heating: annual demand", "Heizen: Jahresbedarf"), DEMAND_RED).move_to(np.array([4.4, 0.5, 0.0]))
+        sign_k = chip(tr("Cooling: design load", "Kühlen: Auslegungslast"), P_CYAN).move_to(np.array([4.4, -0.3, 0.0]))
         self.play(FadeOut(VGroup(box_k, row_k, season_chip_j, result_chip_k, win_chip, sum_chip, cap_loss_k, cap_gain_k,
                                  gap_lab_k, ground)),
                   *[FadeOut(m) for m in (loss_col, gain_col, gap_s, sun_live)], run_time=1.0)

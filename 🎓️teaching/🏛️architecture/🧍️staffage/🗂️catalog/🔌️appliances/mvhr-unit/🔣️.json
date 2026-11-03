@@ -1,0 +1,3469 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "mvhr-unit",
+    "category": "appliances",
+    "title": {
+      "en": "Wall-Mounted Heat-Recovery Ventilation Unit",
+      "de": "Wandmontiertes Lüftungsgerät mit Wärmerückgewinnung"
+    },
+    "summary": {
+      "en": "A wall-mounted mechanical ventilation unit with heat recovery of 0.6 m by 0.6 m: a box with an inspection window onto the turning supply impeller and four duct spigots on top; it moves 110 to 220 m3/h and returns 85 percent of the heat of the extract air for 38 to 75 W.",
+      "de": "Ein wandmontiertes Lüftungsgerät mit Wärmerückgewinnung von 0,6 m mal 0,6 m: ein Kasten mit Schauglas auf das drehende Zuluftlaufrad und vier Kanalstutzen oben; es bewegt 110 bis 220 m3/h und gibt 85 Prozent der Abluftwärme zurück bei 38 bis 75 W."
+    },
+    "tags": [
+      "mvhr",
+      "heat-recovery",
+      "ventilation",
+      "mechanical-ventilation",
+      "appliance",
+      "wall-mounted",
+      "supply-air",
+      "extract-air",
+      "internal-gain",
+      "electrical",
+      "rotating"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A10)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "din-en-13141-7-2021",
+          "citation": "DIN EN 13141-7:2021 Ventilation for buildings - Performance testing of components/products for residential ventilation - Part 7: Mechanical supply and exhaust ventilation units with heat recovery (temperature ratio, electric power, specific fan power)."
+        },
+        {
+          "id": "en-308-1997",
+          "citation": "EN 308:1997 Heat exchangers - Test procedures for establishing performance of air to air and flue gases heat recovery devices (temperature efficiency, test point of 0 degC outdoor air and 21 degC extract air)."
+        },
+        {
+          "id": "phi-2020",
+          "citation": "Passive House Institute (2020). Criteria for certified ventilation units with heat recovery: effective heat recovery of at least 75 percent, electric efficiency of at most 0.45 Wh/m3."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A compact wall unit of the 250 m3/h class in front elevation: a casing of 0.6 m width and 0.6 m height with a round inspection window of 0.224 m showing the supply impeller (nine backward-curved blades), a status light and a filter-door handle, and four DN100 spigots of 98 mm on top (from the left: exhaust, extract, supply, outdoor air), each with a rolled bead. The unit is 0.3 m deep (depthM) and weighs 24 kg; the overall height with the spigots is 0.665 m. The origin is the lower edge of the casing on the wall, x = 0 on the centreline. Dimensions and masses are rounded from this product class (authored estimate). At level 1 each stream is 0.061 m3/s (220 m3/h) and the two fans take 75 W (about 33 W warm the air streams, 12 W show at the casing behind its insulation, which runs about 1.5 K above the room, and 30 W at the supply impeller); at level 0.5 it is 110 m3/h and 38 W, linearised from a fan law with an SFP of 0.34 to 0.38 Wh/m3. The heat recovery is 85 percent (temperature ratio of the heat exchanger, EN 308 test point 0 degC outdoors, 21 degC extract): the supply air leaves at 0.85 x 21 = 17.9 degC plus 0.5 K of fan heat, 2.6 K below the room, and the exhaust air at 3.2 degC, 17.9 K below the room.",
+        "de": "Ein kompaktes Wandgerät der Klasse 250 m3/h in der Vorderansicht: ein Gehäuse von 0,6 m Breite und 0,6 m Höhe mit rundem Schauglas von 0,224 m, das das Zuluftlaufrad (neun rückwärts gekrümmte Schaufeln) zeigt, eine Statusleuchte und ein Griff der Filtertür, und vier DN100-Stutzen von 98 mm oben (von links: Fortluft, Abluft, Zuluft, Außenluft) mit je einer Sicke. Das Gerät ist 0,3 m tief (depthM) und wiegt 24 kg; die Gesamthöhe mit den Stutzen beträgt 0,665 m. Der Ursprung ist die Unterkante des Gehäuses an der Wand, x = 0 auf der Mittellinie. Maße und Massen sind aus dieser Produktklasse gerundet (Schätzwert). Auf Stufe 1 beträgt jeder Strom 0,061 m3/s (220 m3/h) und die beiden Ventilatoren nehmen 75 W auf (etwa 33 W erwärmen die Luftströme, 12 W zeigen sich am Gehäuse hinter seiner Dämmung, das etwa 1,5 K über dem Raum liegt, und 30 W am Zuluftlaufrad); bei Stufe 0,5 sind es 110 m3/h und 38 W, linearisiert nach einem Ventilatorgesetz mit einer SFP von 0,34 bis 0,38 Wh/m3. Die Wärmerückgewinnung beträgt 85 Prozent (Temperaturverhältnis des Wärmeübertragers, Prüfpunkt nach EN 308 mit 0 degC Außenluft und 21 degC Abluft): die Zuluft verlässt das Gerät mit 0,85 x 21 = 17,9 degC plus 0,5 K Ventilatorwärme, 2,6 K unter der Raumluft, und die Fortluft mit 3,2 degC, 17,9 K unter der Raumluft."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.665,
+      "widthM": 0.6,
+      "depthM": 0.3,
+      "massKg": 24
+    },
+    "materials": [
+      {
+        "id": "painted-steel",
+        "title": {
+          "en": "Powder-coated steel sheet",
+          "de": "Pulverbeschichtetes Stahlblech"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.35,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "galvanised-steel",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "polycarbonate",
+        "title": {
+          "en": "Polycarbonate",
+          "de": "Polycarbonat"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "pp-impeller",
+        "title": {
+          "en": "Polypropylene impeller",
+          "de": "Polypropylen-Laufrad"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 900,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "casing",
+      "bones": [
+        {
+          "id": "casing",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Casing with heat exchanger",
+            "de": "Gehäuse mit Wärmeübertrager"
+          },
+          "lengthM": 0.6,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 21,
+            "comX": 0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "spigots",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.6,
+          "angleDeg": 0,
+          "title": {
+            "en": "Four duct spigots",
+            "de": "Vier Kanalstutzen"
+          },
+          "lengthM": 0.065,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.6,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "impeller",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.3,
+          "angleDeg": 0,
+          "title": {
+            "en": "Supply impeller behind the window",
+            "de": "Zuluftlaufrad hinter dem Fenster"
+          },
+          "lengthM": 0.1,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 1.4,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-hook",
+        "bone": "casing",
+        "x": 0,
+        "y": 0.57,
+        "kind": "support",
+        "title": {
+          "en": "Upper hook on the wall plate",
+          "de": "Oberer Haken an der Wandplatte"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.3
+      },
+      {
+        "id": "wall-rest",
+        "bone": "casing",
+        "x": 0,
+        "y": 0.03,
+        "kind": "support",
+        "title": {
+          "en": "Lower rest against the wall",
+          "de": "Untere Anlage an der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "supply-spigot",
+        "bone": "spigots",
+        "x": 0.075,
+        "y": 0.065,
+        "kind": "emitter",
+        "title": {
+          "en": "Supply air spigot",
+          "de": "Zuluftstutzen"
+        }
+      },
+      {
+        "id": "exhaust-spigot",
+        "bone": "spigots",
+        "x": -0.225,
+        "y": 0.065,
+        "kind": "emitter",
+        "title": {
+          "en": "Exhaust air spigot",
+          "de": "Fortluftstutzen"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.6,
+              "r": 0.025,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": -0.274,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.282,
+              "y": 0.048,
+              "w": 0.114,
+              "h": 0.014,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": -0.124,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.132,
+              "y": 0.048,
+              "w": 0.114,
+              "h": 0.014,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": 0.026,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.018,
+              "y": 0.048,
+              "w": 0.114,
+              "h": 0.014,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": 0.176,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.168,
+              "y": 0.048,
+              "w": 0.114,
+              "h": 0.014,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "window-ring",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.3,
+              "rx": 0.128,
+              "ry": 0.128,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "window",
+              "bone": "casing",
+              "role": "glazing",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.14,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.3,
+              "rx": 0.112,
+              "ry": 0.112,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "blade-1",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.03804 0.01236 L 0.04673 0.00852 L 0.05491 0.00316 L 0.06239 -0.00364 L 0.069 -0.01178 L 0.07456 -0.02114 L 0.07891 -0.03159 L 0.08191 -0.04298 L 0.08342 -0.05515 L 0.06357 -0.0772 L 0.06448 -0.06633 L 0.06397 -0.05597 L 0.06216 -0.04628 L 0.05916 -0.03741 L 0.0551 -0.02949 L 0.05013 -0.02263 L 0.04439 -0.0169 L 0.03804 -0.01236 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-2",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.02119 0.03392 L 0.03032 0.03657 L 0.04003 0.03771 L 0.05014 0.03731 L 0.06043 0.03533 L 0.07071 0.03173 L 0.08076 0.02652 L 0.09037 0.01972 L 0.09935 0.01137 L 0.09832 -0.01828 L 0.09202 -0.00936 L 0.08498 -0.00175 L 0.07737 0.0045 L 0.06937 0.00937 L 0.06117 0.01283 L 0.05295 0.01489 L 0.04487 0.01559 L 0.03709 0.01498 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-3",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.00557 0.03961 L -0.00028 0.0475 L 0.00643 0.05462 L 0.01442 0.06081 L 0.02359 0.06591 L 0.03377 0.06976 L 0.04482 0.07223 L 0.05655 0.0732 L 0.0688 0.07257 L 0.08706 0.0492 L 0.07651 0.05198 L 0.06623 0.05328 L 0.05637 0.05318 L 0.04712 0.05177 L 0.03861 0.04914 L 0.03099 0.04544 L 0.02435 0.04079 L 0.01878 0.03532 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-4",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.02973 0.02676 L -0.03075 0.03621 L -0.03019 0.04597 L -0.02804 0.05586 L -0.0243 0.06565 L -0.01897 0.07514 L -0.0121 0.08414 L -0.00373 0.09242 L 0.00605 0.09982 L 0.03507 0.09365 L 0.0252 0.089 L 0.01648 0.08339 L 0.009 0.07698 L 0.00282 0.06994 L -0.00201 0.06247 L -0.00547 0.05473 L -0.00756 0.04689 L -0.00831 0.03913 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-5",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.03998 0.00139 L -0.04683 0.00797 L -0.05268 0.01581 L -0.05738 0.02476 L -0.06081 0.03467 L -0.06283 0.04537 L -0.06335 0.05668 L -0.06227 0.0684 L -0.05953 0.08035 L -0.03333 0.09428 L -0.0379 0.08438 L -0.04097 0.07447 L -0.04258 0.06475 L -0.0428 0.05539 L -0.04169 0.04656 L -0.03937 0.03841 L -0.03594 0.03106 L -0.03152 0.02463 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-6",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.03152 -0.02463 L -0.041 -0.02399 L -0.05052 -0.02175 L -0.05988 -0.01792 L -0.06887 -0.01253 L -0.07729 -0.00563 L -0.08496 0.0027 L -0.09167 0.01238 L -0.09725 0.02329 L -0.08614 0.0508 L -0.08327 0.04027 L -0.07926 0.03071 L -0.07424 0.02223 L -0.06839 0.01492 L -0.06187 0.00887 L -0.05485 0.00412 L -0.04749 0.00069 L -0.03998 -0.00139 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-7",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.00831 -0.03913 L -0.01598 -0.04473 L -0.02472 -0.04913 L -0.03435 -0.05221 L -0.0447 -0.05387 L -0.05559 -0.054 L -0.06682 -0.05254 L -0.07818 -0.04944 L -0.08947 -0.04467 L -0.09864 -0.01645 L -0.08968 -0.02268 L -0.08046 -0.02742 L -0.07116 -0.03069 L -0.06198 -0.03253 L -0.05309 -0.03297 L -0.04466 -0.0321 L -0.03683 -0.03 L -0.02973 -0.02676 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-8",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.01878 -0.03532 L 0.01651 -0.04454 L 0.01264 -0.05353 L 0.00725 -0.06208 L 0.00038 -0.07 L -0.00787 -0.0771 L -0.01741 -0.0832 L -0.02811 -0.08813 L -0.03983 -0.09173 L -0.06499 -0.07601 L -0.05412 -0.07501 L -0.04401 -0.07272 L -0.03478 -0.06926 L -0.02657 -0.06476 L -0.01948 -0.05939 L -0.01358 -0.0533 L -0.00893 -0.04665 L -0.00557 -0.03961 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-9",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.03709 -0.01498 L 0.04127 -0.02351 L 0.04409 -0.03288 L 0.04545 -0.0429 L 0.04528 -0.05338 L 0.04353 -0.06412 L 0.04014 -0.07492 L 0.03511 -0.08558 L 0.02845 -0.09587 L -0.00093 -0.1 L 0.00676 -0.09225 L 0.01303 -0.084 L 0.01787 -0.07541 L 0.02127 -0.06669 L 0.02325 -0.05801 L 0.02386 -0.04956 L 0.02315 -0.04148 L 0.02119 -0.03392 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "hub",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "led",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "ellipse",
+              "cx": 0.215,
+              "cy": 0.1,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "handle",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.08,
+              "y": 0.03,
+              "w": 0.16,
+              "h": 0.024,
+              "r": 0.012,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "cover-seam",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.275,
+                  0.07
+                ],
+                [
+                  -0.275,
+                  0.565
+                ],
+                [
+                  0.275,
+                  0.565
+                ],
+                [
+                  0.275,
+                  0.07
+                ],
+                [
+                  -0.275,
+                  0.07
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.15,
+              "w": 0.6,
+              "h": 0.3,
+              "r": 0.025,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "cover-seam",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.275,
+                  -0.125
+                ],
+                [
+                  0.275,
+                  -0.125
+                ],
+                [
+                  0.275,
+                  0.125
+                ],
+                [
+                  -0.275,
+                  0.125
+                ],
+                [
+                  -0.275,
+                  -0.125
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.176,
+                  0.07
+                ],
+                [
+                  -0.17723,
+                  0.0809
+                ],
+                [
+                  -0.18085,
+                  0.09126
+                ],
+                [
+                  -0.18669,
+                  0.10055
+                ],
+                [
+                  -0.19445,
+                  0.10831
+                ],
+                [
+                  -0.20374,
+                  0.11415
+                ],
+                [
+                  -0.2141,
+                  0.11777
+                ],
+                [
+                  -0.225,
+                  0.119
+                ],
+                [
+                  -0.2359,
+                  0.11777
+                ],
+                [
+                  -0.24626,
+                  0.11415
+                ],
+                [
+                  -0.25555,
+                  0.10831
+                ],
+                [
+                  -0.26331,
+                  0.10055
+                ],
+                [
+                  -0.26915,
+                  0.09126
+                ],
+                [
+                  -0.27277,
+                  0.0809
+                ],
+                [
+                  -0.274,
+                  0.07
+                ],
+                [
+                  -0.27277,
+                  0.0591
+                ],
+                [
+                  -0.26915,
+                  0.04874
+                ],
+                [
+                  -0.26331,
+                  0.03945
+                ],
+                [
+                  -0.25555,
+                  0.03169
+                ],
+                [
+                  -0.24626,
+                  0.02585
+                ],
+                [
+                  -0.2359,
+                  0.02223
+                ],
+                [
+                  -0.225,
+                  0.021
+                ],
+                [
+                  -0.2141,
+                  0.02223
+                ],
+                [
+                  -0.20374,
+                  0.02585
+                ],
+                [
+                  -0.19445,
+                  0.03169
+                ],
+                [
+                  -0.18669,
+                  0.03945
+                ],
+                [
+                  -0.18085,
+                  0.04874
+                ],
+                [
+                  -0.17723,
+                  0.0591
+                ]
+              ],
+              "closed": true,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-1",
+              "bone": "spigots",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.168,
+                  0.07
+                ],
+                [
+                  -0.16943,
+                  0.08268
+                ],
+                [
+                  -0.17364,
+                  0.09473
+                ],
+                [
+                  -0.18044,
+                  0.10554
+                ],
+                [
+                  -0.18946,
+                  0.11456
+                ],
+                [
+                  -0.20027,
+                  0.12136
+                ],
+                [
+                  -0.21232,
+                  0.12557
+                ],
+                [
+                  -0.225,
+                  0.127
+                ],
+                [
+                  -0.23768,
+                  0.12557
+                ],
+                [
+                  -0.24973,
+                  0.12136
+                ],
+                [
+                  -0.26054,
+                  0.11456
+                ],
+                [
+                  -0.26956,
+                  0.10554
+                ],
+                [
+                  -0.27636,
+                  0.09473
+                ],
+                [
+                  -0.28057,
+                  0.08268
+                ],
+                [
+                  -0.282,
+                  0.07
+                ],
+                [
+                  -0.28057,
+                  0.05732
+                ],
+                [
+                  -0.27636,
+                  0.04527
+                ],
+                [
+                  -0.26956,
+                  0.03446
+                ],
+                [
+                  -0.26054,
+                  0.02544
+                ],
+                [
+                  -0.24973,
+                  0.01864
+                ],
+                [
+                  -0.23768,
+                  0.01443
+                ],
+                [
+                  -0.225,
+                  0.013
+                ],
+                [
+                  -0.21232,
+                  0.01443
+                ],
+                [
+                  -0.20027,
+                  0.01864
+                ],
+                [
+                  -0.18946,
+                  0.02544
+                ],
+                [
+                  -0.18044,
+                  0.03446
+                ],
+                [
+                  -0.17364,
+                  0.04527
+                ],
+                [
+                  -0.16943,
+                  0.05732
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.026,
+                  -0.07
+                ],
+                [
+                  -0.02723,
+                  -0.0591
+                ],
+                [
+                  -0.03085,
+                  -0.04874
+                ],
+                [
+                  -0.03669,
+                  -0.03945
+                ],
+                [
+                  -0.04445,
+                  -0.03169
+                ],
+                [
+                  -0.05374,
+                  -0.02585
+                ],
+                [
+                  -0.0641,
+                  -0.02223
+                ],
+                [
+                  -0.075,
+                  -0.021
+                ],
+                [
+                  -0.0859,
+                  -0.02223
+                ],
+                [
+                  -0.09626,
+                  -0.02585
+                ],
+                [
+                  -0.10555,
+                  -0.03169
+                ],
+                [
+                  -0.11331,
+                  -0.03945
+                ],
+                [
+                  -0.11915,
+                  -0.04874
+                ],
+                [
+                  -0.12277,
+                  -0.0591
+                ],
+                [
+                  -0.124,
+                  -0.07
+                ],
+                [
+                  -0.12277,
+                  -0.0809
+                ],
+                [
+                  -0.11915,
+                  -0.09126
+                ],
+                [
+                  -0.11331,
+                  -0.10055
+                ],
+                [
+                  -0.10555,
+                  -0.10831
+                ],
+                [
+                  -0.09626,
+                  -0.11415
+                ],
+                [
+                  -0.0859,
+                  -0.11777
+                ],
+                [
+                  -0.075,
+                  -0.119
+                ],
+                [
+                  -0.0641,
+                  -0.11777
+                ],
+                [
+                  -0.05374,
+                  -0.11415
+                ],
+                [
+                  -0.04445,
+                  -0.10831
+                ],
+                [
+                  -0.03669,
+                  -0.10055
+                ],
+                [
+                  -0.03085,
+                  -0.09126
+                ],
+                [
+                  -0.02723,
+                  -0.0809
+                ]
+              ],
+              "closed": true,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-2",
+              "bone": "spigots",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.018,
+                  -0.07
+                ],
+                [
+                  -0.01943,
+                  -0.05732
+                ],
+                [
+                  -0.02364,
+                  -0.04527
+                ],
+                [
+                  -0.03044,
+                  -0.03446
+                ],
+                [
+                  -0.03946,
+                  -0.02544
+                ],
+                [
+                  -0.05027,
+                  -0.01864
+                ],
+                [
+                  -0.06232,
+                  -0.01443
+                ],
+                [
+                  -0.075,
+                  -0.013
+                ],
+                [
+                  -0.08768,
+                  -0.01443
+                ],
+                [
+                  -0.09973,
+                  -0.01864
+                ],
+                [
+                  -0.11054,
+                  -0.02544
+                ],
+                [
+                  -0.11956,
+                  -0.03446
+                ],
+                [
+                  -0.12636,
+                  -0.04527
+                ],
+                [
+                  -0.13057,
+                  -0.05732
+                ],
+                [
+                  -0.132,
+                  -0.07
+                ],
+                [
+                  -0.13057,
+                  -0.08268
+                ],
+                [
+                  -0.12636,
+                  -0.09473
+                ],
+                [
+                  -0.11956,
+                  -0.10554
+                ],
+                [
+                  -0.11054,
+                  -0.11456
+                ],
+                [
+                  -0.09973,
+                  -0.12136
+                ],
+                [
+                  -0.08768,
+                  -0.12557
+                ],
+                [
+                  -0.075,
+                  -0.127
+                ],
+                [
+                  -0.06232,
+                  -0.12557
+                ],
+                [
+                  -0.05027,
+                  -0.12136
+                ],
+                [
+                  -0.03946,
+                  -0.11456
+                ],
+                [
+                  -0.03044,
+                  -0.10554
+                ],
+                [
+                  -0.02364,
+                  -0.09473
+                ],
+                [
+                  -0.01943,
+                  -0.08268
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "spigot-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "poly",
+              "points": [
+                [
+                  0.124,
+                  0.07
+                ],
+                [
+                  0.12277,
+                  0.0809
+                ],
+                [
+                  0.11915,
+                  0.09126
+                ],
+                [
+                  0.11331,
+                  0.10055
+                ],
+                [
+                  0.10555,
+                  0.10831
+                ],
+                [
+                  0.09626,
+                  0.11415
+                ],
+                [
+                  0.0859,
+                  0.11777
+                ],
+                [
+                  0.075,
+                  0.119
+                ],
+                [
+                  0.0641,
+                  0.11777
+                ],
+                [
+                  0.05374,
+                  0.11415
+                ],
+                [
+                  0.04445,
+                  0.10831
+                ],
+                [
+                  0.03669,
+                  0.10055
+                ],
+                [
+                  0.03085,
+                  0.09126
+                ],
+                [
+                  0.02723,
+                  0.0809
+                ],
+                [
+                  0.026,
+                  0.07
+                ],
+                [
+                  0.02723,
+                  0.0591
+                ],
+                [
+                  0.03085,
+                  0.04874
+                ],
+                [
+                  0.03669,
+                  0.03945
+                ],
+                [
+                  0.04445,
+                  0.03169
+                ],
+                [
+                  0.05374,
+                  0.02585
+                ],
+                [
+                  0.0641,
+                  0.02223
+                ],
+                [
+                  0.075,
+                  0.021
+                ],
+                [
+                  0.0859,
+                  0.02223
+                ],
+                [
+                  0.09626,
+                  0.02585
+                ],
+                [
+                  0.10555,
+                  0.03169
+                ],
+                [
+                  0.11331,
+                  0.03945
+                ],
+                [
+                  0.11915,
+                  0.04874
+                ],
+                [
+                  0.12277,
+                  0.0591
+                ]
+              ],
+              "closed": true,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-3",
+              "bone": "spigots",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.132,
+                  0.07
+                ],
+                [
+                  0.13057,
+                  0.08268
+                ],
+                [
+                  0.12636,
+                  0.09473
+                ],
+                [
+                  0.11956,
+                  0.10554
+                ],
+                [
+                  0.11054,
+                  0.11456
+                ],
+                [
+                  0.09973,
+                  0.12136
+                ],
+                [
+                  0.08768,
+                  0.12557
+                ],
+                [
+                  0.075,
+                  0.127
+                ],
+                [
+                  0.06232,
+                  0.12557
+                ],
+                [
+                  0.05027,
+                  0.12136
+                ],
+                [
+                  0.03946,
+                  0.11456
+                ],
+                [
+                  0.03044,
+                  0.10554
+                ],
+                [
+                  0.02364,
+                  0.09473
+                ],
+                [
+                  0.01943,
+                  0.08268
+                ],
+                [
+                  0.018,
+                  0.07
+                ],
+                [
+                  0.01943,
+                  0.05732
+                ],
+                [
+                  0.02364,
+                  0.04527
+                ],
+                [
+                  0.03044,
+                  0.03446
+                ],
+                [
+                  0.03946,
+                  0.02544
+                ],
+                [
+                  0.05027,
+                  0.01864
+                ],
+                [
+                  0.06232,
+                  0.01443
+                ],
+                [
+                  0.075,
+                  0.013
+                ],
+                [
+                  0.08768,
+                  0.01443
+                ],
+                [
+                  0.09973,
+                  0.01864
+                ],
+                [
+                  0.11054,
+                  0.02544
+                ],
+                [
+                  0.11956,
+                  0.03446
+                ],
+                [
+                  0.12636,
+                  0.04527
+                ],
+                [
+                  0.13057,
+                  0.05732
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "spigot-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "poly",
+              "points": [
+                [
+                  0.274,
+                  -0.07
+                ],
+                [
+                  0.27277,
+                  -0.0591
+                ],
+                [
+                  0.26915,
+                  -0.04874
+                ],
+                [
+                  0.26331,
+                  -0.03945
+                ],
+                [
+                  0.25555,
+                  -0.03169
+                ],
+                [
+                  0.24626,
+                  -0.02585
+                ],
+                [
+                  0.2359,
+                  -0.02223
+                ],
+                [
+                  0.225,
+                  -0.021
+                ],
+                [
+                  0.2141,
+                  -0.02223
+                ],
+                [
+                  0.20374,
+                  -0.02585
+                ],
+                [
+                  0.19445,
+                  -0.03169
+                ],
+                [
+                  0.18669,
+                  -0.03945
+                ],
+                [
+                  0.18085,
+                  -0.04874
+                ],
+                [
+                  0.17723,
+                  -0.0591
+                ],
+                [
+                  0.176,
+                  -0.07
+                ],
+                [
+                  0.17723,
+                  -0.0809
+                ],
+                [
+                  0.18085,
+                  -0.09126
+                ],
+                [
+                  0.18669,
+                  -0.10055
+                ],
+                [
+                  0.19445,
+                  -0.10831
+                ],
+                [
+                  0.20374,
+                  -0.11415
+                ],
+                [
+                  0.2141,
+                  -0.11777
+                ],
+                [
+                  0.225,
+                  -0.119
+                ],
+                [
+                  0.2359,
+                  -0.11777
+                ],
+                [
+                  0.24626,
+                  -0.11415
+                ],
+                [
+                  0.25555,
+                  -0.10831
+                ],
+                [
+                  0.26331,
+                  -0.10055
+                ],
+                [
+                  0.26915,
+                  -0.09126
+                ],
+                [
+                  0.27277,
+                  -0.0809
+                ]
+              ],
+              "closed": true,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-4",
+              "bone": "spigots",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.282,
+                  -0.07
+                ],
+                [
+                  0.28057,
+                  -0.05732
+                ],
+                [
+                  0.27636,
+                  -0.04527
+                ],
+                [
+                  0.26956,
+                  -0.03446
+                ],
+                [
+                  0.26054,
+                  -0.02544
+                ],
+                [
+                  0.24973,
+                  -0.01864
+                ],
+                [
+                  0.23768,
+                  -0.01443
+                ],
+                [
+                  0.225,
+                  -0.013
+                ],
+                [
+                  0.21232,
+                  -0.01443
+                ],
+                [
+                  0.20027,
+                  -0.01864
+                ],
+                [
+                  0.18946,
+                  -0.02544
+                ],
+                [
+                  0.18044,
+                  -0.03446
+                ],
+                [
+                  0.17364,
+                  -0.04527
+                ],
+                [
+                  0.16943,
+                  -0.05732
+                ],
+                [
+                  0.168,
+                  -0.07
+                ],
+                [
+                  0.16943,
+                  -0.08268
+                ],
+                [
+                  0.17364,
+                  -0.09473
+                ],
+                [
+                  0.18044,
+                  -0.10554
+                ],
+                [
+                  0.18946,
+                  -0.11456
+                ],
+                [
+                  0.20027,
+                  -0.12136
+                ],
+                [
+                  0.21232,
+                  -0.12557
+                ],
+                [
+                  0.225,
+                  -0.127
+                ],
+                [
+                  0.23768,
+                  -0.12557
+                ],
+                [
+                  0.24973,
+                  -0.12136
+                ],
+                [
+                  0.26054,
+                  -0.11456
+                ],
+                [
+                  0.26956,
+                  -0.10554
+                ],
+                [
+                  0.27636,
+                  -0.09473
+                ],
+                [
+                  0.28057,
+                  -0.08268
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.0,
+              "w": 0.3,
+              "h": 0.6,
+              "r": 0.025,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "cover-seam",
+              "bone": "casing",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.125,
+                  0.07
+                ],
+                [
+                  -0.125,
+                  0.565
+                ],
+                [
+                  0.125,
+                  0.565
+                ],
+                [
+                  0.125,
+                  0.07
+                ],
+                [
+                  -0.125,
+                  0.07
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": 0.021,
+              "y": 0.6,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-1",
+              "bone": "spigots",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.013,
+              "y": 0.648,
+              "w": 0.114,
+              "h": 0.014,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": -0.119,
+              "y": 0.6,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-2",
+              "bone": "spigots",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.127,
+              "y": 0.648,
+              "w": 0.114,
+              "h": 0.014,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.6 m by 0.665 m wall unit, 12 mm by 13.3 mm on paper: a light box with a round inspection window showing a nine-bladed impeller and four round duct spigots with a bead each on its top edge. Front view: the 0.3 m casing with its cover seam and the two spigots on the front side of the top, the other two hiding behind them. Top view: the 0.6 m by 0.3 m casing with the cover seam and the four round spigots with their beads in a zigzag, at a lateral offset of 0.07 m either side.",
+            "de": "Ein Wandgerät von 0,6 m mal 0,665 m, auf Papier 12 mm mal 13,3 mm: ein heller Kasten mit rundem Schauglas, das ein neunflügeliges Laufrad zeigt, und vier runde Kanalstutzen mit je einer Sicke am oberen Rand. Vorderansicht: das 0,3 m tiefe Gehäuse mit seiner Deckelfuge und den zwei vorderen Stutzen oben, die beiden anderen verbergen sich dahinter. Draufsicht: das Gehäuse von 0,6 m mal 0,3 m mit der Deckelfuge und den vier runden Stutzen mit ihren Sicken im Zickzack, seitlich je 0,07 m versetzt."
+          },
+          "retained": {
+            "en": "Casing of 0.6 m with its rounded corners, window ring and window of 0.224 m, nine backward-curved blades with the hub, four spigots of 98 mm with their beads, the cover seam, the status light and the filter-door handle.",
+            "de": "Gehäuse von 0,6 m mit gerundeten Ecken, Fensterring und Fenster von 0,224 m, neun rückwärts gekrümmte Schaufeln mit Nabe, vier Stutzen von 98 mm mit ihren Sicken, die Deckelfuge, die Statusleuchte und der Griff der Filtertür."
+          },
+          "merged": {
+            "en": "The heat exchanger, the extract fan and the bypass flap behind the cover are part of the casing region; only the supply impeller shows through the window.",
+            "de": "Wärmeübertrager, Abluftventilator und Bypassklappe hinter dem Deckel gehören zur Gehäuseregion; nur das Zuluftlaufrad zeigt sich durch das Fenster."
+          },
+          "omitted": {
+            "en": "Condensate drain, power cable, screws, the label and the duct labels. Front and top view omit the impeller window, the LED and the handle, which sit on the side face and are seen edge-on there.",
+            "de": "Kondensatablauf, Netzkabel, Schrauben, das Typenschild und die Stutzenbeschriftung. Vorder- und Draufsicht lassen das Laufradfenster, die Leuchtdiode und den Griff weg, die auf der Seitenfläche sitzen und dort nur von der Kante zu sehen wären."
+          },
+          "thinElements": {
+            "en": "The beads are 14 mm (0.28 mm); the blades are 26 to 30 mm wide (0.5 to 0.6 mm); the seam, the light and the handle are 0.13 mm detail pen.",
+            "de": "Die Sicken sind 14 mm (0,28 mm) hoch; die Schaufeln sind 26 bis 30 mm (0,5 bis 0,6 mm) breit; Fuge, Leuchte und Griff sind im 0,13-mm-Detailstift gezeichnet."
+          },
+          "hatching": {
+            "en": "None; the window is a dark tone.",
+            "de": "Keine; das Fenster ist ein dunkler Ton."
+          },
+          "styles": {
+            "en": "Casing 0.82, window ring 0.6, window 0.14, blades 0.8, spigots 0.66, beads 0.5; body pen 0.18 mm, detail and glazing 0.13 mm, ground 0.35 mm.",
+            "de": "Gehäuse 0,82, Fensterring 0,6, Fenster 0,14, Schaufeln 0,8, Stutzen 0,66, Sicken 0,5; Körperstift 0,18 mm, Detail und Verglasung 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Casing, window, impeller and ducts are four regions: in the thermal view the casing and the impeller warm, the spigots follow the air they carry.",
+            "de": "Gehäuse, Fenster, Laufrad und Kanäle sind vier Regionen: in der Thermalansicht erwärmen sich Gehäuse und Laufrad, die Stutzen folgen der Luft, die sie tragen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.6,
+              "r": 0.025,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": -0.274,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.282,
+              "y": 0.046,
+              "w": 0.114,
+              "h": 0.016,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": -0.124,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.132,
+              "y": 0.046,
+              "w": 0.114,
+              "h": 0.016,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": 0.026,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.018,
+              "y": 0.046,
+              "w": 0.114,
+              "h": 0.016,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": 0.176,
+              "y": 0,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "bead-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.168,
+              "y": 0.046,
+              "w": 0.114,
+              "h": 0.016,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "window",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.16,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.3,
+              "rx": 0.118,
+              "ry": 0.118,
+              "regions": [
+                "casing",
+                "window"
+              ],
+              "material": "polycarbonate"
+            },
+            {
+              "id": "blade-1",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.0421 0.0159 L 0.05148 0.01207 L 0.06038 0.00665 L 0.06862 -0.00025 L 0.07602 -0.00853 L 0.08241 -0.0181 L 0.08763 -0.02883 L 0.09153 -0.04058 L 0.09399 -0.0532 L 0.06871 -0.08333 L 0.06944 -0.07213 L 0.06878 -0.06147 L 0.06684 -0.05149 L 0.06372 -0.04233 L 0.05955 -0.0341 L 0.05447 -0.0269 L 0.0486 -0.02082 L 0.0421 -0.0159 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-2",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.01381 0.04283 L 0.02266 0.04777 L 0.03245 0.05136 L 0.04298 0.0535 L 0.05407 0.05412 L 0.06554 0.05314 L 0.07718 0.05053 L 0.0888 0.04626 L 0.10019 0.04032 L 0.10799 0.00177 L 0.09969 0.00932 L 0.09095 0.01545 L 0.08193 0.02015 L 0.07282 0.02343 L 0.06379 0.0253 L 0.05499 0.02581 L 0.04658 0.02502 L 0.03868 0.023 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-3",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.02487 0.0375 L -0.02322 0.0475 L -0.01992 0.05739 L -0.01503 0.06696 L -0.0086 0.07602 L -0.00069 0.08437 L 0.00861 0.09185 L 0.0192 0.09827 L 0.03095 0.10347 L 0.06595 0.08553 L 0.05487 0.08375 L 0.04462 0.08074 L 0.03533 0.07662 L 0.02709 0.07154 L 0.01999 0.06565 L 0.01411 0.05909 L 0.00948 0.05202 L 0.00614 0.04458 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-4",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.04483 0.00394 L -0.05162 0.01147 L -0.05729 0.02021 L -0.06172 0.03 L -0.06479 0.04067 L -0.06639 0.05207 L -0.06644 0.064 L -0.06486 0.07628 L -0.0616 0.08871 L -0.02575 0.10489 L -0.03127 0.09512 L -0.0353 0.08523 L -0.03788 0.07539 L -0.03905 0.06578 L -0.03886 0.05656 L -0.0374 0.04787 L -0.03476 0.03985 L -0.03103 0.03259 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-5",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.03103 -0.03259 L -0.04115 -0.03321 L -0.05152 -0.03219 L -0.06194 -0.02955 L -0.0722 -0.0253 L -0.0821 -0.01944 L -0.09146 -0.01204 L -0.10008 -0.00315 L -0.10776 0.00715 L -0.09806 0.04526 L -0.09386 0.03486 L -0.08864 0.02554 L -0.08256 0.01739 L -0.07578 0.01049 L -0.06845 0.00488 L -0.06075 0.00061 L -0.05282 -0.00233 L -0.04483 -0.00394 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-6",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.00614 -0.04458 L 0.00031 -0.05287 L -0.00695 -0.06035 L -0.01551 -0.06685 L -0.02524 -0.07222 L -0.03599 -0.07631 L -0.04761 -0.07902 L -0.05993 -0.08021 L -0.07278 -0.0798 L -0.09653 -0.04844 L -0.08578 -0.05165 L -0.07524 -0.05338 L -0.06507 -0.05371 L -0.05545 -0.05271 L -0.0465 -0.05047 L -0.03835 -0.04712 L -0.03111 -0.04275 L -0.02487 -0.0375 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-7",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.03868 -0.023 L 0.04153 -0.03273 L 0.04285 -0.04306 L 0.04259 -0.05381 L 0.04073 -0.06476 L 0.03723 -0.07572 L 0.03209 -0.08649 L 0.02534 -0.09686 L 0.01701 -0.10665 L -0.02231 -0.10567 L -0.0131 -0.09926 L -0.00517 -0.0921 L 0.00142 -0.08436 L 0.00664 -0.07621 L 0.01047 -0.06782 L 0.01293 -0.05936 L 0.01402 -0.05098 L 0.01381 -0.04283 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "hub",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.048,
+              "ry": 0.048,
+              "region": "impeller",
+              "material": "pp-impeller"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.15,
+              "w": 0.6,
+              "h": 0.3,
+              "r": 0.025,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "ellipse",
+              "cx": -0.225,
+              "cy": 0.07,
+              "rx": 0.049,
+              "ry": 0.049,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "ellipse",
+              "cx": -0.075,
+              "cy": -0.07,
+              "rx": 0.049,
+              "ry": 0.049,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "ellipse",
+              "cx": 0.075,
+              "cy": 0.07,
+              "rx": 0.049,
+              "ry": 0.049,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "ellipse",
+              "cx": 0.225,
+              "cy": -0.07,
+              "rx": 0.049,
+              "ry": 0.049,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.0,
+              "w": 0.3,
+              "h": 0.6,
+              "r": 0.025,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": 0.021,
+              "y": 0.6,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.66,
+              "kind": "rect",
+              "x": -0.119,
+              "y": 0.6,
+              "w": 0.098,
+              "h": 0.062,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 6 mm by 6.7 mm box with a round window holding a seven-bladed pinwheel and four spigots on top. Front view: the 0.3 m casing with the two front spigots. Top view: the 0.6 m by 0.3 m casing with four round spigots in a zigzag.",
+            "de": "Ein Kasten von 6 mm mal 6,7 mm mit rundem Fenster, das ein siebenflügeliges Windrad enthält, und vier Stutzen oben. Vorderansicht: das 0,3 m tiefe Gehäuse mit den zwei vorderen Stutzen. Draufsicht: das Gehäuse von 0,6 m mal 0,3 m mit vier runden Stutzen im Zickzack."
+          },
+          "retained": {
+            "en": "Casing with rounded corners, window, seven curved blades and the hub, four spigots with beads.",
+            "de": "Gehäuse mit gerundeten Ecken, Fenster, sieben gekrümmte Schaufeln und die Nabe, vier Stutzen mit Sicken."
+          },
+          "merged": {
+            "en": "Window ring and window are one disc (regions casing and window merged); nine blades become seven.",
+            "de": "Fensterring und Fenster sind eine Scheibe (Regionen Gehäuse und Fenster zusammengeführt); aus neun Schaufeln werden sieben."
+          },
+          "omitted": {
+            "en": "Seam, status light and handle. Front and top view omit the cover seam, the beads and, as in the side view, window, LED and handle.",
+            "de": "Fuge, Statusleuchte und Griff. Vorder- und Draufsicht lassen die Deckelfuge, die Sicken und wie in der Seitenansicht Fenster, Leuchtdiode und Griff weg."
+          },
+          "thinElements": {
+            "en": "The blades are widened to 34 to 40 mm (0.34 to 0.4 mm) and the beads to 16 mm (0.16 mm).",
+            "de": "Die Schaufeln sind auf 34 bis 40 mm (0,34 bis 0,4 mm) und die Sicken auf 16 mm (0,16 mm) verbreitert."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Casing 0.82, window 0.16, blades 0.8, hub 0.5, spigots 0.66, beads 0.5; one body pen of 0.18 mm.",
+            "de": "Gehäuse 0,82, Fenster 0,16, Schaufeln 0,8, Nabe 0,5, Stutzen 0,66, Sicken 0,5; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The window disc lists casing and window as merged regions; impeller and ducts stay their own.",
+            "de": "Die Fensterscheibe führt Gehäuse und Fenster als zusammengeführte Regionen; Laufrad und Kanäle bleiben eigene."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.6,
+              "r": 0.03,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.09,
+              "h": 0.065,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0,
+              "w": 0.09,
+              "h": 0.065,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0,
+              "w": 0.09,
+              "h": 0.065,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": 0.18,
+              "y": 0,
+              "w": 0.09,
+              "h": 0.065,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "window",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.16,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.3,
+              "rx": 0.125,
+              "ry": 0.125,
+              "regions": [
+                "casing",
+                "window"
+              ],
+              "material": "polycarbonate"
+            },
+            {
+              "id": "blade-1",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.03904 0.03123 L 0.05004 0.02957 L 0.06091 0.02605 L 0.0714 0.02082 L 0.08131 0.01398 L 0.09045 0.00565 L 0.09867 -0.00406 L 0.10581 -0.01502 L 0.11176 -0.0271 L 0.06369 -0.09575 L 0.06406 -0.08555 L 0.06328 -0.07581 L 0.06143 -0.06663 L 0.05858 -0.05809 L 0.05483 -0.05025 L 0.05026 -0.04316 L 0.04496 -0.03684 L 0.03904 -0.03123 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-2",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.03123 0.03904 L -0.02957 0.05004 L -0.02605 0.06091 L -0.02082 0.0714 L -0.01398 0.08131 L -0.00565 0.09045 L 0.00406 0.09867 L 0.01502 0.10581 L 0.0271 0.11176 L 0.09575 0.06369 L 0.08555 0.06406 L 0.07581 0.06328 L 0.06663 0.06143 L 0.05809 0.05858 L 0.05025 0.05483 L 0.04316 0.05026 L 0.03684 0.04496 L 0.03123 0.03904 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-3",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.03904 -0.03123 L -0.05004 -0.02957 L -0.06091 -0.02605 L -0.0714 -0.02082 L -0.08131 -0.01398 L -0.09045 -0.00565 L -0.09867 0.00406 L -0.10581 0.01502 L -0.11176 0.0271 L -0.06369 0.09575 L -0.06406 0.08555 L -0.06328 0.07581 L -0.06143 0.06663 L -0.05858 0.05809 L -0.05483 0.05025 L -0.05026 0.04316 L -0.04496 0.03684 L -0.03904 0.03123 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "blade-4",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.03123 -0.03904 L 0.02957 -0.05004 L 0.02605 -0.06091 L 0.02082 -0.0714 L 0.01398 -0.08131 L 0.00565 -0.09045 L -0.00406 -0.09867 L -0.01502 -0.10581 L -0.0271 -0.11176 L -0.09575 -0.06369 L -0.08555 -0.06406 L -0.07581 -0.06328 L -0.06663 -0.06143 L -0.05809 -0.05858 L -0.05025 -0.05483 L -0.04316 -0.05026 L -0.03684 -0.04496 L -0.03123 -0.03904 Z",
+              "region": "impeller",
+              "material": "pp-impeller"
+            },
+            {
+              "id": "hub",
+              "bone": "impeller",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.056,
+              "ry": 0.056,
+              "region": "impeller",
+              "material": "pp-impeller"
+            }
+          ],
+          "plan": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.15,
+              "w": 0.6,
+              "h": 0.3,
+              "r": 0.03,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.035,
+              "w": 0.09,
+              "h": 0.09,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.125,
+              "w": 0.09,
+              "h": 0.09,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-3",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0.035,
+              "w": 0.09,
+              "h": 0.09,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-4",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": 0.18,
+              "y": -0.125,
+              "w": 0.09,
+              "h": 0.09,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.0,
+              "w": 0.3,
+              "h": 0.6,
+              "r": 0.03,
+              "region": "casing",
+              "material": "painted-steel"
+            },
+            {
+              "id": "spigot-1",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": 0.035,
+              "y": 0.6,
+              "w": 0.09,
+              "h": 0.065,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "spigot-2",
+              "bone": "spigots",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0.6,
+              "w": 0.09,
+              "h": 0.065,
+              "region": "ducts",
+              "material": "galvanised-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 3 mm by 3.3 mm box with a dark disc holding a four-bladed pinwheel and four stubs on top. Front view: a 0.3 m by 0.6 m block with two spigots on top. Top view: a 0.6 m by 0.3 m block with four square spigot marks.",
+            "de": "Ein Kasten von 3 mm mal 3,3 mm mit dunkler Scheibe, die ein vierflügeliges Windrad enthält, und vier Stummeln oben. Vorderansicht: ein Block von 0,3 m mal 0,6 m mit zwei Stutzen oben. Draufsicht: ein Block von 0,6 m mal 0,3 m mit vier quadratischen Stutzenmarken."
+          },
+          "retained": {
+            "en": "Box, window disc, four wide curved blades with the hub, four spigots.",
+            "de": "Kasten, Fensterscheibe, vier breite gekrümmte Schaufeln mit Nabe, vier Stutzen."
+          },
+          "merged": {
+            "en": "Window ring and window are one disc; the beads join the spigots, which are drawn 90 mm wide; nine blades become four.",
+            "de": "Fensterring und Fenster sind eine Scheibe; die Sicken gehen in den Stutzen auf, die 90 mm breit gezeichnet sind; aus neun Schaufeln werden vier."
+          },
+          "omitted": {
+            "en": "Seam, light, handle and beads. Front and top view omit beads, seams and the impeller as in the side view.",
+            "de": "Fuge, Leuchte, Griff und Sicken. Vorder- und Draufsicht lassen wie die Seitenansicht Sicken, Fugen und Laufrad weg."
+          },
+          "thinElements": {
+            "en": "The blades are 80 to 90 mm wide (0.4 to 0.45 mm).",
+            "de": "Die Schaufeln sind 80 bis 90 mm (0,4 bis 0,45 mm) breit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Casing 0.82, window 0.16, blades 0.8, hub 0.5, spigots 0.62; one body pen of 0.13 mm.",
+            "de": "Gehäuse 0,82, Fenster 0,16, Schaufeln 0,8, Nabe 0,5, Stutzen 0,62; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "As at 1:100.",
+            "de": "Wie bei 1:100."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the 0.6 m unit is 1.2 mm wide and its spigot gaps 0.08 mm, below every print profile.",
+          "de": "Bei 1:500 ist das 0,6 m große Gerät 1,2 mm breit und die Lücken zwischen den Stutzen 0,08 mm, unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "Gap of 42 mm between the spigots",
+          "de": "Lücke von 42 mm zwischen den Stutzen"
+        },
+        "limitingSizeM": 0.042,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "Fans are off; the unit is at room temperature and no air moves.",
+          "de": "Die Ventilatoren sind aus; das Gerät hat Raumtemperatur und keine Luft bewegt sich."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "impeller": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "ducts": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "supply-air": 0,
+            "extract-air": 0
+          },
+          "operating": {
+            "fan": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "normal",
+        "title": {
+          "en": "Normal ventilation",
+          "de": "Grundlüftung"
+        },
+        "description": {
+          "en": "Both fans run at the normal stage: 110 m3/h in each direction with 38 W; 85 percent of the heat of the extract air goes to the supply air.",
+          "de": "Beide Ventilatoren laufen auf der Grundstufe: 110 m3/h in jede Richtung mit 38 W; 85 Prozent der Wärme der Abluft gehen in die Zuluft."
+        },
+        "bones": {
+          "impeller": {
+            "angleDeg": 20
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "impeller": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "ducts": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "supply-air": 1,
+            "extract-air": 1
+          },
+          "operating": {
+            "fan": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "boost",
+        "title": {
+          "en": "Boost",
+          "de": "Intensivlüftung"
+        },
+        "description": {
+          "en": "Both fans run at full speed: 220 m3/h in each direction with 75 W.",
+          "de": "Beide Ventilatoren laufen mit voller Drehzahl: 220 m3/h in jede Richtung mit 75 W."
+        },
+        "bones": {
+          "impeller": {
+            "angleDeg": 40
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "impeller": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "ducts": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "supply-air": 1,
+            "extract-air": 1
+          },
+          "operating": {
+            "fan": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "boost-spin",
+        "title": {
+          "en": "Spin up to boost",
+          "de": "Hochlaufen auf Intensiv"
+        },
+        "description": {
+          "en": "The impeller starts from rest, runs at the normal stage after one second and at boost after four; the turning rate is slowed to 120 and 240 degrees per second.",
+          "de": "Das Laufrad läuft aus dem Stillstand an, läuft nach einer Sekunde auf der Grundstufe und nach vier auf Intensiv; die Drehrate ist auf 120 und 240 Grad je Sekunde verlangsamt."
+        },
+        "durationS": 6,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "in"
+          },
+          {
+            "t": 1,
+            "pose": "normal",
+            "ease": "linear",
+            "bones": {
+              "impeller": {
+                "angleDeg": 60
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "normal",
+            "ease": "in",
+            "bones": {
+              "impeller": {
+                "angleDeg": 300
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "boost",
+            "ease": "linear",
+            "bones": {
+              "impeller": {
+                "angleDeg": 540
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "boost",
+            "ease": "linear",
+            "bones": {
+              "impeller": {
+                "angleDeg": 1020
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "start",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Starting",
+              "de": "Anlaufen"
+            }
+          },
+          {
+            "id": "normal",
+            "fromS": 1,
+            "toS": 3,
+            "title": {
+              "en": "Normal",
+              "de": "Grundlüftung"
+            }
+          },
+          {
+            "id": "boost",
+            "fromS": 3,
+            "toS": 6,
+            "title": {
+              "en": "Boost",
+              "de": "Intensiv"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "operating",
+            "title": {
+              "en": "Fans switched on",
+              "de": "Ventilatoren eingeschaltet"
+            },
+            "target": "fan"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.5
+              },
+              {
+                "t": 3,
+                "v": 0.5
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:supply-air",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 1
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:extract-air",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 1
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "normal-spin",
+        "title": {
+          "en": "Steady spin at the normal stage",
+          "de": "Gleichmäßiger Lauf auf der Grundstufe"
+        },
+        "description": {
+          "en": "The impeller turns once in three seconds at the normal stage (120 degrees per second, the rate of the spin-up clip); the picture is a slow-motion view: the real impeller turns at about 2000 revolutions per minute.",
+          "de": "Das Laufrad dreht sich auf der Grundstufe in drei Sekunden einmal (120 Grad je Sekunde, die Rate des Hochlaufs); das Bild zeigt eine Zeitlupe: das echte Laufrad dreht mit etwa 2000 Umdrehungen je Minute."
+        },
+        "durationS": 3,
+        "fps": 15,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "normal",
+            "ease": "linear",
+            "bones": {
+              "impeller": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "normal",
+            "ease": "linear",
+            "bones": {
+              "impeller": {
+                "angleDeg": 360
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 3
+          }
+        ],
+        "phases": [
+          {
+            "id": "run",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Turning",
+              "de": "Dreht"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "day-cycle",
+        "title": {
+          "en": "Normal, boost and off",
+          "de": "Grundlüftung, Intensiv und Aus"
+        },
+        "description": {
+          "en": "The unit runs at the normal stage, goes to boost for ten minutes (a shower) and returns to normal before it is switched off.",
+          "de": "Das Gerät läuft auf der Grundstufe, geht für zehn Minuten auf Intensiv (eine Dusche) und kehrt auf die Grundstufe zurück, bevor es ausgeschaltet wird."
+        },
+        "durationS": 3600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "normal",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "boost",
+            "ease": "step"
+          },
+          {
+            "t": 1200,
+            "pose": "normal",
+            "ease": "step"
+          },
+          {
+            "t": 2400,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 3600,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 3600
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 3600
+          }
+        ],
+        "phases": [
+          {
+            "id": "normal",
+            "fromS": 0,
+            "toS": 600,
+            "title": {
+              "en": "Normal",
+              "de": "Grundlüftung"
+            }
+          },
+          {
+            "id": "boost",
+            "fromS": 600,
+            "toS": 1200,
+            "title": {
+              "en": "Boost",
+              "de": "Intensiv"
+            }
+          },
+          {
+            "id": "normal-2",
+            "fromS": 1200,
+            "toS": 2400,
+            "title": {
+              "en": "Normal",
+              "de": "Grundlüftung"
+            }
+          },
+          {
+            "id": "off",
+            "fromS": 2400,
+            "toS": 3600,
+            "title": {
+              "en": "Off, cooling",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 600,
+            "kind": "operating",
+            "title": {
+              "en": "Boost for the shower",
+              "de": "Intensivstufe für die Dusche"
+            },
+            "target": "fan"
+          },
+          {
+            "t": 2400,
+            "kind": "shutdown",
+            "title": {
+              "en": "Fans switched off",
+              "de": "Ventilatoren ausgeschaltet"
+            },
+            "target": "fan"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 600,
+                "v": 1
+              },
+              {
+                "t": 1200,
+                "v": 0.5
+              },
+              {
+                "t": 2400,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:supply-air",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 1
+              },
+              {
+                "t": 1200,
+                "v": 1
+              },
+              {
+                "t": 2400,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:extract-air",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 1
+              },
+              {
+                "t": 1200,
+                "v": 1
+              },
+              {
+                "t": 2400,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "fan",
+          "title": {
+            "en": "Fans",
+            "de": "Ventilatoren"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Normal (110 m3/h, 38 W)",
+                "de": "Grundlüftung (110 m3/h, 38 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Boost (220 m3/h, 75 W)",
+                "de": "Intensiv (220 m3/h, 75 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Casing shell",
+            "de": "Gehäuseschale"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "painted-steel",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.6,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Painted steel sheet 1 mm with 20 mm EPP lining",
+                "de": "Lackiertes Stahlblech 1 mm mit 20 mm EPP-Auskleidung"
+              },
+              "kind": "insulation",
+              "material": "painted-steel",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.5,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "fan",
+            "heatW": 12
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "window",
+          "title": {
+            "en": "Inspection window",
+            "de": "Schauglas"
+          },
+          "kind": "glazing",
+          "model": "passive",
+          "material": "polycarbonate",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.224,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "pane",
+              "title": {
+                "en": "Polycarbonate pane 3 mm",
+                "de": "Polycarbonatscheibe 3 mm"
+              },
+              "kind": "polymer",
+              "material": "polycarbonate",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.015,
+              "heatCapacityJM2K": 3600,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3600,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "impeller",
+          "title": {
+            "en": "Supply impeller and motor",
+            "de": "Zuluftlaufrad und Motor"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "pp-impeller",
+          "areaM2": 0.06,
+          "characteristicLengthM": 0.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "blades",
+              "title": {
+                "en": "Polypropylene blades 2 mm",
+                "de": "Polypropylenschaufeln 2 mm"
+              },
+              "kind": "polymer",
+              "material": "pp-impeller",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2900,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2900,
+          "operating": {
+            "key": "fan",
+            "heatW": 30
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "ducts",
+          "title": {
+            "en": "Duct spigots",
+            "de": "Kanalstutzen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.08,
+          "characteristicLengthM": 0.098,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Galvanised steel tube 0.7 mm",
+                "de": "Verzinktes Stahlrohr 0,7 mm"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "supply-air",
+          "kind": "vent",
+          "title": {
+            "en": "Supply air leaving through the supply spigot",
+            "de": "Zuluft am Zuluftstutzen"
+          },
+          "anchor": "supply-spigot",
+          "directionDeg": 90,
+          "diameterM": 0.098,
+          "operatingKey": "fan",
+          "volumeFlowM3S": 0.061,
+          "temperatureRiseK": -2.6,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "en-308-1997"
+        },
+        {
+          "id": "extract-air",
+          "kind": "vent",
+          "title": {
+            "en": "Exhaust air after the heat exchanger leaving to outside",
+            "de": "Fortluft nach dem Wärmeübertrager nach außen"
+          },
+          "anchor": "exhaust-spigot",
+          "directionDeg": 90,
+          "diameterM": 0.098,
+          "operatingKey": "fan",
+          "volumeFlowM3S": 0.061,
+          "temperatureRiseK": -17.9,
+          "vapourKgPerKg": -0.0029,
+          "source": "authored-estimate",
+          "reference": "en-308-1997"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Heat recovery of 85 percent at the test point of EN 308 (0 degC outdoors, 21 degC extract air): supply air at 17.9 degC plus 0.5 K fan heat, exhaust air at 3.2 degC; the flows and the temperature differences scale with the fan level, the differences to the room air stay as authored at the reference room of 21 degC.",
+          "de": "Wärmerückgewinnung von 85 Prozent am Prüfpunkt der EN 308 (0 degC außen, 21 degC Abluft): Zuluft mit 17,9 degC plus 0,5 K Ventilatorwärme, Fortluft mit 3,2 degC; die Ströme und die Temperaturdifferenzen skalieren mit der Ventilatorstufe, die Differenzen zur Raumluft bleiben wie angesetzt für den Bezugsraum von 21 degC."
+        },
+        {
+          "en": "The 75 W of the two fans end entirely as heat: about 33 W warm the air streams (the 0.5 K of fan heat in the supply air), 30 W show at the supply impeller and 12 W at the casing (extract fan, electronics), which behind its 20 mm insulation of R 0.5 runs only about 1.5 K above the room; the exhaust air is saturated at 3.2 degC (vapour 0.0029 kg/kg below the room air of 21 degC and 50 percent); condensate is drained and its heat is neglected.",
+          "de": "Die 75 W der beiden Ventilatoren enden vollständig als Wärme: etwa 33 W erwärmen die Luftströme (die 0,5 K Ventilatorwärme in der Zuluft), 30 W zeigen sich am Zuluftlaufrad und 12 W am Gehäuse (Abluftventilator, Elektronik), das hinter seiner 20-mm-Dämmung mit R 0,5 nur etwa 1,5 K über dem Raum liegt; die Fortluft ist bei 3,2 degC gesättigt (Dampf 0,0029 kg/kg unter der Raumluft von 21 degC und 50 Prozent); Kondensat wird abgeführt und seine Wärme vernachlässigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-hook",
+        "wall-rest"
+      ],
+      "assumptions": [
+        {
+          "en": "The 24 kg unit hangs on the upper hook (pin) and leans against the wall at the lower edge (roller): the hook carries the weight, the pair resists the overturning moment of the centre of mass 0.12 m from the wall.",
+          "de": "Das 24 kg schwere Gerät hängt am oberen Haken (Festlager) und lehnt unten an der Wand (Rollenlager): der Haken trägt das Gewicht, das Paar nimmt das Kippmoment des Schwerpunkts 0,12 m vor der Wand auf."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "normal",
+      "defaultClip": "boost-spin",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

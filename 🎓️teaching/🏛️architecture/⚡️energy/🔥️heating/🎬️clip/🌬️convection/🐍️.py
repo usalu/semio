@@ -49,7 +49,7 @@ highlight_param = _manim_module.highlight_param
 math_label = _manim_module.math_label
 math_readout = _manim_module.math_readout
 math_panel = _manim_module.math_panel
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 smooth_path = _manim_module.smooth_path
 flow_guides = _manim_module.flow_guides
 flow_animation = _manim_module.flow_animation
@@ -60,6 +60,7 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
 
@@ -163,7 +164,7 @@ class Beat1_LueftungImWinter(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Lüftungsverlust im Winter")
+        subtitle = section_heading(tr("Ventilation loss in winter", "Lüftungsverlust im Winter"))
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -219,9 +220,9 @@ class Beat1_LueftungImWinter(Scene):
 
         #region factor cards
         specs = [
-            ("vn", r"V \cdot n", "Volumenstrom", V_DOT, 0, r"\mathrm{m^{3}/h}", PASTEL_ORANGE, "Lüftung · Kap. 2", ("v", "n")),
-            ("c", r"c_{\mathrm{Luft}}", "Wärmekapazität", C_LUFT, 2, r"\mathrm{Wh/(m^{3}K)}", PASTEL_GREEN, "Lüftung · Kap. 3", ("c",)),
-            ("dt", r"\Delta\theta", "Innen − außen", D_THETA, 0, r"\mathrm{K}", PASTEL_YELLOW, "Lüftung · Kap. 3", ("dt",)),
+            ("vn", r"V \cdot n", tr("Volume flow", "Volumenstrom"), V_DOT, 0, r"\mathrm{m^{3}/h}", PASTEL_ORANGE, tr("Vent. · Ch. 2", "Lüftung · Kap. 2"), ("v", "n")),
+            ("c", r"c_{\mathrm{Luft}}", tr("Heat capacity", "Wärmekapazität"), C_LUFT, 2, r"\mathrm{Wh/(m^{3}K)}", PASTEL_GREEN, tr("Vent. · Ch. 3", "Lüftung · Kap. 3"), ("c",)),
+            ("dt", r"\Delta\theta", tr("Indoor − outdoor", "Innen − außen"), D_THETA, 0, r"\mathrm{K}", PASTEL_YELLOW, tr("Vent. · Ch. 3", "Lüftung · Kap. 3"), ("dt",)),
         ]
         trackers = {spec[0]: ValueTracker(0.0) for spec in specs}
         card_w, gap, cy = 2.45, 0.15, 0.95
@@ -232,7 +233,7 @@ class Beat1_LueftungImWinter(Scene):
             frame.set_fill(P_DEEP_DARK, 0.82).move_to([x, cy, 0])
             head = math_label(sym, np.array([x, cy + 0.32, 0]), size=FORMULA_FONT_SIZE, color=color)
             cap = body_text(name, font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to([x, cy - 0.12, 0])
-            val = math_readout(lambda key=key, digits=digits, unit=unit: rf"{de_num(trackers[key].get_value(), digits)}\,{unit}",
+            val = math_readout(lambda key=key, digits=digits, unit=unit: rf"{label_number(trackers[key].get_value(), digits)}\,{unit}",
                                np.array([x, cy - 0.55, 0]), size=BODY_FONT_SIZE, color=color, edge="center")
             link = _backlink(chapter).move_to([x, cy - 1.2, 0])
             cards[key] = (VGroup(frame, head, cap), val, link, value)
@@ -253,8 +254,8 @@ class Beat1_LueftungImWinter(Scene):
         self.play(*[FadeOut(r) for r in rings], *breeze(0.2), run_time=0.2)
         k = ValueTracker(0.0)
         phi_read = math_readout(
-            lambda: rf"\Phi_{{\mathrm{{V}}}} = {de_num(V_NET)} \cdot {de_num(N_RATE, 1)} \cdot {de_num(C_LUFT, 2)} \cdot "
-                    rf"{de_num(D_THETA * k.get_value())} \approx {de_num(round(PHI_V * k.get_value(), -1))}\,\mathrm{{W}}",
+            lambda: rf"\Phi_{{\mathrm{{V}}}} = {label_number(V_NET)} \cdot {label_number(N_RATE, 1)} \cdot {label_number(C_LUFT, 2)} \cdot "
+                    rf"{label_number(D_THETA * k.get_value())} \approx {label_number(round(PHI_V * k.get_value(), -1))}\,\mathrm{{W}}",
             np.array([2.6, -0.98, 0.0]), size=BODY_FONT_SIZE + 2, color=PASTEL_BLUE, edge="center")
         self.add(phi_read)
         ring = highlight_param(items, "phi", color=PASTEL_BLUE)
@@ -277,17 +278,17 @@ class Beat1_LueftungImWinter(Scene):
                          lambda: cut() * unit * k_v.get_value(), PASTEL_BLUE)
         t_mid = lambda: [col_x, base_y + 0.5 * PHI_T * unit * k_t.get_value(), 0.0]
         v_mid = lambda: [col_x, base_y + PHI_T * unit * k_t.get_value() + 0.5 * cut() * unit * k_v.get_value(), 0.0]
-        t_read = math_readout(lambda: rf"\Phi_{{\mathrm{{T}}}} \approx {de_num(round(PHI_T * k_t.get_value(), -1))}\,\mathrm{{W}}",
+        t_read = math_readout(lambda: rf"\Phi_{{\mathrm{{T}}}} \approx {label_number(round(PHI_T * k_t.get_value(), -1))}\,\mathrm{{W}}",
                               t_mid, size=BODY_FONT_SIZE, color=PASTEL_CYAN, edge="left")
-        v_read = math_readout(lambda: rf"\Phi_{{\mathrm{{V}}}} \approx {de_num(round(cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
+        v_read = math_readout(lambda: rf"\Phi_{{\mathrm{{V}}}} \approx {label_number(round(cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
                               v_mid, size=BODY_FONT_SIZE, color=PASTEL_BLUE, edge="left")
         total = math_readout(
             lambda: rf"\Phi_{{\mathrm{{T}}}} + \Phi_{{\mathrm{{V}}}} \approx "
-                    rf"{de_num(round(PHI_T * k_t.get_value() + cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
+                    rf"{label_number(round(PHI_T * k_t.get_value() + cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
             [bar_x, 2.12, 0.0],
             size=BODY_FONT_SIZE, color=PASTEL_WHITE, edge="center")
-        t_link = _backlink("Modul 2", color=PASTEL_CYAN)
-        v_link = _backlink("Lüftung · Kap. 3", r"\dot{Q}_{\mathrm{V,sens}}")
+        t_link = _backlink(tr("Module 2", "Modul 2"), color=PASTEL_CYAN)
+        v_link = _backlink(tr("Vent. · Ch. 3", "Lüftung · Kap. 3"), r"\dot{Q}_{\mathrm{V,sens}}")
         sheet = Line(np.array([bar_x - 0.9, base_y, 0]), np.array([bar_x + 0.9, base_y, 0]), color=PASTEL_WHITE, stroke_width=2)
         wall_arrows = VGroup(*[Arrow(np.array([hs["bottom_right"][0] + 0.02, y, 0.0]), np.array([hs["bottom_right"][0] + 0.55, y, 0.0]),
                                      color=PASTEL_CYAN, buff=0.0, stroke_width=3, max_tip_length_to_length_ratio=0.35)
@@ -304,17 +305,17 @@ class Beat1_LueftungImWinter(Scene):
 
         #region heat recovery
         caption = swap_caption(self, caption, subtitle_text(N, "wrg"))
-        gauge = meter("Rückgewinnung", length=2.3, thickness=0.34, color=PASTEL_GREEN, vertical=False)
+        gauge = meter(tr("Recovery", "Rückgewinnung"), length=2.3, thickness=0.34, color=PASTEL_GREEN, vertical=False)
         gauge["group"].move_to([5.3, 1.85, 0.0])
         gauge["fill"].add_updater(lambda m: set_meter(gauge, ETA_WRG * eta.get_value()))
-        eta_read = math_readout(lambda: rf"\eta_{{\mathrm{{WRG}}}} = {de_num(ETA_WRG * eta.get_value(), 2)}",
+        eta_read = math_readout(lambda: rf"\eta_{{\mathrm{{WRG}}}} = {label_number(ETA_WRG * eta.get_value(), 2)}",
                                 np.array([5.3, 1.25, 0.0]), size=BODY_FONT_SIZE, color=PASTEL_GREEN, edge="center")
-        eta_link = _backlink("Lüftung · Kap. 5").move_to([5.3, 0.75, 0])
+        eta_link = _backlink(tr("Vent. · Ch. 5", "Lüftung · Kap. 5")).move_to([5.3, 0.75, 0])
         ghost = always_redraw(lambda: Rectangle(
             width=1.3, height=max(0.004, PHI_V * ETA_WRG * eta.get_value() * unit), color=PASTEL_GREEN, stroke_width=1.6,
             fill_opacity=0.0).move_to([bar_x, base_y + (PHI_T + PHI_V) * unit - PHI_V * ETA_WRG * eta.get_value() * unit / 2, 0.0])
             .set_stroke(opacity=1.0 if eta.get_value() > 0.001 else 0.0))
-        saved = math_readout(lambda: rf"-{de_num(round(PHI_V * ETA_WRG * eta.get_value(), -1))}\,\mathrm{{W}}",
+        saved = math_readout(lambda: rf"-{label_number(round(PHI_V * ETA_WRG * eta.get_value(), -1))}\,\mathrm{{W}}",
                              lambda: [col_x, base_y + (PHI_T + PHI_V) * unit - PHI_V * ETA_WRG * eta.get_value() * unit / 2, 0.0],
                              size=BODY_FONT_SIZE, color=PASTEL_GREEN, edge="left")
         row2, box2, items2 = math_panel(parts + [
@@ -334,8 +335,8 @@ class Beat1_LueftungImWinter(Scene):
 
         #region hand back to the Lüftung video
         caption = swap_caption(self, caption, subtitle_text(N, "link"))
-        to_window = _outlook_chip("→ Lüftung · Kap. 4: Stoß- oder Kipplüftung").move_to([3.9, 1.95, 0.0])
-        to_systems = _outlook_chip("→ Lüftung · Kap. 5: Anlagenvergleich").move_to([4.3, 1.4, 0.0])
+        to_window = _outlook_chip(tr("→ Ventilation · Ch. 4: Burst ventilation or tilted window", "→ Lüftung · Kap. 4: Stoß- oder Kipplüftung")).move_to([3.9, 1.95, 0.0])
+        to_systems = _outlook_chip(tr("→ Ventilation · Ch. 5: System comparison", "→ Lüftung · Kap. 5: Anlagenvergleich")).move_to([4.3, 1.4, 0.0])
         eta_column = VGroup(gauge["track"], gauge["fill"], gauge["label"], eta_read, eta_link)
         for mob in (eta_read, gauge["fill"]):
             mob.clear_updaters()

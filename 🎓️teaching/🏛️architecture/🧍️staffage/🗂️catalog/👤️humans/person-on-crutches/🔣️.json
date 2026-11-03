@@ -336,7 +336,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": 0.2013
         },
         {
           "id": "forearm-l",
@@ -368,7 +369,7 @@
           "parent": "forearm-l",
           "title": {
             "en": "Left hand",
-            "de": "Linker Hand"
+            "de": "Linke Hand"
           },
           "x": 0.2657,
           "y": 0,
@@ -411,7 +412,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": 0.0962
         },
         {
           "id": "shank-l",
@@ -503,7 +505,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": -0.2013
         },
         {
           "id": "forearm-r",
@@ -535,7 +538,7 @@
           "parent": "forearm-r",
           "title": {
             "en": "Right hand",
-            "de": "Rechter Hand"
+            "de": "Rechte Hand"
           },
           "x": 0.2657,
           "y": 0,
@@ -578,7 +581,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": -0.0962
         },
         {
           "id": "shank-r",
@@ -708,7 +712,7 @@
         "kind": "contact",
         "title": {
           "en": "Left heel",
-          "de": "Linker Ferse"
+          "de": "Linke Ferse"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -740,7 +744,7 @@
         "kind": "contact",
         "title": {
           "en": "Right heel",
-          "de": "Rechter Ferse"
+          "de": "Rechte Ferse"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -1812,12 +1816,1842 @@
               "tone": 0.1,
               "region": "crutch-frame"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0314,
+                  0
+                ],
+                [
+                  -0.0314,
+                  0.0693
+                ],
+                [
+                  0,
+                  0.0889
+                ],
+                [
+                  0.223,
+                  0.0799
+                ],
+                [
+                  0.4459,
+                  0.0648
+                ],
+                [
+                  0.4668,
+                  0.0506
+                ],
+                [
+                  0.4668,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "thigh-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0209,
+                  0
+                ],
+                [
+                  -0.0209,
+                  0.0473
+                ],
+                [
+                  0,
+                  0.0607
+                ],
+                [
+                  0.2238,
+                  0.0533
+                ],
+                [
+                  0.4477,
+                  0.0418
+                ],
+                [
+                  0.4477,
+                  0.0326
+                ],
+                [
+                  0.4477,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "shank-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0539,
+                  0.1039
+                ],
+                [
+                  0.1386,
+                  0.1039
+                ],
+                [
+                  0.1456,
+                  0.0569
+                ],
+                [
+                  0.1489,
+                  0.0125
+                ],
+                [
+                  0.1433,
+                  0
+                ],
+                [
+                  0.0491,
+                  0
+                ],
+                [
+                  0.0435,
+                  0.0125
+                ],
+                [
+                  0.0468,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0962,
+                  0.9557
+                ],
+                [
+                  0.0962,
+                  0.5307
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "crease-thigh-l",
+              "bone": "thigh-l",
+              "role": "detail",
+              "z": 1.05,
+              "filled": false,
+              "tone": 0.1,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0962,
+                  0.5307
+                ],
+                [
+                  0.0962,
+                  0.1144
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "crease-shank-l",
+              "bone": "shank-l",
+              "role": "detail",
+              "z": 1.07,
+              "filled": false,
+              "tone": 0.1,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0314,
+                  0
+                ],
+                [
+                  -0.0314,
+                  0.0693
+                ],
+                [
+                  0,
+                  0.0889
+                ],
+                [
+                  0.223,
+                  0.0799
+                ],
+                [
+                  0.4459,
+                  0.0648
+                ],
+                [
+                  0.4668,
+                  0.0506
+                ],
+                [
+                  0.4668,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "thigh-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0209,
+                  0
+                ],
+                [
+                  -0.0209,
+                  0.0473
+                ],
+                [
+                  0,
+                  0.0607
+                ],
+                [
+                  0.2238,
+                  0.0533
+                ],
+                [
+                  0.4477,
+                  0.0418
+                ],
+                [
+                  0.4477,
+                  0.0326
+                ],
+                [
+                  0.4477,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "shank-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1386,
+                  0.1039
+                ],
+                [
+                  -0.0539,
+                  0.1039
+                ],
+                [
+                  -0.0468,
+                  0.0569
+                ],
+                [
+                  -0.0435,
+                  0.0125
+                ],
+                [
+                  -0.0491,
+                  0
+                ],
+                [
+                  -0.1433,
+                  0
+                ],
+                [
+                  -0.1489,
+                  0.0125
+                ],
+                [
+                  -0.1456,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0962,
+                  0.9557
+                ],
+                [
+                  -0.0962,
+                  0.5307
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "crease-thigh-r",
+              "bone": "thigh-r",
+              "role": "detail",
+              "z": 1.05,
+              "filled": false,
+              "tone": 0.1,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0962,
+                  0.5307
+                ],
+                [
+                  -0.0962,
+                  0.1144
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "crease-shank-r",
+              "bone": "shank-r",
+              "role": "detail",
+              "z": 1.07,
+              "filled": false,
+              "tone": 0.1,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1806,
+                  1.0676
+                ],
+                [
+                  0.1806,
+                  1.0676
+                ],
+                [
+                  0.1806,
+                  0.9452
+                ],
+                [
+                  0.1084,
+                  0.9139
+                ],
+                [
+                  -0.1084,
+                  0.9139
+                ],
+                [
+                  -0.1806,
+                  0.9452
+                ]
+              ],
+              "closed": true,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1647,
+                  1.0676
+                ],
+                [
+                  0.1647,
+                  1.0676
+                ],
+                [
+                  0.2013,
+                  1.305
+                ],
+                [
+                  0.2222,
+                  1.4626
+                ],
+                [
+                  0.161,
+                  1.5117
+                ],
+                [
+                  0.068,
+                  1.5317
+                ],
+                [
+                  -0.068,
+                  1.5317
+                ],
+                [
+                  -0.161,
+                  1.5117
+                ],
+                [
+                  -0.2222,
+                  1.4626
+                ],
+                [
+                  -0.2013,
+                  1.305
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  1.5212
+                ],
+                [
+                  0,
+                  1.0676
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "placket",
+              "bone": "torso",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hoodie"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0446,
+                  1.5526
+                ],
+                [
+                  0.0446,
+                  1.5526
+                ],
+                [
+                  0.0544,
+                  1.5317
+                ],
+                [
+                  0.0544,
+                  1.5745
+                ],
+                [
+                  0.0502,
+                  1.6172
+                ],
+                [
+                  0.0412,
+                  1.5858
+                ],
+                [
+                  -0.0412,
+                  1.5858
+                ],
+                [
+                  -0.0502,
+                  1.6172
+                ],
+                [
+                  -0.0544,
+                  1.5745
+                ],
+                [
+                  -0.0544,
+                  1.5317
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.7246,
+              "rx": 0.0784,
+              "ry": 0.1114,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0816,
+                  1.7246
+                ],
+                [
+                  -0.0776,
+                  1.7601
+                ],
+                [
+                  -0.066,
+                  1.792
+                ],
+                [
+                  -0.0479,
+                  1.8174
+                ],
+                [
+                  -0.0252,
+                  1.8337
+                ],
+                [
+                  0,
+                  1.8393
+                ],
+                [
+                  0.0252,
+                  1.8337
+                ],
+                [
+                  0.0479,
+                  1.8174
+                ],
+                [
+                  0.066,
+                  1.792
+                ],
+                [
+                  0.0776,
+                  1.7601
+                ],
+                [
+                  0.0816,
+                  1.7246
+                ],
+                [
+                  0.0784,
+                  1.7135
+                ],
+                [
+                  0.0549,
+                  1.7009
+                ],
+                [
+                  0,
+                  1.7093
+                ],
+                [
+                  -0.0549,
+                  1.7009
+                ],
+                [
+                  -0.0784,
+                  1.7135
+                ]
+              ],
+              "closed": true,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0824,
+              "cy": 1.7121,
+              "rx": 0.0115,
+              "ry": 0.0251,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.0824,
+              "cy": 1.7121,
+              "rx": 0.0115,
+              "ry": 0.0251,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  1.7286
+                ],
+                [
+                  0.0031,
+                  1.6775
+                ]
+              ],
+              "closed": false,
+              "id": "nose",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.1,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0167,
+                  1.6462
+                ],
+                [
+                  0.0167,
+                  1.6462
+                ]
+              ],
+              "closed": false,
+              "id": "mouth",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.1,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.1328,
+                  0.0424
+                ],
+                [
+                  0.2657,
+                  0.0356
+                ],
+                [
+                  0.2657,
+                  0.0277
+                ],
+                [
+                  0.2657,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.08088,
+                  0.9316
+                ],
+                [
+                  0.15208,
+                  0.9316
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "cuff-l",
+              "bone": "forearm-l",
+              "role": "detail",
+              "z": 3.65,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hoodie"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.1328,
+                  0.0424
+                ],
+                [
+                  0.2657,
+                  0.0356
+                ],
+                [
+                  0.2657,
+                  0.0277
+                ],
+                [
+                  0.2657,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15208,
+                  0.9316
+                ],
+                [
+                  -0.08088,
+                  0.9316
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "cuff-r",
+              "bone": "forearm-r",
+              "role": "detail",
+              "z": 3.65,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hoodie"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.013,
+                  0.9975
+                ],
+                [
+                  0.1794,
+                  0.9975
+                ],
+                [
+                  0.1976,
+                  0.9975
+                ],
+                [
+                  0.1938,
+                  0.8825
+                ],
+                [
+                  0.1824,
+                  0.7675
+                ],
+                [
+                  0.1669,
+                  0.7675
+                ],
+                [
+                  0.0255,
+                  0.7675
+                ],
+                [
+                  0.01,
+                  0.7675
+                ],
+                [
+                  -0.0014,
+                  0.8825
+                ],
+                [
+                  -0.0052,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1794,
+                  0.9975
+                ],
+                [
+                  -0.013,
+                  0.9975
+                ],
+                [
+                  0.0052,
+                  0.9975
+                ],
+                [
+                  0.0014,
+                  0.8825
+                ],
+                [
+                  -0.01,
+                  0.7675
+                ],
+                [
+                  -0.0255,
+                  0.7675
+                ],
+                [
+                  -0.1669,
+                  0.7675
+                ],
+                [
+                  -0.1824,
+                  0.7675
+                ],
+                [
+                  -0.1938,
+                  0.8825
+                ],
+                [
+                  -0.1976,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.2084,
+                  0.7763
+                ],
+                [
+                  0.2304,
+                  0.7763
+                ],
+                [
+                  0.3113,
+                  -0.023
+                ],
+                [
+                  0.2893,
+                  -0.023
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.2849,
+                  -0.023
+                ],
+                [
+                  0.3157,
+                  -0.023
+                ],
+                [
+                  0.325,
+                  -0.0935
+                ],
+                [
+                  0.2898,
+                  -0.0935
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tip-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.1,
+              "region": "crutch-tips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.13148,
+              "cy": 0.885,
+              "rx": 0.03,
+              "ry": 0.016,
+              "id": "crutch-grip-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "rect",
+              "x": 0.07148,
+              "y": 1.2307,
+              "w": 0.09,
+              "h": 0.05,
+              "r": 0.015,
+              "id": "crutch-cuff-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2304,
+                  0.7761
+                ],
+                [
+                  -0.2084,
+                  0.7761
+                ],
+                [
+                  -0.2892,
+                  -0.0226
+                ],
+                [
+                  -0.3112,
+                  -0.0226
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3156,
+                  -0.0226
+                ],
+                [
+                  -0.2848,
+                  -0.0226
+                ],
+                [
+                  -0.2898,
+                  -0.0935
+                ],
+                [
+                  -0.325,
+                  -0.0935
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tip-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.1,
+              "region": "crutch-tips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.13148,
+              "cy": 0.885,
+              "rx": 0.03,
+              "ry": 0.016,
+              "id": "crutch-grip-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "rect",
+              "x": -0.16148,
+              "y": 1.2307,
+              "w": 0.09,
+              "h": 0.05,
+              "r": 0.015,
+              "id": "crutch-cuff-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0607,
+              "r1": 0.0418,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": 0.0962,
+              "x1": 0.1493,
+              "y1": 0.0962,
+              "r0": 0.0418,
+              "r1": 0.0491,
+              "followTip": true,
+              "id": "shoe-heel-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.1493,
+              "y0": 0.0962,
+              "x1": 0.2148,
+              "y1": 0.0962,
+              "r0": 0.0491,
+              "r1": 0.0397,
+              "followTip": true,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.21,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0607,
+              "r1": 0.0418,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": -0.0962,
+              "x1": 0.1493,
+              "y1": -0.0962,
+              "r0": 0.0418,
+              "r1": 0.0491,
+              "followTip": true,
+              "id": "shoe-heel-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.1493,
+              "y0": -0.0962,
+              "x1": 0.2148,
+              "y1": -0.0962,
+              "r0": 0.0491,
+              "r1": 0.0397,
+              "followTip": true,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.21,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.133,
+              "ry": 0.1851,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.14,
+              "ry": 0.2222,
+              "id": "trunk",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1456,
+              "ry": 0.2431,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0,
+              "y1": 0.2013,
+              "r0": 0.0544,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0,
+              "y1": 0.2013,
+              "r0": 0.046,
+              "r1": 0.0356,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0.00603,
+              "y1": 0.2013,
+              "r0": 0.0314,
+              "r1": 0.023,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0314,
+              "y0": 0.1699,
+              "x1": -0.0627,
+              "y1": 0.1762,
+              "r0": 0.0115,
+              "r1": 0.0084,
+              "followTip": true,
+              "id": "thumb-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0544,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.046,
+              "r1": 0.0356,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0314,
+              "r1": 0.023,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.0314,
+              "y0": -0.1699,
+              "x1": -0.0627,
+              "y1": -0.1762,
+              "r0": 0.0115,
+              "r1": 0.0084,
+              "followTip": true,
+              "id": "thumb-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.012,
+              "cy": 0,
+              "rx": 0.0941,
+              "ry": 0.0784,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.0026,
+              "cy": 0,
+              "rx": 0.0847,
+              "ry": 0.0769,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.008,
+              "cy": 0.0804,
+              "rx": 0.0167,
+              "ry": 0.0084,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.008,
+              "cy": -0.0804,
+              "rx": 0.0167,
+              "ry": 0.0084,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.1124,
+              "cy": 0,
+              "rx": 0.0125,
+              "ry": 0.0094,
+              "id": "nose",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.08958,
+              "cy": 0,
+              "rx": 0.07958,
+              "ry": 0.1,
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2163,
+              "x1": 0,
+              "y1": 0.3074,
+              "r0": 0.011,
+              "r1": 0.011,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0666,
+              "cy": 0.2013,
+              "rx": 0.022,
+              "ry": 0.07,
+              "id": "crutch-cuff-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0181,
+              "cy": 0.2163,
+              "rx": 0.045,
+              "ry": 0.016,
+              "id": "crutch-grip-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2163,
+              "x1": 0,
+              "y1": -0.3074,
+              "r0": 0.011,
+              "r1": 0.011,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0737,
+              "cy": -0.2013,
+              "rx": 0.022,
+              "ry": 0.07,
+              "id": "crutch-cuff-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0287,
+              "cy": -0.2163,
+              "rx": 0.045,
+              "ry": 0.016,
+              "id": "crutch-grip-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips",
+              "penMm": 0.1
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Full articulation: head profile with short hair and ear, hooded sweatshirt with hood collar and ribbed cuffs, mitten hands with thumbs and finger lines, bare legs with sports shorts, a sneaker on the right foot and a tall orthopaedic boot with three straps on the left foot, both forearm crutches with 22 mm tube, cuff, bracket, hand grip, adjustment holes and rubber tip.",
-            "de": "Volle Gliederung: Kopfprofil mit Kurzhaar und Ohr, Kapuzenpullover mit Kapuzenkragen und Bündchen, Fäustlingshände mit Daumen und Fingerlinien, nackte Beine mit Sportshorts, Sneaker am rechten Fuß und hoher orthopädischer Stiefel mit drei Riemen am linken Fuß, beide Unterarmgehstützen mit 22-mm-Rohr, Manschette, Bügel, Handgriff, Verstellbohrungen und Gummispitze."
+            "en": "Full articulation: head profile with short hair and ear, hooded sweatshirt with hood collar and ribbed cuffs, mitten hands with thumbs and finger lines, bare legs with sports shorts, a sneaker on the right foot and a tall orthopaedic boot with three straps on the left foot, both forearm crutches with 22 mm tube, cuff, bracket, hand grip, adjustment holes and rubber tip. Front and plan are fully articulated. Front: face with nose and mouth line, hair cap, ears, neck, torso with placket, hips, arms with cuffs, mitten hands, thighs and shanks with trouser creases and shoes, all on their own bones. Plan: face, hair, ears and nose, shoulders, trunk, hips, arms, forearms, hands with thumbs, thigh and shank capsules and heel and toe capsules. Each crutch is a slanted strip in front, from the hand grip out to the planted tip at 0.325 m from the centre line, and a capsule from grip to tip in plan, both on the crutch bone so the tripod and every swing-through reads; bare thighs show below the shorts, and the left boot and right sneaker keep their own regions.",
+            "de": "Volle Gliederung: Kopfprofil mit Kurzhaar und Ohr, Kapuzenpullover mit Kapuzenkragen und Bündchen, Fäustlingshände mit Daumen und Fingerlinien, nackte Beine mit Sportshorts, Sneaker am rechten Fuß und hoher orthopädischer Stiefel mit drei Riemen am linken Fuß, beide Unterarmgehstützen mit 22-mm-Rohr, Manschette, Bügel, Handgriff, Verstellbohrungen und Gummispitze. Vorder- und Draufsicht sind voll gegliedert. Vorderansicht: Gesicht mit Nasen- und Mundlinie, Haarkappe, Ohren, Hals, Rumpf mit Knopfleiste, Hüfte, Arme mit Manschetten, Fäustlingshände, Ober- und Unterschenkel mit Bügelfalten und Schuhe, jeweils an eigenem Knochen. Draufsicht: Gesicht, Haar, Ohren und Nase, Schultern, Rumpf, Hüfte, Arme, Unterarme, Hände mit Daumen, Kapseln für Ober- und Unterschenkel sowie Fersen- und Zehenkapseln. Jede Krücke ist in der Vorderansicht ein schräger Streifen vom Handgriff zur aufgesetzten Spitze 0,325 m neben der Mittellinie und in der Draufsicht eine Kapsel von Griff zu Spitze, beide am Krückenknochen, sodass Dreipunktstand und jedes Durchschwingen lesbar bleiben; unter den Shorts sind die nackten Oberschenkel sichtbar, und linker Stiefel und rechter Turnschuh behalten ihre eigenen Regionen."
           },
           "retained": {
             "en": "Ear, mouth, boot straps, crutch adjustment holes and cuff opening, far crutch and far limbs.",
@@ -2308,12 +4142,1512 @@
               "kind": "path",
               "d": "M0.03500 -0.05800 L0.02752 -0.03484 L0.02503 -0.00100 L0.02752 0.03284 L0.03500 0.05600 L0.04171 0.06223 L0.06265 0.06936 L0.08735 0.06936 L0.10829 0.06223 L0.11936 0.04643 L0.12498 -0.00100 L0.12348 -0.02130 L0.12597 -0.02480 L0.13168 -0.02503 L0.12441 -0.04389 L0.11313 -0.05566 L0.11268 -0.07645 L0.10985 -0.07729 L0.09928 -0.06840 L0.06265 -0.07136 L0.04171 -0.06423 Z"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0314,
+                  0
+                ],
+                [
+                  -0.0314,
+                  0.0693
+                ],
+                [
+                  0,
+                  0.0889
+                ],
+                [
+                  0.223,
+                  0.0799
+                ],
+                [
+                  0.4459,
+                  0.0648
+                ],
+                [
+                  0.4668,
+                  0.0506
+                ],
+                [
+                  0.4668,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "thigh-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0209,
+                  0
+                ],
+                [
+                  -0.0209,
+                  0.0473
+                ],
+                [
+                  0,
+                  0.0607
+                ],
+                [
+                  0.2238,
+                  0.0533
+                ],
+                [
+                  0.4477,
+                  0.0418
+                ],
+                [
+                  0.4477,
+                  0.0326
+                ],
+                [
+                  0.4477,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "shank-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0539,
+                  0.1039
+                ],
+                [
+                  0.1386,
+                  0.1039
+                ],
+                [
+                  0.1456,
+                  0.0569
+                ],
+                [
+                  0.1489,
+                  0.0125
+                ],
+                [
+                  0.1433,
+                  0
+                ],
+                [
+                  0.0491,
+                  0
+                ],
+                [
+                  0.0435,
+                  0.0125
+                ],
+                [
+                  0.0468,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0314,
+                  0
+                ],
+                [
+                  -0.0314,
+                  0.0693
+                ],
+                [
+                  0,
+                  0.0889
+                ],
+                [
+                  0.223,
+                  0.0799
+                ],
+                [
+                  0.4459,
+                  0.0648
+                ],
+                [
+                  0.4668,
+                  0.0506
+                ],
+                [
+                  0.4668,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "thigh-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0209,
+                  0
+                ],
+                [
+                  -0.0209,
+                  0.0473
+                ],
+                [
+                  0,
+                  0.0607
+                ],
+                [
+                  0.2238,
+                  0.0533
+                ],
+                [
+                  0.4477,
+                  0.0418
+                ],
+                [
+                  0.4477,
+                  0.0326
+                ],
+                [
+                  0.4477,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "shank-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1386,
+                  0.1039
+                ],
+                [
+                  -0.0539,
+                  0.1039
+                ],
+                [
+                  -0.0468,
+                  0.0569
+                ],
+                [
+                  -0.0435,
+                  0.0125
+                ],
+                [
+                  -0.0491,
+                  0
+                ],
+                [
+                  -0.1433,
+                  0
+                ],
+                [
+                  -0.1489,
+                  0.0125
+                ],
+                [
+                  -0.1456,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1806,
+                  1.0676
+                ],
+                [
+                  0.1806,
+                  1.0676
+                ],
+                [
+                  0.1806,
+                  0.9452
+                ],
+                [
+                  0.1084,
+                  0.9139
+                ],
+                [
+                  -0.1084,
+                  0.9139
+                ],
+                [
+                  -0.1806,
+                  0.9452
+                ]
+              ],
+              "closed": true,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1647,
+                  1.0676
+                ],
+                [
+                  0.1647,
+                  1.0676
+                ],
+                [
+                  0.2013,
+                  1.305
+                ],
+                [
+                  0.2222,
+                  1.4626
+                ],
+                [
+                  0.161,
+                  1.5117
+                ],
+                [
+                  0.068,
+                  1.5317
+                ],
+                [
+                  -0.068,
+                  1.5317
+                ],
+                [
+                  -0.161,
+                  1.5117
+                ],
+                [
+                  -0.2222,
+                  1.4626
+                ],
+                [
+                  -0.2013,
+                  1.305
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0446,
+                  1.5526
+                ],
+                [
+                  0.0446,
+                  1.5526
+                ],
+                [
+                  0.0544,
+                  1.5317
+                ],
+                [
+                  0.0544,
+                  1.5745
+                ],
+                [
+                  0.0502,
+                  1.6172
+                ],
+                [
+                  0.0412,
+                  1.5858
+                ],
+                [
+                  -0.0412,
+                  1.5858
+                ],
+                [
+                  -0.0502,
+                  1.6172
+                ],
+                [
+                  -0.0544,
+                  1.5745
+                ],
+                [
+                  -0.0544,
+                  1.5317
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.7246,
+              "rx": 0.0784,
+              "ry": 0.1114,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0816,
+                  1.7246
+                ],
+                [
+                  -0.0776,
+                  1.7601
+                ],
+                [
+                  -0.066,
+                  1.792
+                ],
+                [
+                  -0.0479,
+                  1.8174
+                ],
+                [
+                  -0.0252,
+                  1.8337
+                ],
+                [
+                  0,
+                  1.8393
+                ],
+                [
+                  0.0252,
+                  1.8337
+                ],
+                [
+                  0.0479,
+                  1.8174
+                ],
+                [
+                  0.066,
+                  1.792
+                ],
+                [
+                  0.0776,
+                  1.7601
+                ],
+                [
+                  0.0816,
+                  1.7246
+                ],
+                [
+                  0.0784,
+                  1.7135
+                ],
+                [
+                  0.0549,
+                  1.7009
+                ],
+                [
+                  0,
+                  1.7093
+                ],
+                [
+                  -0.0549,
+                  1.7009
+                ],
+                [
+                  -0.0784,
+                  1.7135
+                ]
+              ],
+              "closed": true,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "hair"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.1328,
+                  0.0424
+                ],
+                [
+                  0.2657,
+                  0.0356
+                ],
+                [
+                  0.2657,
+                  0.0277
+                ],
+                [
+                  0.2657,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.1328,
+                  0.0424
+                ],
+                [
+                  0.2657,
+                  0.0356
+                ],
+                [
+                  0.2657,
+                  0.0277
+                ],
+                [
+                  0.2657,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.013,
+                  0.9975
+                ],
+                [
+                  0.1794,
+                  0.9975
+                ],
+                [
+                  0.1976,
+                  0.9975
+                ],
+                [
+                  0.1938,
+                  0.8825
+                ],
+                [
+                  0.1824,
+                  0.7675
+                ],
+                [
+                  0.1669,
+                  0.7675
+                ],
+                [
+                  0.0255,
+                  0.7675
+                ],
+                [
+                  0.01,
+                  0.7675
+                ],
+                [
+                  -0.0014,
+                  0.8825
+                ],
+                [
+                  -0.0052,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1794,
+                  0.9975
+                ],
+                [
+                  -0.013,
+                  0.9975
+                ],
+                [
+                  0.0052,
+                  0.9975
+                ],
+                [
+                  0.0014,
+                  0.8825
+                ],
+                [
+                  -0.01,
+                  0.7675
+                ],
+                [
+                  -0.0255,
+                  0.7675
+                ],
+                [
+                  -0.1669,
+                  0.7675
+                ],
+                [
+                  -0.1824,
+                  0.7675
+                ],
+                [
+                  -0.1938,
+                  0.8825
+                ],
+                [
+                  -0.1976,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.2068,
+                  0.7763
+                ],
+                [
+                  0.2318,
+                  0.7763
+                ],
+                [
+                  0.3106,
+                  -0.023
+                ],
+                [
+                  0.2856,
+                  -0.023
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.2806,
+                  -0.023
+                ],
+                [
+                  0.3156,
+                  -0.023
+                ],
+                [
+                  0.325,
+                  -0.0935
+                ],
+                [
+                  0.285,
+                  -0.0935
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tip-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.1,
+              "region": "crutch-tips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.13148,
+              "cy": 0.885,
+              "rx": 0.03,
+              "ry": 0.016,
+              "id": "crutch-grip-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "rect",
+              "x": 0.07148,
+              "y": 1.2307,
+              "w": 0.09,
+              "h": 0.05,
+              "r": 0.015,
+              "id": "crutch-cuff-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2318,
+                  0.7761
+                ],
+                [
+                  -0.2068,
+                  0.7761
+                ],
+                [
+                  -0.2855,
+                  -0.0226
+                ],
+                [
+                  -0.3105,
+                  -0.0226
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3155,
+                  -0.0226
+                ],
+                [
+                  -0.2805,
+                  -0.0226
+                ],
+                [
+                  -0.285,
+                  -0.0935
+                ],
+                [
+                  -0.325,
+                  -0.0935
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tip-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.1,
+              "region": "crutch-tips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.13148,
+              "cy": 0.885,
+              "rx": 0.03,
+              "ry": 0.016,
+              "id": "crutch-grip-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips",
+              "penMm": 0.1
+            },
+            {
+              "kind": "rect",
+              "x": -0.16148,
+              "y": 1.2307,
+              "w": 0.09,
+              "h": 0.05,
+              "r": 0.015,
+              "id": "crutch-cuff-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0607,
+              "r1": 0.0418,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": 0.0962,
+              "x1": 0.1493,
+              "y1": 0.0962,
+              "r0": 0.0418,
+              "r1": 0.0491,
+              "followTip": true,
+              "id": "shoe-heel-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.1493,
+              "y0": 0.0962,
+              "x1": 0.2148,
+              "y1": 0.0962,
+              "r0": 0.0491,
+              "r1": 0.0397,
+              "followTip": true,
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.21,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0607,
+              "r1": 0.0418,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": -0.0962,
+              "x1": 0.1493,
+              "y1": -0.0962,
+              "r0": 0.0418,
+              "r1": 0.0491,
+              "followTip": true,
+              "id": "shoe-heel-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.1493,
+              "y0": -0.0962,
+              "x1": 0.2148,
+              "y1": -0.0962,
+              "r0": 0.0491,
+              "r1": 0.0397,
+              "followTip": true,
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.21,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.133,
+              "ry": 0.1851,
+              "id": "hips",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.14,
+              "ry": 0.2222,
+              "id": "trunk",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1456,
+              "ry": 0.2431,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0,
+              "y1": 0.2013,
+              "r0": 0.0544,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0,
+              "y1": 0.2013,
+              "r0": 0.046,
+              "r1": 0.0356,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0.00603,
+              "y1": 0.2013,
+              "r0": 0.0314,
+              "r1": 0.023,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0544,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.046,
+              "r1": 0.0356,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0314,
+              "r1": 0.023,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.012,
+              "cy": 0,
+              "rx": 0.0941,
+              "ry": 0.0784,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.8,
+              "region": "face-skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.0026,
+              "cy": 0,
+              "rx": 0.0847,
+              "ry": 0.0769,
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "hair"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.08958,
+              "cy": 0,
+              "rx": 0.07958,
+              "ry": 0.1,
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2163,
+              "x1": 0,
+              "y1": 0.3125,
+              "r0": 0.0125,
+              "r1": 0.0125,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0666,
+              "cy": 0.2013,
+              "rx": 0.022,
+              "ry": 0.07,
+              "id": "crutch-cuff-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2163,
+              "x1": 0,
+              "y1": -0.3125,
+              "r0": 0.0125,
+              "r1": 0.0125,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.0737,
+              "cy": -0.2013,
+              "rx": 0.022,
+              "ry": 0.07,
+              "id": "crutch-cuff-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 9.25,
+              "filled": true,
+              "tone": 0.15,
+              "region": "crutch-cuffs"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Articulated outlines: hair mass, coarse face profile, hoodie in torso, hip and sleeve pieces, shorts, bare legs per segment, sneaker and boot in two parts at the ball joint, mitten hands with thumb, both crutches as 22 mm capsules with grip, cuff, bracket and tip.",
-            "de": "Gegliederte Konturen: Haarmasse, grobes Gesichtsprofil, Pullover in Rumpf-, Hüft- und Ärmelteilen, Shorts, nackte Beine je Segment, Sneaker und Stiefel zweiteilig am Ballengelenk, Fäustlingshände mit Daumen, beide Krücken als 22-mm-Kapseln mit Griff, Manschette, Bügel und Spitze."
+            "en": "Articulated outlines: hair mass, coarse face profile, hoodie in torso, hip and sleeve pieces, shorts, bare legs per segment, sneaker and boot in two parts at the ball joint, mitten hands with thumb, both crutches as 22 mm capsules with grip, cuff, bracket and tip. Front and plan are articulated. Front: head with hair, neck, torso, hips, an arm, forearm and mitten hand per side, thigh, shank and shoe per side, with a cuff-end ellipse that keeps a forward-raised forearm visible. Plan: head with hair crescent, shoulders, trunk, hips, arm, forearm and hand capsules, thigh and shank capsules and a heel and a toe capsule per shoe; thighs and shanks stretch with the stride. Each crutch is a slanted strip in front, from the hand grip out to the planted tip at 0.325 m from the centre line, and a capsule from grip to tip in plan, both on the crutch bone so the tripod and every swing-through reads; bare thighs show below the shorts, and the left boot and right sneaker keep their own regions.",
+            "de": "Gegliederte Konturen: Haarmasse, grobes Gesichtsprofil, Pullover in Rumpf-, Hüft- und Ärmelteilen, Shorts, nackte Beine je Segment, Sneaker und Stiefel zweiteilig am Ballengelenk, Fäustlingshände mit Daumen, beide Krücken als 22-mm-Kapseln mit Griff, Manschette, Bügel und Spitze. Vorder- und Draufsicht sind gegliedert. Vorderansicht: Kopf mit Haar, Hals, Rumpf, Hüfte, je Seite Oberarm, Unterarm und Fäustlingshand, Oberschenkel, Unterschenkel und Schuh, dazu eine Manschettenellipse, die einen nach vorn gehobenen Unterarm sichtbar hält. Draufsicht: Kopf mit Haarsichel, Schultern, Rumpf, Hüfte, Kapseln für Oberarm, Unterarm und Hand, Kapseln für Ober- und Unterschenkel sowie je Schuh eine Ferse und eine Spitze; Ober- und Unterschenkel dehnen sich mit dem Schritt. Jede Krücke ist in der Vorderansicht ein schräger Streifen vom Handgriff zur aufgesetzten Spitze 0,325 m neben der Mittellinie und in der Draufsicht eine Kapsel von Griff zu Spitze, beide am Krückenknochen, sodass Dreipunktstand und jedes Durchschwingen lesbar bleiben; unter den Shorts sind die nackten Oberschenkel sichtbar, und linker Stiefel und rechter Turnschuh behalten ihre eigenen Regionen."
           },
           "retained": {
             "en": "Ear, thumbs, the far crutch (offset by 50 mm so it stays separate), boot shaft.",
@@ -2687,12 +6021,1178 @@
               "region": "crutch-frame",
               "penMm": 0.11
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0314,
+                  0
+                ],
+                [
+                  -0.0314,
+                  0.0693
+                ],
+                [
+                  0,
+                  0.0889
+                ],
+                [
+                  0.223,
+                  0.0799
+                ],
+                [
+                  0.4459,
+                  0.0648
+                ],
+                [
+                  0.4668,
+                  0.0506
+                ],
+                [
+                  0.4668,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "thigh-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0209,
+                  0
+                ],
+                [
+                  -0.0209,
+                  0.0473
+                ],
+                [
+                  0,
+                  0.0607
+                ],
+                [
+                  0.2238,
+                  0.0533
+                ],
+                [
+                  0.4477,
+                  0.0418
+                ],
+                [
+                  0.4477,
+                  0.0326
+                ],
+                [
+                  0.4477,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "shank-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0539,
+                  0.1039
+                ],
+                [
+                  0.1386,
+                  0.1039
+                ],
+                [
+                  0.1456,
+                  0.0569
+                ],
+                [
+                  0.1489,
+                  0.0125
+                ],
+                [
+                  0.1433,
+                  0
+                ],
+                [
+                  0.0491,
+                  0
+                ],
+                [
+                  0.0435,
+                  0.0125
+                ],
+                [
+                  0.0468,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0314,
+                  0
+                ],
+                [
+                  -0.0314,
+                  0.0693
+                ],
+                [
+                  0,
+                  0.0889
+                ],
+                [
+                  0.223,
+                  0.0799
+                ],
+                [
+                  0.4459,
+                  0.0648
+                ],
+                [
+                  0.4668,
+                  0.0506
+                ],
+                [
+                  0.4668,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "thigh-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0209,
+                  0
+                ],
+                [
+                  -0.0209,
+                  0.0473
+                ],
+                [
+                  0,
+                  0.0607
+                ],
+                [
+                  0.2238,
+                  0.0533
+                ],
+                [
+                  0.4477,
+                  0.0418
+                ],
+                [
+                  0.4477,
+                  0.0326
+                ],
+                [
+                  0.4477,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "shank-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1386,
+                  0.1039
+                ],
+                [
+                  -0.0539,
+                  0.1039
+                ],
+                [
+                  -0.0468,
+                  0.0569
+                ],
+                [
+                  -0.0435,
+                  0.0125
+                ],
+                [
+                  -0.0491,
+                  0
+                ],
+                [
+                  -0.1433,
+                  0
+                ],
+                [
+                  -0.1489,
+                  0.0125
+                ],
+                [
+                  -0.1456,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1647,
+                  1.0676
+                ],
+                [
+                  0.1647,
+                  1.0676
+                ],
+                [
+                  0.2013,
+                  1.305
+                ],
+                [
+                  0.2222,
+                  1.4626
+                ],
+                [
+                  0.161,
+                  1.5117
+                ],
+                [
+                  0.068,
+                  1.5317
+                ],
+                [
+                  -0.068,
+                  1.5317
+                ],
+                [
+                  -0.161,
+                  1.5117
+                ],
+                [
+                  -0.2222,
+                  1.4626
+                ],
+                [
+                  -0.2013,
+                  1.305
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.7246,
+              "rx": 0.0784,
+              "ry": 0.1114,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.47500000000000003,
+              "regions": [
+                "hair",
+                "face-skin"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.2311,
+                  0.0435
+                ],
+                [
+                  0.4623,
+                  0.0376
+                ],
+                [
+                  0.4748,
+                  0.0294
+                ],
+                [
+                  0.4748,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.52,
+              "regions": [
+                "hoodie",
+                "hands"
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.2311,
+                  0.0435
+                ],
+                [
+                  0.4623,
+                  0.0376
+                ],
+                [
+                  0.4748,
+                  0.0294
+                ],
+                [
+                  0.4748,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.52,
+              "regions": [
+                "hoodie",
+                "hands"
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.013,
+                  0.9975
+                ],
+                [
+                  0.1794,
+                  0.9975
+                ],
+                [
+                  0.1976,
+                  0.9975
+                ],
+                [
+                  0.1938,
+                  0.8825
+                ],
+                [
+                  0.1824,
+                  0.7675
+                ],
+                [
+                  0.1669,
+                  0.7675
+                ],
+                [
+                  0.0255,
+                  0.7675
+                ],
+                [
+                  0.01,
+                  0.7675
+                ],
+                [
+                  -0.0014,
+                  0.8825
+                ],
+                [
+                  -0.0052,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1794,
+                  0.9975
+                ],
+                [
+                  -0.013,
+                  0.9975
+                ],
+                [
+                  0.0052,
+                  0.9975
+                ],
+                [
+                  0.0014,
+                  0.8825
+                ],
+                [
+                  -0.01,
+                  0.7675
+                ],
+                [
+                  -0.0255,
+                  0.7675
+                ],
+                [
+                  -0.1669,
+                  0.7675
+                ],
+                [
+                  -0.1824,
+                  0.7675
+                ],
+                [
+                  -0.1938,
+                  0.8825
+                ],
+                [
+                  -0.1976,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shorts-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.24,
+              "region": "shorts"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.2041,
+                  0.7763
+                ],
+                [
+                  0.2341,
+                  0.7763
+                ],
+                [
+                  0.325,
+                  -0.023
+                ],
+                [
+                  0.295,
+                  -0.023
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2342,
+                  0.7761
+                ],
+                [
+                  -0.2042,
+                  0.7761
+                ],
+                [
+                  -0.295,
+                  -0.0226
+                ],
+                [
+                  -0.325,
+                  -0.0226
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-l",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.13148,
+              "cy": 0.885,
+              "rx": 0.03,
+              "ry": 0.02,
+              "id": "crutch-grip-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.13148,
+              "cy": 0.885,
+              "rx": 0.03,
+              "ry": 0.02,
+              "id": "crutch-grip-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 9.2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": 0.0962,
+              "x1": 0.2148,
+              "y1": 0.0962,
+              "r0": 0.0418,
+              "r1": 0.0481,
+              "followTip": true,
+              "id": "foot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": -0.0962,
+              "x1": 0.2148,
+              "y1": -0.0962,
+              "r0": 0.0418,
+              "r1": 0.0481,
+              "followTip": true,
+              "id": "foot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.14,
+              "ry": 0.2222,
+              "id": "trunk",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1456,
+              "ry": 0.2431,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0,
+              "y1": 0.2013,
+              "r0": 0.0544,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "arm-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0,
+              "y1": 0.2013,
+              "r0": 0.046,
+              "r1": 0.045,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.52,
+              "regions": [
+                "hoodie",
+                "hands"
+              ]
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0544,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.046,
+              "r1": 0.045,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.52,
+              "regions": [
+                "hoodie",
+                "hands"
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.012,
+              "cy": 0,
+              "rx": 0.0941,
+              "ry": 0.0784,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.15,
+              "regions": [
+                "hair",
+                "face-skin"
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.08958,
+              "cy": 0,
+              "rx": 0.07958,
+              "ry": 0.1,
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.04661,
+              "y0": 0.2163,
+              "x1": 0,
+              "y1": 0.31,
+              "r0": 0.015,
+              "r1": 0.015,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2163,
+              "x1": 0,
+              "y1": -0.31,
+              "r0": 0.015,
+              "r1": 0.015,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0607,
+              "r1": 0.0418,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.2013,
+              "x1": 0.00603,
+              "y1": 0.2013,
+              "r0": 0.0314,
+              "r1": 0.023,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0607,
+              "r1": 0.0418,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0314,
+              "r1": 0.023,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Main masses: head with hair, hoodie torso and hip, one short per leg, one bare thigh and shank per leg, one sleeve per upper arm and forearm, small hands, one shoe mass per foot (boot larger); the near crutch as 0.11 mm tube line with grip, tip, cuff and bracket strokes.",
-            "de": "Hauptmassen: Kopf mit Haar, Pulloverrumpf und Hüfte, eine Short je Bein, ein nackter Ober- und Unterschenkel je Bein, ein Ärmel je Ober- und Unterarm, kleine Hände, eine Schuhmasse je Fuß (Stiefel größer); die nahe Krücke als 0,11-mm-Rohrlinie mit Griff-, Spitzen-, Manschetten- und Bügelstrichen."
+            "en": "Main masses: head with hair, hoodie torso and hip, one short per leg, one bare thigh and shank per leg, one sleeve per upper arm and forearm, small hands, one shoe mass per foot (boot larger); the near crutch as 0.11 mm tube line with grip, tip, cuff and bracket strokes. Front and plan show the main masses. Front: head, torso, an arm and a forearm-with-hand per side, a thigh and a shank-with-shoe per side. Plan: head, shoulders, trunk, an arm and a forearm-with-hand capsule per side, and one foot capsule per side; the legs are hidden below the trunk and dropped. Each crutch is a slanted strip in front, from the hand grip out to the planted tip at 0.325 m from the centre line, and a capsule from grip to tip in plan, both on the crutch bone so the tripod and every swing-through reads; bare thighs show below the shorts, and the left boot and right sneaker keep their own regions.",
+            "de": "Hauptmassen: Kopf mit Haar, Pulloverrumpf und Hüfte, eine Short je Bein, ein nackter Ober- und Unterschenkel je Bein, ein Ärmel je Ober- und Unterarm, kleine Hände, eine Schuhmasse je Fuß (Stiefel größer); die nahe Krücke als 0,11-mm-Rohrlinie mit Griff-, Spitzen-, Manschetten- und Bügelstrichen. Vorder- und Draufsicht zeigen die Hauptmassen. Vorderansicht: Kopf, Rumpf, je Seite Oberarm und Unterarm mit Hand sowie Oberschenkel und Unterschenkel mit Schuh. Draufsicht: Kopf, Schultern, Rumpf, je Seite eine Kapsel für Oberarm und eine für Unterarm mit Hand sowie je eine Fußkapsel; die Beine liegen unter dem Rumpf verdeckt und entfallen. Jede Krücke ist in der Vorderansicht ein schräger Streifen vom Handgriff zur aufgesetzten Spitze 0,325 m neben der Mittellinie und in der Draufsicht eine Kapsel von Griff zu Spitze, beide am Krückenknochen, sodass Dreipunktstand und jedes Durchschwingen lesbar bleiben; unter den Shorts sind die nackten Oberschenkel sichtbar, und linker Stiefel und rechter Turnschuh behalten ihre eigenen Regionen."
           },
           "retained": {
             "en": "The boot as a larger dark shoe mass than the sneaker; the lifted left leg.",
@@ -2940,12 +7440,900 @@
               "kind": "path",
               "d": "M0.05017 0.00359 L0.10405 0.00625"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1647,
+                  1.0676
+                ],
+                [
+                  0.1647,
+                  1.0676
+                ],
+                [
+                  0.264,
+                  1.2187
+                ],
+                [
+                  0.264,
+                  0.895
+                ],
+                [
+                  0.1595,
+                  0.895
+                ],
+                [
+                  0.1595,
+                  1.3946
+                ],
+                [
+                  0.161,
+                  1.5097
+                ],
+                [
+                  0.0732,
+                  1.5422
+                ],
+                [
+                  -0.0732,
+                  1.5422
+                ],
+                [
+                  -0.161,
+                  1.5097
+                ],
+                [
+                  -0.1595,
+                  1.3946
+                ],
+                [
+                  -0.1595,
+                  0.895
+                ],
+                [
+                  -0.264,
+                  0.895
+                ],
+                [
+                  -0.264,
+                  1.2187
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "sil-torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "regions": [
+                "hoodie",
+                "hands"
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.7246,
+              "rx": 0.0784,
+              "ry": 0.1114,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.15,
+              "regions": [
+                "hair",
+                "face-skin"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.027,
+                  0.9975
+                ],
+                [
+                  0.1654,
+                  0.9975
+                ],
+                [
+                  0.1806,
+                  0.9975
+                ],
+                [
+                  0.1717,
+                  0.7641
+                ],
+                [
+                  0.1569,
+                  0.5307
+                ],
+                [
+                  0.1459,
+                  0.4889
+                ],
+                [
+                  0.0465,
+                  0.4889
+                ],
+                [
+                  0.0356,
+                  0.5307
+                ],
+                [
+                  0.0208,
+                  0.7641
+                ],
+                [
+                  0.0118,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "sil-leg-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "regions": [
+                "legs-skin",
+                "shorts"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0516,
+                  0.5621
+                ],
+                [
+                  0.1408,
+                  0.5621
+                ],
+                [
+                  0.1506,
+                  0.5307
+                ],
+                [
+                  0.1473,
+                  0.3068
+                ],
+                [
+                  0.1401,
+                  0.083
+                ],
+                [
+                  0.1322,
+                  0.083
+                ],
+                [
+                  0.1433,
+                  0
+                ],
+                [
+                  0.0491,
+                  0
+                ],
+                [
+                  0.0523,
+                  0.083
+                ],
+                [
+                  0.0451,
+                  0.3068
+                ],
+                [
+                  0.0418,
+                  0.5307
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "sil-shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.42000000000000004,
+              "regions": [
+                "legs-skin",
+                "boot"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1654,
+                  0.9975
+                ],
+                [
+                  -0.027,
+                  0.9975
+                ],
+                [
+                  -0.0118,
+                  0.9975
+                ],
+                [
+                  -0.0208,
+                  0.7641
+                ],
+                [
+                  -0.0356,
+                  0.5307
+                ],
+                [
+                  -0.0465,
+                  0.4889
+                ],
+                [
+                  -0.1459,
+                  0.4889
+                ],
+                [
+                  -0.1569,
+                  0.5307
+                ],
+                [
+                  -0.1717,
+                  0.7641
+                ],
+                [
+                  -0.1806,
+                  0.9975
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "sil-leg-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.66,
+              "regions": [
+                "legs-skin",
+                "shorts"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1408,
+                  0.5621
+                ],
+                [
+                  -0.0516,
+                  0.5621
+                ],
+                [
+                  -0.0418,
+                  0.5307
+                ],
+                [
+                  -0.0451,
+                  0.3068
+                ],
+                [
+                  -0.0523,
+                  0.083
+                ],
+                [
+                  -0.0602,
+                  0.083
+                ],
+                [
+                  -0.0491,
+                  0
+                ],
+                [
+                  -0.1433,
+                  0
+                ],
+                [
+                  -0.1401,
+                  0.083
+                ],
+                [
+                  -0.1473,
+                  0.3068
+                ],
+                [
+                  -0.1506,
+                  0.5307
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "sil-shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.755,
+              "regions": [
+                "legs-skin",
+                "sneaker"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.1926,
+                  0.7763
+                ],
+                [
+                  0.2446,
+                  0.7763
+                ],
+                [
+                  0.325,
+                  -0.023
+                ],
+                [
+                  0.273,
+                  -0.023
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2446,
+                  0.7761
+                ],
+                [
+                  -0.1926,
+                  0.7761
+                ],
+                [
+                  -0.273,
+                  -0.0226
+                ],
+                [
+                  -0.325,
+                  -0.0226
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.0539,
+                  0.1039
+                ],
+                [
+                  0.1386,
+                  0.1039
+                ],
+                [
+                  0.1456,
+                  0.0569
+                ],
+                [
+                  0.1489,
+                  0.0125
+                ],
+                [
+                  0.1433,
+                  0
+                ],
+                [
+                  0.0491,
+                  0
+                ],
+                [
+                  0.0435,
+                  0.0125
+                ],
+                [
+                  0.0468,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.7,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1386,
+                  0.1039
+                ],
+                [
+                  -0.0539,
+                  0.1039
+                ],
+                [
+                  -0.0468,
+                  0.0569
+                ],
+                [
+                  -0.0435,
+                  0.0125
+                ],
+                [
+                  -0.0491,
+                  0
+                ],
+                [
+                  -0.1433,
+                  0
+                ],
+                [
+                  -0.1489,
+                  0.0125
+                ],
+                [
+                  -0.1456,
+                  0.0569
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.7,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0261,
+                  0
+                ],
+                [
+                  -0.0261,
+                  0.0424
+                ],
+                [
+                  0,
+                  0.0544
+                ],
+                [
+                  0.1693,
+                  0.0522
+                ],
+                [
+                  0.3385,
+                  0.046
+                ],
+                [
+                  0.349,
+                  0.0359
+                ],
+                [
+                  0.349,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "arm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0157,
+                  0
+                ],
+                [
+                  -0.0157,
+                  0.0359
+                ],
+                [
+                  0,
+                  0.046
+                ],
+                [
+                  0.2311,
+                  0.0435
+                ],
+                [
+                  0.4623,
+                  0.0376
+                ],
+                [
+                  0.4748,
+                  0.0294
+                ],
+                [
+                  0.4748,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.52,
+              "regions": [
+                "hoodie",
+                "hands"
+              ],
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "forearm-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.0261
+                ],
+                [
+                  0,
+                  0.0335
+                ],
+                [
+                  0.0983,
+                  0.0321
+                ],
+                [
+                  0.1966,
+                  0.0282
+                ],
+                [
+                  0.2091,
+                  0.022
+                ],
+                [
+                  0.2091,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.3,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "hand-r",
+                "axis": "u",
+                "axisX": 0,
+                "axisZ": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.13148,
+              "cy": 0.885,
+              "rx": 0.05,
+              "ry": 0.05,
+              "id": "crutch-grip-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 9.7,
+              "filled": true,
+              "tone": 0.12,
+              "region": "crutch-grips"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": 0.0962,
+              "x1": 0.2148,
+              "y1": 0.0962,
+              "r0": 0.0418,
+              "r1": 0.0481,
+              "followTip": true,
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.18,
+              "region": "boot"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.0418,
+              "y0": -0.0962,
+              "x1": 0.2148,
+              "y1": -0.0962,
+              "r0": 0.0418,
+              "r1": 0.0481,
+              "followTip": true,
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.85,
+              "region": "sneaker"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.147,
+              "ry": 0.2484,
+              "id": "shoulders",
+              "bone": "neck",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.34,
+              "regions": [
+                "hoodie",
+                "hands"
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.012,
+              "cy": 0,
+              "rx": 0.0941,
+              "ry": 0.0784,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.15,
+              "regions": [
+                "hair",
+                "face-skin"
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.1088,
+              "cy": 0,
+              "rx": 0.0988,
+              "ry": 0.1,
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.01901,
+              "y0": 0.2163,
+              "x1": 0,
+              "y1": 0.299,
+              "r0": 0.026,
+              "r1": 0.026,
+              "followTip": true,
+              "id": "crutch-tube-l",
+              "bone": "crutch-l",
+              "role": "body",
+              "z": 0.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2163,
+              "x1": 0,
+              "y1": -0.299,
+              "r0": 0.026,
+              "r1": 0.026,
+              "followTip": true,
+              "id": "crutch-tube-r",
+              "bone": "crutch-r",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.62,
+              "region": "crutch-frame",
+              "penMm": 0.1
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.55,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.0962,
+              "x1": 0,
+              "y1": 0.0962,
+              "r0": 0.0607,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0889,
+              "r1": 0.0648,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.55,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.0962,
+              "x1": 0,
+              "y1": -0.0962,
+              "r0": 0.0607,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.66,
+              "region": "legs-skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.0544,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "arm-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.34,
+              "region": "hoodie"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": 0,
+              "y1": -0.2013,
+              "r0": 0.05,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.52,
+              "regions": [
+                "hoodie",
+                "hands"
+              ]
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.2013,
+              "x1": -0.0353,
+              "y1": -0.2013,
+              "r0": 0.05,
+              "r1": 0.05,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.7,
+              "region": "hands"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "One composed figure: head mass, hoodie torso and hip, shorts pieces, bare leg masses with a dark boot shoe on the lifted leg, a near arm as a stroke; the near crutch as a single 0.10 mm stroke from grip to tip with a short cuff stroke. Height 1.83 m and 1.0 m span are real.",
-            "de": "Eine zusammengesetzte Figur: Kopfmasse, Pulloverrumpf und Hüfte, Shortsteile, nackte Beinmassen mit dunklem Stiefelschuh am angehobenen Bein, ein naher Arm als Linie; die nahe Krücke als einzelne 0,10-mm-Linie von Griff bis Spitze mit kurzem Manschettenstrich. Höhe 1,83 m und Spannweite 1,0 m sind real."
+            "en": "One composed figure: head mass, hoodie torso and hip, shorts pieces, bare leg masses with a dark boot shoe on the lifted leg, a near arm as a stroke; the near crutch as a single 0.10 mm stroke from grip to tip with a short cuff stroke. Height 1.83 m and 1.0 m span are real. Front and plan are composed silhouettes. Front: head ellipse, one torso-and-arms outline and one outline per leg (thigh mass plus a shank-and-shoe mass), each following its bone. Plan: a shoulders-and-arms ellipse, the head ellipse and one shoe capsule per foot; hands, legs, hair parting and face are merged or dropped. Each crutch is a slanted strip in front, from the hand grip out to the planted tip at 0.325 m from the centre line, and a capsule from grip to tip in plan, both on the crutch bone so the tripod and every swing-through reads; bare thighs show below the shorts, and the left boot and right sneaker keep their own regions.",
+            "de": "Eine zusammengesetzte Figur: Kopfmasse, Pulloverrumpf und Hüfte, Shortsteile, nackte Beinmassen mit dunklem Stiefelschuh am angehobenen Bein, ein naher Arm als Linie; die nahe Krücke als einzelne 0,10-mm-Linie von Griff bis Spitze mit kurzem Manschettenstrich. Höhe 1,83 m und Spannweite 1,0 m sind real. Vorder- und Draufsicht sind komponierte Silhouetten. Vorderansicht: Kopfellipse, eine Kontur für Rumpf mit Armen und je eine Kontur pro Bein (Oberschenkelmasse und eine Masse aus Unterschenkel und Schuh), jeweils an ihrem Knochen. Draufsicht: eine Ellipse für Schultern und Arme, die Kopfellipse und je eine Schuhkapsel pro Fuß; Hände, Beine, Scheitel und Gesicht sind verschmolzen oder entfallen. Jede Krücke ist in der Vorderansicht ein schräger Streifen vom Handgriff zur aufgesetzten Spitze 0,325 m neben der Mittellinie und in der Draufsicht eine Kapsel von Griff zu Spitze, beide am Krückenknochen, sodass Dreipunktstand und jedes Durchschwingen lesbar bleiben; unter den Shorts sind die nackten Oberschenkel sichtbar, und linker Stiefel und rechter Turnschuh behalten ihre eigenen Regionen."
           },
           "retained": {
             "en": "The posture with the lifted boot and the crutch geometry.",
@@ -7118,7 +12506,7 @@
       "supports": [],
       "assumptions": [
         {
-          "en": "The crutch tips (0.6 kg for two crutches with cuffs) are unilateral contacts with rubber friction; the share they carry follows the elastic-support model of the solver and is not a clinical load measurement.",
+          "en": "The crutch tips (1.1 kg for two crutches with cuffs) are unilateral contacts with rubber friction; the share they carry follows the elastic-support model of the solver and is not a clinical load measurement.",
           "de": "Die Krückenspitzen (1,1 kg für zwei Krücken mit Manschetten) sind einseitige Kontakte mit Gummireibung; ihr Lastanteil folgt dem Elastizitätsmodell des Lösers und ist keine klinische Lastmessung."
         },
         {
@@ -7135,10 +12523,7 @@
     "presentation": {
       "defaultPose": "tripod-stand",
       "defaultClip": "three-point-gait",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

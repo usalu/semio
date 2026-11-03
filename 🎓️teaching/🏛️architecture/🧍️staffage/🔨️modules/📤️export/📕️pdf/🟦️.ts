@@ -4,6 +4,9 @@
  * (no creation date, ID derived from the content). Browser-compatible, dependency-free.
  * <https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf> · <https://pdfa.org/resource/iso-32000-2/> */
 import type { DrawingItem, DrawingScene, JobControl, PathCommand } from "../../🔗️contracts/🟦️.ts";
+import { VIEW_TITLES } from "../../🎨️depiction/🟦️.ts";
+import { viewpointCaption } from "../../🎨️depiction/✂️section/🟦️.ts";
+import { FIDELITY_NAMES, PROJECTION_NAMES, isSheet } from "../📑️sheet/🟦️.ts";
 
 //#region 🔖️Units
 /** 📏️ Points per millimetre. */
@@ -246,8 +249,10 @@ export function writePdf(pages: readonly DrawingScene[], control?: JobControl): 
   document.objects[tree - 1] = `<< /Type /Pages /Count ${kids.length} /Kids [${kids.map(reference).join(" ")}] >>`;
   document.objects[catalog - 1] = `<< /Type /Catalog /Pages ${reference(tree)} /PageMode /UseNone /ViewerPreferences << /DisplayDocTitle true >> /OCProperties << /OCGs [${order}] /D << /BaseState /ON /Order [${order}] >> >> >>`;
   const meta = first.metadata;
-  const subject = `Staffage ${meta.asset}, scale 1:${num(meta.scale.denominator)} (${num(meta.mmPerMetre)} mm/m), t = ${num(meta.timeS)} s, view ${meta.view}, ${meta.viewpoint}`;
-  document.objects[info - 1] = `<< /Title ${textString(bilingual(meta.title))} /Subject ${textString(subject)} /Keywords ${textString(`${meta.asset}, 1:${num(meta.scale.denominator)}, ${meta.view}`)} /Creator ${textString("semio staffage archive")} /Producer ${textString("semio staffage PDF writer")} >>`;
+  const mode = `${VIEW_TITLES[meta.view].en} / ${VIEW_TITLES[meta.view].de}`;
+  const where = isSheet(first) ? `plan, front elevation and side elevation, ${PROJECTION_NAMES[first.sheet.projection].en} / ${PROJECTION_NAMES[first.sheet.projection].de}` : `${viewpointCaption(meta.viewpoint, undefined, "en")} / ${viewpointCaption(meta.viewpoint, undefined, "de")}`;
+  const subject = `Staffage ${meta.asset}, scale 1:${num(meta.scale.denominator)} (${num(meta.mmPerMetre)} mm/m), t = ${num(meta.timeS)} s, representation ${mode}, viewpoint ${where}, ${FIDELITY_NAMES[meta.fidelity].en} / ${FIDELITY_NAMES[meta.fidelity].de}`;
+  document.objects[info - 1] = `<< /Title ${textString(bilingual(meta.title))} /Subject ${textString(subject)} /Keywords ${textString(`${meta.asset}, 1:${num(meta.scale.denominator)}, ${mode}, ${where}`)} /Creator ${textString("semio staffage archive")} /Producer ${textString("semio staffage PDF writer")} >>`;
   const out = new Sink();
   out.text("%PDF-1.7\n%âãÏÓ\n");
   const offsets: number[] = [];

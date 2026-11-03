@@ -2,15 +2,15 @@
  *
  * Route: `#/` overview · `#/all` · `#/<category>` · `#/<category>/<asset>` · `#/collections[/<id>]` · `#/compare` · `#/playground`.
  * Parameters carry only what differs from the default, in a stable order, so `format(parse(x))` is canonical and a link reproduces the state: filters (`q cat an h root done sort dir`),
- * the viewer (`view scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`), the comparison (`p` per pane) and the playground (`p` per placement, `len`).
+ * the viewer (`view vp vl scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`), the comparison (`p` per pane) and the playground (`p` per placement, `len`).
  * The reader's own preferences — language, theme — are never part of a link.
  *
  * @see ../🔎️search/🟦️.ts — filter parameters
  * @see ../💾️persistence/🟦️.ts — the local state that is not shared
  */
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, VIEWS } from "@teaching/staffage";
-import type { CategoryId, DisplayRange, ForceQuantity, Slug, ThermalQuantity, View } from "@teaching/staffage";
+import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, VIEWPOINTS, VIEWS } from "@teaching/staffage";
+import type { CategoryId, DisplayRange, ForceQuantity, Slug, Text, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 import { BACKGROUNDS, DEFAULT_LENGTH_M, type Background, type Placement, type Playground, type Selection } from "../💾️persistence/🟦️.ts";
 
 /** 📍️ A page of the archive. */
@@ -26,7 +26,7 @@ export type Route =
 /** 🏠️ The overview. */
 export const OVERVIEW: Route = { page: "overview" };
 
-/** 🧭️ A route and its query. */
+/** 📮️ A route and its query. */
 export type Address = { readonly route: Route; readonly params: URLSearchParams };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -49,7 +49,7 @@ export function parseAddress(hash: string): Address {
   return { route, params };
 }
 
-/** 🔗️ The path of a route. */
+/** 🛤️ The path of a route. */
 export function routePath(route: Route): string {
   switch (route.page) {
     case "overview":
@@ -67,7 +67,7 @@ export function routePath(route: Route): string {
   }
 }
 
-/** 🔗️ The hash of a route and its query. */
+/** 🧾️ The hash of a route and its query. */
 export function formatAddress(route: Route, params: URLSearchParams = new URLSearchParams()): string {
   const query = params.toString();
   return `#${routePath(route)}${query === "" ? "" : `?${query}`}`;
@@ -103,7 +103,7 @@ export function parentRoute(route: Route): Route | null {
   }
 }
 
-/** 🧭️ Whether two routes are the same page. */
+/** 🟰️ Whether two routes are the same page. */
 export const sameRoute = (a: Route, b: Route): boolean => routePath(a) === routePath(b);
 
 //#region 🎛️Viewer
@@ -119,6 +119,8 @@ export type DiagramToggles = { readonly axial: boolean; readonly shear: boolean;
 /** 🎛️ Everything the viewer shows besides the asset: view, scale, what is posed or played, zoom and analytic options. */
 export type ViewerState = {
   readonly view: View;
+  readonly viewpoint: Viewpoint;
+  readonly layout: "single" | "all";
   readonly scale: number;
   readonly selection: Selection | null;
   readonly timeS: number | null;
@@ -142,6 +144,8 @@ export type ViewerState = {
 /** 🌱️ The viewer a reader first sees: dark line drawing at 1:100, the default clip playing, fitted. */
 export const DEFAULT_VIEWER: ViewerState = {
   view: "dark-line",
+  viewpoint: "elevation",
+  layout: "single",
   scale: 100,
   selection: null,
   timeS: null,
@@ -152,7 +156,7 @@ export const DEFAULT_VIEWER: ViewerState = {
   thermalQuantity: "surface-temperature",
   forceQuantity: "axial",
   range: { mode: "auto" },
-  patterns: false,
+  patterns: true,
   diagrams: { axial: false, shear: false, moment: true, freeBody: true },
   environment: {},
   rate: 1,
@@ -163,6 +167,7 @@ export const DEFAULT_VIEWER: ViewerState = {
 };
 
 const DIAGRAM_CODES = { n: "axial", v: "shear", m: "moment", fb: "freeBody" } as const;
+const isViewpoint = (value: string | null): value is Viewpoint => (VIEWPOINTS as readonly string[]).includes(value ?? "");
 const isView = (value: string | null): value is View => (VIEWS as readonly string[]).includes(value ?? "");
 const number = (value: string | null): number | null => {
   const parsed = value === null || value.trim() === "" ? Number.NaN : Number(value);
@@ -171,10 +176,11 @@ const number = (value: string | null): number | null => {
 const clamp = (value: number, low: number, high: number): number => Math.min(Math.max(value, low), high);
 const round = (value: number, places: number): number => Number(value.toFixed(places));
 
-/** 🔗️ The viewer of an address query; unknown or out-of-range values fall back to the default. */
+/** 📥️ The viewer of an address query; unknown or out-of-range values fall back to the default. */
 export function viewerFromParams(params: URLSearchParams): ViewerState {
   const base = DEFAULT_VIEWER;
   const view = params.get("view");
+  const viewpoint = params.get("vp");
   const scale = number(params.get("scale"));
   const pose = params.get("pose");
   const clip = params.get("clip");
@@ -185,11 +191,14 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
   const tq = params.get("tq");
   const fq = params.get("fq");
   const [low, high] = (params.get("range") ?? "").split(":").map(number);
+  const spanK = number(params.get("span"));
   const diagrams = params.get("dg");
-  const t = number(params.get("t"));
+  const t =number(params.get("t"));
   const env = { airTempC: number(params.get("air")), meanRadiantTempC: number(params.get("mrt")), relativeHumidity: number(params.get("rh")), windMS: number(params.get("wind")), solarWM2: number(params.get("sun")) };
   return {
     view: isView(view) ? view : base.view,
+    viewpoint: isViewpoint(viewpoint) ? viewpoint : base.viewpoint,
+    layout: params.get("vl") === "all" ? "all" : base.layout,
     scale: scale !== null && scale >= 1 && scale <= 100000 ? scale : base.scale,
     selection: isSlug(pose ?? undefined) ? { kind: "pose", pose: pose as Slug } : isSlug(clip ?? undefined) ? { kind: "clip", clip: clip as Slug } : null,
     timeS: t !== null && t >= 0 ? t : null,
@@ -199,8 +208,8 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
     theme: params.get("th") === "light" || params.get("th") === "dark" ? (params.get("th") as "light" | "dark") : "auto",
     thermalQuantity: (THERMAL_QUANTITIES as readonly string[]).includes(tq ?? "") ? (tq as ThermalQuantity) : base.thermalQuantity,
     forceQuantity: (FORCE_QUANTITIES as readonly string[]).includes(fq ?? "") ? (fq as ForceQuantity) : base.forceQuantity,
-    range: low !== undefined && low !== null && high !== undefined && high !== null && high > low ? { mode: "fixed", min: low, max: high } : base.range,
-    patterns: params.get("pat") === "1",
+    range: low !== undefined && low !== null && high !== undefined && high !== null && high > low ? { mode: "fixed", min: low, max: high } : spanK !== null && spanK > 0 ? { mode: "span", spanK } : base.range,
+    patterns: params.get("pat") !== "0",
     diagrams: diagrams === null ? base.diagrams : { axial: false, shear: false, moment: false, freeBody: false, ...Object.fromEntries(diagrams.split(",").flatMap((code) => (code in DIAGRAM_CODES ? [[DIAGRAM_CODES[code as keyof typeof DIAGRAM_CODES], true]] : []))) },
     rate: number(params.get("rate")) !== null && [0.1, 0.25, 0.5, 1, 2].includes(number(params.get("rate"))!) ? number(params.get("rate"))! : 1,
     loop: params.get("loop") !== "0",
@@ -217,10 +226,12 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
   };
 }
 
-/** 🔗️ Writes the non-default viewer state into a query, in a stable order. */
+/** 📤️ Writes the non-default viewer state into a query, in a stable order. */
 export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new URLSearchParams()): URLSearchParams {
   const base = DEFAULT_VIEWER;
   if (viewer.view !== base.view) into.set("view", viewer.view);
+  if (viewer.viewpoint !== base.viewpoint) into.set("vp", viewer.viewpoint);
+  if (viewer.layout !== base.layout) into.set("vl", viewer.layout);
   if (viewer.scale !== base.scale) into.set("scale", String(round(viewer.scale, 2)));
   if (viewer.selection?.kind === "pose") into.set("pose", viewer.selection.pose);
   if (viewer.selection?.kind === "clip") into.set("clip", viewer.selection.clip);
@@ -232,7 +243,8 @@ export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new 
   if (viewer.thermalQuantity !== base.thermalQuantity) into.set("tq", viewer.thermalQuantity);
   if (viewer.forceQuantity !== base.forceQuantity) into.set("fq", viewer.forceQuantity);
   if (viewer.range.mode === "fixed") into.set("range", `${round(viewer.range.min, 3)}:${round(viewer.range.max, 3)}`);
-  if (viewer.patterns) into.set("pat", "1");
+  if (viewer.range.mode === "span") into.set("span", String(round(viewer.range.spanK, 3)));
+  if (!viewer.patterns) into.set("pat", "0");
   const codes = Object.entries(DIAGRAM_CODES).flatMap(([code, key]) => (viewer.diagrams[key] ? [code] : []));
   if (codes.join() !== "m,fb") into.set("dg", codes.join(","));
   if (viewer.rate !== 1) into.set("rate", String(viewer.rate));
@@ -251,10 +263,10 @@ export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new 
 //#endregion 🎛️Viewer
 
 //#region ⚖️Compare
-/** ⚖️ One pane of the comparison: an asset in a view, optionally at its own pose or clip. */
-export type ComparePane = { readonly asset: Slug; readonly view: View; readonly selection: Selection | null };
+/** ⚖️ One pane of the comparison: an asset in a representation and a viewpoint, optionally at its own pose or clip. */
+export type ComparePane = { readonly asset: Slug; readonly view: View; readonly viewpoint: Viewpoint; readonly selection: Selection | null };
 
-/** ⚖️ The comparison: two to four panes on one clock at one scale. */
+/** 🆚️ The comparison: two to four panes on one clock at one scale. */
 export type CompareState = { readonly panes: readonly ComparePane[]; readonly scale: number; readonly timeS: number | null; readonly rate?: number; readonly loop?: boolean };
 
 /** 📏️ The fewest and most panes. */
@@ -266,13 +278,13 @@ function selectionFrom(token: string | undefined): Selection | null {
   return isSlug(slug) ? (kind === "pose" ? { kind: "pose", pose: slug } : kind === "clip" ? { kind: "clip", clip: slug } : null) : null;
 }
 
-/** 🔗️ The comparison of an address query. */
+/** 🔍️ The comparison of an address query. */
 export function compareFromParams(params: URLSearchParams): CompareState {
   const panes = params
     .getAll("p")
     .flatMap((token): ComparePane[] => {
-      const [asset, view, selection] = token.split("~");
-      return isSlug(asset) ? [{ asset, view: isView(view ?? null) ? (view as View) : DEFAULT_VIEWER.view, selection: selectionFrom(selection) }] : [];
+      const [asset, view, selection, viewpoint] = token.split("~");
+      return isSlug(asset) ? [{ asset, view: isView(view ?? null) ? (view as View) : DEFAULT_VIEWER.view, viewpoint: isViewpoint(viewpoint ?? null) ? (viewpoint as Viewpoint) : DEFAULT_VIEWER.viewpoint, selection: selectionFrom(selection) }] : [];
     })
     .slice(0, COMPARE_LIMITS.max);
   const scale = number(params.get("scale"));
@@ -281,9 +293,9 @@ export function compareFromParams(params: URLSearchParams): CompareState {
   return { panes, scale: scale !== null && scale >= 1 ? scale : DEFAULT_VIEWER.scale, timeS: t !== null && t >= 0 ? t : null, ...(rate !== null && [0.1, 0.25, 0.5, 2].includes(rate) ? { rate } : {}), ...(params.get("loop") === "0" ? { loop: false } : {}) };
 }
 
-/** 🔗️ Writes a comparison into a query. */
+/** 📝️ Writes a comparison into a query. */
 export function compareToParams(compare: CompareState, into: URLSearchParams = new URLSearchParams()): URLSearchParams {
-  for (const pane of compare.panes) into.append("p", [pane.asset, pane.view, selectionToken(pane.selection)].join("~").replace(/~+$/u, ""));
+  for (const pane of compare.panes) into.append("p", [pane.asset, pane.view, selectionToken(pane.selection), pane.viewpoint === DEFAULT_VIEWER.viewpoint ? "" : pane.viewpoint].join("~").replace(/~+$/u, ""));
   if (compare.scale !== DEFAULT_VIEWER.scale) into.set("scale", String(round(compare.scale, 2)));
   if (compare.timeS !== null) into.set("t", String(round(compare.timeS, 3)));
   if (compare.rate !== undefined && compare.rate !== 1) into.set("rate", String(compare.rate));
@@ -293,31 +305,60 @@ export function compareToParams(compare: CompareState, into: URLSearchParams = n
 //#endregion ⚖️Compare
 
 //#region 🧪️Playground
-/** 🔗️ The playground of an address query, or null when the address carries none (the local one then stands). */
+/** 🛝️ The playground of an address query, or null when the address carries none (the local one then stands). */
 export function playgroundFromParams(params: URLSearchParams): Playground | null {
   const tokens = params.getAll("p");
-  if (tokens.length === 0 && !params.has("len") && !params.has("scale") && !params.has("view")) return null;
+  if (tokens.length === 0 && !params.has("len") && !params.has("scale") && !params.has("view") && !params.has("vp")) return null;
   const lengthM = clamp(number(params.get("len")) ?? DEFAULT_LENGTH_M, 4, 200);
   const view = params.get("view");
+  const viewpoint = params.get("vp");
   const scale = number(params.get("scale"));
   const bg = params.get("bg");
+  const sideElevation = !isViewpoint(viewpoint) || viewpoint === "elevation";
   const placements = tokens.flatMap((token, index): Placement[] => {
-    const [asset, x, pick, offset, mirrored] = token.split("~");
-    return isSlug(asset) ? [{ id: `url-${index}`, asset, xM: clamp(number(x ?? null) ?? 0, 0, lengthM), pick: selectionFrom(pick), offsetS: number(offset ?? null) ?? 0, mirrored: mirrored === "m" }] : [];
+    const [asset, x, pick, offset, mirrored, z, yaw] = token.split("~");
+    return isSlug(asset) ? [{ id: `url-${index}`, asset, xM: clamp(number(x ?? null) ?? 0, 0, lengthM), zM: clamp(number(z ?? null) ?? 0, -lengthM / 2, lengthM / 2), yawDeg: clamp(number(yaw ?? null) ?? 0, -180, 180), pick: selectionFrom(pick), offsetS: number(offset ?? null) ?? 0, mirrored: mirrored === "m" && sideElevation }] : [];
   });
-  return { scale: scale !== null && scale >= 1 ? scale : 100, view: isView(view) ? view : "dark-line", background: (BACKGROUNDS as readonly string[]).includes(bg ?? "") ? (bg as Background) : "paper", lengthM, placements };
+  return { scale: scale !== null && scale >= 1 ? scale : 100, view: isView(view) ? view : "dark-line", viewpoint: isViewpoint(viewpoint) ? viewpoint : DEFAULT_VIEWER.viewpoint, background: (BACKGROUNDS as readonly string[]).includes(bg ?? "") ? (bg as Background) : "paper", lengthM, placements };
 }
 
-/** 🔗️ Writes a playground into a query. */
+/** 🧩️ Writes a playground into a query. */
 export function playgroundToParams(playground: Playground, into: URLSearchParams = new URLSearchParams()): URLSearchParams {
   if (playground.scale !== 100) into.set("scale", String(round(playground.scale, 2)));
   if (playground.view !== "dark-line") into.set("view", playground.view);
+  if (playground.viewpoint !== DEFAULT_VIEWER.viewpoint) into.set("vp", playground.viewpoint);
   if (playground.background !== "paper") into.set("bg", playground.background);
   if (playground.lengthM !== DEFAULT_LENGTH_M) into.set("len", String(round(playground.lengthM, 1)));
-  for (const placement of playground.placements) into.append("p", [placement.asset, round(placement.xM, 2), selectionToken(placement.pick), placement.offsetS === 0 ? "" : round(placement.offsetS, 2), placement.mirrored ? "m" : ""].join("~").replace(/~+$/u, ""));
+  for (const placement of playground.placements) into.append("p", [placement.asset, round(placement.xM, 2), selectionToken(placement.pick), placement.offsetS === 0 ? "" : round(placement.offsetS, 2), placement.mirrored ? "m" : "", placement.zM === 0 ? "" : round(placement.zM, 2), placement.yawDeg === 0 ? "" : round(placement.yawDeg, 1)].join("~").replace(/~+$/u, ""));
   return into;
 }
 //#endregion 🧪️Playground
+
+//#region 🚨️Problems
+const PROBLEM_WORDS = {
+  viewpoint: (value: string): Text => ({ en: `The link names an unknown viewpoint "${value}"; the side elevation is shown. Use elevation, front or plan.`, de: `Der Link nennt eine unbekannte Blickrichtung "${value}"; die Seitenansicht wird gezeigt. Gültig sind elevation, front und plan.` }),
+  mirror: { en: "The link mirrors placements, but mirroring applies to the side elevation only; they are drawn unmirrored.", de: "Der Link spiegelt Platzierungen, Spiegeln gilt aber nur in der Seitenansicht; sie werden ungespiegelt gezeichnet." } as Text,
+  layout: (value: string): Text => ({ en: `The link names an unknown layout "${value}"; one viewpoint is shown. Use all for three views.`, de: `Der Link nennt ein unbekanntes Layout "${value}"; eine Blickrichtung wird gezeigt. Gültig ist all für drei Ansichten.` }),
+  view: (value: string): Text => ({ en: `The link names an unknown representation "${value}"; the dark line drawing is shown.`, de: `Der Link nennt eine unbekannte Darstellung "${value}"; die dunkle Strichzeichnung wird gezeigt.` }),
+} as const;
+
+/** 🚨️ What the address query of a page says that the archive cannot read, in words: an unknown viewpoint, layout or representation is reported, never silently replaced. */
+export function addressProblems(params: URLSearchParams, page: "asset" | "compare" | "playground"): readonly Text[] {
+  const problems: Text[] = [];
+  const viewpoint = params.get("vp");
+  const layout = params.get("vl");
+  const view = params.get("view");
+  if (viewpoint !== null && !isViewpoint(viewpoint)) problems.push(PROBLEM_WORDS.viewpoint(viewpoint));
+  if (page === "asset" && layout !== null && layout !== "all") problems.push(PROBLEM_WORDS.layout(layout));
+  if (view !== null && !isView(view)) problems.push(PROBLEM_WORDS.view(view));
+  if (page === "playground" && isViewpoint(viewpoint) && viewpoint !== "elevation" && params.getAll("p").some((token) => token.split("~")[4] === "m")) problems.push(PROBLEM_WORDS.mirror);
+  for (const token of page === "compare" ? params.getAll("p") : []) {
+    const named = token.split("~")[3];
+    if (named !== undefined && named !== "" && !isViewpoint(named)) problems.push(PROBLEM_WORDS.viewpoint(named));
+  }
+  return problems;
+}
+//#endregion 🚨️Problems
 
 //#region 🧭️Navigation
 const remembered = new Map<string, string>();
@@ -327,7 +368,7 @@ export function rememberParams(route: Route, params: URLSearchParams): void {
   remembered.set(routePath(route), params.toString());
 }
 
-/** 🧠️ The query a page was last left with. */
+/** 🔙️ The query a page was last left with. */
 export function recallParams(route: Route): URLSearchParams {
   return new URLSearchParams(remembered.get(routePath(route)) ?? "");
 }

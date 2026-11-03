@@ -585,68 +585,140 @@
   },
   "anchors": [
    {
-    "id": "contact-f1",
+    "id": "contact-f1-l",
     "bone": "bogie-f",
     "x": -0.9,
     "y": -0.3,
     "kind": "contact",
     "title": {
-     "en": "Front wheelset 1 contact",
-     "de": "Aufstandspunkt Radsatz vorn 1"
+     "en": "Front wheelset 1 contact (left)",
+     "de": "Aufstandspunkt Radsatz vorn 1 (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.012,
-    "footprintWidthM": 0.014,
-    "frictionCoefficient": 0.3
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": 0.715
    },
    {
-    "id": "contact-f2",
+    "id": "contact-f1-r",
+    "bone": "bogie-f",
+    "x": -0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Front wheelset 1 contact (right)",
+     "de": "Aufstandspunkt Radsatz vorn 1 (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": -0.715
+   },
+   {
+    "id": "contact-f2-l",
     "bone": "bogie-f",
     "x": 0.9,
     "y": -0.3,
     "kind": "contact",
     "title": {
-     "en": "Front wheelset 2 contact",
-     "de": "Aufstandspunkt Radsatz vorn 2"
+     "en": "Front wheelset 2 contact (left)",
+     "de": "Aufstandspunkt Radsatz vorn 2 (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.012,
-    "footprintWidthM": 0.014,
-    "frictionCoefficient": 0.3
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": 0.715
    },
    {
-    "id": "contact-r1",
+    "id": "contact-f2-r",
+    "bone": "bogie-f",
+    "x": 0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Front wheelset 2 contact (right)",
+     "de": "Aufstandspunkt Radsatz vorn 2 (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": -0.715
+   },
+   {
+    "id": "contact-r1-l",
     "bone": "bogie-r",
     "x": -0.9,
     "y": -0.3,
     "kind": "contact",
     "title": {
-     "en": "Rear wheelset 1 contact",
-     "de": "Aufstandspunkt Radsatz hinten 1"
+     "en": "Rear wheelset 1 contact (left)",
+     "de": "Aufstandspunkt Radsatz hinten 1 (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.012,
-    "footprintWidthM": 0.014,
-    "frictionCoefficient": 0.3
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": 0.715
    },
    {
-    "id": "contact-r2",
+    "id": "contact-r1-r",
+    "bone": "bogie-r",
+    "x": -0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Rear wheelset 1 contact (right)",
+     "de": "Aufstandspunkt Radsatz hinten 1 (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": -0.715
+   },
+   {
+    "id": "contact-r2-l",
     "bone": "bogie-r",
     "x": 0.9,
     "y": -0.3,
     "kind": "contact",
     "title": {
-     "en": "Rear wheelset 2 contact",
-     "de": "Aufstandspunkt Radsatz hinten 2"
+     "en": "Rear wheelset 2 contact (left)",
+     "de": "Aufstandspunkt Radsatz hinten 2 (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.012,
-    "footprintWidthM": 0.014,
-    "frictionCoefficient": 0.3
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": 0.715
+   },
+   {
+    "id": "contact-r2-r",
+    "bone": "bogie-r",
+    "x": 0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Rear wheelset 2 contact (right)",
+     "de": "Aufstandspunkt Radsatz hinten 2 (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.007,
+    "frictionCoefficient": 0.3,
+    "z": -0.715
    },
    {
     "id": "resistor-vent",
@@ -662,8 +734,8 @@
    {
     "id": "hvac-vent",
     "bone": "body-mid",
-    "x": -3.5,
-    "y": 3.62,
+    "x": 3.5,
+    "y": -3.32,
     "kind": "emitter",
     "title": {
      "en": "Roof air-conditioning outlet",
@@ -684,8 +756,8 @@
    {
     "id": "floor-aisle-mid",
     "bone": "body-mid",
-    "x": -3.5,
-    "y": 0.45,
+    "x": 3.5,
+    "y": -0.15,
     "kind": "load",
     "title": {
      "en": "Aisle load point of the middle module",
@@ -2110,12 +2182,735 @@
        "tone": 0.9,
        "material": "glass"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.65,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "r": 0.03,
+       "id": "wheel-l",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.78,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "r": 0.03,
+       "id": "wheel-r",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.28
+        ],
+        [
+         1.2,
+         0.28
+        ],
+        [
+         1.2,
+         3
+        ],
+        [
+         1.1,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         -1.1,
+         3.4
+        ],
+        [
+         -1.2,
+         3
+        ],
+        [
+         -1.2,
+         0.28
+        ],
+        [
+         0,
+         0.28
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": 3.4,
+       "w": 1.8,
+       "h": 0.26,
+       "r": 0.04,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.85,
+       "y": 3.4,
+       "w": 1.7,
+       "h": 0.24,
+       "r": 0.03,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.35,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.05,
+         1.25
+        ],
+        [
+         1.05,
+         1.25
+        ],
+        [
+         0.98,
+         2.75
+        ],
+        [
+         -0.98,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -0.7,
+       "y": 2.85,
+       "w": 1.4,
+       "h": 0.2,
+       "r": 0.03,
+       "id": "destination-sign",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.6,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.7,
+       "y": 0.85,
+       "w": 0.3,
+       "h": 0.25,
+       "r": 0.05,
+       "id": "headlamp-l",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -1,
+       "y": 0.85,
+       "w": 0.3,
+       "h": 0.25,
+       "r": 0.05,
+       "id": "headlamp-r",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.03,
+        "z1": 0.03
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.03,
+        "z1": 0.03
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      },
+      {
+       "kind": "rect",
+       "x": -0.4,
+       "y": 3.4,
+       "w": 0.8,
+       "h": 0.15,
+       "r": 0.02,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.06,
+       "id": "door-opening-a",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.06,
+       "id": "door-opening-b",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.06,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.15,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.06,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.06,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -3.35,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.06,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0
+        ],
+        [
+         0.45,
+         1.2
+        ],
+        [
+         8.9,
+         1.2
+        ],
+        [
+         9.3,
+         1.1
+        ],
+        [
+         9.45,
+         0.8
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         -0.8
+        ],
+        [
+         9.3,
+         -1.1
+        ],
+        [
+         8.9,
+         -1.2
+        ],
+        [
+         0.45,
+         -1.2
+        ],
+        [
+         0.45,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -6,
+         0
+        ],
+        [
+         -6,
+         0.8
+        ],
+        [
+         -5.85,
+         1.1
+        ],
+        [
+         -5.5,
+         1.2
+        ],
+        [
+         -0.45,
+         1.2
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         -1.2
+        ],
+        [
+         -5.5,
+         -1.2
+        ],
+        [
+         -5.85,
+         -1.1
+        ],
+        [
+         -6,
+         -0.8
+        ],
+        [
+         -6,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.45,
+       "y": -1,
+       "w": 0.9,
+       "h": 2,
+       "r": 0.1,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 0.6,
+       "y": -1,
+       "w": 8.4,
+       "h": 2,
+       "r": 0.15,
+       "id": "roof-end",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.8,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -5.85,
+       "y": -1,
+       "w": 5.2,
+       "h": 2,
+       "r": 0.15,
+       "id": "roof-mid",
+       "bone": "body-mid",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.8,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -5.2,
+       "y": -0.9,
+       "w": 3.8,
+       "h": 1.8,
+       "r": 0.06,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.5,
+       "y": -0.9,
+       "w": 2,
+       "h": 1.8,
+       "r": 0.05,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.35,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         9.1,
+         -1
+        ],
+        [
+         9.35,
+         -0.95
+        ],
+        [
+         9.35,
+         0.95
+        ],
+        [
+         9.1,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 9.39,
+       "y": 0.7,
+       "w": 0.06,
+       "h": 0.3,
+       "r": 0.02,
+       "id": "headlamp-l",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 9.39,
+       "y": -1,
+       "w": 0.06,
+       "h": 0.3,
+       "r": 0.02,
+       "id": "headlamp-r",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 2.3,
+       "y": -0.4,
+       "w": 0.6,
+       "h": 0.8,
+       "r": 0.03,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.03,
+        "z1": 0.03
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.03,
+        "z1": 0.03
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Full side elevation with louvred roof boxes, pantograph with insulated base, door leaves with glass, bellows, motor blocks, wheels with brake discs and hubs, head lamp.",
-      "de": "Vollständige Seitenansicht mit Lamellen der Dachkästen, Stromabnehmer mit Isolatorfuß, Türflügel mit Glas, Balg, Motorblöcke, Räder mit Bremsscheiben und Naben, Scheinwerfer."
+      "en": "Full side elevation with louvred roof boxes, pantograph with insulated base, door leaves with glass, bellows, motor blocks, wheels with brake discs and hubs, head lamp. Front: wheels below the skirt, cab front with windscreen, destination sign and headlamps, the roof boxes and the single-arm pantograph with its collector; top: both car shells with the gangway, roof boxes, pantograph, windscreen, lamps and the four door leaves as strips.",
+      "de": "Vollständige Seitenansicht mit Lamellen der Dachkästen, Stromabnehmer mit Isolatorfuß, Türflügel mit Glas, Balg, Motorblöcke, Räder mit Bremsscheiben und Naben, Scheinwerfer. Vorn: Räder unter der Schürze, Führerstandsfront mit Windschutzscheibe, Zielanzeige und Scheinwerfern, die Dachkästen und der Einholm-Stromabnehmer mit Schleifstück; oben: beide Wagenkästen mit Übergang, Dachkästen, Stromabnehmer, Windschutzscheibe, Leuchten und die vier Türflügel als Streifen."
      },
      "retained": {
       "en": "All printable parts.",
@@ -2142,8 +2937,8 @@
       "de": "Aufbau mittlerer Ton, Glas am hellsten, Balg und Räder dunkel, Dachkästen abgesetzt."
      },
      "overlays": {
-      "en": "Merged shapes list their regions; the middle module is cut at its rear end (continuation not modelled).",
-      "de": "Zusammengefasste Formen führen ihre Regionen; das Mittelmodul ist am hinteren Ende abgeschnitten (Fortsetzung nicht modelliert)."
+      "en": "Merged shapes list their regions; the middle module is cut at its rear end (continuation not modelled). Front and top shapes carry the regions of the side view. The pantograph arms are followTip rects (front) and capsules (top) bound to their own bones, the collector head follows the upper arm tip, so the raised and the depot pose read in every view; the door leaves slide over the dark openings; wheels and motors are hidden by the skirt in front view and by the shells in plan.",
+      "de": "Zusammengefasste Formen führen ihre Regionen; das Mittelmodul ist am hinteren Ende abgeschnitten (Fortsetzung nicht modelliert). Vorder- und Draufsichtformen tragen die Regionen der Seitenansicht. Die Stromabnehmerarme sind followTip-Rechtecke (vorn) und -Kapseln (oben) an eigenen Knochen, das Schleifstück folgt der Spitze des Oberarms, so lesen sich die ausgefahrene und die Depotstellung in jeder Ansicht; die Türflügel gleiten über die dunklen Öffnungen; Räder und Motoren sind vorn durch die Schürze und oben durch die Wagenkästen verdeckt."
      }
     }
    },
@@ -3288,20 +4083,666 @@
        "tone": 0.9,
        "material": "glass"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.65,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "r": 0.03,
+       "id": "wheel-l",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.78,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "r": 0.03,
+       "id": "wheel-r",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.28
+        ],
+        [
+         1.2,
+         0.28
+        ],
+        [
+         1.2,
+         3
+        ],
+        [
+         1.1,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         -1.1,
+         3.4
+        ],
+        [
+         -1.2,
+         3
+        ],
+        [
+         -1.2,
+         0.28
+        ],
+        [
+         0,
+         0.28
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": 3.4,
+       "w": 1.8,
+       "h": 0.26,
+       "r": 0.04,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.85,
+       "y": 3.4,
+       "w": 1.7,
+       "h": 0.24,
+       "r": 0.03,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.05,
+         1.25
+        ],
+        [
+         1.05,
+         1.25
+        ],
+        [
+         0.98,
+         3.05
+        ],
+        [
+         -0.98,
+         3.05
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -1,
+       "y": 0.85,
+       "w": 2,
+       "h": 0.25,
+       "r": 0.05,
+       "id": "headlamps",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.85,
+       "material": "glass"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      },
+      {
+       "kind": "rect",
+       "x": -0.4,
+       "y": 3.4,
+       "w": 0.8,
+       "h": 0.15,
+       "r": 0.02,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.07,
+       "id": "door-opening-a",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.07,
+       "id": "door-opening-b",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.07,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.15,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.07,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.07,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -3.35,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.07,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0
+        ],
+        [
+         0.45,
+         1.2
+        ],
+        [
+         8.9,
+         1.2
+        ],
+        [
+         9.3,
+         1.1
+        ],
+        [
+         9.45,
+         0.8
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         -0.8
+        ],
+        [
+         9.3,
+         -1.1
+        ],
+        [
+         8.9,
+         -1.2
+        ],
+        [
+         0.45,
+         -1.2
+        ],
+        [
+         0.45,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -6,
+         0
+        ],
+        [
+         -6,
+         0.8
+        ],
+        [
+         -5.85,
+         1.1
+        ],
+        [
+         -5.5,
+         1.2
+        ],
+        [
+         -0.45,
+         1.2
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         -1.2
+        ],
+        [
+         -5.5,
+         -1.2
+        ],
+        [
+         -5.85,
+         -1.1
+        ],
+        [
+         -6,
+         -0.8
+        ],
+        [
+         -6,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.45,
+       "y": -1,
+       "w": 0.9,
+       "h": 2,
+       "r": 0.1,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 0.6,
+       "y": -1,
+       "w": 8.4,
+       "h": 2,
+       "r": 0.15,
+       "id": "roof",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -5.2,
+       "y": -0.9,
+       "w": 3.8,
+       "h": 1.8,
+       "r": 0.06,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.5,
+       "y": -0.9,
+       "w": 2,
+       "h": 1.8,
+       "r": 0.05,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         9.1,
+         -1
+        ],
+        [
+         9.35,
+         -0.95
+        ],
+        [
+         9.35,
+         0.95
+        ],
+        [
+         9.1,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 2.3,
+       "y": -0.4,
+       "w": 0.6,
+       "h": 0.8,
+       "r": 0.03,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Body shells with arches 0.10 m clear of the wheels, the side windows of the front half merged into one pane, door leaves with glass, bellows, roof boxes, pantograph, wheels with brake discs, motor blocks in the bogies and the head lamp.",
-      "de": "Aufbauhüllen mit Radläufen im Abstand von 0,10 m zu den Rädern, die Seitenfenster der vorderen Hälfte zu einer Scheibe zusammengefasst, Türflügel mit Glas, Balg, Dachkästen, Stromabnehmer, Räder mit Bremsscheiben, Motorblöcke in den Drehgestellen und der Scheinwerfer."
+      "en": "Body shells with arches 0.10 m clear of the wheels, the side windows of the front half merged into one pane, door leaves with glass, bellows, roof boxes, pantograph, wheels with brake discs, motor blocks in the bogies and the head lamp. Front and top as articulated masses: wheels, cab front, roof boxes, pantograph, shells with gangway, windscreen and the door leaves.",
+      "de": "Aufbauhüllen mit Radläufen im Abstand von 0,10 m zu den Rädern, die Seitenfenster der vorderen Hälfte zu einer Scheibe zusammengefasst, Türflügel mit Glas, Balg, Dachkästen, Stromabnehmer, Räder mit Bremsscheiben, Motorblöcke in den Drehgestellen und der Scheinwerfer. Vorder- und Draufsicht als gegliederte Massen: Räder, Führerstandsfront, Dachkästen, Stromabnehmer, Wagenkästen mit Übergang, Windschutzscheibe und die Türflügel."
      },
      "retained": {
       "en": "Everything above 0.1 m.",
       "de": "Alles über 0,1 m."
      },
      "merged": {
-      "en": "Bogie frame and motor are one block.",
-      "de": "Drehgestellrahmen und Motor sind ein Block."
+      "en": "Bogie frame and motor are one block. Front: windscreen and destination sign are one glass shape and the headlamps one bar; top: lamps are dropped and both roof areas are one shape.",
+      "de": "Drehgestellrahmen und Motor sind ein Block. Vorn: Windschutzscheibe und Zielanzeige sind eine Glasform und die Scheinwerfer ein Balken; oben entfallen die Leuchten und beide Dachflächen sind eine Form."
      },
      "omitted": {
       "en": "Handrails, wipers, seals.",
@@ -4198,8 +5639,8 @@
        "y0": 0,
        "x1": 0.25,
        "y1": 0,
-       "r0": 0.03,
-       "r1": 0.03,
+       "r0": 0.04,
+       "r1": 0.04,
        "id": "pan-head",
        "bone": "pan-head",
        "role": "detail",
@@ -4299,20 +5740,568 @@
        "region": "hvac-unit",
        "material": "paint"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.65,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "id": "wheel-l",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.78,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "id": "wheel-r",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.28
+        ],
+        [
+         1.2,
+         0.28
+        ],
+        [
+         1.2,
+         3
+        ],
+        [
+         1.1,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         -1.1,
+         3.4
+        ],
+        [
+         -1.2,
+         3
+        ],
+        [
+         -1.2,
+         0.28
+        ],
+        [
+         0,
+         0.28
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "traction-motors",
+        "brake-discs"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": 3.4,
+       "w": 1.8,
+       "h": 0.26,
+       "r": 0.03,
+       "id": "roof-boxes",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.45,
+       "regions": [
+        "hvac-unit",
+        "brake-resistor"
+       ],
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.05,
+         1.25
+        ],
+        [
+         1.05,
+         1.25
+        ],
+        [
+         0.98,
+         3.05
+        ],
+        [
+         -0.98,
+         3.05
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.08,
+       "id": "door-opening-a",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.08,
+       "id": "door-opening-b",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.08,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.15,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.08,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.08,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -3.35,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.08,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0
+        ],
+        [
+         0.45,
+         1.2
+        ],
+        [
+         8.9,
+         1.2
+        ],
+        [
+         9.3,
+         1.1
+        ],
+        [
+         9.45,
+         0.8
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         -0.8
+        ],
+        [
+         9.3,
+         -1.1
+        ],
+        [
+         8.9,
+         -1.2
+        ],
+        [
+         0.45,
+         -1.2
+        ],
+        [
+         0.45,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "glazing"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -6,
+         0
+        ],
+        [
+         -6,
+         0.8
+        ],
+        [
+         -5.85,
+         1.1
+        ],
+        [
+         -5.5,
+         1.2
+        ],
+        [
+         -0.45,
+         1.2
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         -1.2
+        ],
+        [
+         -5.5,
+         -1.2
+        ],
+        [
+         -5.85,
+         -1.1
+        ],
+        [
+         -6,
+         -0.8
+        ],
+        [
+         -6,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "glazing"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.45,
+       "y": -1,
+       "w": 0.9,
+       "h": 2,
+       "r": 0.1,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -5.2,
+       "y": -0.9,
+       "w": 3.8,
+       "h": 1.8,
+       "r": 0.06,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.5,
+       "y": -0.9,
+       "w": 2,
+       "h": 1.8,
+       "r": 0.05,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Body shells with open wheel arches 0.12 m (0.6 mm) clear of the tyres, individual panes separated by 0.25 m pillars, door leaves, bellows, roof boxes, pantograph and wheel discs with brake discs.",
-      "de": "Aufbauhüllen mit offenen Radläufen im Abstand von 0,12 m (0,6 mm) zu den Rädern, einzelne Scheiben mit 0,25 m breiten Pfosten, Türflügel, Balg, Dachkästen, Stromabnehmer und Radscheiben mit Bremsscheiben."
+      "en": "Body shells with open wheel arches 0.12 m (0.6 mm) clear of the tyres, individual panes separated by 0.25 m pillars, door leaves, bellows, roof boxes, pantograph and wheel discs with brake discs. Front and top keep main masses only: wheels, one cab shape with windscreen, the roof block, the pantograph as one arm and collector, and in plan both shells, gangway, boxes and the door leaves.",
+      "de": "Aufbauhüllen mit offenen Radläufen im Abstand von 0,12 m (0,6 mm) zu den Rädern, einzelne Scheiben mit 0,25 m breiten Pfosten, Türflügel, Balg, Dachkästen, Stromabnehmer und Radscheiben mit Bremsscheiben. Vorder- und Draufsicht behalten nur die Hauptmassen: Räder, eine Führerstandsform mit Windschutzscheibe, den Dachblock, den Stromabnehmer als ein Arm mit Schleifstück und oben beide Wagenkästen, Übergang, Kästen und die Türflügel."
      },
      "retained": {
       "en": "Everything above 0.2 m.",
       "de": "Alles über 0,2 m."
      },
      "merged": {
-      "en": "Wheel and motor share one disc.",
-      "de": "Rad und Motor teilen sich eine Scheibe."
+      "en": "Wheel and motor share one disc. The pantograph arms are plain followTip rects without base; lamps and destination sign are dropped.",
+      "de": "Rad und Motor teilen sich eine Scheibe. Die Stromabnehmerarme sind schlichte followTip-Rechtecke ohne Sockel; Leuchten und Zielanzeige entfallen."
      },
      "omitted": {
       "en": "Handles, lamps, wipers, bogie frames.",
@@ -4480,8 +6469,7 @@
         "body-panels",
         "roof"
        ],
-       "material": "paint"
-      ,
+       "material": "paint",
        "penMm": 0.243
       },
       {
@@ -4788,8 +6776,7 @@
        "filled": true,
        "tone": 0.2,
        "region": "pantograph",
-       "material": "carbon"
-      ,
+       "material": "carbon",
        "penMm": 0.243
       },
       {
@@ -4882,12 +6869,515 @@
        "region": "hvac-unit",
        "material": "paint"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.65,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "id": "wheel-l",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.78,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "id": "wheel-r",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.25,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.28
+        ],
+        [
+         1.2,
+         0.28
+        ],
+        [
+         1.2,
+         3
+        ],
+        [
+         1.1,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         0,
+         3.4
+        ],
+        [
+         -1.1,
+         3.4
+        ],
+        [
+         -1.2,
+         3
+        ],
+        [
+         -1.2,
+         0.28
+        ],
+        [
+         0,
+         0.28
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "traction-motors",
+        "brake-discs",
+        "hvac-unit",
+        "brake-resistor"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.05,
+         1.25
+        ],
+        [
+         1.05,
+         1.25
+        ],
+        [
+         0.98,
+         3.05
+        ],
+        [
+         -0.98,
+         3.05
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.06,
+       "r1": 0.06,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.06,
+        "z1": 0.06
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.06,
+       "r1": 0.06,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.06,
+        "z1": 0.06
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0
+        ],
+        [
+         0.45,
+         1.2
+        ],
+        [
+         8.9,
+         1.2
+        ],
+        [
+         9.3,
+         1.1
+        ],
+        [
+         9.45,
+         0.8
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         0
+        ],
+        [
+         9.45,
+         -0.8
+        ],
+        [
+         9.3,
+         -1.1
+        ],
+        [
+         8.9,
+         -1.2
+        ],
+        [
+         0.45,
+         -1.2
+        ],
+        [
+         0.45,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "glazing",
+        "brake-resistor"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -6,
+         0
+        ],
+        [
+         -6,
+         0.8
+        ],
+        [
+         -5.85,
+         1.1
+        ],
+        [
+         -5.5,
+         1.2
+        ],
+        [
+         -0.45,
+         1.2
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         0
+        ],
+        [
+         -0.45,
+         -1.2
+        ],
+        [
+         -5.5,
+         -1.2
+        ],
+        [
+         -5.85,
+         -1.1
+        ],
+        [
+         -6,
+         -0.8
+        ],
+        [
+         -6,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "glazing",
+        "hvac-unit"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.45,
+       "y": -1,
+       "w": 0.9,
+       "h": 2,
+       "r": 0.1,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.1,
+       "id": "door-opening-a",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.1,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.1,
+       "id": "door-opening-b",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.1,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.06,
+       "r1": 0.06,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.06,
+        "z1": 0.06
+       },
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.9,
+       "y1": 0,
+       "r0": 0.06,
+       "r1": 0.06,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.06,
+        "z1": 0.06
+       },
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.28,
+       "y0": 0,
+       "x1": 0.28,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.6,
+        "z1": 0.6
+       },
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      },
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.1,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.7,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 4.15,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.1,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.7,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.1,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.7,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -3.35,
+       "y": -1.2,
+       "w": 0.65,
+       "h": 0.1,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.7,
+       "region": "doors",
+       "material": "paint"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Two body silhouettes (end module without arches and middle module) joined by one bellows block, wheel discs overlapping the sill, one window band per module, door leaves and a pantograph of two strokes and a head.",
-      "de": "Zwei Aufbausilhouetten (Endmodul ohne Radläufe und Mittelmodul), verbunden durch einen Balgblock, Radscheiben über der Schwelle, ein Fensterband je Modul, Türflügel und ein Stromabnehmer aus zwei Strichen und Kopf."
+      "en": "Two body silhouettes (end module without arches and middle module) joined by one bellows block, wheel discs overlapping the sill, one window band per module, door leaves and a pantograph of two strokes and a head. Front and top are composed silhouettes: wheels, one body outline with windscreen, the pantograph as widened arm and collector, and in plan both shells, gangway, door openings and leaves.",
+      "de": "Zwei Aufbausilhouetten (Endmodul ohne Radläufe und Mittelmodul), verbunden durch einen Balgblock, Radscheiben über der Schwelle, ein Fensterband je Modul, Türflügel und ein Stromabnehmer aus zwei Strichen und Kopf. Vorder- und Draufsicht sind komponierte Silhouetten: Räder, ein Aufbauumriss mit Windschutzscheibe, der Stromabnehmer als verbreiterter Arm mit Schleifstück und oben beide Wagenkästen, Übergang, Türöffnungen und Flügel."
      },
      "retained": {
       "en": "Bodies, glass bands, door leaves, bellows, wheels, resistor, air-conditioning unit, pantograph.",
@@ -4902,8 +7392,8 @@
       "de": "Pfosten, Drehgestellrahmen, Leuchten, Haltestangen, Wischer."
      },
      "thinElements": {
-      "en": "Pantograph arms 0.06 m wide are drawn as strokes of 0.13 (real 0.12) mm; lamellae 0.13 mm.",
-      "de": "Stromabnehmerarme von 0,06 m Breite werden als Striche von 0,13 (real 0,12) mm gezeichnet; Lamellen 0,13 mm."
+      "en": "Pantograph arms 0.06 m wide are drawn as strokes of 0.13 (real 0.12) mm; lamellae 0.13 mm. Pantograph arms are widened to 0.1 m (front) and 0.12 m (plan) and the door leaf strips to 0.1 m so that they stay above 0.2 mm on paper.",
+      "de": "Stromabnehmerarme von 0,06 m Breite werden als Striche von 0,13 (real 0,12) mm gezeichnet; Lamellen 0,13 mm. Stromabnehmerarme sind vorn auf 0,1 m und oben auf 0,12 m, die Türflügelstreifen auf 0,1 m verbreitert, damit sie auf Papier über 0,2 mm bleiben."
      },
      "hatching": {
       "en": "None; material is tone only.",
@@ -4922,14 +7412,14 @@
   },
   "symbols": [
    {
-    "id": "tram-plan",
+    "id": "tram-symbol",
     "title": {
-     "en": "Tram section plan symbol",
-     "de": "Straßenbahnabschnitt-Grundrisszeichen"
+     "en": "Tram symbol",
+     "de": "Strassenbahnzeichen"
     },
     "description": {
-     "en": "True-extent plan: end module, bellows, middle module and the collector frame.",
-     "de": "Grundriss in wahrer Ausdehnung: Endmodul, Balg, Mittelmodul und Stromabnehmerrahmen."
+     "en": "True-extent symbol of the tram in side, front and top view: end module, bellows gangway, middle module, wheelsets, windows, the right-hand doors and the pantograph.",
+     "de": "Zeichen der Strassenbahn in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Endmodul, Faltenbalg, Mittelmodul, Radsätze, Fenster, die Türen auf der rechten Seite und der Stromabnehmer."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -4946,7 +7436,268 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
+     "elevation": [
+      {
+       "kind": "rect",
+       "x": 0.45,
+       "y": 0.28,
+       "w": 9,
+       "h": 3.12,
+       "id": "elevation-shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -6,
+       "y": 0.28,
+       "w": 5.55,
+       "h": 3.12,
+       "id": "elevation-shell-mid",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.45,
+       "w": 0.9,
+       "h": 2.8,
+       "id": "elevation-gangway",
+       "bone": "body-end",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2
+      },
+      {
+       "kind": "ellipse",
+       "cx": 1,
+       "cy": 0.3,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "elevation-wheel-r1",
+       "bone": "body-end",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": 2.8,
+       "cy": 0.3,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "elevation-wheel-r2",
+       "bone": "body-end",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": 6.3,
+       "cy": 0.3,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "elevation-wheel-f1",
+       "bone": "body-end",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": 8.1,
+       "cy": 0.3,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "elevation-wheel-f2",
+       "bone": "body-end",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": 0.9,
+       "y": 1.25,
+       "w": 7.55,
+       "h": 1.5,
+       "id": "elevation-window-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 8,
+       "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": -5.85,
+       "y": 1.25,
+       "w": 5.15,
+       "h": 1.5,
+       "id": "elevation-window-mid",
+       "bone": "body-end",
+       "role": "body",
+       "z": 9,
+       "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": 3.5,
+       "y": 0.28,
+       "w": 1.3,
+       "h": 2.42,
+       "id": "elevation-door-a",
+       "bone": "body-end",
+       "role": "body",
+       "z": 10,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": 0.28,
+       "w": 1.3,
+       "h": 2.42,
+       "id": "elevation-door-b",
+       "bone": "body-end",
+       "role": "body",
+       "z": 11,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.6,
+         3.4
+        ],
+        [
+         4.36,
+         4.26
+        ],
+        [
+         2.6,
+         4.97
+        ]
+       ],
+       "closed": false,
+       "id": "elevation-pantograph",
+       "bone": "body-end",
+       "role": "body",
+       "z": 12,
+       "filled": false,
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": 2.29,
+       "y": 4.9,
+       "w": 0.62,
+       "h": 0.12,
+       "id": "elevation-pan-head",
+       "bone": "body-end",
+       "role": "body",
+       "z": 13,
+       "filled": true,
+       "tone": 0.3
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -1.2,
+       "y": 0.28,
+       "w": 2.4,
+       "h": 3.12,
+       "id": "front-shell",
+       "bone": "body-end",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -1.05,
+       "y": 1.25,
+       "w": 2.1,
+       "h": 1.8,
+       "id": "front-windscreen",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": 0.65,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "id": "front-wheel-l",
+       "bone": "body-end",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.78,
+       "y": 0,
+       "w": 0.13,
+       "h": 0.6,
+       "id": "front-wheel-r",
+       "bone": "body-end",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.06,
+       "y": 3.4,
+       "w": 0.12,
+       "h": 1.6,
+       "id": "front-pan-arm",
+       "bone": "body-end",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": -0.6,
+       "y": 4.9,
+       "w": 1.2,
+       "h": 0.12,
+       "id": "front-pan-head",
+       "bone": "body-end",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3
+      }
+     ],
      "plan": [
       {
        "kind": "poly",
@@ -4977,107 +7728,103 @@
         ]
        ],
        "closed": true,
-       "id": "plan-end",
+       "id": "plan-shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -6,
+       "y": -1.2,
+       "w": 5.55,
+       "h": 2.4,
+       "id": "plan-shell-mid",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -0.45,
+       "y": -1,
+       "w": 0.9,
+       "h": 2,
+       "id": "plan-gangway",
        "bone": "body-end",
        "role": "body",
        "z": 3,
        "filled": true,
-       "tone": 0.6,
-       "material": "paint"
+       "tone": 0.2
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         -6,
-         -1.2
-        ],
-        [
-         -0.45,
-         -1.2
-        ],
-        [
-         -0.45,
-         1.2
-        ],
-        [
-         -6,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "plan-mid",
-       "bone": "body-end",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.6,
-       "material": "paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.45,
-         -1
-        ],
-        [
-         0.45,
-         -1
-        ],
-        [
-         0.45,
-         1
-        ],
-        [
-         -0.45,
-         1
-        ]
-       ],
-       "closed": true,
-       "id": "plan-bellows",
+       "kind": "rect",
+       "x": 3.5,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.1,
+       "id": "plan-door-a",
        "bone": "body-end",
        "role": "body",
        "z": 4,
        "filled": true,
-       "tone": 0.2,
-       "material": "rubber"
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -4,
+       "y": -1.2,
+       "w": 1.3,
+       "h": 0.1,
+       "id": "plan-door-b",
+       "bone": "body-end",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 2.29,
+       "y": -0.6,
+       "w": 0.62,
+       "h": 1.2,
+       "id": "plan-pan-head",
+       "bone": "body-end",
+       "role": "body",
+       "z": 6,
+       "filled": false,
+       "tone": 0.3
       },
       {
        "kind": "poly",
        "points": [
         [
-         2,
-         -0.6
+         2.54,
+         0
         ],
         [
-         3.2,
-         -0.6
-        ],
-        [
-         3.2,
-         0.6
-        ],
-        [
-         2,
-         0.6
+         4.42,
+         0
         ]
        ],
        "closed": false,
-       "id": "plan-pantograph",
+       "id": "plan-pan-arm",
        "bone": "body-end",
        "role": "body",
-       "z": 5,
+       "z": 7,
        "filled": false,
-       "tone": 0.3,
-       "material": "pan-alloy",
-       "penMm": 0.13
+       "tone": 0.3
       }
      ]
     },
     "dimensionalNote": {
-     "en": "Model metres: length 15.45 m, width 2.40 m, cut at the rear of the middle module.",
-     "de": "Modellmeter: Länge 15,45 m, Breite 2,40 m, am Ende des Mittelmoduls abgeschnitten."
+     "en": "Model metres: length 15.45 m, width 2.40 m, height with the raised pantograph 5.0 m, cut at the rear of the middle module; side, front and top view.",
+     "de": "Modellmeter: Länge 15,45 m, Breite 2,40 m, Höhe mit gehobenem Stromabnehmer 5,0 m, am Heck des Mittelmoduls abgeschnitten; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -5100,10 +7847,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5221,10 +7972,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5329,10 +8084,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5447,10 +8206,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5520,7 +8283,7 @@
     "id": "loop-start",
     "title": {
      "en": "Run loop start",
-     "de": "Fahrschleife start"
+     "de": "Fahrschleife Start"
     },
     "description": {
      "en": "Technical key of the run loop: wheelsets have turned theta = -x / r.",
@@ -5548,10 +8311,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5670,10 +8437,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5792,10 +8563,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -5901,10 +8676,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -6023,10 +8802,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f1",
-     "contact-f2",
-     "contact-r1",
-     "contact-r2"
+     "contact-f1-l",
+     "contact-f1-r",
+     "contact-f2-l",
+     "contact-f2-r",
+     "contact-r1-l",
+     "contact-r1-r",
+     "contact-r2-l",
+     "contact-r2-r"
     ],
     "thermal": {
      "operating": {
@@ -6148,22 +8931,42 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f1",
+      "anchor": "contact-f1-l",
       "fromS": 0,
       "toS": 1.3577
      },
      {
-      "anchor": "contact-f2",
+      "anchor": "contact-f1-r",
       "fromS": 0,
       "toS": 1.3577
      },
      {
-      "anchor": "contact-r1",
+      "anchor": "contact-f2-l",
       "fromS": 0,
       "toS": 1.3577
      },
      {
-      "anchor": "contact-r2",
+      "anchor": "contact-f2-r",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-r1-l",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-r1-r",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-r2-l",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-r2-r",
       "fromS": 0,
       "toS": 1.3577
      }
@@ -6343,22 +9146,42 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f1",
+      "anchor": "contact-f1-l",
       "fromS": 0,
       "toS": 14
      },
      {
-      "anchor": "contact-f2",
+      "anchor": "contact-f1-r",
       "fromS": 0,
       "toS": 14
      },
      {
-      "anchor": "contact-r1",
+      "anchor": "contact-f2-l",
       "fromS": 0,
       "toS": 14
      },
      {
-      "anchor": "contact-r2",
+      "anchor": "contact-f2-r",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r1-l",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r1-r",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r2-l",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r2-r",
       "fromS": 0,
       "toS": 14
      }
@@ -6559,22 +9382,42 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f1",
+      "anchor": "contact-f1-l",
       "fromS": 0,
       "toS": 12
      },
      {
-      "anchor": "contact-f2",
+      "anchor": "contact-f1-r",
       "fromS": 0,
       "toS": 12
      },
      {
-      "anchor": "contact-r1",
+      "anchor": "contact-f2-l",
       "fromS": 0,
       "toS": 12
      },
      {
-      "anchor": "contact-r2",
+      "anchor": "contact-f2-r",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r1-l",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r1-r",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r2-l",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r2-r",
       "fromS": 0,
       "toS": 12
      }
@@ -6827,7 +9670,7 @@
      "id": "body-panels",
      "title": {
       "en": "Painted side and end panels",
-      "de": "Lackierte Seiten- und Stirnwände"
+      "de": "Lackierte Seiten- und Endbleche"
      },
      "kind": "wall",
      "model": "conditioned",
@@ -7272,10 +10115,7 @@
   "presentation": {
    "defaultPose": "running",
    "defaultClip": "run-loop",
-   "defaultScale": 200,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 200
   },
   "exports": [
    "svg",

@@ -1,0 +1,2 @@
+import { readFileSync } from "node:fs"; import { path } from "./sy.ts";
+for (const id of process.argv.slice(2)) { const a = JSON.parse(readFileSync(path(id),"utf8")).asset; console.log(id.padEnd(24), [50,100,200,500].map(s=>{const r=a.representations[s]; return r.status==="authored"?`${s}:b${r.pens.body}/d${r.pens.detail}/g${r.pens.glazing}`:`${s}:UNAV(${JSON.stringify(r.reason.en).slice(1,70)})`}).join("  ")); }

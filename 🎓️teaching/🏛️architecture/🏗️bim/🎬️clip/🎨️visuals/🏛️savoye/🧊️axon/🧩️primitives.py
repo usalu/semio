@@ -252,10 +252,10 @@ def _column_band(source, z0, z1):
     result = []
     for cell in api._native_material_cells(source):
         stock = {"material":source.get("material"),"role":source.get("role","post"),"mesh":{"vertices":api.part_vertices(cell),"faces":api.part_faces(cell)}}
-        clipped = api._surface_finishes().clip_stock(stock,[{"normal":[0,0,-1],"offset":-z0,"point":[0,0,z0]},{"normal":[0,0,1],"offset":z1,"point":[0,0,z1]}],exact=True)
+        clipped = api.surface_finishes().clip_stock(stock,[{"normal":[0,0,-1],"offset":-z0,"point":[0,0,z0]},{"normal":[0,0,1],"offset":z1,"point":[0,0,z1]}],exact=True)
         if clipped is not None:
             metadata = {key:value for key,value in source.items() if key not in ("mesh","section","top_outline","outline","holes","z0","z1")}
-            result.append({**metadata,**api._surface_finishes().publish_stock(clipped)})
+            result.append({**metadata,**api.surface_finishes().publish_stock(clipped)})
     return result
 
 

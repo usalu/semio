@@ -1,0 +1,41 @@
+{
+  "description": "Language-agnostic vectors of the thermal span range: a symmetric range of plus and minus spanK kelvin around the air temperature. The signed fraction is (value - air) / spanK clamped to [-1, 1]; the shared range of -20 to 60 degC reads the same value as (value - air) / (60 - air) above and (value - air) / (air + 20) below the air temperature. The legend of the span range spans air - spanK to air + spanK.",
+  "sharedC": { "min": -20, "max": 60 },
+  "scales": [
+    { "name": "laptop in a heated room", "airC": 21, "spanK": 25, "min": -4, "max": 46 },
+    { "name": "person skin in a warm room", "airC": 27, "spanK": 25, "min": 2, "max": 52 },
+    { "name": "cold outdoor air", "airC": 2, "spanK": 15, "min": -13, "max": 17 },
+    { "name": "narrow span", "airC": 22, "spanK": 5, "min": 17, "max": 27 }
+  ],
+  "fractions": [
+    { "airC": 21, "spanK": 25, "valueC": 35, "span": 0.56, "shared": 0.358974 },
+    { "airC": 21, "spanK": 25, "valueC": 21, "span": 0, "shared": 0 },
+    { "airC": 21, "spanK": 25, "valueC": 33, "span": 0.48, "shared": 0.307692 },
+    { "airC": 21, "spanK": 25, "valueC": 0, "span": -0.84, "shared": -0.512195 },
+    { "airC": 21, "spanK": 25, "valueC": 60, "span": 1, "shared": 1 },
+    { "airC": 21, "spanK": 25, "valueC": 80, "span": 1, "shared": 1 },
+    { "airC": 27, "spanK": 25, "valueC": 33.5, "span": 0.26, "shared": 0.19697 },
+    { "airC": 2, "spanK": 15, "valueC": -20, "span": -1, "shared": -1 }
+  ],
+  "sceneRule": {
+    "description": "One scene draws all its thermal casts on one span (null = the shared absolute range); different scenes may differ. mixed lists the scenes that break the rule.",
+    "scenes": [
+      { "name": "uniform scene", "casts": [25, 25, 25], "mixed": false },
+      { "name": "wide scene on its own span", "casts": [78, 78], "mixed": false },
+      { "name": "single cast", "casts": [40], "mixed": false },
+      { "name": "two spans in one scene", "casts": [25, 78], "mixed": true },
+      { "name": "span next to the absolute range", "casts": [25, null], "mixed": true },
+      { "name": "mixed among equal ones", "casts": [25, 25, 25, 26], "mixed": true }
+    ],
+    "clips": [
+      { "name": "two scenes with different spans", "scenes": { "comfort": [25, 25], "kettle": [78, 78] }, "mixedScenes": [] },
+      { "name": "one scene mixes", "scenes": { "comfort": [25, 25], "kettle": [78, 25] }, "mixedScenes": ["kettle"] },
+      { "name": "every scene mixes", "scenes": { "a": [25, 40], "b": [null, 25] }, "mixedScenes": ["a", "b"] }
+    ]
+  },
+  "invalid": [
+    { "name": "zero span", "spanK": 0 },
+    { "name": "negative span", "spanK": -5 },
+    { "name": "span as text", "spanK": "25" }
+  ]
+}

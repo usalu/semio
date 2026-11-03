@@ -1,0 +1,2 @@
+import { readFileSync } from "node:fs"; import { path } from "./sy.ts";
+for (const id of process.argv.slice(2)) { const a = JSON.parse(readFileSync(path(id),"utf8")).asset; const r=a.representations["500"]; console.log("##",id, JSON.stringify(a.dimensions)); console.log(" reason",JSON.stringify(r.reason)); console.log(" limiting",JSON.stringify(r.limitingFeature),r.limitingSizeM, JSON.stringify(r.alternatives), r.cause, "symbols", a.symbols.map((s:any)=>s.id).join()); }

@@ -13,7 +13,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -25,6 +24,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -42,22 +42,23 @@ dim_arrow = _manim_module.dim_arrow
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 highlight_param = _manim_module.highlight_param
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
-radiator = _manim_module.radiator
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
 sun_glyph = _manim_module.sun_glyph
 sun_rays = _manim_module.sun_rays
 shine = _manim_module.shine
 pulse_flashes = _manim_module.pulse_flashes
-person_glyph = _manim_module.person_glyph
-lamp_glyph = _manim_module.lamp_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
 ripples = _manim_module.ripples
 energy_tank = _manim_module.energy_tank
@@ -122,7 +123,7 @@ def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
 
 
 def _plot_samples(values: np.ndarray, n: int = PLOT_N) -> np.ndarray:
-    """📉 Evenly spaced picks of an hourly series — what the chart actually draws."""
+    """🎯 Evenly spaced picks of an hourly series — what the chart actually draws."""
     return values[np.linspace(0, len(values) - 1, n).round().astype(int)]
 
 
@@ -132,7 +133,7 @@ def _cumulative(load: np.ndarray) -> np.ndarray:
 
 
 def _energy_at(cum: np.ndarray, frac: float) -> float:
-    """∑ Energy collected up to a fraction of the year, in kWh."""
+    """🔢 Energy collected up to a fraction of the year, in kWh."""
     return float(np.interp(frac * (len(cum) - 1), np.arange(len(cum)), cum))
 #endregion
 
@@ -144,7 +145,7 @@ def _wide_chart(y_src: str = r"P\;[\mathrm{kW}]"):
 
 
 def _wide_tank(color=ENERGY):
-    """🔋 Energy tank left of the wide chart, as tall as its plot area."""
+    """🔋 Abstract energy-quantity gauge (the accumulated kWh, not a physical store) left of the wide chart, as tall as its plot area."""
     height = WIDE_H - 0.2
     return energy_tank(np.array([-6.0, WIDE_ORIGIN[1] + height / 2, 0.0]), height=height, width=0.7, color=color, level=0.0)
 
@@ -197,7 +198,7 @@ def _kw_ticks(chart, y_max_kw: float, values=(5, 10)):
 
 def _month_labels(chart):
     """🗓️ Twelve month names under the year axis."""
-    names = ("Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez")
+    names = ("Jan", "Feb", tr("Mar", "Mär"), "Apr", tr("May", "Mai"), "Jun", "Jul", "Aug", "Sep", tr("Oct", "Okt"), "Nov", tr("Dec", "Dez"))
     return VGroup(*[
         body_text(m, font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(chart["pt"]((i + 0.5) / 12, 0) + DOWN * 0.24)
         for i, m in enumerate(names)
@@ -210,7 +211,7 @@ def _hour_labels(chart, values=(0, 2000, 4000, 6000, 8760)):
     for h in values:
         f = h / PROFILE_N
         group.add(Line(chart["pt"](f, 0) + DOWN * 0.06, chart["pt"](f, 0) + UP * 0.06, color=P_WHITE, stroke_width=2))
-        group.add(math_label(de_num(h), chart["pt"](f, 0) + DOWN * 0.38, size=LABEL_FONT_SIZE - 2))
+        group.add(math_label(label_number(h), chart["pt"](f, 0) + DOWN * 0.38, size=LABEL_FONT_SIZE - 2))
     return group
 
 
@@ -250,12 +251,11 @@ def _heated_house(center, scale: float):
     top_y = float(hs["top_left"][1])
     storey = hs["w_height"] / 2
     floors = (float(bl[1]), float(hs["level_1"].get_center()[1]))
-    metre = storey / 2.5
+    metre = room_metre(storey)
     rads = VGroup()
     for fy in floors:
-        r = radiator(ORIGIN, color=POWER, height=0.65 * metre, width=1.3 * metre)
-        r.move_to(np.array([bl[0] + 0.15 * scale + 0.1 + r.width / 2, fy + r.height / 2 + 0.12 * metre, 0.0]))
-        rads.add(r)
+        anchor = np.array([bl[0] + 0.15 * scale + 0.1 + 0.65 * metre, fy, 0.0])
+        rads.add(staffage("shared-radiator-winter", unit=metre, anchor=anchor).add(_manim_module.radiator_wall(anchor, metre)))
     win_paths = []
     for w, r in zip(hs["windows"], rads):
         x, y = float(w["x"]), float(w["center"][1])
@@ -283,10 +283,18 @@ def _heated_house(center, scale: float):
     }
 
 
-def _stand(floor_y: float, x: float, storey: float, color=P_ORANGE):
-    """🧍 Occupant at true scale — 70 % of the room height, feet on the floor line at ``x``."""
-    height = 0.7 * storey
-    return person_glyph(np.array([x, floor_y + 0.015 + height / 2, 0.0]), color=color, scale=height / 0.66)
+def _stand(floor_y: float, x: float, storey: float):
+    """🧍 Breathing thermal occupant at true scale — 70 % of the room height, feet on the floor line at ``x``."""
+    cast = "shared-person-winter"
+    return staffage_motion(cast, unit=0.7 * storey / staffage_height(cast), anchor=np.array([x, floor_y + 0.015, 0.0]))
+
+
+def _lamp(top, height: float):
+    """💡 Thermal pendant lamp hanging from ``top`` and ``height`` long, with its bulb point for the heat ripples."""
+    cast = "shared-lamp-winter"
+    group = staffage(cast, unit=height / staffage_height(cast))
+    group.shift(top - group.get_top())
+    return {"group": group, "bulb": Point(group.get_bottom() + UP * 0.2 * height)}
 
 
 def _rate_stream(paths, level, rt: float, *, speed: float = 0.8, per_path: int = 8, color=POWER, color_end=P_ORANGE,
@@ -320,7 +328,7 @@ def _rate_stream(paths, level, rt: float, *, speed: float = 0.8, per_path: int =
 
 
 def _heat(spots, rt: float, *, r_max: float = 0.35, color=POWER):
-    """🌡️ Long-wave heat spreading from the warm radiators for ``rt`` seconds."""
+    """♨️ Long-wave heat spreading from the warm radiators for ``rt`` seconds."""
     return ripples(spots, r_max=r_max, cycles=rt / 1.4, color=color)
 
 
@@ -411,8 +419,8 @@ class Beat1_LeistungUndEnergie(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Leistung ist eine Rate, Energie eine Menge")
-        din = _din_ref("Grundlagen · DIN V 18599-2")
+        subtitle = section_heading(tr("Power is a rate, energy is an amount", "Leistung ist eine Rate, Energie eine Menge"))
+        din = _din_ref(tr("Fundamentals · DIN V 18599-2", "Grundlagen · DIN V 18599-2"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "zahlen"))
@@ -433,20 +441,20 @@ class Beat1_LeistungUndEnergie(Scene):
         months = _month_labels(chart)
         tank = _wide_tank()
         q_tag = math_label(r"Q\;[\mathrm{kWh}]", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
-        p_card = _card("Leistung", r"P\;[\mathrm{kW}]", POWER, np.array([-2.8, 0.3, 0.0]))
-        q_card = _card("Energie", r"Q\;[\mathrm{kWh}]", ENERGY, np.array([2.8, 0.3, 0.0]))
+        p_card = _card(tr("Power", "Leistung"), r"P\;[\mathrm{kW}]", POWER, np.array([-2.8, 0.3, 0.0]))
+        q_card = _card(tr("Energy", "Energie"), r"Q\;[\mathrm{kWh}]", ENERGY, np.array([2.8, 0.3, 0.0]))
         neq = math_label("≠", np.array([0.0, 0.1, 0.0]), size=FORMULA_FONT_SIZE + 12, color=P_WHITE)
 
         curve = always_redraw(lambda: _partial(chart, ys, year.get_value()))
         knob = always_redraw(lambda: Dot(chart["pt"](year.get_value(), p_frac()), radius=0.07, color=POWER))
-        p_read = math_readout(lambda: rf"P = {de_num(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}",
+        p_read = math_readout(lambda: rf"P = {label_number(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}",
                               np.array([-2.0, 1.30, 0.0]), color=POWER)
         stem = always_redraw(lambda: DashedLine(chart["pt"](year.get_value(), 0), chart["pt"](year.get_value(), p_frac()),
                                                 color=P_YELLOW, stroke_width=2.4))
         peak_i = int(np.argmax(ys))
         peak_pt = chart["pt"](peak_i / (len(ys) - 1), 1.0)
-        tag_cold = math_label(r"\text{kalt: hoch}", peak_pt + RIGHT * 0.95 + DOWN * 0.1, size=LABEL_FONT_SIZE, color=POWER)
-        tag_warm = math_label(r"\text{Sommer: null}", chart["pt"](0.5, 0.0) + UP * 0.45, size=LABEL_FONT_SIZE, color=P_WHITE)
+        tag_cold = math_label(tr(r"\text{cold: high}", r"\text{kalt: hoch}"), peak_pt + RIGHT * 0.95 + DOWN * 0.1, size=LABEL_FONT_SIZE, color=POWER)
+        tag_warm = math_label(tr(r"\text{Summer: zero}", r"\text{Sommer: null}"), chart["pt"](0.5, 0.0) + UP * 0.45, size=LABEL_FONT_SIZE, color=P_WHITE)
 
         self.play(FadeIn(p_card, shift=UP * 0.2), run_time=1.4)
         self.play(FadeIn(q_card, shift=UP * 0.2), run_time=1.4)
@@ -490,7 +498,7 @@ class Beat1_LeistungUndEnergie(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "summe"))
         area = always_redraw(lambda: _partial_area(chart, ys, year.get_value()))
-        q_read = math_readout(lambda: rf"Q = {de_num(round(_energy_at(cum, year.get_value()), -2))}\,\mathrm{{kWh}}",
+        q_read = math_readout(lambda: rf"Q = {label_number(round(_energy_at(cum, year.get_value()), -2))}\,\mathrm{{kWh}}",
                               np.array([-2.0, 1.30, 0.0]), color=ENERGY)
         tank["level"].add_updater(lambda m: m.set_value(_energy_at(cum, year.get_value()) / cum[-1]))
         self.add(area, tank["level"])
@@ -500,7 +508,7 @@ class Beat1_LeistungUndEnergie(Scene):
         hold_for(self, N, "summe")
 
         caption = swap_caption(self, caption, subtitle_text(N, "kwh"))
-        q_final = math_label(rf"Q \approx {de_num(q_year)}\,\mathrm{{kWh/a}}", np.array([-2.0, 1.30, 0.0]),
+        q_final = math_label(rf"Q \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([-2.0, 1.30, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
         self.play(ReplacementTransform(q_read, q_final), run_time=1.2)
         self.play(Indicate(q_final, color=ENERGY, scale_factor=1.15), run_time=1.4)
@@ -514,7 +522,7 @@ class Beat1_LeistungUndEnergie(Scene):
         cell_p = math_label(r"1\,\mathrm{kW}", cell.get_left() + LEFT * 0.12 + DOWN * 0.07, size=LABEL_FONT_SIZE,
                             color=POWER, edge="right")
         cell_q = math_label(r"1\,\mathrm{kWh}", cell.get_center() + DOWN * 0.07, size=LABEL_FONT_SIZE, color=ENERGY)
-        p_now = math_readout(lambda: rf"P = {de_num(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([-2.0, 0.80, 0.0]),
+        p_now = math_readout(lambda: rf"P = {label_number(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([-2.0, 0.80, 0.0]),
                              color=POWER)
         self.play(FadeIn(cell), FadeIn(cell_h), run_time=1.2)
         self.play(FadeIn(cell_p), FadeIn(p_now), run_time=1.2)
@@ -529,8 +537,8 @@ class Beat1_LeistungUndEnergie(Scene):
         hold_for(self, N, "produkt")
 
         caption = swap_caption(self, caption, subtitle_text(N, "trennung"))
-        tag_load = math_label(r"\text{Last}", peak_pt + RIGHT * 0.5 + UP * 0.1, size=LABEL_FONT_SIZE, color=POWER)
-        tag_demand = math_label(r"\text{Bedarf}", chart["pt"](0.05, 0.12), size=LABEL_FONT_SIZE, color=ENERGY,
+        tag_load = math_label(tr(r"\text{Load}", r"\text{Last}"), peak_pt + RIGHT * 0.5 + UP * 0.1, size=LABEL_FONT_SIZE, color=POWER)
+        tag_demand = math_label(tr(r"\text{Demand}", r"\text{Bedarf}"), chart["pt"](0.05, 0.12), size=LABEL_FONT_SIZE, color=ENERGY,
                                 edge="left")
         self.play(Create(highlight_param(panel[2], "p", color=POWER)), FadeIn(tag_load), run_time=1.4)
         self.play(Create(highlight_param(panel[2], "q", color=ENERGY)), FadeIn(tag_demand), run_time=1.4)
@@ -551,7 +559,7 @@ def _lvl(temp: float) -> float:
 
 def _signed(value: float, digits: int = 0) -> str:
     """➖ German signed number for ``math_text`` — a real minus sign for negatives."""
-    return ("−" if value < 0 else "") + de_num(abs(value), digits)
+    return ("−" if value < 0 else "") + label_number(abs(value), digits)
 
 
 def _fact(name: str, value):
@@ -607,7 +615,7 @@ class Beat2_Normheizlast(Scene):
         N = self.NARRATION
         H_T_VAL, H_V_VAL = 225.0, 87.5
 
-        subtitle = section_heading("Die Norm-Heizlast nach DIN EN 12831-1")
+        subtitle = section_heading(tr("The standard heating load per DIN EN 12831-1", "Die Norm-Heizlast nach DIN EN 12831-1"))
         din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -624,12 +632,12 @@ class Beat2_Normheizlast(Scene):
         year_curve = _partial(chart, ys, 1.0)
         peak_dot = Dot(chart["pt"](peak_x, 1.0), radius=0.08, color=POWER)
         peak_name = VGroup(math_label(r"\Phi_{\mathrm{HL}}", size=BODY_FONT_SIZE, color=POWER),
-                           body_text("Norm-Heizlast", font_size=LABEL_FONT_SIZE, color=POWER)).arrange(RIGHT, buff=0.18)
+                           body_text(tr("Standard heating load", "Norm-Heizlast"), font_size=LABEL_FONT_SIZE, color=POWER)).arrange(RIGHT, buff=0.18)
         peak_name.next_to(peak_dot, LEFT if peak_x > 0.5 else RIGHT, buff=0.25).shift(UP * 0.12)
         facts = VGroup(
-            _fact("Norm:", body_text("DIN EN 12831-1", font_size=LABEL_FONT_SIZE, color=P_WHITE)),
-            _fact("Formelzeichen:", math_label(r"\Phi_{\mathrm{HL}}", size=LABEL_FONT_SIZE, color=POWER)),
-            _fact("Regeln:", body_text("Normbedingungen", font_size=LABEL_FONT_SIZE, color=P_WHITE)),
+            _fact(tr("Standard:", "Norm:"), body_text("DIN EN 12831-1", font_size=LABEL_FONT_SIZE, color=P_WHITE)),
+            _fact(tr("Symbol:", "Formelzeichen:"), math_label(r"\Phi_{\mathrm{HL}}", size=LABEL_FONT_SIZE, color=POWER)),
+            _fact(tr("Rules:", "Regeln:"), body_text(tr("Standard conditions", "Normbedingungen"), font_size=LABEL_FONT_SIZE, color=P_WHITE)),
         ).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to(np.array([0.0, 1.0, 0.0]))
 
         scale = 0.9
@@ -664,13 +672,13 @@ class Beat2_Normheizlast(Scene):
                                                    stroke_width=1.4, stroke_opacity=0.6))
         span = always_redraw(lambda: dim_arrow(np.array([arrow_x, top(theta_e.get_value()), 0.0]),
                                                np.array([arrow_x, top(THETA_I), 0.0]), color=DELTA_T))
-        row_i = math_readout(lambda: rf"\theta_{{\mathrm{{int}}}} = {de_num(THETA_I)}\,\mathrm{{°C}}",
+        row_i = math_readout(lambda: rf"\theta_{{\mathrm{{int}}}} = {label_number(THETA_I)}\,\mathrm{{°C}}",
                              np.array([row_x, -0.12, 0.0]), size=LABEL_FONT_SIZE, color=P_RED)
         row_e = math_readout(lambda: rf"\theta_{{\mathrm{{e}}}} = {_signed(theta_e.get_value())}\,\mathrm{{°C}}",
                              np.array([row_x, -0.52, 0.0]), size=LABEL_FONT_SIZE, color=P_BLUE)
-        row_d = math_readout(lambda: rf"\Delta\theta = {de_num(d_theta())}\,\mathrm{{K}}",
+        row_d = math_readout(lambda: rf"\Delta\theta = {label_number(d_theta())}\,\mathrm{{K}}",
                              np.array([row_x, -0.97, 0.0]), size=BODY_FONT_SIZE, color=DELTA_T)
-        phi_read = math_readout(lambda: rf"\Phi_{{\mathrm{{HL}}}} = {de_num(phi_kw(), 1)}\,\mathrm{{kW}}",
+        phi_read = math_readout(lambda: rf"\Phi_{{\mathrm{{HL}}}} = {label_number(phi_kw(), 1)}\,\mathrm{{kW}}",
                                 np.array([row_x, 0.55, 0.0]), size=BODY_FONT_SIZE, color=POWER)
         peak_line = always_redraw(lambda: DashedLine(chart["pt"](0, min(level(), 1.0)), chart["pt"](1, min(level(), 1.0)),
                                                      color=POWER, stroke_width=2.0, stroke_opacity=0.85))
@@ -715,7 +723,7 @@ class Beat2_Normheizlast(Scene):
               guide_i, guide_e, span)
 
         caption = swap_caption(self, caption, subtitle_text(N, "verluste"))
-        loss_lbl = body_text("nur Verluste zählen", font_size=LABEL_FONT_SIZE, color=P_RED)
+        loss_lbl = body_text(tr("only losses count", "nur Verluste zählen"), font_size=LABEL_FONT_SIZE, color=P_RED)
         loss_lbl.move_to(np.array([-5.6, 1.3, 0.0]))
         self.play(FadeIn(loss_lbl), *_life(house, level, 1.4, paths=every, r_max=0.45), run_time=1.4)
         hold_for(self, N, "verluste", during=lambda rt: _life(house, level, rt, paths=every, r_max=0.45))
@@ -728,7 +736,7 @@ class Beat2_Normheizlast(Scene):
                         [up_win["lintel"] - 0.08, (up_win["sill"] + up_win["lintel"]) / 2, up_win["sill"] + 0.08],
                         floor1 + 0.02, gap=0.55)
         ray_paths = [[s, h, l] for s, h, l in zip(rays["starts"], rays["hits"], rays["lands"])]
-        sun_lbl = VGroup(body_text("solare Gewinne", font_size=LABEL_FONT_SIZE, color=P_YELLOW),
+        sun_lbl = VGroup(body_text(tr("solar gains", "solare Gewinne"), font_size=LABEL_FONT_SIZE, color=P_YELLOW),
                          cross_mark(size=0.11)).arrange(RIGHT, buff=0.14)
         sun_lbl.move_to(np.array([-5.6, 0.2, 0.0]))
         self.play(FadeIn(sun), run_time=1.0)
@@ -739,11 +747,10 @@ class Beat2_Normheizlast(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "intern"))
         person = _stand(floor1, hs["bottom_right"][0] - 0.65, storey)
-        lamp = lamp_glyph(np.array([hs["center"][0] - 0.1, float(hs["top_left"][1]), 0.0]), drop=0.1)
-        lamp["group"].scale(0.6, about_point=np.array([hs["center"][0] - 0.1, float(hs["top_left"][1]), 0.0]))
+        lamp = _lamp(np.array([hs["center"][0], float(hs["roof_peak"][1]) - 0.14 * hs["w_height"] / 2.4 - 0.01, 0.0]), 0.3)
         gain_spots = [person.get_top() + UP * 0.04]
         lamp_spot = [lamp["bulb"].get_center() + DOWN * 0.1]
-        int_lbl = VGroup(body_text("interne Gewinne", font_size=LABEL_FONT_SIZE, color=P_ORANGE),
+        int_lbl = VGroup(body_text(tr("internal gains", "interne Gewinne"), font_size=LABEL_FONT_SIZE, color=P_ORANGE),
                          cross_mark(size=0.11)).arrange(RIGHT, buff=0.14)
         int_lbl.move_to(np.array([-5.6, 0.2, 0.0]))
 
@@ -758,11 +765,11 @@ class Beat2_Normheizlast(Scene):
         _hide(self, person, lamp["group"], int_lbl)
 
         caption = swap_caption(self, caption, subtitle_text(N, "transmission"))
-        t_lbl = math_label(rf"H_{{T}} = {de_num(H_T_VAL)}\,\mathrm{{W/K}}", np.array([-0.85, 1.72, 0.0]),
+        t_lbl = math_label(rf"H_{{T}} = {label_number(H_T_VAL)}\,\mathrm{{W/K}}", np.array([-0.85, 1.72, 0.0]),
                            size=LABEL_FONT_SIZE, color=H_T, edge="left")
-        v_lbl = math_label(rf"H_{{V}} = {de_num(H_V_VAL, 1)}\,\mathrm{{W/K}}", np.array([-6.2, -0.05, 0.0]),
+        v_lbl = math_label(rf"H_{{V}} = {label_number(H_V_VAL, 1)}\,\mathrm{{W/K}}", np.array([-6.2, -0.05, 0.0]),
                            size=LABEL_FONT_SIZE, color=H_V, edge="left")
-        note = math_label(r"\text{schematisch vereinfacht — die Norm enthält weitere Terme}",
+        note = math_label(tr(r"\text{simplified schematic — the standard contains further terms}", r"\text{schematisch vereinfacht — die Norm enthält weitere Terme}"),
                           np.array([0.0, NOTE_BAND_Y - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
         guides_t = flow_guides(walls_t, H_T, opacity=0.3)
         guides_v = flow_guides(walls_v, H_V, opacity=0.3)
@@ -783,26 +790,26 @@ class Beat2_Normheizlast(Scene):
         hold_for(self, N, "lueftung", during=stream_v)
 
         caption = swap_caption(self, caption, subtitle_text(N, "summe"))
-        row_d = math_label(rf"\Delta\theta = {de_num(DESIGN_DT)}\,\mathrm{{K}}", np.array([row_x, -0.97, 0.0]),
+        row_d = math_label(rf"\Delta\theta = {label_number(DESIGN_DT)}\,\mathrm{{K}}", np.array([row_x, -0.97, 0.0]),
                            size=BODY_FONT_SIZE, color=DELTA_T, edge="left")
-        phi_read = math_label(rf"\Phi_{{\mathrm{{HL}}}} = {de_num(PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([row_x, 0.55, 0.0]),
+        phi_read = math_label(rf"\Phi_{{\mathrm{{HL}}}} = {label_number(PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([row_x, 0.55, 0.0]),
                               size=BODY_FONT_SIZE, color=POWER, edge="left")
         self.play(FadeIn(row_d), FadeIn(phi_read), FadeIn(note), run_time=1.2)
         panel = math_panel([
             (None, r"\Phi_{\mathrm{HL}}", POWER), (None, "=", P_WHITE), (None, "(", P_WHITE),
             (None, "H_{T}", H_T), (None, "+", P_WHITE), (None, "H_{V}", H_V), (None, ")", P_WHITE),
             (None, r"\cdot", P_WHITE), (None, r"\Delta\theta", DELTA_T), (None, "=", P_WHITE),
-            (None, "(", P_WHITE), ("t", de_num(H_T_VAL), H_T), (None, "+", P_WHITE), ("v", de_num(H_V_VAL, 1), H_V),
+            (None, "(", P_WHITE), ("t", label_number(H_T_VAL), H_T), (None, "+", P_WHITE), ("v", label_number(H_V_VAL, 1), H_V),
             (None, ")", P_WHITE), (None, r"\mathrm{W/K}", P_WHITE), (None, r"\cdot", P_WHITE),
-            ("d", rf"{de_num(DESIGN_DT)}\,\mathrm{{K}}", DELTA_T), (None, "=", P_WHITE),
-            ("phi", rf"{de_num(PEAK_KW)}\,\mathrm{{kW}}", POWER),
+            ("d", rf"{label_number(DESIGN_DT)}\,\mathrm{{K}}", DELTA_T), (None, "=", P_WHITE),
+            ("phi", rf"{label_number(PEAK_KW)}\,\mathrm{{kW}}", POWER),
         ], size=FORMULA_FONT_SIZE - 5)
         _fill_panel(self, panel, {"t": t_lbl, "v": v_lbl, "d": row_d, "phi": phi_read})
         hold_for(self, N, "summe")
 
         caption = swap_caption(self, caption, subtitle_text(N, "kilowatt"))
         area = _partial_area(chart, ys, 1.0)
-        kwh_tag = VGroup(math_label(r"\text{Fläche} = Q_h\;[\mathrm{kWh/a}]", size=LABEL_FONT_SIZE, color=ENERGY),
+        kwh_tag = VGroup(math_label(tr(r"\text{Area} = Q_h\;[\mathrm{kWh/a}]", r"\text{Fläche} = Q_h\;[\mathrm{kWh/a}]"), size=LABEL_FONT_SIZE, color=ENERGY),
                          cross_mark(size=0.11)).arrange(RIGHT, buff=0.2)
         kwh_tag.move_to(chart["pt"](0.5, 0.55))
         ring = highlight_param(panel[2], "phi", color=POWER)
@@ -813,7 +820,7 @@ class Beat2_Normheizlast(Scene):
         hold_for(self, N, "kilowatt")
 
         caption = swap_caption(self, caption, subtitle_text(N, "auslegung"))
-        kw_tag = math_label(r"\text{Anlagengröße}", chart["pt"](0.5, 0.86), size=LABEL_FONT_SIZE, color=POWER)
+        kw_tag = math_label(tr(r"\text{System size}", r"\text{Anlagengröße}"), chart["pt"](0.5, 0.86), size=LABEL_FONT_SIZE, color=POWER)
         self.play(FadeOut(area), FadeOut(kwh_tag), run_time=0.8)
         self.play(FadeIn(kw_tag), Indicate(ring, color=POWER, scale_factor=1.1), run_time=1.4)
         hold_for(self, N, "auslegung")
@@ -867,7 +874,7 @@ class Beat3_Jahresdauerlinie(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Die Jahresdauerlinie")
+        subtitle = section_heading(tr("The annual load duration curve", "Die Jahresdauerlinie"))
         din = _din_ref("DIN EN 12831-1 · DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -899,11 +906,11 @@ class Beat3_Jahresdauerlinie(Scene):
         curve = always_redraw(lambda: _partial(chart, ys_year, x.get_value()))
         knob = always_redraw(lambda: Dot(chart["pt"](x.get_value(), p_frac()), radius=0.07, color=POWER))
         peak_i = int(np.argmax(ys_year))
-        tag_load = math_label(r"\text{Last}", chart["pt"](peak_i / (PLOT_N - 1), 1.0) + RIGHT * 0.5 + UP * 0.1,
+        tag_load = math_label(tr(r"\text{Load}", r"\text{Last}"), chart["pt"](peak_i / (PLOT_N - 1), 1.0) + RIGHT * 0.5 + UP * 0.1,
                               size=LABEL_FONT_SIZE, color=POWER)
-        tag_demand = math_label(r"\text{Bedarf}", chart["pt"](0.04, 0.12), size=LABEL_FONT_SIZE, color=ENERGY,
+        tag_demand = math_label(tr(r"\text{Demand}", r"\text{Bedarf}"), chart["pt"](0.04, 0.12), size=LABEL_FONT_SIZE, color=ENERGY,
                                 edge="left")
-        tag_curve = math_label(r"\text{Jahresdauerlinie}", chart["pt"](0.5, 0.45), size=BODY_FONT_SIZE, color=P_WHITE)
+        tag_curve = math_label(tr(r"\text{Load duration curve}", r"\text{Jahresdauerlinie}"), chart["pt"](0.5, 0.45), size=BODY_FONT_SIZE, color=P_WHITE)
 
         self.play(Create(chart["group"]), FadeIn(kw_ticks), FadeIn(months), run_time=1.6)
         self.add(curve, knob)
@@ -939,7 +946,7 @@ class Beat3_Jahresdauerlinie(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "hoehe"))
         peak_line = DashedLine(chart["pt"](0, 1.0), chart["pt"](1, 1.0), color=POWER, stroke_width=2.2, stroke_opacity=0.8)
-        phi_read = math_label(rf"\Phi_{{\mathrm{{HL}}}} = {de_num(PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([0.2, 1.62, 0.0]),
+        phi_read = math_label(rf"\Phi_{{\mathrm{{HL}}}} = {label_number(PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([0.2, 1.62, 0.0]),
                               size=BODY_FONT_SIZE, color=POWER, edge="left")
         self.play(Create(peak_line), run_time=1.6)
         self.play(FadeIn(phi_read, shift=UP * 0.2), Indicate(knob, color=POWER, scale_factor=2.4), run_time=1.4)
@@ -947,7 +954,7 @@ class Beat3_Jahresdauerlinie(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "wenige"))
         sliver = _partial_area(chart, ys_sorted, few, color=P_RED, opacity=0.4)
-        tag_few = math_label(r"\text{wenige Stunden}", chart["pt"](few + 0.03, 0.88), size=LABEL_FONT_SIZE, color=P_RED,
+        tag_few = math_label(tr(r"\text{few hours}", r"\text{wenige Stunden}"), chart["pt"](few + 0.03, 0.88), size=LABEL_FONT_SIZE, color=P_RED,
                              edge="left")
         self.play(FadeIn(sliver), run_time=1.4)
         self.play(FadeIn(tag_few, shift=LEFT * 0.2), run_time=1.4)
@@ -957,20 +964,20 @@ class Beat3_Jahresdauerlinie(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "flaeche_bedarf"))
         x.set_value(0.0)
         sweep = always_redraw(lambda: _partial_area(chart, ys_sorted, x.get_value()))
-        q_read = math_readout(lambda: rf"Q_{{h}} = {de_num(round(_energy_at(cum, x.get_value()), -2))}\,\mathrm{{kWh}}",
+        q_read = math_readout(lambda: rf"Q_{{h}} = {label_number(round(_energy_at(cum, x.get_value()), -2))}\,\mathrm{{kWh}}",
                               np.array([0.2, 1.08, 0.0]), size=BODY_FONT_SIZE, color=ENERGY)
         tank["level"].add_updater(lambda m: m.set_value(_energy_at(cum, x.get_value()) / cum[-1]))
         self.add(sweep, tank["level"])
         self.play(FadeOut(area), FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(q_tag), FadeIn(q_read), run_time=1.4)
         self.play(_ramp(x, 1.0, rate_func=linear), run_time=6.0)
-        q_final = math_label(rf"Q_{{h}} \approx {de_num(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
+        q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
         self.play(ReplacementTransform(q_read, q_final), run_time=1.0)
         hold_for(self, N, "flaeche_bedarf")
 
         caption = swap_caption(self, caption, subtitle_text(N, "nutzenergie"))
-        use = body_text("Nutzenergie", font_size=LABEL_FONT_SIZE, color=ENERGY)
-        billed = VGroup(body_text("abgerechneter Verbrauch", font_size=LABEL_FONT_SIZE, color=P_ORANGE),
+        use = body_text(tr("Useful energy", "Nutzenergie"), font_size=LABEL_FONT_SIZE, color=ENERGY)
+        billed = VGroup(body_text(tr("billed consumption", "abgerechneter Verbrauch"), font_size=LABEL_FONT_SIZE, color=P_ORANGE),
                         cross_mark(size=0.11)).arrange(RIGHT, buff=0.2)
         rows = VGroup(use, billed).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to(np.array([1.9, 0.35, 0.0]))
         self.play(FadeIn(use, shift=RIGHT * 0.2), run_time=1.4)
@@ -983,7 +990,7 @@ class Beat3_Jahresdauerlinie(Scene):
                        fill_color=P_YELLOW, fill_opacity=0.24, stroke_color=P_YELLOW, stroke_width=2.2)
         sweep.clear_updaters()
         run = ValueTracker(0.0)
-        t_read = math_readout(lambda: rf"t_{{VL}} = {de_num(min(run.get_value(), full) * PROFILE_N, 0)}\,\mathrm{{h}}",
+        t_read = math_readout(lambda: rf"t_{{VL}} = {label_number(min(run.get_value(), full) * PROFILE_N, 0)}\,\mathrm{{h}}",
                               np.array([0.2, 0.55, 0.0]), size=BODY_FONT_SIZE, color=TIME)
         self.add(run)
         self.play(ReplacementTransform(sweep, rect), FadeIn(phi_read), FadeIn(t_read), run_time=2.0)
@@ -994,15 +1001,15 @@ class Beat3_Jahresdauerlinie(Scene):
         panel = math_panel([
             ("t", r"t_{VL}", TIME), (None, "=", P_WHITE),
             (None, r"\frac{Q_{h}}{\Phi_{\mathrm{HL}}}", P_WHITE), (None, "=", P_WHITE),
-            ("f", rf"\frac{{\textcolor{{{ENERGY}}}{{{de_num(q_year)}\,\mathrm{{kWh/a}}}}}}"
-                  rf"{{\textcolor{{{POWER}}}{{{de_num(PEAK_KW)}\,\mathrm{{kW}}}}}}", P_WHITE),
-            (None, "=", P_WHITE), ("res", rf"{de_num(t_vl)}\,\mathrm{{h/a}}", TIME),
+            ("f", rf"\frac{{\textcolor{{{ENERGY}}}{{{label_number(q_year)}\,\mathrm{{kWh/a}}}}}}"
+                  rf"{{\textcolor{{{POWER}}}{{{label_number(PEAK_KW)}\,\mathrm{{kW}}}}}}", P_WHITE),
+            (None, "=", P_WHITE), ("res", rf"{label_number(t_vl)}\,\mathrm{{h/a}}", TIME),
         ], size=FORMULA_FONT_SIZE - 5)
         _fill_panel(self, panel, {"f": [q_final, phi_read], "res": t_read, "t": t_read})
         hold_for(self, N, "vollstunden")
 
         caption = swap_caption(self, caption, subtitle_text(N, "bruchteil"))
-        share = math_label(rf"\approx {de_num(100 * t_vl / PROFILE_N)}\,\%\;\text{{des Jahres}}",
+        share = math_label(tr(rf"\approx {label_number(100 * t_vl / PROFILE_N)}\,\%\;\text{{of the year}}", rf"\approx {label_number(100 * t_vl / PROFILE_N)}\,\%\;\text{{des Jahres}}"),
                            np.array([0.2, 0.0, 0.0]), size=BODY_FONT_SIZE, color=TIME, edge="left")
         self.play(FadeIn(share, shift=UP * 0.2), Indicate(rect, color=P_YELLOW, scale_factor=1.04), run_time=1.6)
         hold_for(self, N, "bruchteil")
@@ -1060,7 +1067,7 @@ class Beat4_RichtigAuslegen(Scene):
         N = self.NARRATION
         PEAK_F = 0.68
 
-        subtitle = section_heading("Auslegen auf die Spitze, nicht auf den Mittelwert")
+        subtitle = section_heading(tr("Size for the peak, not for the mean", "Auslegen auf die Spitze, nicht auf den Mittelwert"))
         din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1 · VDI 4645")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1097,13 +1104,13 @@ class Beat4_RichtigAuslegen(Scene):
         knob = always_redraw(lambda: Dot(chart["pt"](x.get_value(), demand()), radius=0.07, color=POWER))
         cap_line = always_redraw(lambda: DashedLine(chart["pt"](0.0, cap.get_value()), chart["pt"](1.0, cap.get_value()),
                                                     color=P_GREEN, stroke_width=2.6))
-        cap_read = math_readout(lambda: rf"\Phi_{{\mathrm{{Anlage}}}} = {de_num(kw_of(cap.get_value()), 1)}\,\mathrm{{kW}}",
+        cap_read = math_readout(lambda: rf"\Phi_{{\mathrm{{Anlage}}}} = {label_number(kw_of(cap.get_value()), 1)}\,\mathrm{{kW}}",
                                 lambda: chart["pt"](1.0, cap.get_value()) + UP * 0.2, size=LABEL_FONT_SIZE, color=P_GREEN,
                                 edge="right")
         above = [i for i, v in enumerate(ys) if v > mean_f]
         gap = Polygon(*[chart["pt"](xs[i], float(ys[i])) for i in above], *[chart["pt"](xs[i], mean_f) for i in reversed(above)],
                       fill_color=P_RED, fill_opacity=0.22, stroke_width=0)
-        gap_tag = math_label(r"\text{Defizit}", chart["pt"](0.15, (float(np.interp(0.15, xs, ys)) + mean_f) / 2 - 0.02), size=LABEL_FONT_SIZE,
+        gap_tag = math_label(tr(r"\text{Deficit}", r"\text{Defizit}"), chart["pt"](0.15, (float(np.interp(0.15, xs, ys)) + mean_f) / 2 - 0.02), size=LABEL_FONT_SIZE,
                              color=P_RED)
 
         bulb = np.array([-6.0, WIDE_ORIGIN[1] + 0.17, 0.0])
@@ -1112,9 +1119,9 @@ class Beat4_RichtigAuslegen(Scene):
         th["level"].add_updater(lambda m: m.set_value(0.8 - 0.4 * float(np.clip((demand() - cap.get_value()) / PEAK_F, 0.0, 1.0))))
         soll_y = bulb[1] + 0.05 + (th_h - 0.12) * 0.8
         soll = Line(np.array([bulb[0] - 0.16, soll_y, 0.0]), np.array([bulb[0] + 0.16, soll_y, 0.0]), color=P_GREEN, stroke_width=1.8)
-        soll_lbl = math_label(rf"{de_num(THETA_I)}\,\mathrm{{°C}}", np.array([bulb[0] + 0.22, soll_y - 0.07, 0.0]),
+        soll_lbl = math_label(rf"{label_number(THETA_I)}\,\mathrm{{°C}}", np.array([bulb[0] + 0.22, soll_y - 0.07, 0.0]),
                               size=LABEL_FONT_SIZE - 2, color=P_GREEN, edge="left")
-        th_lbl = body_text("Raumtemperatur", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(bulb + UP * (th_h + 0.3))
+        th_lbl = body_text(tr("Room temperature", "Raumtemperatur"), font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(bulb + UP * (th_h + 0.3))
 
         reserve = Polygon(
             *[chart["pt"](xs[i], float(ys[i])) for i in range(PLOT_N)],
@@ -1122,10 +1129,10 @@ class Beat4_RichtigAuslegen(Scene):
             fill_color=P_ORANGE, fill_opacity=0.2, stroke_width=0)
         reserve_tag = math_label(r"\text{Reserve}", chart["pt"](0.55, 0.62), size=BODY_FONT_SIZE, color=P_ORANGE)
         floor_line = DashedLine(chart["pt"](0.0, 0.3 * big), chart["pt"](1.0, 0.3 * big), color=P_ORANGE, stroke_width=2.0)
-        floor_lbl = math_label(r"\text{Mindestleistung}", chart["pt"](0.98, 0.3 * big) + UP * 0.2, size=LABEL_FONT_SIZE,
+        floor_lbl = math_label(tr(r"\text{Minimum output}", r"\text{Mindestleistung}"), chart["pt"](0.98, 0.3 * big) + UP * 0.2, size=LABEL_FONT_SIZE,
                                color=P_ORANGE, edge="right")
         sup_dot = always_redraw(lambda: Dot(chart["pt"](x.get_value(), cycled()), radius=0.09, color=P_GREEN))
-        taktet = math_label(r"\text{taktet}", chart["pt"](0.5, 0.55 * big), size=BODY_FONT_SIZE, color=P_ORANGE)
+        taktet = math_label(tr(r"\text{cycles}", r"\text{taktet}"), chart["pt"](0.5, 0.55 * big), size=BODY_FONT_SIZE, color=P_ORANGE)
 
         self.play(Create(chart["group"]), FadeIn(kw_ticks), FadeIn(hours), run_time=1.6)
         self.play(Create(curve), run_time=2.4)
@@ -1181,7 +1188,7 @@ class Beat4_RichtigAuslegen(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "anlage"))
         parts = [body_text(name, font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(np.array([px, 1.75, 0.0]))
-                 for name, px in (("Erzeuger", -3.2), ("Regelung", -1.0), ("Speicher", 1.2))]
+                 for name, px in ((tr("Generator", "Erzeuger"), -3.2), (tr("Control", "Regelung"), -1.0), (tr("Storage", "Speicher"), 1.2))]
         for part in parts:
             self.play(FadeIn(part, shift=UP * 0.2), run_time=1.3)
         hold_for(self, N, "anlage")
@@ -1191,7 +1198,7 @@ class Beat4_RichtigAuslegen(Scene):
         tank = _wide_tank()
         q_tag = math_label(r"Q_{h}\;[\mathrm{kWh}]", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
         sweep = always_redraw(lambda: _partial_area(chart, ys, x.get_value()))
-        q_read = math_readout(lambda: rf"Q_{{h}} = {de_num(round(_energy_at(cum, x.get_value()), -2))}\,\mathrm{{kWh}}",
+        q_read = math_readout(lambda: rf"Q_{{h}} = {label_number(round(_energy_at(cum, x.get_value()), -2))}\,\mathrm{{kWh}}",
                               np.array([0.2, 1.08, 0.0]), size=BODY_FONT_SIZE, color=ENERGY)
         tank["level"].add_updater(lambda m: m.set_value(_energy_at(cum, x.get_value()) / cum[-1]))
         x.set_value(0.0)
@@ -1199,7 +1206,7 @@ class Beat4_RichtigAuslegen(Scene):
         q_read.update()
         self.play(FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(q_tag), FadeIn(q_read), run_time=1.4)
         self.play(_ramp(x, 1.0, rate_func=linear), run_time=6.0)
-        q_final = math_label(rf"Q_{{h}} \approx {de_num(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
+        q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
         self.play(ReplacementTransform(q_read, q_final), run_time=1.0)
         hold_for(self, N, "bedarf")
@@ -1207,8 +1214,8 @@ class Beat4_RichtigAuslegen(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "kosten"))
         _hide(self, tank["group"], tank["fill"], q_tag)
         panel = math_panel([
-            ("q", r"Q_{h}", ENERGY), (None, r"\to", P_WHITE), (None, r"\text{Endenergie}", P_WHITE),
-            (None, r"\to", P_WHITE), (None, r"\text{Kosten}", P_WHITE),
+            ("q", r"Q_{h}", ENERGY), (None, r"\to", P_WHITE), (None, tr(r"\text{Final energy}", r"\text{Endenergie}"), P_WHITE),
+            (None, r"\to", P_WHITE), (None, tr(r"\text{Costs}", r"\text{Kosten}"), P_WHITE),
         ])
         _fill_panel(self, panel, {"q": q_final})
         hold_for(self, N, "kosten")

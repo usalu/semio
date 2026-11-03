@@ -1,0 +1,45 @@
+/** 🧊️ The projected displacement of the origin and of the tip of a bone from the rest pose, `[ahead, up, left]`. */
+function displacement(kin: Chain3, bone: Slug, length: number): { readonly origin: readonly [number, number, number]; readonly tip: readonly [number, number, number] } {
+  const now = kin.now[bone]!.frame;
+  const rest = kin.rest[bone]!.frame;
+  const at = (f: Frame3, s: number): [number, number, number] => [f.o[0] + f.u[0] * s, f.o[1] + f.u[1] * s, f.o[2] + f.u[2] * s];
+  const [o1, o0, t1, t0] = [at(now, 0), at(rest, 0), at(now, length), at(rest, length)];
+  return { origin: [o1[0] - o0[0], o1[1] - o0[1], o1[2] - o0[2]], tip: [t1[0] - t0[0], t1[1] - t0[1], t1[2] - t0[2]] };
+}
+
+/** 📐️ A front or plan shape placed by the single 3D path: every shape is carried by the transform from the rest frame to the current frame of its bone and projected to the view (rotations about any axis, spread, twist and the sagittal swing alike); a revolved or extruded solid is built in 3D from its profile ({@link solid3}); a plan capsule with `followTip` has its first end follow the origin and its second the tip of the bone; a `followTip` rect or poly on a bone that has no extent in the view (a bone along the viewing axis) additionally grows from the displacement of the origin to that of the tip, by the lateral position across the shape from its inner end to its outer end. */
+function placeProjected(asset: Asset, shape: Shape, flat: { readonly rings: readonly (readonly Point[])[]; readonly closed: boolean }, kin: Chain3, viewpoint: Exclude<Viewpoint, "elevation">): EvaluatedShape {
+  const bone = boneOf(asset, shape.bone);
+  const plan = viewpoint === "plan";
+  if (shape.solid !== undefined) return { shape, rings: solid3(shape.solid, flat.rings, kin, shape.bone, viewpoint), closed: true };
+  const moved = displacement(kin, shape.bone, bone.lengthM);
+  if (plan && shape.kind === "capsule" && shape.followTip === true) return { shape, rings: [capsule(shape.x0 + moved.origin[0], shape.y0 + moved.origin[2], shape.x1 + moved.tip[0], shape.y1 + moved.tip[2], shape.r0, shape.r1)], closed: true };
+  const carried = flat.rings.map((ring) => ring.map((p) => carryPoint(kin, shape.bone, viewpoint, p)));
+  const grows = (shape.kind === "rect" || shape.kind === "poly") && shape.followTip === true && !inView(asset, shape.bone, viewpoint);
+  const outward = Math.sign(moved.tip[2] - moved.origin[2]);
+  if (!grows || outward === 0) return { shape, rings: carried, closed: flat.closed };
+  const across = flat.rings.flat().map((p) => (plan ? p.y : p.x));
+  const lo = Math.min(...across);
+  const hi = Math.max(...across);
+  const dx = moved.tip[0] - moved.origin[0];
+  const dy = moved.tip[1] - moved.origin[1];
+  const dz = moved.tip[2] - moved.origin[2];
+  const rings = carried.map((ring, i) =>
+    ring.map((p, j) => {
+      const c = across[0] === undefined ? 0 : plan ? flat.rings[i]![j]!.y : flat.rings[i]![j]!.x;
+      const u = hi === lo ? 1 : outward > 0 ? (c - lo) / (hi - lo) : (hi - c) / (hi - lo);
+      return plan ? { x: p.x + dx * u, y: p.y + dz * u } : { x: p.x + dz * u, y: p.y + dy * u };
+    }),
+  );
+  return { shape, rings, closed: flat.closed };
+}
+
+function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: Viewpoint, identity: boolean, kin: Chain3 | undefined = undefined): EvaluatedShape {
+  const matrix = world[shape.bone];
+  if (matrix === undefined) throw new Error(`shape "${shape.id}" of asset "${asset.id}" is bound to unknown bone "${shape.bone}"`);
+  const flat = flattenGeometry(shape);
+  if (identity) return { shape, rings: flat.rings, closed: flat.closed };
+  if (viewpoint === "elevation" || kin === undefined) return { shape, rings: flat.rings.map((ring) => ring.map((p) => apply(matrix, p.x, p.y))), closed: flat.closed };
+  return placeProjected(asset, shape, flat, kin, viewpoint);
+}
+

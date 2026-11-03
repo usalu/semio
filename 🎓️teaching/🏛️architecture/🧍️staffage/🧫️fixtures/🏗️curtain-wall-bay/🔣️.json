@@ -1,0 +1,170 @@
+{
+ "case": "🏗️curtain-wall-bay",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "structural",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 90
+ },
+ "bones": [
+  {
+   "id": "mullion",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 3.3,
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "head",
+   "bone": "mullion",
+   "x": 3.3,
+   "y": 0,
+   "kind": "support",
+   "support": "pin"
+  },
+  {
+   "id": "base",
+   "bone": "mullion",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "support": "roller",
+   "normalDeg": 0,
+   "tiltDeg": 90
+  }
+ ],
+ "contacts": [],
+ "supports": [
+  "head",
+  "base"
+ ],
+ "loads": [
+  {
+   "id": "igu-centre",
+   "bone": "mullion",
+   "at": {
+    "x": 0,
+    "y": 2.075,
+    "z": 0
+   },
+   "fxN": 0,
+   "fyN": 0,
+   "fzN": -3628.7999999999997
+  },
+  {
+   "id": "spandrel-centre",
+   "bone": "mullion",
+   "at": {
+    "x": 0,
+    "y": 0.45,
+    "z": 0
+   },
+   "fxN": 0,
+   "fyN": 0,
+   "fzN": -1360.8
+  }
+ ],
+ "scenarios": [],
+ "oracle": {
+  "tool": "numpy",
+  "version": "2.5.4",
+  "values": {
+   "head": {
+    "fxN": 0.0,
+    "fyN": 0.0,
+    "fzN": 2467.3090909090915,
+    "mxNm": -0.0,
+    "myNm": -0.0,
+    "mzNm": 0.0
+   },
+   "base": {
+    "fxN": 0.0,
+    "fyN": 0.0,
+    "fzN": 2522.29090909091,
+    "mxNm": -0.0,
+    "myNm": -0.0,
+    "mzNm": 0.0
+   },
+   "stations": [
+    {
+     "s": 0.275,
+     "mxNm": 693.630000000001,
+     "myNm": -0.0,
+     "mzNm": 0.0,
+     "shearZN": 2522.290909090908,
+     "shearN": 0.0,
+     "momentLateralNm": -693.630000000001,
+     "momentNm": 0.0
+    },
+    {
+     "s": 0.45,
+     "mxNm": 1135.0309090909095,
+     "myNm": -0.0,
+     "mzNm": 0.0,
+     "shearZN": 1161.4909090909082,
+     "shearN": 0.0,
+     "momentLateralNm": -1135.0309090909095,
+     "momentNm": 0.0
+    },
+    {
+     "s": 0.9625,
+     "mxNm": 1730.295,
+     "myNm": -0.0,
+     "mzNm": 0.0,
+     "shearZN": 1161.4909090909082,
+     "shearN": 0.0,
+     "momentLateralNm": -1730.295,
+     "momentNm": 0.0
+    },
+    {
+     "s": 2.075,
+     "mxNm": 3022.453636363636,
+     "myNm": -0.0,
+     "mzNm": 0.0,
+     "shearZN": -2467.3090909090915,
+     "shearN": 0.0,
+     "momentLateralNm": -3022.453636363636,
+     "momentNm": 0.0
+    },
+    {
+     "s": 2.8875,
+     "mxNm": 1017.7649999999994,
+     "myNm": -0.0,
+     "mzNm": 0.0,
+     "shearZN": -2467.3090909090915,
+     "shearN": 0.0,
+     "momentLateralNm": -1017.7649999999994,
+     "momentNm": 0.0
+    }
+   ],
+   "hand": {
+    "headFzN": 2467.3,
+    "baseFzN": 2522.3,
+    "momentAtSpandrelNm": 1135.0,
+    "peakMomentNm": 3022.5,
+    "shears": [
+     2522.3,
+     1161.5,
+     -2467.3
+    ]
+   }
+  }
+ }
+}

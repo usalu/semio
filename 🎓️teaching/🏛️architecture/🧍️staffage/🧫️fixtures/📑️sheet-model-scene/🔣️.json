@@ -1,0 +1,12 @@
+{
+  "description": "Language-agnostic vector of a CAD multiview sheet in model metres: layers of two views carry their view as a prefix (PLAN-, FRONT-) and the note layer carries the one-line note naming asset, instant, representation, viewpoint, scale and fidelity as a TEXT, so a DWG or DXF states its view in its content.",
+  "units": "m",
+  "asset": "standing-adult",
+  "timeS": 0,
+  "representation": { "kind": "scale", "denominator": 100, "requested": 100, "exact": true },
+  "layers": [
+    { "name": "PLAN-STAFFAGE-BODY", "aci": 7, "lineweight": 35, "polylines": [{ "closed": true, "points": [{ "x": 0.0, "y": 1.2 }, { "x": 0.33, "y": 1.2 }, { "x": 0.33, "y": 1.6 }, { "x": 0.0, "y": 1.6 }] }], "texts": [] },
+    { "name": "FRONT-STAFFAGE-BODY", "aci": 7, "lineweight": 35, "polylines": [{ "closed": true, "points": [{ "x": 1.0, "y": 0.0 }, { "x": 1.4, "y": 0.0 }, { "x": 1.4, "y": 1.69 }, { "x": 1.0, "y": 1.69 }] }], "texts": [] },
+    { "name": "STAFFAGE-NOTE", "aci": 7, "lineweight": 18, "polylines": [], "texts": [{ "at": { "x": 0.0, "y": -0.075 }, "heightM": 0.25, "text": "staffage standing-adult relaxed light-line front 1:100 physical" }] }
+  ]
+}

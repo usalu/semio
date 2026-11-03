@@ -552,6 +552,36 @@
       }
     },
     {
+      "name": "repo dashboard is the installed control plane",
+      "args": ["repo", "run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"],
+      "language": "en",
+      "route": { "kind": "dashboard", "args": ["run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"] }
+    },
+    {
+      "name": "the installed dashboard run is the control plane",
+      "args": ["repo", "run", "@semio-tech/repo-dashboard-rs:run", "--output=stream"],
+      "language": "en",
+      "route": { "kind": "dashboard", "args": ["run", "@semio-tech/repo-dashboard-rs:run", "--output=stream"] }
+    },
+    {
+      "name": "the installed dashboard daemon is the control plane",
+      "args": ["repo", "run", "@semio-tech/repo-dashboard-rs:daemon"],
+      "language": "de",
+      "route": { "kind": "dashboard", "args": ["run", "@semio-tech/repo-dashboard-rs:daemon"] }
+    },
+    {
+      "name": "dashboard preferences stay on the control plane",
+      "args": ["repo", "run", "@semio-tech/repo-dashboard-rs:preferences", "--lang=de"],
+      "language": "de",
+      "route": { "kind": "dashboard", "args": ["run", "@semio-tech/repo-dashboard-rs:preferences"] }
+    },
+    {
+      "name": "a dashboard install still uses the full implementation",
+      "args": ["repo", "run", "@semio-tech/repo-dashboard-rs:build", "--exclude-dependencies", "--skip-cache", "--output=stream"],
+      "language": "en",
+      "route": { "kind": "full" }
+    },
+    {
       "name": "the dashboard target goes to the full implementation even with help",
       "args": [
         "repo",

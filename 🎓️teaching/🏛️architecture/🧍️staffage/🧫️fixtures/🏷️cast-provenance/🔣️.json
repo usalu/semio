@@ -1,0 +1,605 @@
+{
+  "description": "Language-agnostic vectors of the cast provenance contract (T/r3-contract.md): the revision of a catalog file (sha256 of its text with CRLF turned into LF), canonical JSON of environment presets, valid and invalid cast entries (every missing combination is refused), and valid and invalid cast indexes with their provenance record. TypeScript and Python read this one file.",
+  "revisions": [
+    {
+      "name": "lf",
+      "text": "{\n  \"a\": 1\n}\n",
+      "revision": "sha256:5e36b6560513586ced65eca0e8b025fe88edbcab82ba2cb67a5fcb2d7b202383"
+    },
+    {
+      "name": "crlf",
+      "text": "{\r\n  \"a\": 1\r\n}\r\n",
+      "revision": "sha256:5e36b6560513586ced65eca0e8b025fe88edbcab82ba2cb67a5fcb2d7b202383"
+    },
+    {
+      "name": "unicode",
+      "text": "{\"title\": \"Büro, neutral\"}\n",
+      "revision": "sha256:a32b3af99de8c92250292ad0e43d3c882f40995091e99a6fe861ce161ff7a919"
+    }
+  ],
+  "canonical": [
+    {
+      "name": "sorted keys and integral floats",
+      "source": "{\"b\":1.0,\"a\":[true,null,\"ü\"],\"e\":-0.5}",
+      "text": "{\"a\":[true,null,\"ü\"],\"b\":1,\"e\":-0.5}"
+    },
+    {
+      "name": "small and long numbers",
+      "source": "{\"c\":1e-7,\"d\":22.000000000000014,\"f\":0.1,\"g\":1.5e300,\"h\":100}",
+      "text": "{\"c\":1e-7,\"d\":22.000000000000014,\"f\":0.1,\"g\":1.5e+300,\"h\":100}"
+    },
+    {
+      "name": "nesting",
+      "source": "{\"z\":{\"y\":[{\"b\":2,\"a\":1}]},\"x\":\"\"}",
+      "text": "{\"x\":\"\",\"z\":{\"y\":[{\"a\":1,\"b\":2}]}}"
+    }
+  ],
+  "preset": {
+    "source": "{\"id\": \"office-neutral\", \"title\": {\"en\": \"Office, neutral\", \"de\": \"Büro, neutral\"}, \"environment\": {\"airC\": 22.0, \"radiantC\": 22, \"relativeHumidity\": 0.5, \"airSpeedMS\": 0.1}}",
+    "text": "{\"environment\":{\"airC\":22,\"airSpeedMS\":0.1,\"radiantC\":22,\"relativeHumidity\":0.5},\"id\":\"office-neutral\",\"title\":{\"de\":\"Büro, neutral\",\"en\":\"Office, neutral\"}}",
+    "revision": "sha256:eb563f0d631e02c59428b0a544ad0cb271e9caa5098d65553df3779e51837285"
+  },
+  "validCasts": [
+    {
+      "name": "a still pose",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing"
+      }
+    },
+    {
+      "name": "a clip with its clock",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50,
+        "clip": "walk-cycle",
+        "fps": 15
+      }
+    },
+    {
+      "name": "a thermal pose in an environment",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing",
+        "environment": "winter-overcast"
+      }
+    },
+    {
+      "name": "a thermal transient",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing",
+        "fps": 2,
+        "timeline": [
+          {
+            "t": 0,
+            "environment": "office-neutral",
+            "ease": "step"
+          },
+          {
+            "t": 4,
+            "environment": "summer-hot-sun",
+            "ease": "linear"
+          }
+        ]
+      }
+    },
+    {
+      "name": "every authored scale",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 500,
+        "pose": "standing"
+      }
+    },
+    {
+      "name": "a mirrored side elevation",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing",
+        "mirror": true
+      }
+    },
+    {
+      "name": "transport with its start",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "environment": "winter-overcast",
+        "clip": "walk-cycle",
+        "fps": 15,
+        "transport": [
+          "pathlines"
+        ],
+        "transportAgeS": 3
+      }
+    }
+  ],
+  "invalidCasts": [
+    {
+      "name": "missing scale",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "pose": "standing"
+      },
+      "issue": "scale: is required"
+    },
+    {
+      "name": "a derived custom scale",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 75,
+        "pose": "standing"
+      },
+      "issue": "scale: is required"
+    },
+    {
+      "name": "a scale as text",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": "50",
+        "pose": "standing"
+      },
+      "issue": "scale: is required"
+    },
+    {
+      "name": "a clip without fps",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50,
+        "clip": "walk-cycle"
+      },
+      "issue": "fps: is required for a clip or a timeline"
+    },
+    {
+      "name": "a timeline without fps",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing",
+        "timeline": [
+          {
+            "t": 0,
+            "environment": "office-neutral",
+            "ease": "step"
+          }
+        ]
+      },
+      "issue": "fps: is required for a clip or a timeline"
+    },
+    {
+      "name": "a timeline key without ease",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing",
+        "fps": 2,
+        "timeline": [
+          {
+            "t": 0,
+            "environment": "office-neutral"
+          }
+        ]
+      },
+      "issue": "ease: is required"
+    },
+    {
+      "name": "thermal without environment or timeline",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing"
+      },
+      "issue": "the thermal view needs an environment or a timeline"
+    },
+    {
+      "name": "transport without its start",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "thermal",
+        "theme": "dark",
+        "scale": 50,
+        "environment": "winter-overcast",
+        "clip": "walk-cycle",
+        "fps": 15,
+        "transport": [
+          "pathlines"
+        ]
+      },
+      "issue": "need transportAgeS"
+    },
+    {
+      "name": "transport outside the thermal view",
+      "cast": {
+        "asset": "walking-commuter",
+        "viewpoint": "elevation",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50,
+        "clip": "walk-cycle",
+        "fps": 15,
+        "transport": [
+          "pathlines"
+        ],
+        "transportAgeS": 3
+      },
+      "issue": "exist for the thermal view only"
+    },
+    {
+      "name": "no view direction",
+      "cast": {
+        "asset": "walking-commuter",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50,
+        "pose": "standing"
+      },
+      "issue": "viewpoint: is required"
+    }
+  ],
+  "indexes": {
+    "valid": [
+      {
+        "name": "a thermal clip",
+        "index": {
+          "version": 1,
+          "cast": "walker",
+          "asset": "walking-commuter",
+          "view": "thermal",
+          "viewpoint": "elevation",
+          "frames": [
+            "0000.svg"
+          ],
+          "fps": 15,
+          "durationS": 1.2,
+          "loop": true,
+          "mmPerMetre": 20,
+          "originMm": [
+            10,
+            20
+          ],
+          "boundsM": {
+            "minX": -0.5,
+            "minY": 0,
+            "maxX": 0.5,
+            "maxY": 1.8
+          },
+          "heightM": 1.8,
+          "provenance": {
+            "version": 1,
+            "asset": {
+              "id": "walking-commuter",
+              "category": "humans",
+              "revision": "sha256:abababababababababababababababababababababababababababababababab"
+            },
+            "view": {
+              "style": "thermal",
+              "viewpoint": "elevation",
+              "theme": "dark",
+              "mirror": false
+            },
+            "scale": {
+              "denominator": 50
+            },
+            "state": {
+              "kind": "clip",
+              "id": "walk-cycle"
+            },
+            "clock": {
+              "fps": 15,
+              "durationS": 1.2,
+              "loop": true,
+              "offsetS": 0,
+              "frames": 18
+            },
+            "scenario": {
+              "kind": "thermal",
+              "environment": {
+                "id": "winter-overcast",
+                "revision": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+              },
+              "spanK": 25,
+              "transport": []
+            }
+          }
+        }
+      },
+      {
+        "name": "a timeline scenario",
+        "index": {
+          "version": 1,
+          "cast": "walker",
+          "asset": "walking-commuter",
+          "view": "thermal",
+          "viewpoint": "elevation",
+          "frames": [
+            "0000.svg"
+          ],
+          "fps": 15,
+          "durationS": 1.2,
+          "loop": true,
+          "mmPerMetre": 20,
+          "originMm": [
+            10,
+            20
+          ],
+          "boundsM": {
+            "minX": -0.5,
+            "minY": 0,
+            "maxX": 0.5,
+            "maxY": 1.8
+          },
+          "heightM": 1.8,
+          "provenance": {
+            "version": 1,
+            "asset": {
+              "id": "walking-commuter",
+              "category": "humans",
+              "revision": "sha256:abababababababababababababababababababababababababababababababab"
+            },
+            "view": {
+              "style": "thermal",
+              "viewpoint": "elevation",
+              "theme": "dark",
+              "mirror": false
+            },
+            "scale": {
+              "denominator": 50
+            },
+            "state": {
+              "kind": "clip",
+              "id": "walk-cycle"
+            },
+            "clock": {
+              "fps": 15,
+              "durationS": 1.2,
+              "loop": true,
+              "offsetS": 0,
+              "frames": 18
+            },
+            "scenario": {
+              "kind": "thermal",
+              "timeline": [
+                {
+                  "t": 0,
+                  "id": "office-neutral",
+                  "ease": "step",
+                  "revision": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef"
+                }
+              ],
+              "spanK": null,
+              "transport": [
+                "parcels"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "a structural scenario",
+        "index": {
+          "version": 1,
+          "cast": "walker",
+          "asset": "walking-commuter",
+          "view": "forces",
+          "viewpoint": "elevation",
+          "frames": [
+            "0000.svg"
+          ],
+          "fps": 15,
+          "durationS": 1.2,
+          "loop": true,
+          "mmPerMetre": 20,
+          "originMm": [
+            10,
+            20
+          ],
+          "boundsM": {
+            "minX": -0.5,
+            "minY": 0,
+            "maxX": 0.5,
+            "maxY": 1.8
+          },
+          "heightM": 1.8,
+          "provenance": {
+            "version": 1,
+            "asset": {
+              "id": "walking-commuter",
+              "category": "humans",
+              "revision": "sha256:abababababababababababababababababababababababababababababababab"
+            },
+            "view": {
+              "style": "forces",
+              "viewpoint": "elevation",
+              "theme": "dark",
+              "mirror": false
+            },
+            "scale": {
+              "denominator": 50
+            },
+            "state": {
+              "kind": "clip",
+              "id": "walk-cycle"
+            },
+            "clock": {
+              "fps": 15,
+              "durationS": 1.2,
+              "loop": true,
+              "offsetS": 0,
+              "frames": 18
+            },
+            "scenario": {
+              "kind": "structural",
+              "dynamics": "quasi-static",
+              "gravityMS2": 9.81
+            }
+          }
+        }
+      },
+      {
+        "name": "a geometry scenario",
+        "index": {
+          "version": 1,
+          "cast": "walker",
+          "asset": "walking-commuter",
+          "view": "dark-line",
+          "viewpoint": "elevation",
+          "frames": [
+            "0000.svg"
+          ],
+          "fps": 15,
+          "durationS": 1.2,
+          "loop": true,
+          "mmPerMetre": 20,
+          "originMm": [
+            10,
+            20
+          ],
+          "boundsM": {
+            "minX": -0.5,
+            "minY": 0,
+            "maxX": 0.5,
+            "maxY": 1.8
+          },
+          "heightM": 1.8,
+          "provenance": {
+            "version": 1,
+            "asset": {
+              "id": "walking-commuter",
+              "category": "humans",
+              "revision": "sha256:abababababababababababababababababababababababababababababababab"
+            },
+            "view": {
+              "style": "dark-line",
+              "viewpoint": "elevation",
+              "theme": "dark",
+              "mirror": false
+            },
+            "scale": {
+              "denominator": 50
+            },
+            "state": {
+              "kind": "clip",
+              "id": "walk-cycle"
+            },
+            "clock": {
+              "fps": 15,
+              "durationS": 1.2,
+              "loop": true,
+              "offsetS": 0,
+              "frames": 18
+            },
+            "scenario": {
+              "kind": "geometry"
+            }
+          }
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "no provenance",
+        "remove": "provenance"
+      },
+      {
+        "name": "no scale",
+        "remove": "provenance/scale"
+      },
+      {
+        "name": "no asset revision",
+        "remove": "provenance/asset/revision"
+      },
+      {
+        "name": "a revision that is no hash",
+        "set": {
+          "path": "provenance/asset/revision",
+          "value": "sha256:abc"
+        }
+      },
+      {
+        "name": "a derived scale",
+        "set": {
+          "path": "provenance/scale/denominator",
+          "value": 75
+        }
+      },
+      {
+        "name": "no state",
+        "remove": "provenance/state"
+      },
+      {
+        "name": "an unknown view style",
+        "set": {
+          "path": "provenance/view/style",
+          "value": "sepia"
+        }
+      },
+      {
+        "name": "no clock offset",
+        "remove": "provenance/clock/offsetS"
+      },
+      {
+        "name": "no scenario",
+        "remove": "provenance/scenario"
+      },
+      {
+        "name": "a thermal scenario without environment",
+        "remove": "provenance/scenario/environment"
+      },
+      {
+        "name": "an unknown scenario kind",
+        "set": {
+          "path": "provenance/scenario/kind",
+          "value": "weather"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{ "version": 1, "casts": {
+  "sh-base": { "asset": "shower-head", "clip": "turn-on-and-run", "view": "thermal", "environment": "office-neutral", "fps": 15, "theme": "dark", "viewpoint": "elevation", "scale": 50 },
+  "sh-parcels": { "asset": "shower-head", "clip": "turn-on-and-run", "view": "thermal", "environment": "office-neutral", "fps": 15, "theme": "dark", "viewpoint": "elevation", "scale": 50, "transport": ["parcels"] },
+  "sh-path": { "asset": "shower-head", "clip": "turn-on-and-run", "view": "thermal", "environment": "office-neutral", "fps": 15, "theme": "dark", "viewpoint": "elevation", "scale": 50, "transport": ["pathlines","condensation"] },
+  "sh-all": { "asset": "shower-head", "pose": "running", "view": "thermal", "environment": "office-neutral", "theme": "dark", "viewpoint": "elevation", "scale": 50, "transport": ["parcels","pathlines","condensation"] },
+  "sh-dark": { "asset": "shower-head", "pose": "running", "view": "dark-line", "theme": "dark", "viewpoint": "elevation", "scale": 50 }
+} }

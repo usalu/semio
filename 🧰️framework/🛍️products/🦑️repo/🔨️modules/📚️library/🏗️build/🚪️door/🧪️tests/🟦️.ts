@@ -45,12 +45,17 @@ test("the policy is closed, every refusal is bilingual with the same placeholder
 });
 
 test("every route vector plans as declared, in English and German, from the catalogue alone",()=>{
+ const database=new Database(":memory:");
+ try{const oracle=database.query(`WITH args AS (SELECT CAST(key AS INTEGER) k,value FROM json_each(?1)), boundary AS (SELECT coalesce(min(k),999999) n FROM args WHERE value='--'), head AS (SELECT value FROM args,boundary WHERE k>1 AND k<n) SELECT CASE WHEN (SELECT value FROM args WHERE k=0)='run' AND (SELECT value FROM args WHERE k=1) IN ('@semio-tech/repo-dashboard-rs:run','@semio-tech/repo-dashboard-rs:daemon','@semio-tech/repo-dashboard-rs:preferences') AND NOT EXISTS (SELECT 1 FROM head WHERE value GLOB '--graph' OR value GLOB '--graph=*' OR value GLOB '--batch' OR value GLOB '--batch=*' OR value GLOB '--parallel' OR value GLOB '--parallel=*' OR value GLOB '--exclude-dependencies' OR value GLOB '--exclude-dependencies=*') THEN 'dashboard' ELSE 'other' END route`);
  for(const row of fixture.plans){
   const plan=planBuildDoorV1(row.args,{SEMIO_LANGUAGE:row.language,...(row as {environment?:Record<string,string>}).environment}),expected=structuredClone(row.route) as {values?:Record<string,string>};
   if(expected.values?.known==="@operations")expected.values.known=operations;
   if(expected.values?.known?.startsWith("@subcommands:"))expected.values.known=subcommandsOf(expected.values.known.slice(13));
   expect(plan,row.name).toEqual({language:row.language,route:expected} as BuildDoorPlanV1);
+  const typed=row.args,body=typed[0]==="repo"?typed.slice(1):typed,selection=selectBuildDoorArgumentsV1(body,{SEMIO_LANGUAGE:row.language,...(row as {environment?:Record<string,string>}).environment});
+  if(!("refused" in selection))expect(plan.route.kind==="dashboard"?"dashboard":"other",row.name).toBe((oracle.get(JSON.stringify(selection.args)) as {route:string}).route);
  }
+ }finally{database.close();}
 });
 
 test("the selection equals the invocation parser and the command equals yargs-parser, an independent reader",()=>{
@@ -87,6 +92,10 @@ test("the front door acts on its plan: help is rendered, refusals go to the erro
  expect(log.load).toEqual(["leases","doctor","capacity"]);
  expect(log.call).toEqual([["leases","/w",["status","--json"],{...environment,SEMIO_LANGUAGE:"de"}],["doctor","/w",["--json"],{...environment,SEMIO_LANGUAGE:"de"}],["capacity",["status"],"de"]]);
  expect(log.exit).toEqual([rules.refusedExitCode,3,4,5]);
+ const loaded=log.load.length,dashboard:unknown[]=[];
+ expect(await runBuildDoorV1("/w",["repo","run","@semio-tech/repo-dashboard-rs:run","--output=stream","--"],environment,{...ports(modules),dashboard:async(root,args,localized)=>{dashboard.push([root,args,localized.SEMIO_LANGUAGE]);return 0;}})).toBe("handled");
+ expect(dashboard).toEqual([["/w",["run","@semio-tech/repo-dashboard-rs:run","--output=stream","--"],"de"]]);
+ expect(log.load.length).toBe(loaded);
  const before=log.load.length;
  expect(await runBuildDoorV1("/w",["repo","run","a:b"],environment,ports(modules))).toBe("full");
  expect(await runBuildDoorV1("/w",["build","x"],environment,ports(modules))).toBe("full");

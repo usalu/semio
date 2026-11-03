@@ -400,42 +400,79 @@
   },
   "anchors": [
    {
-    "id": "contact-r",
+    "id": "contact-r-l",
     "bone": "rear-frame",
     "x": -1.7,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Rear tyre contact patch",
-     "de": "Hinterreifen-Aufstandsfläche"
+     "en": "Rear tyre contact patch (left)",
+     "de": "Hinterreifen-Aufstandsfläche (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.8,
-    "footprintWidthM": 1.2,
-    "frictionCoefficient": 0.7
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7,
+    "z": 1.1
    },
    {
-    "id": "contact-f",
+    "id": "contact-r-r",
+    "bone": "rear-frame",
+    "x": -1.7,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre contact patch (right)",
+     "de": "Hinterreifen-Aufstandsfläche (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.8,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7,
+    "z": -1.1
+   },
+   {
+    "id": "contact-f-l",
     "bone": "front-frame",
     "x": 1.7,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Front tyre contact patch",
-     "de": "Vorderreifen-Aufstandsfläche"
+     "en": "Front tyre contact patch (left)",
+     "de": "Vorderreifen-Aufstandsfläche (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.8,
-    "footprintWidthM": 1.2,
-    "frictionCoefficient": 0.7
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7,
+    "z": 1.1
+   },
+   {
+    "id": "contact-f-r",
+    "bone": "front-frame",
+    "x": 1.7,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre contact patch (right)",
+     "de": "Vorderreifen-Aufstandsfläche (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.8,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7,
+    "z": -1.1
    },
    {
     "id": "stack-mouth",
     "bone": "rear-frame",
     "x": -1.23,
     "y": 3.15,
+    "z": -0.9,
     "kind": "emitter",
     "title": {
      "en": "Exhaust stack mouth",
@@ -645,8 +682,7 @@
        "filled": true,
        "tone": 0.55,
        "region": "cab",
-       "material": "paint-steel"
-      ,
+       "material": "paint-steel",
        "penMm": 0.452
       },
       {
@@ -2059,8 +2095,7 @@
        "filled": true,
        "tone": 0.2,
        "region": "cab",
-       "material": "paint-steel"
-      ,
+       "material": "paint-steel",
        "penMm": 0.352
       },
       {
@@ -2137,12 +2172,1467 @@
        "region": "engine-bay",
        "material": "paint-steel"
       }
+     ],
+     "front": [
+      {
+       "id": "counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.1,
+       "y": 0.62,
+       "w": 2.2,
+       "h": 1.78,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -1,
+       "y": 0.62,
+       "w": 2,
+       "h": 1.78,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.99,
+       "y": 2.4,
+       "w": 0.18,
+       "h": 0.75,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-frame",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.62,
+       "w": 1.8,
+       "h": 0.58,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tower-l",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.62,
+       "y": 1.2,
+       "w": 0.26,
+       "h": 1,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tower-r",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.88,
+       "y": 1.2,
+       "w": 0.26,
+       "h": 1,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.45,
+       "w": 1.6,
+       "h": 1.95,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab-glass-front",
+       "bone": "front-frame",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.65,
+       "y": 2.1,
+       "w": 1.3,
+       "h": 1.1,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "id": "head-lamp-l",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.5,
+       "y": 0.95,
+       "w": 0.2,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "glass"
+      },
+      {
+       "id": "head-lamp-r",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.95,
+       "w": 0.2,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "glass"
+      },
+      {
+       "id": "mirror",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.95,
+       "y": 3,
+       "w": 0.15,
+       "h": 0.25,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.8,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -1.4,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "lift-cyl-l",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 4.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.48,
+        "z1": 0.72
+       }
+      },
+      {
+       "id": "lift-rod-l",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 4.95,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.55,
+        "z1": 0.65
+       }
+      },
+      {
+       "id": "lift-cyl-r",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 4.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.48
+       }
+      },
+      {
+       "id": "lift-rod-r",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 4.95,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.65,
+        "z1": -0.55
+       }
+      },
+      {
+       "id": "tilt-cyl",
+       "bone": "tilt-cyl",
+       "role": "body",
+       "z": 5.300000000000001,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.9,
+         -0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "tilt-rod",
+       "bone": "tilt-rod",
+       "role": "body",
+       "z": 5.3500000000000005,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.045
+        ],
+        [
+         0.2689,
+         -0.045
+        ],
+        [
+         0.2689,
+         0.045
+        ],
+        [
+         0,
+         0.045
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.045,
+        "z1": 0.045
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 6.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      },
+      {
+       "id": "bucket-edge",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.301,
+         -0.77
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.501,
+         -0.8
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
+     ],
+     "plan": [
+      {
+       "id": "counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -3.5,
+       "y": -1.1,
+       "w": 0.9,
+       "h": 2.2,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3,
+       "y": -1,
+       "w": 2.1,
+       "h": 2,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.23,
+       "cy": -0.9,
+       "rx": 0.09,
+       "ry": 0.09,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-frame",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.9,
+       "w": 3.25,
+       "h": 1.8,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.8,
+       "w": 1.9,
+       "h": 1.6,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "handrail",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -2.9,
+         -0.95
+        ],
+        [
+         -2.9,
+         0.95
+        ],
+        [
+         -1.4,
+         0.95
+        ],
+        [
+         -1.4,
+         -0.95
+        ]
+       ],
+       "closed": true,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "hood-louvres",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -2.3,
+         0.3
+        ],
+        [
+         -1.2,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "hood-louvres-2",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -2.3,
+         -0.3
+        ],
+        [
+         -1.2,
+         -0.3
+        ]
+       ],
+       "closed": false,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "head-lamp-l",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 2.3,
+       "y": 0.5,
+       "w": 0.05,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "glass"
+      },
+      {
+       "id": "head-lamp-r",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 2.3,
+       "y": -0.7,
+       "w": 0.05,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "glass"
+      },
+      {
+       "id": "access-step",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -1,
+       "w": 0.4,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "lift-cyl-l",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.48,
+        "z1": 0.72
+       }
+      },
+      {
+       "id": "lift-rod-l",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 2.9499999999999997,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.55,
+        "z1": 0.65
+       }
+      },
+      {
+       "id": "lift-cyl-r",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.48
+       }
+      },
+      {
+       "id": "lift-rod-r",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 2.9499999999999997,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.65,
+        "z1": -0.55
+       }
+      },
+      {
+       "id": "tilt-cyl",
+       "bone": "tilt-cyl",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.9,
+         -0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "tilt-rod",
+       "bone": "tilt-rod",
+       "role": "body",
+       "z": 3.35,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.045
+        ],
+        [
+         0.2689,
+         -0.045
+        ],
+        [
+         0.2689,
+         0.045
+        ],
+        [
+         0,
+         0.045
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.045,
+        "z1": 0.045
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      },
+      {
+       "id": "bucket-rib-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.895,
+        "z1": -0.875
+       }
+      },
+      {
+       "id": "bucket-rib-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.305,
+        "z1": -0.285
+       }
+      },
+      {
+       "id": "bucket-rib-3",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.285,
+        "z1": 0.305
+       }
+      },
+      {
+       "id": "bucket-rib-4",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.875,
+        "z1": 0.895
+       }
+      },
+      {
+       "id": "bucket-edge",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.301,
+         -0.77
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.501,
+         -0.8
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "All 1:100 parts plus 20 tread lugs per tyre, lamp, mirror, door handle and hood louvres.",
-      "de": "Alle 1:100-Teile plus 20 Profilstollen je Reifen, Leuchte, Spiegel, Türgriff und Lüftungsschlitze."
+      "en": "All 1:100 parts plus 20 tread lugs per tyre, lamp, mirror, door handle and hood louvres. Front and top views: front: the bucket, a pair of lift arms, three cylinders, the cab with its glass, mirror and head lamps, the hood and counterweight behind and the two front tyres; each arm, cylinder and the bucket stretches between its pivot and its tip, so lifting and tilting move them. Top: hood with handrail and louvres, cab roof, tyres, the two arms and cylinders as stretching capsules and the bucket as a true top view, its outline extruded across the width with the cutting edge and, as unfilled detail strokes, four cross ribs; all follow lifting and tilting.",
+      "de": "Alle 1:100-Teile plus 20 Profilstollen je Reifen, Leuchte, Spiegel, Türgriff und Lüftungsschlitze. Vorder- und Draufsicht: vorn: die Schaufel, zwei Hubarme, drei Zylinder, die Kabine mit Glas, Spiegel und Scheinwerfern, dahinter Haube und Gegengewicht sowie die beiden Vorderreifen; jeder Arm, jeder Zylinder und die Schaufel strecken sich zwischen Drehpunkt und Spitze, sodass Heben und Kippen sie bewegen. Oben: Haube mit Handlauf und Lüftungsschlitzen, Kabinendach, Reifen, die beiden Arme und Zylinder als sich streckende Kapseln und die Schaufel als echte Draufsicht, seine über die Breite gezogene Kontur mit der Schneide und, als ungefüllte Detailstriche, vier Querrippen; alles folgt Heben und Kippen."
      },
      "retained": {
       "en": "Tread lugs of 0.09 m (1.8 mm) give a visible rotation of the tyres.",
@@ -3039,12 +4529,1373 @@
        "region": "tyres",
        "material": "cast-iron"
       }
+     ],
+     "front": [
+      {
+       "id": "counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.1,
+       "y": 0.62,
+       "w": 2.2,
+       "h": 1.78,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -1,
+       "y": 0.62,
+       "w": 2,
+       "h": 1.78,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.99,
+       "y": 2.4,
+       "w": 0.18,
+       "h": 0.75,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-frame",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.62,
+       "w": 1.8,
+       "h": 0.58,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tower-l",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.62,
+       "y": 1.2,
+       "w": 0.26,
+       "h": 1,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tower-r",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.88,
+       "y": 1.2,
+       "w": 0.26,
+       "h": 1,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.45,
+       "w": 1.6,
+       "h": 1.95,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab-glass-front",
+       "bone": "front-frame",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.65,
+       "y": 2.1,
+       "w": 1.3,
+       "h": 1.1,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.8,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -1.4,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "lift-cyl-l",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 4.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.48,
+        "z1": 0.72
+       }
+      },
+      {
+       "id": "lift-rod-l",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 4.95,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.55,
+        "z1": 0.65
+       }
+      },
+      {
+       "id": "lift-cyl-r",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 4.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.48
+       }
+      },
+      {
+       "id": "lift-rod-r",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 4.95,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.65,
+        "z1": -0.55
+       }
+      },
+      {
+       "id": "tilt-cyl",
+       "bone": "tilt-cyl",
+       "role": "body",
+       "z": 5.300000000000001,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.9,
+         -0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "tilt-rod",
+       "bone": "tilt-rod",
+       "role": "body",
+       "z": 5.3500000000000005,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.045
+        ],
+        [
+         0.2689,
+         -0.045
+        ],
+        [
+         0.2689,
+         0.045
+        ],
+        [
+         0,
+         0.045
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.045,
+        "z1": 0.045
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 6.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      },
+      {
+       "id": "bucket-edge",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.301,
+         -0.77
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.501,
+         -0.8
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
+     ],
+     "plan": [
+      {
+       "id": "counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -3.5,
+       "y": -1.1,
+       "w": 0.9,
+       "h": 2.2,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3,
+       "y": -1,
+       "w": 2.1,
+       "h": 2,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.23,
+       "cy": -0.9,
+       "rx": 0.09,
+       "ry": 0.09,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-frame",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.9,
+       "w": 3.25,
+       "h": 1.8,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.8,
+       "w": 1.9,
+       "h": 1.6,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "handrail",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -2.9,
+         -0.95
+        ],
+        [
+         -2.9,
+         0.95
+        ],
+        [
+         -1.4,
+         0.95
+        ],
+        [
+         -1.4,
+         -0.95
+        ]
+       ],
+       "closed": true,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "hood-louvres",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -2.3,
+         0.3
+        ],
+        [
+         -1.2,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "hood-louvres-2",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -2.3,
+         -0.3
+        ],
+        [
+         -1.2,
+         -0.3
+        ]
+       ],
+       "closed": false,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "head-lamp-l",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 2.3,
+       "y": 0.5,
+       "w": 0.05,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "glass"
+      },
+      {
+       "id": "head-lamp-r",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 2.3,
+       "y": -0.7,
+       "w": 0.05,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "glass"
+      },
+      {
+       "id": "access-step",
+       "bone": "front-frame",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -1,
+       "w": 0.4,
+       "h": 0.2,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "lift-cyl-l",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.48,
+        "z1": 0.72
+       }
+      },
+      {
+       "id": "lift-rod-l",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 2.9499999999999997,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.55,
+        "z1": 0.65
+       }
+      },
+      {
+       "id": "lift-cyl-r",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.48
+       }
+      },
+      {
+       "id": "lift-rod-r",
+       "bone": "lift-rod",
+       "role": "body",
+       "z": 2.9499999999999997,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.4574,
+         -0.05
+        ],
+        [
+         0.4574,
+         0.05
+        ],
+        [
+         0,
+         0.05
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.65,
+        "z1": -0.55
+       }
+      },
+      {
+       "id": "tilt-cyl",
+       "bone": "tilt-cyl",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.9,
+         -0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "tilt-rod",
+       "bone": "tilt-rod",
+       "role": "body",
+       "z": 3.35,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.045
+        ],
+        [
+         0.2689,
+         -0.045
+        ],
+        [
+         0.2689,
+         0.045
+        ],
+        [
+         0,
+         0.045
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.045,
+        "z1": 0.045
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      },
+      {
+       "id": "bucket-rib-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.7475,
+        "z1": -0.7275
+       }
+      },
+      {
+       "id": "bucket-rib-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.01,
+        "z1": 0.01
+       }
+      },
+      {
+       "id": "bucket-rib-3",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.7275,
+        "z1": 0.7475
+       }
+      },
+      {
+       "id": "bucket-edge",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.301,
+         -0.77
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.501,
+         -0.8
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "As 1:200 with rear grille, handrail, access step, bucket cutting edge and wheel hubs with six bolt circles.",
-      "de": "Wie 1:200 mit hinterem Gitter, Handlauf, Einstieg, Schaufelschneide und Radnaben mit sechs Bolzenkreisen."
+      "en": "As 1:200 with rear grille, handrail, access step, bucket cutting edge and wheel hubs with six bolt circles. Front and top views: as at 1:50 without lamps and mirror; the bucket from above is its outline with the cutting edge and three cross rib strokes.",
+      "de": "Wie 1:200 mit hinterem Gitter, Handlauf, Einstieg, Schaufelschneide und Radnaben mit sechs Bolzenkreisen. Vorder- und Draufsicht: wie bei 1:50 ohne Leuchten und Spiegel; die Schaufel besteht von oben aus ihrer Kontur mit der Schneide und drei Querrippenstrichen."
      },
      "retained": {
       "en": "Hub and six bolt outlines turn with the wheel.",
@@ -3511,8 +6362,7 @@
        "filled": true,
        "tone": 0.8,
        "region": "hydraulics",
-       "material": "chrome"
-      ,
+       "material": "chrome",
        "penMm": 0.222
       },
       {
@@ -3555,8 +6405,7 @@
        "filled": true,
        "tone": 0.25,
        "region": "bucket",
-       "material": "wear-steel"
-      ,
+       "material": "wear-steel",
        "penMm": 0.273
       },
       {
@@ -3619,12 +6468,925 @@
        "region": "tyres",
        "material": "cast-iron"
       }
+     ],
+     "front": [
+      {
+       "id": "counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.1,
+       "y": 0.62,
+       "w": 2.2,
+       "h": 1.78,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -1,
+       "y": 0.62,
+       "w": 2,
+       "h": 1.78,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.99,
+       "y": 2.4,
+       "w": 0.18,
+       "h": 0.75,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-frame",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.62,
+       "w": 1.8,
+       "h": 0.58,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tower-l",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.62,
+       "y": 1.2,
+       "w": 0.26,
+       "h": 1,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tower-r",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.88,
+       "y": 1.2,
+       "w": 0.26,
+       "h": 1,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.45,
+       "w": 1.6,
+       "h": 1.95,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab-glass-front",
+       "bone": "front-frame",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.65,
+       "y": 2.1,
+       "w": 1.3,
+       "h": 1.1,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.8,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -1.4,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "lift-cyl-l",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 4.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.48,
+        "z1": 0.72
+       }
+      },
+      {
+       "id": "lift-cyl-r",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 4.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.48
+       }
+      },
+      {
+       "id": "tilt-cyl",
+       "bone": "tilt-cyl",
+       "role": "body",
+       "z": 5.300000000000001,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.9,
+         -0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 6.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
+     ],
+     "plan": [
+      {
+       "id": "counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -3.5,
+       "y": -1.1,
+       "w": 0.9,
+       "h": 2.2,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3,
+       "y": -1,
+       "w": 2.1,
+       "h": 2,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.23,
+       "cy": -0.9,
+       "rx": 0.09,
+       "ry": 0.09,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-frame",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.9,
+       "w": 3.25,
+       "h": 1.8,
+       "region": "front-frame",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.8,
+       "w": 1.9,
+       "h": 1.6,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "region": "lift-arm",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "lift-cyl-l",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.48,
+        "z1": 0.72
+       }
+      },
+      {
+       "id": "lift-cyl-r",
+       "bone": "lift-cyl",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.12
+        ],
+        [
+         1.1,
+         -0.12
+        ],
+        [
+         1.1,
+         0.12
+        ],
+        [
+         0,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.48
+       }
+      },
+      {
+       "id": "tilt-cyl",
+       "bone": "tilt-cyl",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.9,
+         -0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      },
+      {
+       "id": "bucket-rib-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5017,
+        "z1": -0.4817
+       }
+      },
+      {
+       "id": "bucket-rib-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.4817,
+        "z1": 0.5017
+       }
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Hood and counterweight as separate masses, front frame, cab with two glass panes, arm, four visible cylinder parts, bucket, tyre with rim disc.",
-      "de": "Haube und Gegengewicht als getrennte Massen, Vorderwagen, Kabine mit zwei Glasscheiben, Arm, vier sichtbare Zylinderteile, Schaufel, Reifen mit Felgenscheibe."
+      "en": "Hood and counterweight as separate masses, front frame, cab with two glass panes, arm, four visible cylinder parts, bucket, tyre with rim disc. Front and top views: main masses only: bucket, lift arms, cylinders, cab with glass, hood with counterweight and two tyres in front; hood, cab, tyres, arms, cylinders and the bucket outline with two cross rib strokes from above.",
+      "de": "Haube und Gegengewicht als getrennte Massen, Vorderwagen, Kabine mit zwei Glasscheiben, Arm, vier sichtbare Zylinderteile, Schaufel, Reifen mit Felgenscheibe. Vorder- und Draufsicht: nur Hauptmassen: Schaufel, Hubarme, Zylinder, Kabine mit Glas, Haube mit Gegengewicht und zwei Reifen von vorn; Haube, Kabine, Reifen, Arme, Zylinder und die Schaufelkontur mit zwei Querrippenstrichen von oben."
      },
      "retained": {
       "en": "Cylinder barrels and rods that extend with the arm, the pillar between the panes, the rim disc.",
@@ -3989,16 +7751,577 @@
        "region": "tyres",
        "material": "rubber"
       }
+     ],
+     "front": [
+      {
+       "id": "rear-body",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -1.1,
+       "y": 0.62,
+       "w": 2.2,
+       "h": 1.78,
+       "regions": [
+        "engine-bay",
+        "counterweight"
+       ],
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.99,
+       "y": 2.4,
+       "w": 0.18,
+       "h": 0.75,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "front-body",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.62,
+       "w": 1.8,
+       "h": 0.58,
+       "regions": [
+        "front-frame"
+       ],
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.45,
+       "w": 1.6,
+       "h": 1.95,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab-glass",
+       "bone": "front-frame",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.65,
+       "y": 2.1,
+       "w": 1.3,
+       "h": 1.1,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.8,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -1.4,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "lift-arm",
+        "hydraulics"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "lift-arm",
+        "hydraulics"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 6.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
+     ],
+     "plan": [
+      {
+       "id": "rear-body",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3.5,
+       "y": -1.1,
+       "w": 2.6,
+       "h": 2.2,
+       "regions": [
+        "engine-bay",
+        "counterweight"
+       ],
+       "material": "paint-steel"
+      },
+      {
+       "id": "front-body",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.9,
+       "w": 3.25,
+       "h": 1.8,
+       "regions": [
+        "front-frame"
+       ],
+       "material": "paint-steel"
+      },
+      {
+       "id": "cab",
+       "bone": "front-frame",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.8,
+       "w": 1.9,
+       "h": 1.6,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.23,
+       "cy": -0.9,
+       "rx": 0.09,
+       "ry": 0.09,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.825,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -2.575,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "r": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "lift-arm-l",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "lift-arm",
+        "hydraulics"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.9,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "lift-arm-r",
+       "bone": "lift-arm",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.249,
+         0.32
+        ],
+        [
+         1.001,
+         0.48
+        ],
+        [
+         2.001,
+         0.38
+        ],
+        [
+         2.851,
+         0.25
+        ],
+        [
+         2.851,
+         -0.25
+        ],
+        [
+         2.001,
+         -0.22
+        ],
+        [
+         1.001,
+         -0.28
+        ],
+        [
+         -0.249,
+         -0.32
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "lift-arm",
+        "hydraulics"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": -0.9
+       }
+      },
+      {
+       "id": "bucket",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.449,
+         -0.6
+        ],
+        [
+         1.501,
+         -0.8
+        ],
+        [
+         1.621,
+         -0.62
+        ],
+        [
+         1.051,
+         0.05
+        ],
+        [
+         0.151,
+         0.6
+        ],
+        [
+         -0.349,
+         0.55
+        ],
+        [
+         -0.549,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "bucket",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.475,
+        "z1": 1.475
+       }
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Rear body with hood and counterweight, front body with tower, cab, a single glass band, the lift arm as one bar with its cylinders, the bucket as one wedge, two tyre discs and the exhaust stack.",
-      "de": "Hinterwagen mit Haube und Gegengewicht, Vorderwagen mit Stütze, Kabine, ein einziges Glasband, der Hubarm als eine Leiste mit seinen Zylindern, die Schaufel als ein Keil, zwei Reifenscheiben und das Auspuffrohr."
+      "en": "Rear body with hood and counterweight, front body with tower, cab, a single glass band, the lift arm as one bar with its cylinders, the bucket as one wedge, two tyre discs and the exhaust stack. Front and top views: a composed silhouette: from the front the bucket, two arm strips, cab, bodies and the front tyres; from above bodies, cab, tyres, two arm capsules and the bucket outline.",
+      "de": "Hinterwagen mit Haube und Gegengewicht, Vorderwagen mit Stütze, Kabine, ein einziges Glasband, der Hubarm als eine Leiste mit seinen Zylindern, die Schaufel als ein Keil, zwei Reifenscheiben und das Auspuffrohr. Vorder- und Draufsicht: eine zusammengesetzte Silhouette: von vorn Schaufel, zwei Armleisten, Kabine, Rümpfe und die Vorderreifen; von oben Rümpfe, Kabine, Reifen, zwei Armkapseln und die Schaufelkontur."
      },
      "retained": {
       "en": "The cranked arm outline, the bucket with cutting edge and the stack at 0.18 m (0.36 mm); the overall 8.6 m length in the carry pose.",
-      "de": "Die abgekröpfte Armkontur, die Schaufel mit Schneide und das Rohr mit 0,18 m (0,36 mm); die Gesamtlänge in Transportstellung."
+      "de": "Die abgekröpfte Armkontur, die Schaufel mit Schneide und das Rohr mit 0,18 m (0,36 mm); die Gesamtlänge von 8,6 m in Transportstellung."
      },
      "merged": {
       "en": "Hood and counterweight form one rear body, frame and tower one front body, cylinders merge into the arm, rim and hub into the tyre disc.",
@@ -4029,14 +8352,14 @@
   },
   "symbols": [
    {
-    "id": "articulated-steering-plan",
+    "id": "wheel-loader-symbol",
     "title": {
-     "en": "Plan view at full articulated steering lock (35 degrees)",
-     "de": "Grundriss bei vollem Knickeinschlag (35 Grad)"
+     "en": "Wheel loader symbol",
+     "de": "Radladerzeichen"
     },
     "description": {
-     "en": "Plan symbol of the loader with the front frame, tyres and bucket turned 35 degrees about the vertical articulation joint.",
-     "de": "Planzeichen des Laders mit um 35 Grad um das senkrechte Knickgelenk eingeschlagenem Vorderwagen, Reifen und Schaufel."
+     "en": "True-extent symbol of the wheel loader driving straight, in side, front and top view: rear frame with counterweight and engine bay, front frame, cab, articulation joint, four tyres, lift arms and the bucket.",
+     "de": "Zeichen des geradeaus fahrenden Radladers in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Hinterwagen mit Gegengewicht und Motorraum, Vorderwagen, Kabine, Knickgelenk, vier Reifen, Hubarme und Schaufel."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -4053,201 +8376,134 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
-     "plan": [
+     "elevation": [
       {
-       "kind": "poly",
-       "points": [
-        [
-         -3.5,
-         -0.9
-        ],
-        [
-         0,
-         -0.9
-        ],
-        [
-         0,
-         0.9
-        ],
-        [
-         -3.5,
-         0.9
-        ]
-       ],
-       "closed": true,
-       "id": "rear-frame-plan",
+       "kind": "ellipse",
+       "cx": -1.695,
+       "cy": 0.875,
+       "rx": 0.875,
+       "ry": 0.875,
+       "id": "elevation-tyre-r",
        "bone": "rear-frame",
        "role": "body",
        "z": 1,
        "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "ellipse",
+       "cx": 1.705,
+       "cy": 0.875,
+       "rx": 0.875,
+       "ry": 0.875,
+       "id": "elevation-tyre-f",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "ellipse",
+       "cx": -1.695,
+       "cy": 0.875,
+       "rx": 0.5,
+       "ry": 0.5,
+       "id": "elevation-rim-r",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "ellipse",
+       "cx": 1.705,
+       "cy": 0.875,
+       "rx": 0.5,
+       "ry": 0.5,
+       "id": "elevation-rim-f",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 4,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -3.5,
+       "y": 0.62,
+       "w": 0.9,
+       "h": 1.78,
+       "id": "elevation-counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -3,
+       "y": 0.62,
+       "w": 2.1,
+       "h": 1.78,
+       "id": "elevation-hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
        "tone": 0.5
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         -2.575,
-         -1.475
-        ],
-        [
-         -0.825,
-         -1.475
-        ],
-        [
-         -0.825,
-         -0.725
-        ],
-        [
-         -2.575,
-         -0.725
-        ]
-       ],
-       "closed": true,
-       "id": "rear-tyre-l",
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.62,
+       "w": 3.25,
+       "h": 1.58,
+       "id": "elevation-front-frame",
        "bone": "rear-frame",
        "role": "body",
-       "z": 2,
+       "z": 7,
        "filled": true,
-       "tone": 0.15
+       "tone": 0.5
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         -2.575,
-         0.725
-        ],
-        [
-         -0.825,
-         0.725
-        ],
-        [
-         -0.825,
-         1.475
-        ],
-        [
-         -2.575,
-         1.475
-        ]
-       ],
-       "closed": true,
-       "id": "rear-tyre-r",
+       "kind": "rect",
+       "x": -0.9,
+       "y": 1.45,
+       "w": 1.9,
+       "h": 1.95,
+       "id": "elevation-cab",
        "bone": "rear-frame",
        "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.15
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.4589,
-         -0.6553
-        ],
-        [
-         2.4248,
-         0.7213
-        ],
-        [
-         1.5071,
-         2.0319
-        ],
-        [
-         -0.4589,
-         0.6553
-        ]
-       ],
-       "closed": true,
-       "id": "front-frame-plan",
-       "bone": "rear-frame",
-       "role": "body",
-       "z": 1.5,
+       "z": 8,
        "filled": true,
        "tone": 0.45
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         1.5218,
-         -0.735
-        ],
-        [
-         2.9553,
-         0.2687
-        ],
-        [
-         2.5252,
-         0.8831
-        ],
-        [
-         1.0916,
-         -0.1207
-        ]
-       ],
-       "closed": true,
-       "id": "front-tyre-l",
+       "kind": "rect",
+       "x": 0.2,
+       "y": 2.1,
+       "w": 0.58,
+       "h": 1.1,
+       "id": "elevation-cab-glass",
        "bone": "rear-frame",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.15
+       "role": "detail",
+       "z": 9,
+       "filled": false,
+       "tone": 0.9
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         0.26,
-         1.0671
-        ],
-        [
-         1.6935,
-         2.0708
-        ],
-        [
-         1.2633,
-         2.6852
-        ],
-        [
-         -0.1702,
-         1.6814
-        ]
-       ],
-       "closed": true,
-       "id": "front-tyre-r",
+       "kind": "rect",
+       "x": -1.32,
+       "y": 2.3,
+       "w": 0.18,
+       "h": 0.85,
+       "id": "elevation-exhaust-stack",
        "bone": "rear-frame",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.15
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         3.8093,
-         0.8361
-        ],
-        [
-         5.2838,
-         1.8686
-        ],
-        [
-         3.5631,
-         4.326
-        ],
-        [
-         2.0886,
-         3.2936
-        ]
-       ],
-       "closed": true,
-       "id": "bucket-plan",
-       "bone": "rear-frame",
-       "role": "body",
-       "z": 1.6,
+       "role": "detail",
+       "z": 10,
        "filled": true,
        "tone": 0.3
       },
@@ -4255,57 +8511,364 @@
        "kind": "poly",
        "points": [
         [
-         1.3886,
-         -0.0653
+         0.76,
+         1.1
         ],
         [
-         3.6822,
-         1.5407
+         0.9,
+         0.86
         ],
         [
-         3.5388,
-         1.7455
+         3.4,
+         1.1
         ],
         [
-         1.2452,
-         0.1394
+         3.3,
+         1.5
         ]
        ],
        "closed": true,
-       "id": "lift-arm-plan",
+       "id": "elevation-lift-arm",
        "bone": "rear-frame",
-       "role": "detail",
-       "z": 1.7,
-       "filled": false,
+       "role": "body",
+       "z": 11,
+       "filled": true,
        "tone": 0.4
       },
       {
        "kind": "poly",
        "points": [
         [
-         0.5569,
-         1.1224
+         3.15,
+         1.7
         ],
         [
-         2.8505,
-         2.7284
+         3.4,
+         0.43
         ],
         [
-         2.7072,
-         2.9332
+         5.4,
+         0.43
         ],
         [
-         0.4135,
-         1.3272
+         5.3,
+         1.1
+        ],
+        [
+         4,
+         1.76
         ]
        ],
        "closed": true,
-       "id": "lift-arm-plan-2",
+       "id": "elevation-bucket",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 12,
+       "filled": true,
+       "tone": 0.35
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -1.1,
+       "y": 0.62,
+       "w": 2.2,
+       "h": 1.78,
+       "id": "front-counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -1,
+       "y": 0.62,
+       "w": 2,
+       "h": 1.78,
+       "id": "front-hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.62,
+       "w": 1.8,
+       "h": 0.58,
+       "id": "front-front-frame",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.45,
+       "w": 1.6,
+       "h": 1.95,
+       "id": "front-cab",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.45
+      },
+      {
+       "kind": "rect",
+       "x": -0.65,
+       "y": 2.1,
+       "w": 1.3,
+       "h": 1.1,
+       "id": "front-cab-glass",
        "bone": "rear-frame",
        "role": "detail",
-       "z": 1.7,
+       "z": 5,
        "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": -0.99,
+       "y": 2.4,
+       "w": 0.18,
+       "h": 0.75,
+       "id": "front-exhaust-stack",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": 0.8,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "id": "front-tyre-l",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "rect",
+       "x": -1.4,
+       "y": 0,
+       "w": 0.6,
+       "h": 1.75,
+       "id": "front-tyre-r",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "rect",
+       "x": 0.9,
+       "y": 0.86,
+       "w": 0.3,
+       "h": 1.52,
+       "id": "front-lift-arm-l",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 9,
+       "filled": true,
        "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -1.2,
+       "y": 0.86,
+       "w": 0.3,
+       "h": 1.52,
+       "id": "front-lift-arm-r",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 10,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -1.475,
+       "y": 0.43,
+       "w": 2.95,
+       "h": 1.33,
+       "id": "front-bucket",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 11,
+       "filled": true,
+       "tone": 0.35
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -3.5,
+       "y": -1.1,
+       "w": 0.9,
+       "h": 2.2,
+       "id": "plan-counterweight",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -3,
+       "y": -1,
+       "w": 2.1,
+       "h": 2,
+       "id": "plan-hood",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.9,
+       "w": 3.25,
+       "h": 1.8,
+       "id": "plan-front-frame",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": -0.8,
+       "w": 1.9,
+       "h": 1.6,
+       "id": "plan-cab",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.45
+      },
+      {
+       "kind": "rect",
+       "x": -1.32,
+       "y": -0.99,
+       "w": 0.18,
+       "h": 0.18,
+       "id": "plan-exhaust-stack",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": 0.82,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "id": "plan-tyre-fl",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "rect",
+       "x": 0.82,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "id": "plan-tyre-fr",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "rect",
+       "x": -2.58,
+       "y": 0.8,
+       "w": 1.75,
+       "h": 0.6,
+       "id": "plan-tyre-rl",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 8,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "rect",
+       "x": -2.58,
+       "y": -1.4,
+       "w": 1.75,
+       "h": 0.6,
+       "id": "plan-tyre-rr",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.15
+      },
+      {
+       "kind": "rect",
+       "x": 0.76,
+       "y": 0.9,
+       "w": 3.12,
+       "h": 0.3,
+       "id": "plan-lift-arm-l",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 10,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 0.76,
+       "y": -1.2,
+       "w": 3.12,
+       "h": 0.3,
+       "id": "plan-lift-arm-r",
+       "bone": "rear-frame",
+       "role": "detail",
+       "z": 11,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 3.15,
+       "y": -1.475,
+       "w": 2.25,
+       "h": 2.95,
+       "id": "plan-bucket",
+       "bone": "rear-frame",
+       "role": "body",
+       "z": 12,
+       "filled": true,
+       "tone": 0.35
       },
       {
        "kind": "ellipse",
@@ -4313,18 +8876,18 @@
        "cy": 0,
        "rx": 0.25,
        "ry": 0.25,
-       "id": "articulation-joint",
+       "id": "plan-articulation-joint",
        "bone": "rear-frame",
        "role": "detail",
-       "z": 3,
+       "z": 13,
        "filled": true,
        "tone": 0.1
       }
      ]
     },
     "dimensionalNote": {
-     "en": "True extent in model metres: frame width 2.4 m, tyres 1.75 m diameter and 0.75 m wide, bucket 3.0 m wide, front frame rotated 35 degrees; real size at both listed scales.",
-     "de": "Wahre Ausdehnung in Modellmetern: Rahmenbreite 2,4 m, Reifen 1,75 m Durchmesser und 0,75 m breit, Schaufel 3,0 m breit, Vorderwagen um 35 Grad gedreht; in beiden gelisteten Maßstäben in Realgröße."
+     "en": "Model metres: length with the bucket on the ground 8.9 m, bucket width 2.95 m, height 3.4 m, tyres 1.75 m diameter and 0.6 m wide; side, front and top view.",
+     "de": "Modellmeter: Länge mit der Schaufel am Boden 8,9 m, Schaufelbreite 2,95 m, Höhe 3,4 m, Reifen 1,75 m Durchmesser und 0,6 m breit; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -4366,8 +8929,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-r",
-     "contact-f"
+     "contact-r-l",
+     "contact-r-r",
+     "contact-f-l",
+     "contact-f-r"
     ],
     "thermal": {
      "operating": {
@@ -4478,8 +9043,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-r",
-     "contact-f"
+     "contact-r-l",
+     "contact-r-r",
+     "contact-f-l",
+     "contact-f-r"
     ],
     "thermal": {
      "operating": {
@@ -4590,8 +9157,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-r",
-     "contact-f"
+     "contact-r-l",
+     "contact-r-r",
+     "contact-f-l",
+     "contact-f-r"
     ],
     "thermal": {
      "operating": {
@@ -4702,8 +9271,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-r",
-     "contact-f"
+     "contact-r-l",
+     "contact-r-r",
+     "contact-f-l",
+     "contact-f-r"
     ],
     "thermal": {
      "operating": {
@@ -4802,8 +9373,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-r",
-     "contact-f"
+     "contact-r-l",
+     "contact-r-r",
+     "contact-f-l",
+     "contact-f-r"
     ],
     "thermal": {
      "operating": {
@@ -5122,12 +9695,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-r",
+      "anchor": "contact-r-l",
       "fromS": 0,
       "toS": 12
      },
      {
-      "anchor": "contact-f",
+      "anchor": "contact-r-r",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-f-l",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-f-r",
       "fromS": 0,
       "toS": 12
      }
@@ -5497,12 +10080,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-r",
+      "anchor": "contact-r-l",
       "fromS": 0,
       "toS": 10
      },
      {
-      "anchor": "contact-f",
+      "anchor": "contact-r-r",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-f-l",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-f-r",
       "fromS": 0,
       "toS": 10
      }
@@ -6185,10 +10778,7 @@
   "presentation": {
    "defaultPose": "carry",
    "defaultClip": "load-cycle",
-   "defaultScale": 200,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 200
   },
   "exports": [
    "svg",

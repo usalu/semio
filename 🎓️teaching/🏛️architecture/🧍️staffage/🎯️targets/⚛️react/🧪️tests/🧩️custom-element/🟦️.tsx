@@ -17,7 +17,7 @@ function make(attributes: Record<string, string>): Figure {
   return element;
 }
 
-const stand = { asset: "reference-walker", view: "dark-line", scale: "100", lang: "en", pose: "stand" };
+const stand = { asset: "reference-walker", view: "dark-line", viewpoint: "elevation", scale: "100", lang: "en", pose: "stand" };
 
 describe("🧩️ custom element", () => {
   it("renders inline SVG at paper size with an accessible label and emits staffage-evaluated", async () => {
@@ -52,7 +52,7 @@ describe("🧩️ custom element", () => {
     document.body.append(silent);
     await flush();
     expect(silent.state).toBeNull();
-    const clipped = make({ asset: "reference-walker", view: "dark-line", scale: "100", lang: "en", clip: "walk", time: "0.5" });
+    const clipped = make({ asset: "reference-walker", view: "dark-line", viewpoint: "elevation", scale: "100", lang: "en", clip: "walk", time: "0.5" });
     document.body.append(clipped);
     await flush();
     expect(clipped.state!.query.timeS).toBeCloseTo(0.5, 9);

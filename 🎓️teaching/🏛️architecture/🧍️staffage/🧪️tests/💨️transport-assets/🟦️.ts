@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Asset, Environment } from "../../🧬️schema/🟦️.ts";
 import type { EvaluationQuery } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
+import { solveThermalAt } from "../../🔨️modules/🌡️thermal/🟦️.ts";
 import { solveTransport } from "../../🔨️modules/💨️transport/🟦️.ts";
 
 const load = (path: string): Asset => {
@@ -50,7 +51,7 @@ describe("💨️ real assets", () => {
     expect(field.parcels.filter((p) => p.emitter === "body-plume").every((p) => p.carries === "airflow")).toBe(true);
     const nose = field.emitters.find((e) => e.emitter === "nose-breath")!;
     const state = evaluate(commuter, walk(6));
-    expect(nose.at).toEqual(state.anchors["nostrils"]!.at);
+    expect(nose.at).toEqual({ ...state.anchors["nostrils"]!.at, z: state.anchors["nostrils"]!.z });
   });
 
   it("starts the excavator exhaust at ignition and scales it with the operating level", () => {
@@ -78,6 +79,18 @@ describe("💨️ real assets", () => {
     expect(new Set(field.parcels.map((p) => p.id.split("#")[0])).size).toBeGreaterThanOrEqual(8);
     expect(field.condensation.length).toBe(0);
   });
+
+  it("solves the region temperatures of an evaporating vent in the environment of each instant, so a timeline equals the session-free solve", () => {
+    const kettle = load("🔌️appliances/electric-kettle");
+    const warm: Environment = { ...cold, airTempC: 30, meanRadiantTempC: 30, relativeHumidity: 0.4 };
+    const timeline = { keys: [{ t: 0, environment: cold, ease: "linear" as const }, { t: 200, environment: warm, ease: "linear" as const }] };
+    const boil = { kind: "clip", clip: "boil", timeS: 120 } as const;
+    const settings = { maxAgeS: 1, pathlines: false, streamlines: false };
+    const shared = solveTransport(kettle, boil, timeline, settings);
+    const alone = solveTransport(structuredClone(kettle), boil, timeline, { ...settings, thermal: (state) => solveThermalAt(state.asset, state.query, timeline) });
+    expect(shared.parcels.length).toBeGreaterThan(0);
+    expect(json(shared.parcels)).toEqual(json(alone.parcels));
+  }, 120_000);
 
   it("is independent of the representation the state is evaluated with", () => {
     const sel = (d: number) => ({ evaluate: (a: Asset, q: EvaluationQuery) => evaluate(a, q, { kind: "scale", scale: { denominator: d } }) });

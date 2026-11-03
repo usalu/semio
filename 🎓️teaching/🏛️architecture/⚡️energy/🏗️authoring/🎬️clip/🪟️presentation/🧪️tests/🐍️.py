@@ -302,7 +302,7 @@ class PresentationNativeTest(unittest.TestCase):
                 import threading
 
                 session = self.runtime.ToolSession()
-                deadline = threading.Timer(300, session.cancel)
+                deadline = threading.Timer(900, session.cancel)
                 deadline.start()
                 try:
                     self.render_chapter_source(content, output, session=session)

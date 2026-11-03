@@ -1,0 +1,138 @@
+{
+ "50": {
+  "silhouette": {
+   "en": "Full articulation: head profile with short hair and ear, hooded sweatshirt with hood collar and ribbed cuffs, mitten hands with thumbs and finger lines, bare legs with sports shorts, a sneaker on the right foot and a tall orthopaedic boot with three straps on the left foot, both forearm crutches with 22 mm tube, cuff, bracket, hand grip, adjustment holes and rubber tip.",
+   "de": "Volle Gliederung: Kopfprofil mit Kurzhaar und Ohr, Kapuzenpullover mit Kapuzenkragen und Bündchen, Fäustlingshände mit Daumen und Fingerlinien, nackte Beine mit Sportshorts, Sneaker am rechten Fuß und hoher orthopädischer Stiefel mit drei Riemen am linken Fuß, beide Unterarmgehstützen mit 22-mm-Rohr, Manschette, Bügel, Handgriff, Verstellbohrungen und Gummispitze."
+  },
+  "retained": {
+   "en": "Ear, mouth, boot straps, crutch adjustment holes and cuff opening, far crutch and far limbs.",
+   "de": "Ohr, Mund, Stiefelriemen, Verstellbohrungen und Manschettenöffnung der Krücke, abgewandte Krücke und Glieder."
+  },
+  "merged": {
+   "en": "Hair and head share one bone; the boot shaft overlaps the shank and the boot sole is split at the ball joint like the sneaker.",
+   "de": "Haar und Kopf teilen einen Knochen; der Stiefelschaft überlappt den Unterschenkel und die Stiefelsohle ist wie beim Sneaker am Ballengelenk geteilt."
+  },
+  "omitted": {
+   "en": "Eyes, drawstrings, seams, shoe laces, crutch labels.",
+   "de": "Augen, Kordeln, Nähte, Schnürsenkel, Krückenbeschriftung."
+  },
+  "thinElements": {
+   "en": "The 22 mm crutch tube is a 0.44 mm capsule: exact. The 20 mm cuff bracket is 0.4 mm. No thickening anywhere.",
+   "de": "Das 22-mm-Krückenrohr ist eine 0,44-mm-Kapsel: exakt. Der 20-mm-Manschettenbügel ist 0,4 mm. Nirgends Verstärkung."
+  },
+  "hatching": {
+   "en": "Fleece knit as 0.8 mm vertical lines on the hoodie; far-side limbs 0.6 mm lines at 60 degrees.",
+   "de": "Fleecegewebe als senkrechte 0,8-mm-Linien auf dem Kapuzenpullover; abgewandte Glieder 0,6-mm-Linien unter 60 Grad."
+  },
+  "styles": {
+   "en": "Body pen 0.25 mm, detail 0.15 mm, texture 0.10 mm; black boot, rubber and grips, light skin.",
+   "de": "Körperstift 0,25 mm, Detail 0,15 mm, Textur 0,10 mm; schwarzer Stiefel, Gummi und Griffe, helle Haut."
+  },
+  "overlays": {
+   "en": "All twelve regions have their own shapes: face and neck, hair, hands, hoodie, shorts, bare legs, boot, sneaker, crutch tubes, grips, tips and cuffs.",
+   "de": "Alle zwölf Regionen haben eigene Formen: Gesicht und Hals, Haar, Hände, Pullover, Shorts, nackte Beine, Stiefel, Sneaker, Krückenrohre, Griffe, Spitzen und Manschetten."
+  }
+ },
+ "100": {
+  "silhouette": {
+   "en": "Articulated outlines: hair mass, coarse face profile, hoodie in torso, hip and sleeve pieces, shorts, bare legs per segment, sneaker and boot in two parts at the ball joint, mitten hands with thumb, both crutches as 22 mm capsules with grip, cuff, bracket and tip.",
+   "de": "Gegliederte Konturen: Haarmasse, grobes Gesichtsprofil, Pullover in Rumpf-, Hüft- und Ärmelteilen, Shorts, nackte Beine je Segment, Sneaker und Stiefel zweiteilig am Ballengelenk, Fäustlingshände mit Daumen, beide Krücken als 22-mm-Kapseln mit Griff, Manschette, Bügel und Spitze."
+  },
+  "retained": {
+   "en": "Ear, thumbs, the far crutch (offset by 50 mm so it stays separate), boot shaft.",
+   "de": "Ohr, Daumen, die abgewandte Krücke (um 50 mm versetzt, damit sie getrennt bleibt), Stiefelschaft."
+  },
+  "merged": {
+   "en": "Neck skin joins the hood collar; the crutch grip and cuff are single capsule and band pieces.",
+   "de": "Der Hals geht in den Kapuzenkragen über; Krückengriff und Manschette sind einzelne Kapsel- und Bandstücke."
+  },
+  "omitted": {
+   "en": "Mouth, glasses, straps, adjustment holes, finger lines, laces, sole lines.",
+   "de": "Mund, Brille, Riemen, Verstellbohrungen, Fingerlinien, Schnürsenkel, Sohlenlinien."
+  },
+  "thinElements": {
+   "en": "The 22 mm tube is drawn 0.22 mm wide, exact; the 20 mm bracket 0.2 mm.",
+   "de": "Das 22-mm-Rohr ist 0,22 mm breit gezeichnet, exakt; der 20-mm-Bügel 0,2 mm."
+  },
+  "hatching": {
+   "en": "Coarse fleece lines 0.6 mm on the hoodie, far limbs 0.5 mm lines.",
+   "de": "Grobe Fleecelinien 0,6 mm auf dem Pullover, abgewandte Glieder 0,5-mm-Linien."
+  },
+  "styles": {
+   "en": "Body pen 0.25 mm, detail 0.13 mm, texture 0.10 mm.",
+   "de": "Körperstift 0,25 mm, Detail 0,13 mm, Textur 0,10 mm."
+  },
+  "overlays": {
+   "en": "Every region is drawn: the crutch regions are the tube, grip, tip and cuff capsules; boot and sneaker are separate shapes.",
+   "de": "Jede Region ist gezeichnet: die Krückenregionen sind Rohr-, Griff-, Spitzen- und Manschettenkapseln; Stiefel und Sneaker sind getrennte Formen."
+  }
+ },
+ "200": {
+  "silhouette": {
+   "en": "Main masses: head with hair, hoodie torso and hip, one short per leg, one bare thigh and shank per leg, one sleeve per upper arm and forearm, small hands, one shoe mass per foot (boot larger); the near crutch as 0.11 mm tube line with grip, tip, cuff and bracket strokes.",
+   "de": "Hauptmassen: Kopf mit Haar, Pulloverrumpf und Hüfte, eine Short je Bein, ein nackter Ober- und Unterschenkel je Bein, ein Ärmel je Ober- und Unterarm, kleine Hände, eine Schuhmasse je Fuß (Stiefel größer); die nahe Krücke als 0,11-mm-Rohrlinie mit Griff-, Spitzen-, Manschetten- und Bügelstrichen."
+  },
+  "retained": {
+   "en": "The boot as a larger dark shoe mass than the sneaker; the lifted left leg.",
+   "de": "Der Stiefel als größere dunkle Schuhmasse als der Sneaker; das angehobene linke Bein."
+  },
+  "merged": {
+   "en": "Neck and hood collar, hair and face, boot shaft and boot shoe are combined; the far crutch is hidden behind the near one and not drawn.",
+   "de": "Hals und Kapuzenkragen, Haar und Gesicht, Stiefelschaft und Stiefelschuh sind zusammengelegt; die abgewandte Krücke verschwindet hinter der nahen und wird nicht gezeichnet."
+  },
+  "omitted": {
+   "en": "Ear, thumbs, hair detail, straps, adjustment holes, bracket detail of the far side.",
+   "de": "Ohr, Daumen, Haardetail, Riemen, Verstellbohrungen, Bügeldetail der abgewandten Seite."
+  },
+  "thinElements": {
+   "en": "Crutch tube 22 mm is a 0.11 mm line: exact. The grip (25 mm) is a 0.16 mm and the tip a 0.17 mm line: thickened to 32 and 34 mm to stay printable; cuff 0.2 mm (40 mm).",
+   "de": "Das 22-mm-Krückenrohr ist eine 0,11-mm-Linie: exakt. Der Griff (25 mm) ist eine 0,16-mm- und die Spitze eine 0,17-mm-Linie: auf 32 und 34 mm verstärkt, damit sie druckbar bleiben; Manschette 0,2 mm (40 mm)."
+  },
+  "hatching": {
+   "en": "No hatching at 1:200.",
+   "de": "Keine Schraffur bei 1:200."
+  },
+  "styles": {
+   "en": "Body pen 0.13 mm, detail 0.10 mm, ground 0.18 mm.",
+   "de": "Körperstift 0,13 mm, Detail 0,10 mm, Boden 0,18 mm."
+  },
+  "overlays": {
+   "en": "Merged: the head shape lists face and hair, the neck shape hoodie and face skin; crutch regions map to the four near-crutch strokes.",
+   "de": "Zusammengelegt: die Kopfform nennt Gesicht und Haar, die Halsform Pullover und Gesichtshaut; die Krückenregionen entsprechen den vier Strichen der nahen Krücke."
+  }
+ },
+ "500": {
+  "silhouette": {
+   "en": "One composed figure: head mass, hoodie torso and hip, shorts pieces, bare leg masses with a dark boot shoe on the lifted leg, a near arm as a stroke; the near crutch as a single 0.10 mm stroke from grip to tip with a short cuff stroke. Height 1.83 m and 1.0 m span are real.",
+   "de": "Eine zusammengesetzte Figur: Kopfmasse, Pulloverrumpf und Hüfte, Shortsteile, nackte Beinmassen mit dunklem Stiefelschuh am angehobenen Bein, ein naher Arm als Linie; die nahe Krücke als einzelne 0,10-mm-Linie von Griff bis Spitze mit kurzem Manschettenstrich. Höhe 1,83 m und Spannweite 1,0 m sind real."
+  },
+  "retained": {
+   "en": "The posture with the lifted boot and the crutch geometry.",
+   "de": "Die Haltung mit dem angehobenen Stiefel und die Krückengeometrie."
+  },
+  "merged": {
+   "en": "Face and hair form one head mass; the crutch tube stroke stands for tube, grip and tip; the boot shaft joins the shank mass.",
+   "de": "Gesicht und Haar bilden eine Kopfmasse; der Krückenrohrstrich steht für Rohr, Griff und Spitze; der Stiefelschaft geht in die Unterschenkelmasse über."
+  },
+  "omitted": {
+   "en": "Far arm and far crutch (hidden behind the near ones), hands as separate shapes, laces, straps, grips, adjustment holes.",
+   "de": "Abgewandter Arm und abgewandte Krücke (vom nahen verdeckt), Hände als getrennte Formen, Schnürung, Riemen, Griffe, Verstellbohrungen."
+  },
+  "thinElements": {
+   "en": "The 22 mm tube is drawn at the 0.10 mm minimum stroke (50 mm): 2.3 times too wide, kept because the aid defines the asset. The arm stroke 0.17 mm (85 mm) equals the sleeve width.",
+   "de": "Das 22-mm-Rohr ist mit dem Mindeststrich 0,10 mm (50 mm) gezeichnet: 2,3-fach zu breit, beibehalten, weil das Hilfsmittel das Asset bestimmt. Der Armstrich 0,17 mm (85 mm) entspricht der Ärmelbreite."
+  },
+  "hatching": {
+   "en": "No hatching at 1:500.",
+   "de": "Keine Schraffur bei 1:500."
+  },
+  "styles": {
+   "en": "Body pen 0.13 mm; dark hair, hoodie and boot, light skin legs.",
+   "de": "Körperstift 0,13 mm; dunkles Haar, Pullover und Stiefel, helle Beinhaut."
+  },
+  "overlays": {
+   "en": "Merged shapes list all their regions: the crutch stroke lists frame, grips and tips, the cuff stroke the cuffs, the head face-skin and hair.",
+   "de": "Zusammengelegte Formen nennen alle ihre Regionen: der Krückenstrich nennt Rahmen, Griffe und Spitzen, der Manschettenstrich die Manschetten, der Kopf Gesichtshaut und Haar."
+  }
+ }
+}

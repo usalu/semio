@@ -1,0 +1,3739 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "circulation-pump",
+    "category": "appliances",
+    "title": {
+      "en": "Heating Circulation Pump",
+      "de": "Heizungs-Umwälzpumpe"
+    },
+    "summary": {
+      "en": "A wet-rotor heating circulator on a pipe section, seen along the motor shaft: round volute casing with unions, motor head with a rotor window and a rotating indicator, terminal box on top; 5 W on the low stage and 45 W at full speed, of which about 30 W warm the room.",
+      "de": "Eine Nassläufer-Heizungsumwälzpumpe in einem Rohrstück, gesehen längs der Motorwelle: rundes Spiralgehäuse mit Verschraubungen, Motorkopf mit Rotorfenster und drehender Anzeige, oben der Klemmenkasten; 5 W auf kleiner Stufe und 45 W bei voller Drehzahl, davon erwärmen etwa 30 W den Raum."
+    },
+    "tags": [
+      "circulation-pump",
+      "circulator",
+      "wet-rotor",
+      "heating",
+      "hydronic",
+      "pump",
+      "internal-gain",
+      "electrical",
+      "pipe"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A9)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-16297-1-2012",
+          "citation": "EN 16297-1:2012 Pumps - Rotodynamic glandless circulator pumps - Part 1: General requirements and procedure for testing and calculation of energy efficiency index (EEI) (installation length 180 mm, power of a high-efficiency circulator)."
+        },
+        {
+          "id": "eu-622-2012",
+          "citation": "Commission Regulation (EU) No 622/2012 amending Regulation (EC) No 641/2009 with regard to ecodesign requirements for glandless standalone circulators and glandless circulators integrated in products (energy efficiency index of at most 0.20 from 2015)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Front view along the motor shaft of a DN 25 circulator of the 25-60/180 class: installation length 180 mm between the pipe stubs (EN 16297-1), round volute casing of 115 mm, motor head of 91 mm, a terminal box of 60 mm by 43 mm on top and a round rotor window of 53 mm showing an indicator pointer; height 0.15 m, depth along the shaft 0.13 m (casing, motor head and window) and a mass of about 2.8 kg are rounded from this product class (authored estimate). The origin is the lowest point of the casing on its centre line; the pipe axis lies 57.5 mm above it and the asset hangs on the pipe at both stubs. A high-efficiency permanent-magnet circulator takes about 45 W at full speed and 3 to 5 W at the lowest stage (EEI 0.20 class); the electrical power is the level scale (level 1 = 45 W, low = 5 W). About two thirds of it leave as heat through motor head, casing and electronics into the room (motor head 18 W, casing 10 W, terminal box 2 W at level 1: authored estimate), the rest warms the water. The rotor indicator is an authored simplification: the real rotor is enclosed in the water behind the can and runs at several thousand revolutions per minute, so the clips show it as a pointer in slow motion.",
+        "de": "Vorderansicht längs der Motorwelle einer DN-25-Umwälzpumpe der Klasse 25-60/180: Einbaulänge 180 mm zwischen den Rohrstutzen (EN 16297-1), rundes Spiralgehäuse von 115 mm, Motorkopf von 91 mm, oben ein Klemmenkasten von 60 mm mal 43 mm und ein rundes Rotorfenster von 53 mm mit einem Anzeigezeiger; Höhe 0,15 m, Tiefe längs der Welle 0,13 m (Gehäuse, Motorkopf und Fenster) und eine Masse von etwa 2,8 kg sind aus dieser Produktklasse gerundet (Schätzwert). Der Ursprung ist der tiefste Punkt des Gehäuses auf seiner Mittellinie; die Rohrachse liegt 57,5 mm darüber und das Asset hängt an beiden Stutzen im Rohr. Eine hocheffiziente Permanentmagnet-Umwälzpumpe nimmt bei voller Drehzahl etwa 45 W und auf der niedrigsten Stufe 3 bis 5 W auf (Klasse EEI 0,20); die elektrische Leistung ist die Stufenskala (Stufe 1 = 45 W, klein = 5 W). Etwa zwei Drittel davon verlassen Motorkopf, Gehäuse und Elektronik als Wärme in den Raum (Motorkopf 18 W, Gehäuse 10 W, Klemmenkasten 2 W auf Stufe 1: Schätzwert), der Rest erwärmt das Wasser. Die Rotoranzeige ist eine gestalterische Vereinfachung: der echte Rotor läuft abgeschlossen im Wasser hinter dem Spaltrohr mit mehreren tausend Umdrehungen je Minute, daher zeigen die Clips ihn als Zeiger in Zeitlupe."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.15,
+      "widthM": 0.18,
+      "depthM": 0.13,
+      "massKg": 2.77
+    },
+    "materials": [
+      {
+        "id": "cast-iron",
+        "title": {
+          "en": "Painted grey cast iron",
+          "de": "Lackiertes Grauguss"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 7200,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 460,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "aluminium",
+        "title": {
+          "en": "Painted die-cast aluminium",
+          "de": "Lackierter Aluminiumdruckguss"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 2700,
+        "conductivityWmK": 150,
+        "specificHeatJKgK": 900,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "polyamide",
+        "title": {
+          "en": "Glass-filled polyamide",
+          "de": "Glasfaserverstärktes Polyamid"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 1400,
+        "conductivityWmK": 0.3,
+        "specificHeatJKgK": 1700,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "window-glass",
+        "title": {
+          "en": "Polycarbonate window pane",
+          "de": "Polycarbonat-Fensterscheibe"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.2,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "copper",
+        "title": {
+          "en": "Copper pipe",
+          "de": "Kupferrohr"
+        },
+        "emissivity": 0.6,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 8900,
+        "conductivityWmK": 390,
+        "specificHeatJKgK": 385,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "brass",
+        "title": {
+          "en": "Brass union nut",
+          "de": "Messing-Überwurfmutter"
+        },
+        "emissivity": 0.5,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 8500,
+        "conductivityWmK": 120,
+        "specificHeatJKgK": 380,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "housing",
+      "bones": [
+        {
+          "id": "housing",
+          "parent": null,
+          "x": 0,
+          "y": 0.0575,
+          "angleDeg": 0,
+          "title": {
+            "en": "Pump casing with unions and pipe stubs",
+            "de": "Pumpengehäuse mit Verschraubungen und Rohrstutzen"
+          },
+          "lengthM": 0.115,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.5,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "motor",
+          "parent": "housing",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Wet-rotor motor head",
+            "de": "Nassläufer-Motorkopf"
+          },
+          "lengthM": 0.09,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.9,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "terminal",
+          "parent": "motor",
+          "x": 0,
+          "y": 0.05,
+          "angleDeg": 0,
+          "title": {
+            "en": "Terminal box",
+            "de": "Klemmenkasten"
+          },
+          "lengthM": 0.0425,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.25,
+            "comX": 0,
+            "comY": 0.02,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rotor",
+          "parent": "motor",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Rotor indicator behind the window",
+            "de": "Rotoranzeige hinter dem Fenster"
+          },
+          "lengthM": 0.025,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 0.12,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "pipe-left",
+        "bone": "housing",
+        "x": -0.085,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Left pipe stub (pin)",
+          "de": "Linker Rohrstutzen (Festlager)"
+        },
+        "support": "pin",
+        "normalDeg": 90,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.028
+      },
+      {
+        "id": "pipe-right",
+        "bone": "housing",
+        "x": 0.085,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Right pipe stub (roller)",
+          "de": "Rechter Rohrstutzen (Rollenlager)"
+        },
+        "support": "roller",
+        "normalDeg": 90,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.028
+      },
+      {
+        "id": "motor-top",
+        "bone": "terminal",
+        "x": 0,
+        "y": 0.0425,
+        "kind": "emitter",
+        "title": {
+          "en": "Top of the terminal box",
+          "de": "Oberseite des Klemmenkastens"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stub-l",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.014,
+              "w": 0.015,
+              "h": 0.028,
+              "region": "casing",
+              "material": "copper"
+            },
+            {
+              "id": "stub-r",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.075,
+              "y": -0.014,
+              "w": 0.015,
+              "h": 0.028,
+              "region": "casing",
+              "material": "copper"
+            },
+            {
+              "id": "union-l",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0775,
+              "y": -0.021,
+              "w": 0.0235,
+              "h": 0.042,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "union-r",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.054,
+              "y": -0.021,
+              "w": 0.0235,
+              "h": 0.042,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0575,
+                  0
+                ],
+                [
+                  0.05701,
+                  0.00751
+                ],
+                [
+                  0.05554,
+                  0.01488
+                ],
+                [
+                  0.05312,
+                  0.022
+                ],
+                [
+                  0.0498,
+                  0.02875
+                ],
+                [
+                  0.04562,
+                  0.035
+                ],
+                [
+                  0.04066,
+                  0.04066
+                ],
+                [
+                  0.035,
+                  0.04562
+                ],
+                [
+                  0.02875,
+                  0.0498
+                ],
+                [
+                  0.022,
+                  0.05312
+                ],
+                [
+                  0.01488,
+                  0.05554
+                ],
+                [
+                  0.00751,
+                  0.05701
+                ],
+                [
+                  0,
+                  0.0575
+                ],
+                [
+                  -0.00751,
+                  0.05701
+                ],
+                [
+                  -0.01488,
+                  0.05554
+                ],
+                [
+                  -0.022,
+                  0.05312
+                ],
+                [
+                  -0.02875,
+                  0.0498
+                ],
+                [
+                  -0.035,
+                  0.04562
+                ],
+                [
+                  -0.04066,
+                  0.04066
+                ],
+                [
+                  -0.04562,
+                  0.035
+                ],
+                [
+                  -0.0498,
+                  0.02875
+                ],
+                [
+                  -0.05312,
+                  0.022
+                ],
+                [
+                  -0.05554,
+                  0.01488
+                ],
+                [
+                  -0.05701,
+                  0.00751
+                ],
+                [
+                  -0.0575,
+                  0
+                ],
+                [
+                  -0.05701,
+                  -0.00751
+                ],
+                [
+                  -0.05554,
+                  -0.01488
+                ],
+                [
+                  -0.05312,
+                  -0.022
+                ],
+                [
+                  -0.0498,
+                  -0.02875
+                ],
+                [
+                  -0.04562,
+                  -0.035
+                ],
+                [
+                  -0.04066,
+                  -0.04066
+                ],
+                [
+                  -0.035,
+                  -0.04562
+                ],
+                [
+                  -0.02875,
+                  -0.0498
+                ],
+                [
+                  -0.022,
+                  -0.05312
+                ],
+                [
+                  -0.01488,
+                  -0.05554
+                ],
+                [
+                  -0.00751,
+                  -0.05701
+                ],
+                [
+                  0,
+                  -0.0575
+                ],
+                [
+                  0.00751,
+                  -0.05701
+                ],
+                [
+                  0.01488,
+                  -0.05554
+                ],
+                [
+                  0.022,
+                  -0.05312
+                ],
+                [
+                  0.02875,
+                  -0.0498
+                ],
+                [
+                  0.035,
+                  -0.04562
+                ],
+                [
+                  0.04066,
+                  -0.04066
+                ],
+                [
+                  0.04562,
+                  -0.035
+                ],
+                [
+                  0.0498,
+                  -0.02875
+                ],
+                [
+                  0.05312,
+                  -0.022
+                ],
+                [
+                  0.05554,
+                  -0.01488
+                ],
+                [
+                  0.05701,
+                  -0.00751
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "cast-iron"
+            },
+            {
+              "id": "nut-edge-l",
+              "bone": "housing",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0645,
+                  -0.018
+                ],
+                [
+                  -0.0645,
+                  0.018
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "nut-edge-r",
+              "bone": "housing",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0645,
+                  -0.018
+                ],
+                [
+                  0.0645,
+                  0.018
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "motor-head",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0455,
+                  0
+                ],
+                [
+                  0.04511,
+                  0.00594
+                ],
+                [
+                  0.04395,
+                  0.01178
+                ],
+                [
+                  0.04204,
+                  0.01741
+                ],
+                [
+                  0.0394,
+                  0.02275
+                ],
+                [
+                  0.0361,
+                  0.0277
+                ],
+                [
+                  0.03217,
+                  0.03217
+                ],
+                [
+                  0.0277,
+                  0.0361
+                ],
+                [
+                  0.02275,
+                  0.0394
+                ],
+                [
+                  0.01741,
+                  0.04204
+                ],
+                [
+                  0.01178,
+                  0.04395
+                ],
+                [
+                  0.00594,
+                  0.04511
+                ],
+                [
+                  0,
+                  0.0455
+                ],
+                [
+                  -0.00594,
+                  0.04511
+                ],
+                [
+                  -0.01178,
+                  0.04395
+                ],
+                [
+                  -0.01741,
+                  0.04204
+                ],
+                [
+                  -0.02275,
+                  0.0394
+                ],
+                [
+                  -0.0277,
+                  0.0361
+                ],
+                [
+                  -0.03217,
+                  0.03217
+                ],
+                [
+                  -0.0361,
+                  0.0277
+                ],
+                [
+                  -0.0394,
+                  0.02275
+                ],
+                [
+                  -0.04204,
+                  0.01741
+                ],
+                [
+                  -0.04395,
+                  0.01178
+                ],
+                [
+                  -0.04511,
+                  0.00594
+                ],
+                [
+                  -0.0455,
+                  0
+                ],
+                [
+                  -0.04511,
+                  -0.00594
+                ],
+                [
+                  -0.04395,
+                  -0.01178
+                ],
+                [
+                  -0.04204,
+                  -0.01741
+                ],
+                [
+                  -0.0394,
+                  -0.02275
+                ],
+                [
+                  -0.0361,
+                  -0.0277
+                ],
+                [
+                  -0.03217,
+                  -0.03217
+                ],
+                [
+                  -0.0277,
+                  -0.0361
+                ],
+                [
+                  -0.02275,
+                  -0.0394
+                ],
+                [
+                  -0.01741,
+                  -0.04204
+                ],
+                [
+                  -0.01178,
+                  -0.04395
+                ],
+                [
+                  -0.00594,
+                  -0.04511
+                ],
+                [
+                  0,
+                  -0.0455
+                ],
+                [
+                  0.00594,
+                  -0.04511
+                ],
+                [
+                  0.01178,
+                  -0.04395
+                ],
+                [
+                  0.01741,
+                  -0.04204
+                ],
+                [
+                  0.02275,
+                  -0.0394
+                ],
+                [
+                  0.0277,
+                  -0.0361
+                ],
+                [
+                  0.03217,
+                  -0.03217
+                ],
+                [
+                  0.0361,
+                  -0.0277
+                ],
+                [
+                  0.0394,
+                  -0.02275
+                ],
+                [
+                  0.04204,
+                  -0.01741
+                ],
+                [
+                  0.04395,
+                  -0.01178
+                ],
+                [
+                  0.04511,
+                  -0.00594
+                ]
+              ],
+              "closed": true,
+              "region": "motor",
+              "material": "aluminium"
+            },
+            {
+              "id": "motor-ring",
+              "bone": "motor",
+              "role": "detail",
+              "z": 3.31,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0405,
+                  0
+                ],
+                [
+                  0.04,
+                  0.00634
+                ],
+                [
+                  0.03852,
+                  0.01252
+                ],
+                [
+                  0.03609,
+                  0.01839
+                ],
+                [
+                  0.03277,
+                  0.02381
+                ],
+                [
+                  0.02864,
+                  0.02864
+                ],
+                [
+                  0.02381,
+                  0.03277
+                ],
+                [
+                  0.01839,
+                  0.03609
+                ],
+                [
+                  0.01252,
+                  0.03852
+                ],
+                [
+                  0.00634,
+                  0.04
+                ],
+                [
+                  0,
+                  0.0405
+                ],
+                [
+                  -0.00634,
+                  0.04
+                ],
+                [
+                  -0.01252,
+                  0.03852
+                ],
+                [
+                  -0.01839,
+                  0.03609
+                ],
+                [
+                  -0.02381,
+                  0.03277
+                ],
+                [
+                  -0.02864,
+                  0.02864
+                ],
+                [
+                  -0.03277,
+                  0.02381
+                ],
+                [
+                  -0.03609,
+                  0.01839
+                ],
+                [
+                  -0.03852,
+                  0.01252
+                ],
+                [
+                  -0.04,
+                  0.00634
+                ],
+                [
+                  -0.0405,
+                  0
+                ],
+                [
+                  -0.04,
+                  -0.00634
+                ],
+                [
+                  -0.03852,
+                  -0.01252
+                ],
+                [
+                  -0.03609,
+                  -0.01839
+                ],
+                [
+                  -0.03277,
+                  -0.02381
+                ],
+                [
+                  -0.02864,
+                  -0.02864
+                ],
+                [
+                  -0.02381,
+                  -0.03277
+                ],
+                [
+                  -0.01839,
+                  -0.03609
+                ],
+                [
+                  -0.01252,
+                  -0.03852
+                ],
+                [
+                  -0.00634,
+                  -0.04
+                ],
+                [
+                  0,
+                  -0.0405
+                ],
+                [
+                  0.00634,
+                  -0.04
+                ],
+                [
+                  0.01252,
+                  -0.03852
+                ],
+                [
+                  0.01839,
+                  -0.03609
+                ],
+                [
+                  0.02381,
+                  -0.03277
+                ],
+                [
+                  0.02864,
+                  -0.02864
+                ],
+                [
+                  0.03277,
+                  -0.02381
+                ],
+                [
+                  0.03609,
+                  -0.01839
+                ],
+                [
+                  0.03852,
+                  -0.01252
+                ],
+                [
+                  0.04,
+                  -0.00634
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "window",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0265,
+                  0
+                ],
+                [
+                  0.02627,
+                  0.00346
+                ],
+                [
+                  0.0256,
+                  0.00686
+                ],
+                [
+                  0.02448,
+                  0.01014
+                ],
+                [
+                  0.02295,
+                  0.01325
+                ],
+                [
+                  0.02102,
+                  0.01613
+                ],
+                [
+                  0.01874,
+                  0.01874
+                ],
+                [
+                  0.01613,
+                  0.02102
+                ],
+                [
+                  0.01325,
+                  0.02295
+                ],
+                [
+                  0.01014,
+                  0.02448
+                ],
+                [
+                  0.00686,
+                  0.0256
+                ],
+                [
+                  0.00346,
+                  0.02627
+                ],
+                [
+                  0,
+                  0.0265
+                ],
+                [
+                  -0.00346,
+                  0.02627
+                ],
+                [
+                  -0.00686,
+                  0.0256
+                ],
+                [
+                  -0.01014,
+                  0.02448
+                ],
+                [
+                  -0.01325,
+                  0.02295
+                ],
+                [
+                  -0.01613,
+                  0.02102
+                ],
+                [
+                  -0.01874,
+                  0.01874
+                ],
+                [
+                  -0.02102,
+                  0.01613
+                ],
+                [
+                  -0.02295,
+                  0.01325
+                ],
+                [
+                  -0.02448,
+                  0.01014
+                ],
+                [
+                  -0.0256,
+                  0.00686
+                ],
+                [
+                  -0.02627,
+                  0.00346
+                ],
+                [
+                  -0.0265,
+                  0
+                ],
+                [
+                  -0.02627,
+                  -0.00346
+                ],
+                [
+                  -0.0256,
+                  -0.00686
+                ],
+                [
+                  -0.02448,
+                  -0.01014
+                ],
+                [
+                  -0.02295,
+                  -0.01325
+                ],
+                [
+                  -0.02102,
+                  -0.01613
+                ],
+                [
+                  -0.01874,
+                  -0.01874
+                ],
+                [
+                  -0.01613,
+                  -0.02102
+                ],
+                [
+                  -0.01325,
+                  -0.02295
+                ],
+                [
+                  -0.01014,
+                  -0.02448
+                ],
+                [
+                  -0.00686,
+                  -0.0256
+                ],
+                [
+                  -0.00346,
+                  -0.02627
+                ],
+                [
+                  0,
+                  -0.0265
+                ],
+                [
+                  0.00346,
+                  -0.02627
+                ],
+                [
+                  0.00686,
+                  -0.0256
+                ],
+                [
+                  0.01014,
+                  -0.02448
+                ],
+                [
+                  0.01325,
+                  -0.02295
+                ],
+                [
+                  0.01613,
+                  -0.02102
+                ],
+                [
+                  0.01874,
+                  -0.01874
+                ],
+                [
+                  0.02102,
+                  -0.01613
+                ],
+                [
+                  0.02295,
+                  -0.01325
+                ],
+                [
+                  0.02448,
+                  -0.01014
+                ],
+                [
+                  0.0256,
+                  -0.00686
+                ],
+                [
+                  0.02627,
+                  -0.00346
+                ]
+              ],
+              "closed": true,
+              "region": "rotor-window",
+              "material": "window-glass"
+            },
+            {
+              "id": "bezel",
+              "bone": "motor",
+              "role": "detail",
+              "z": 3.41,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0305,
+                  0
+                ],
+                [
+                  0.03004,
+                  0.0053
+                ],
+                [
+                  0.02866,
+                  0.01043
+                ],
+                [
+                  0.02641,
+                  0.01525
+                ],
+                [
+                  0.02336,
+                  0.01961
+                ],
+                [
+                  0.01961,
+                  0.02336
+                ],
+                [
+                  0.01525,
+                  0.02641
+                ],
+                [
+                  0.01043,
+                  0.02866
+                ],
+                [
+                  0.0053,
+                  0.03004
+                ],
+                [
+                  0,
+                  0.0305
+                ],
+                [
+                  -0.0053,
+                  0.03004
+                ],
+                [
+                  -0.01043,
+                  0.02866
+                ],
+                [
+                  -0.01525,
+                  0.02641
+                ],
+                [
+                  -0.01961,
+                  0.02336
+                ],
+                [
+                  -0.02336,
+                  0.01961
+                ],
+                [
+                  -0.02641,
+                  0.01525
+                ],
+                [
+                  -0.02866,
+                  0.01043
+                ],
+                [
+                  -0.03004,
+                  0.0053
+                ],
+                [
+                  -0.0305,
+                  0
+                ],
+                [
+                  -0.03004,
+                  -0.0053
+                ],
+                [
+                  -0.02866,
+                  -0.01043
+                ],
+                [
+                  -0.02641,
+                  -0.01525
+                ],
+                [
+                  -0.02336,
+                  -0.01961
+                ],
+                [
+                  -0.01961,
+                  -0.02336
+                ],
+                [
+                  -0.01525,
+                  -0.02641
+                ],
+                [
+                  -0.01043,
+                  -0.02866
+                ],
+                [
+                  -0.0053,
+                  -0.03004
+                ],
+                [
+                  0,
+                  -0.0305
+                ],
+                [
+                  0.0053,
+                  -0.03004
+                ],
+                [
+                  0.01043,
+                  -0.02866
+                ],
+                [
+                  0.01525,
+                  -0.02641
+                ],
+                [
+                  0.01961,
+                  -0.02336
+                ],
+                [
+                  0.02336,
+                  -0.01961
+                ],
+                [
+                  0.02641,
+                  -0.01525
+                ],
+                [
+                  0.02866,
+                  -0.01043
+                ],
+                [
+                  0.03004,
+                  -0.0053
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.0425,
+              "r": 0.004,
+              "region": "terminal-box",
+              "material": "polyamide"
+            },
+            {
+              "id": "lid-seam",
+              "bone": "terminal",
+              "role": "detail",
+              "z": 3.51,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.025
+                ],
+                [
+                  0.03,
+                  0.025
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "gland",
+              "bone": "terminal",
+              "role": "detail",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.0465,
+              "y": 0.004,
+              "w": 0.0165,
+              "h": 0.0145
+            },
+            {
+              "id": "led",
+              "bone": "terminal",
+              "role": "detail",
+              "z": 3.52,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0045,
+                  0.033
+                ],
+                [
+                  0.00416,
+                  0.03472
+                ],
+                [
+                  0.00318,
+                  0.03618
+                ],
+                [
+                  0.00172,
+                  0.03716
+                ],
+                [
+                  0,
+                  0.0375
+                ],
+                [
+                  -0.00172,
+                  0.03716
+                ],
+                [
+                  -0.00318,
+                  0.03618
+                ],
+                [
+                  -0.00416,
+                  0.03472
+                ],
+                [
+                  -0.0045,
+                  0.033
+                ],
+                [
+                  -0.00416,
+                  0.03128
+                ],
+                [
+                  -0.00318,
+                  0.02982
+                ],
+                [
+                  -0.00172,
+                  0.02884
+                ],
+                [
+                  0,
+                  0.0285
+                ],
+                [
+                  0.00172,
+                  0.02884
+                ],
+                [
+                  0.00318,
+                  0.02982
+                ],
+                [
+                  0.00416,
+                  0.03128
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "pointer",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.007,
+                  0
+                ],
+                [
+                  0.007,
+                  0
+                ],
+                [
+                  0,
+                  0.026
+                ]
+              ],
+              "closed": true,
+              "material": "window-glass"
+            },
+            {
+              "id": "tail",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.005,
+                  0
+                ],
+                [
+                  0.005,
+                  0
+                ],
+                [
+                  0,
+                  -0.012
+                ]
+              ],
+              "closed": true,
+              "material": "window-glass"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0055,
+                  0
+                ],
+                [
+                  0.00508,
+                  0.0021
+                ],
+                [
+                  0.00389,
+                  0.00389
+                ],
+                [
+                  0.0021,
+                  0.00508
+                ],
+                [
+                  0,
+                  0.0055
+                ],
+                [
+                  -0.0021,
+                  0.00508
+                ],
+                [
+                  -0.00389,
+                  0.00389
+                ],
+                [
+                  -0.00508,
+                  0.0021
+                ],
+                [
+                  -0.0055,
+                  0
+                ],
+                [
+                  -0.00508,
+                  -0.0021
+                ],
+                [
+                  -0.00389,
+                  -0.00389
+                ],
+                [
+                  -0.0021,
+                  -0.00508
+                ],
+                [
+                  0,
+                  -0.0055
+                ],
+                [
+                  0.0021,
+                  -0.00508
+                ],
+                [
+                  0.00389,
+                  -0.00389
+                ],
+                [
+                  0.00508,
+                  -0.0021
+                ]
+              ],
+              "closed": true,
+              "material": "window-glass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "stub-l",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0.026,
+              "w": 0.015,
+              "h": 0.028,
+              "region": "casing",
+              "material": "copper"
+            },
+            {
+              "id": "stub-r",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.075,
+              "y": 0.026,
+              "w": 0.015,
+              "h": 0.028,
+              "region": "casing",
+              "material": "copper"
+            },
+            {
+              "id": "union-l",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0775,
+              "y": 0.019,
+              "w": 0.0235,
+              "h": 0.042,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "union-r",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.054,
+              "y": 0.019,
+              "w": 0.0235,
+              "h": 0.042,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.0575,
+              "y": 0.015,
+              "w": 0.115,
+              "h": 0.05,
+              "r": 0.006,
+              "region": "casing",
+              "material": "cast-iron"
+            },
+            {
+              "id": "nut-edge-l",
+              "bone": "housing",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0645,
+                  0.022
+                ],
+                [
+                  -0.0645,
+                  0.058
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "nut-edge-r",
+              "bone": "housing",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0645,
+                  0.022
+                ],
+                [
+                  0.0645,
+                  0.058
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "motor-head",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.0455,
+              "y": -0.06,
+              "w": 0.091,
+              "h": 0.075,
+              "r": 0.004,
+              "region": "motor",
+              "material": "aluminium"
+            },
+            {
+              "id": "motor-ring",
+              "bone": "motor",
+              "role": "detail",
+              "z": 3.31,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0455,
+                  -0.045
+                ],
+                [
+                  0.0455,
+                  -0.045
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "window",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.0305,
+              "y": -0.065,
+              "w": 0.061,
+              "h": 0.005,
+              "region": "rotor-window",
+              "material": "window-glass"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.03,
+              "y": -0.05,
+              "w": 0.06,
+              "h": 0.05,
+              "r": 0.004,
+              "region": "terminal-box",
+              "material": "polyamide"
+            },
+            {
+              "id": "lid-seam",
+              "bone": "terminal",
+              "role": "detail",
+              "z": 3.51,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  -0.025
+                ],
+                [
+                  0.03,
+                  -0.025
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "gland",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.0465,
+              "y": -0.0315,
+              "w": 0.0165,
+              "h": 0.013
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": 0.015,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.115,
+              "r": 0.006,
+              "region": "casing",
+              "material": "cast-iron"
+            },
+            {
+              "id": "motor-head",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.06,
+              "y": 0.012,
+              "w": 0.075,
+              "h": 0.091,
+              "r": 0.004,
+              "region": "motor",
+              "material": "aluminium"
+            },
+            {
+              "id": "motor-ring",
+              "bone": "motor",
+              "role": "detail",
+              "z": 3.31,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.016
+                ],
+                [
+                  -0.05,
+                  0.099
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "window",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0.031,
+              "w": 0.005,
+              "h": 0.053,
+              "region": "rotor-window",
+              "material": "window-glass"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.1075,
+              "w": 0.05,
+              "h": 0.0425,
+              "r": 0.004,
+              "region": "terminal-box",
+              "material": "polyamide"
+            },
+            {
+              "id": "lid-seam",
+              "bone": "terminal",
+              "role": "detail",
+              "z": 3.51,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.055,
+                  0.1325
+                ],
+                [
+                  -0.005,
+                  0.1325
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "union",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": 0.0575,
+              "rx": 0.021,
+              "ry": 0.021,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "stub",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.85,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": 0.0575,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "casing",
+              "material": "copper"
+            },
+            {
+              "id": "bore",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": 0.0575,
+              "rx": 0.009,
+              "ry": 0.009
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.18 m by 0.15 m front view along the motor shaft, 3.6 mm by 3 mm on paper: the round volute casing with a union and a pipe stub on each side, the smaller motor head in front of it with the round rotor window, and the terminal box on top. Front, looking along the pipe, 2.6 mm by 3 mm on paper: the thin volute disc as a tall slab on the left, the longer motor head with its round window end on the right, the terminal box on top and the union end of the pipe as three rings in front. Plan, 3.6 mm by 2.6 mm: the pipe with a stub and union nut on each side, the volute block, the motor head reaching towards the viewer with two rings and the window end, and the terminal box with its lid seam and the gland on the left wall.",
+            "de": "Eine Vorderansicht von 0,18 m mal 0,15 m längs der Motorwelle, auf Papier 3,6 mm mal 3 mm: das runde Spiralgehäuse mit einer Verschraubung und einem Rohrstutzen an jeder Seite, davor der kleinere Motorkopf mit dem runden Rotorfenster und oben der Klemmenkasten. Vorderansicht, entlang der Rohrachse, 2,6 mm auf 3 mm: die flache Spiralgehäuse-Scheibe als hohe Platte links, der längere Motorkopf mit dem runden Fensterende rechts, der Klemmenkasten obenauf und das Verschraubungsende des Rohrs als drei Ringe davor. Grundriss, 3,6 mm auf 2,6 mm: das Rohr mit Anschlussstutzen und Überwurfmutter auf jeder Seite, der Spiralgehäuse-Block, der Motorkopf zum Betrachter hin mit zwei Ringen und dem Fensterende sowie der Klemmenkasten mit Deckelfuge und der Kabelverschraubung an der linken Wand."
+          },
+          "retained": {
+            "en": "Casing disc of 115 mm, both brass unions with their hex edge, the copper stubs of 28 mm, the motor head of 91 mm with its inner ring, the rotor window of 53 mm with bezel, the pointer with its tail and hub, the terminal box with lid seam, cable gland and indicator.",
+            "de": "Gehäusescheibe von 115 mm, beide Messingverschraubungen mit ihrer Sechskantkante, die Kupferstutzen von 28 mm, der Motorkopf von 91 mm mit seinem Innenring, das Rotorfenster von 53 mm mit Blende, der Zeiger mit Gegenstück und Nabe, der Klemmenkasten mit Deckelfuge, Kabelverschraubung und Anzeige."
+          },
+          "merged": {
+            "en": "Stubs and unions are separate shapes of the same region casing; the volute behind the casing disc is not drawn.",
+            "de": "Stutzen und Verschraubungen sind getrennte Formen derselben Region Gehäuse; die Spirale hinter der Gehäusescheibe ist nicht gezeichnet."
+          },
+          "omitted": {
+            "en": "Flange screws, the vent plug, the name plate and the rotor can inside the water. The rotor, the LED and the pointer lie inside or on the end window and do not appear in front or plan.",
+            "de": "Flanschschrauben, die Entlüftungsschraube, das Typenschild und der Spaltrohrtopf im Wasser. Rotor, LED und Zeiger liegen im Innern oder am Endfenster und erscheinen weder in der Vorderansicht noch im Grundriss."
+          },
+          "thinElements": {
+            "en": "The pointer is 14 mm wide (0.28 mm on paper), the hub 11 mm (0.22 mm); the nut edges and the lid seam are 0.13 mm detail strokes.",
+            "de": "Der Zeiger ist 14 mm breit (0,28 mm auf Papier), die Nabe 11 mm (0,22 mm); Mutterkanten und Deckelfuge sind 0,13-mm-Detailstriche."
+          },
+          "hatching": {
+            "en": "None; the casing is a mid tone, the motor head lighter, the window dark.",
+            "de": "Keine; das Gehäuse ist ein mittlerer Ton, der Motorkopf heller, das Fenster dunkel."
+          },
+          "styles": {
+            "en": "Casing 0.42, unions 0.5, stubs 0.7, motor head 0.62, window 0.18, terminal box 0.78, pointer 0.95; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Gehäuse 0,42, Verschraubungen 0,5, Stutzen 0,7, Motorkopf 0,62, Fenster 0,18, Klemmenkasten 0,78, Zeiger 0,95; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Casing, motor, terminal box and window are separate regions: in the thermal view the motor head warms most, the casing follows the water, the window stays cool.",
+            "de": "Gehäuse, Motor, Klemmenkasten und Fenster sind getrennte Regionen: in der Thermalansicht erwärmt sich der Motorkopf am stärksten, das Gehäuse folgt dem Wasser, das Fenster bleibt kühl."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stub-l",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.017,
+              "w": 0.035,
+              "h": 0.034,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "stub-r",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.055,
+              "y": -0.017,
+              "w": 0.035,
+              "h": 0.034,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0575,
+                  0
+                ],
+                [
+                  0.05663,
+                  0.00998
+                ],
+                [
+                  0.05403,
+                  0.01967
+                ],
+                [
+                  0.0498,
+                  0.02875
+                ],
+                [
+                  0.04405,
+                  0.03696
+                ],
+                [
+                  0.03696,
+                  0.04405
+                ],
+                [
+                  0.02875,
+                  0.0498
+                ],
+                [
+                  0.01967,
+                  0.05403
+                ],
+                [
+                  0.00998,
+                  0.05663
+                ],
+                [
+                  0,
+                  0.0575
+                ],
+                [
+                  -0.00998,
+                  0.05663
+                ],
+                [
+                  -0.01967,
+                  0.05403
+                ],
+                [
+                  -0.02875,
+                  0.0498
+                ],
+                [
+                  -0.03696,
+                  0.04405
+                ],
+                [
+                  -0.04405,
+                  0.03696
+                ],
+                [
+                  -0.0498,
+                  0.02875
+                ],
+                [
+                  -0.05403,
+                  0.01967
+                ],
+                [
+                  -0.05663,
+                  0.00998
+                ],
+                [
+                  -0.0575,
+                  0
+                ],
+                [
+                  -0.05663,
+                  -0.00998
+                ],
+                [
+                  -0.05403,
+                  -0.01967
+                ],
+                [
+                  -0.0498,
+                  -0.02875
+                ],
+                [
+                  -0.04405,
+                  -0.03696
+                ],
+                [
+                  -0.03696,
+                  -0.04405
+                ],
+                [
+                  -0.02875,
+                  -0.0498
+                ],
+                [
+                  -0.01967,
+                  -0.05403
+                ],
+                [
+                  -0.00998,
+                  -0.05663
+                ],
+                [
+                  0,
+                  -0.0575
+                ],
+                [
+                  0.00998,
+                  -0.05663
+                ],
+                [
+                  0.01967,
+                  -0.05403
+                ],
+                [
+                  0.02875,
+                  -0.0498
+                ],
+                [
+                  0.03696,
+                  -0.04405
+                ],
+                [
+                  0.04405,
+                  -0.03696
+                ],
+                [
+                  0.0498,
+                  -0.02875
+                ],
+                [
+                  0.05403,
+                  -0.01967
+                ],
+                [
+                  0.05663,
+                  -0.00998
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "casing",
+                "motor"
+              ],
+              "material": "cast-iron"
+            },
+            {
+              "id": "window",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.026,
+                  0
+                ],
+                [
+                  0.02535,
+                  0.00579
+                ],
+                [
+                  0.02343,
+                  0.01128
+                ],
+                [
+                  0.02033,
+                  0.01621
+                ],
+                [
+                  0.01621,
+                  0.02033
+                ],
+                [
+                  0.01128,
+                  0.02343
+                ],
+                [
+                  0.00579,
+                  0.02535
+                ],
+                [
+                  0,
+                  0.026
+                ],
+                [
+                  -0.00579,
+                  0.02535
+                ],
+                [
+                  -0.01128,
+                  0.02343
+                ],
+                [
+                  -0.01621,
+                  0.02033
+                ],
+                [
+                  -0.02033,
+                  0.01621
+                ],
+                [
+                  -0.02343,
+                  0.01128
+                ],
+                [
+                  -0.02535,
+                  0.00579
+                ],
+                [
+                  -0.026,
+                  0
+                ],
+                [
+                  -0.02535,
+                  -0.00579
+                ],
+                [
+                  -0.02343,
+                  -0.01128
+                ],
+                [
+                  -0.02033,
+                  -0.01621
+                ],
+                [
+                  -0.01621,
+                  -0.02033
+                ],
+                [
+                  -0.01128,
+                  -0.02343
+                ],
+                [
+                  -0.00579,
+                  -0.02535
+                ],
+                [
+                  0,
+                  -0.026
+                ],
+                [
+                  0.00579,
+                  -0.02535
+                ],
+                [
+                  0.01128,
+                  -0.02343
+                ],
+                [
+                  0.01621,
+                  -0.02033
+                ],
+                [
+                  0.02033,
+                  -0.01621
+                ],
+                [
+                  0.02343,
+                  -0.01128
+                ],
+                [
+                  0.02535,
+                  -0.00579
+                ]
+              ],
+              "closed": true,
+              "region": "rotor-window",
+              "material": "window-glass"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.0425,
+              "r": 0.004,
+              "region": "terminal-box",
+              "material": "polyamide"
+            }
+          ],
+          "plan": [
+            {
+              "id": "stub-l",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0.023,
+              "w": 0.035,
+              "h": 0.034,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "stub-r",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.055,
+              "y": 0.023,
+              "w": 0.035,
+              "h": 0.034,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.0575,
+              "y": 0.015,
+              "w": 0.115,
+              "h": 0.05,
+              "region": "casing",
+              "material": "cast-iron"
+            },
+            {
+              "id": "motor-head",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.0455,
+              "y": -0.065,
+              "w": 0.091,
+              "h": 0.08,
+              "region": "motor",
+              "material": "aluminium"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.03,
+              "y": -0.05,
+              "w": 0.06,
+              "h": 0.05,
+              "region": "terminal-box",
+              "material": "polyamide"
+            }
+          ],
+          "front": [
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": 0.015,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.115,
+              "region": "casing",
+              "material": "cast-iron"
+            },
+            {
+              "id": "motor-head",
+              "bone": "motor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0.012,
+              "w": 0.08,
+              "h": 0.091,
+              "region": "motor",
+              "material": "aluminium"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.1075,
+              "w": 0.05,
+              "h": 0.0425,
+              "region": "terminal-box",
+              "material": "polyamide"
+            },
+            {
+              "id": "stub",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": 0.0575,
+              "rx": 0.017,
+              "ry": 0.017,
+              "region": "casing",
+              "material": "brass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.8 mm by 1.5 mm front view: a round casing with a dark window, a box on top and a thick stub on each side. Front, 1.3 mm by 1.5 mm: the volute slab, the longer motor block, the terminal box and one brass disc for the pipe end. Plan, 1.8 mm by 1.3 mm: the pipe stubs, the volute block, the motor block and the terminal box.",
+            "de": "Eine Vorderansicht von 1,8 mm mal 1,5 mm: ein rundes Gehäuse mit dunklem Fenster, oben ein Kasten und an jeder Seite ein dicker Stutzen. Vorderansicht, 1,3 mm auf 1,5 mm: die Spiralgehäuse-Platte, der längere Motorblock, der Klemmenkasten und eine Messingscheibe für das Rohrende. Grundriss, 1,8 mm auf 1,3 mm: die Rohrstutzen, der Spiralgehäuse-Block, der Motorblock und der Klemmenkasten."
+          },
+          "retained": {
+            "en": "Casing disc of 115 mm, the dark rotor window of 52 mm, the terminal box of 60 mm by 43 mm and the two pipe stubs with their unions.",
+            "de": "Gehäusescheibe von 115 mm, das dunkle Rotorfenster von 52 mm, der Klemmenkasten von 60 mm mal 43 mm und die beiden Rohrstutzen mit ihren Verschraubungen."
+          },
+          "merged": {
+            "en": "Motor head and casing share one disc (regions casing and motor merged); union and stub become one block of 34 mm height per side.",
+            "de": "Motorkopf und Gehäuse teilen eine Scheibe (Regionen Gehäuse und Motor zusammengeführt); Verschraubung und Stutzen werden zu einem Block von 34 mm Höhe je Seite."
+          },
+          "omitted": {
+            "en": "Motor ring, bezel, nut edges, lid seam, gland, indicator, pointer, tail and hub: the rotor indicator is too fine (0.14 mm) and is not drawn. Front and plan have no window, rings, lid seam or nut edges.",
+            "de": "Motorring, Blende, Mutterkanten, Deckelfuge, Verschraubung, Anzeige, Zeiger, Gegenstück und Nabe: die Rotoranzeige ist zu fein (0,14 mm) und nicht gezeichnet. Vorderansicht und Grundriss haben kein Fenster, keine Ringe, keine Deckelfuge und keine Mutterkanten."
+          },
+          "thinElements": {
+            "en": "The stubs are thickened from 28 to 34 mm (0.34 mm on paper) and carry the unions.",
+            "de": "Die Stutzen sind von 28 auf 34 mm (0,34 mm auf Papier) verdickt und tragen die Verschraubungen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Casing 0.42, window 0.18, stubs 0.6, terminal box 0.78; one body pen of 0.18 mm.",
+            "de": "Gehäuse 0,42, Fenster 0,18, Stutzen 0,6, Klemmenkasten 0,78; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The disc lists casing and motor as merged regions, so the motor heat still shows; the rotor does not turn visibly at this scale.",
+            "de": "Die Scheibe führt Gehäuse und Motor als zusammengeführte Regionen, sodass die Motorwärme sichtbar bleibt; der Rotor dreht sich in diesem Maßstab nicht sichtbar."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pipe",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.019,
+              "w": 0.18,
+              "h": 0.039,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "casing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0575,
+                  0
+                ],
+                [
+                  0.05606,
+                  0.01279
+                ],
+                [
+                  0.05181,
+                  0.02495
+                ],
+                [
+                  0.04496,
+                  0.03585
+                ],
+                [
+                  0.03585,
+                  0.04496
+                ],
+                [
+                  0.02495,
+                  0.05181
+                ],
+                [
+                  0.01279,
+                  0.05606
+                ],
+                [
+                  0,
+                  0.0575
+                ],
+                [
+                  -0.01279,
+                  0.05606
+                ],
+                [
+                  -0.02495,
+                  0.05181
+                ],
+                [
+                  -0.03585,
+                  0.04496
+                ],
+                [
+                  -0.04496,
+                  0.03585
+                ],
+                [
+                  -0.05181,
+                  0.02495
+                ],
+                [
+                  -0.05606,
+                  0.01279
+                ],
+                [
+                  -0.0575,
+                  0
+                ],
+                [
+                  -0.05606,
+                  -0.01279
+                ],
+                [
+                  -0.05181,
+                  -0.02495
+                ],
+                [
+                  -0.04496,
+                  -0.03585
+                ],
+                [
+                  -0.03585,
+                  -0.04496
+                ],
+                [
+                  -0.02495,
+                  -0.05181
+                ],
+                [
+                  -0.01279,
+                  -0.05606
+                ],
+                [
+                  0,
+                  -0.0575
+                ],
+                [
+                  0.01279,
+                  -0.05606
+                ],
+                [
+                  0.02495,
+                  -0.05181
+                ],
+                [
+                  0.03585,
+                  -0.04496
+                ],
+                [
+                  0.04496,
+                  -0.03585
+                ],
+                [
+                  0.05181,
+                  -0.02495
+                ],
+                [
+                  0.05606,
+                  -0.01279
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "casing",
+                "motor",
+                "rotor-window"
+              ],
+              "material": "cast-iron"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.0425,
+              "region": "terminal-box",
+              "material": "polyamide"
+            }
+          ],
+          "plan": [
+            {
+              "id": "pipe",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0.0205,
+              "w": 0.18,
+              "h": 0.039,
+              "region": "casing",
+              "material": "brass"
+            },
+            {
+              "id": "body",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0455,
+                  -0.065
+                ],
+                [
+                  0.0455,
+                  -0.065
+                ],
+                [
+                  0.0455,
+                  0.015
+                ],
+                [
+                  0.0575,
+                  0.015
+                ],
+                [
+                  0.0575,
+                  0.065
+                ],
+                [
+                  -0.0575,
+                  0.065
+                ],
+                [
+                  -0.0575,
+                  0.015
+                ],
+                [
+                  -0.0455,
+                  0.015
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "casing",
+                "motor",
+                "rotor-window"
+              ],
+              "material": "cast-iron"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.03,
+              "y": -0.05,
+              "w": 0.06,
+              "h": 0.05,
+              "region": "terminal-box",
+              "material": "polyamide"
+            }
+          ],
+          "front": [
+            {
+              "id": "body",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.065,
+                  0.012
+                ],
+                [
+                  0.015,
+                  0.012
+                ],
+                [
+                  0.015,
+                  0
+                ],
+                [
+                  0.065,
+                  0
+                ],
+                [
+                  0.065,
+                  0.115
+                ],
+                [
+                  0.015,
+                  0.115
+                ],
+                [
+                  0.015,
+                  0.103
+                ],
+                [
+                  -0.065,
+                  0.103
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "casing",
+                "motor",
+                "rotor-window"
+              ],
+              "material": "cast-iron"
+            },
+            {
+              "id": "terminal-box",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.1075,
+              "w": 0.05,
+              "h": 0.0425,
+              "region": "terminal-box",
+              "material": "polyamide"
+            },
+            {
+              "id": "pipe",
+              "bone": "housing",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": 0.0575,
+              "rx": 0.0195,
+              "ry": 0.0195,
+              "region": "casing",
+              "material": "brass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.9 mm by 0.75 mm mark: a disc with a box on top and a pipe through it. Front, 0.65 mm wide: one stepped body of volute and motor with the terminal box and a pipe disc. Plan: the stepped body with the pipe through it and the terminal box.",
+            "de": "Ein Zeichen von 0,9 mm mal 0,75 mm: eine Scheibe mit einem Kasten oben und einem Rohr hindurch. Vorderansicht, 0,65 mm breit: ein gestufter Körper aus Spiralgehäuse und Motor mit Klemmenkasten und einer Rohrscheibe. Grundriss: der gestufte Körper mit dem durchgehenden Rohr und dem Klemmenkasten."
+          },
+          "retained": {
+            "en": "The 115 mm casing disc, the 60 mm terminal box and the pipe of 180 mm length through the casing.",
+            "de": "Die Gehäusescheibe von 115 mm, der Klemmenkasten von 60 mm und das Rohr von 180 mm Länge durch das Gehäuse."
+          },
+          "merged": {
+            "en": "Casing, motor head and window form one disc (three regions merged); unions and stubs form one pipe bar.",
+            "de": "Gehäuse, Motorkopf und Fenster bilden eine Scheibe (drei Regionen zusammengeführt); Verschraubungen und Stutzen bilden einen Rohrbalken."
+          },
+          "omitted": {
+            "en": "Window, rotor indicator, motor ring, bezel, gland, indicator and all edges. Union nuts, window and the split between volute and motor in front and plan.",
+            "de": "Fenster, Rotoranzeige, Motorring, Blende, Verschraubung, Anzeige und alle Kanten. Überwurfmuttern, Fenster und die Trennung zwischen Spiralgehäuse und Motor in Vorderansicht und Grundriss."
+          },
+          "thinElements": {
+            "en": "The pipe is thickened from 28 to 39 mm (0.2 mm on paper) so that it stays a closed fill.",
+            "de": "Das Rohr ist von 28 auf 39 mm (0,2 mm auf Papier) verdickt, damit es eine geschlossene Fläche bleibt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Casing 0.42, pipe 0.6, terminal box 0.78; one body pen of 0.13 mm.",
+            "de": "Gehäuse 0,42, Rohr 0,6, Klemmenkasten 0,78; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "The disc lists casing, motor and window as merged regions; the terminal box stays separate.",
+            "de": "Die Scheibe führt Gehäuse, Motor und Fenster als zusammengeführte Regionen; der Klemmenkasten bleibt getrennt."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the pump is 0.36 mm by 0.30 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the status LED of 9 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist die Pumpe 0,36 mm mal 0,30 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, die Status-LED von 9 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Status LED of 9 mm",
+          "de": "Status-LED von 9 mm"
+        },
+        "limitingSizeM": 0.009,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The pump is switched off: the rotor stands still and the housing is at room temperature.",
+          "de": "Die Pumpe ist ausgeschaltet: der Rotor steht still und das Gehäuse hat Raumtemperatur."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "pipe-left",
+          "pipe-right"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "motor": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "terminal-box": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "rotor-window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "motor-plume": 0
+          },
+          "operating": {
+            "power": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "low",
+        "title": {
+          "en": "Low speed",
+          "de": "Kleine Stufe"
+        },
+        "description": {
+          "en": "The pump runs on the low stage at 5 W: the rotor turns slowly, the housing warms slightly.",
+          "de": "Die Pumpe läuft auf der kleinen Stufe mit 5 W: der Rotor dreht langsam, das Gehäuse erwärmt sich leicht."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "pipe-left",
+          "pipe-right"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "motor": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "terminal-box": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "rotor-window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "motor-plume": 0.3
+          },
+          "operating": {
+            "power": 0.111
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "high",
+        "title": {
+          "en": "High speed",
+          "de": "Große Stufe"
+        },
+        "description": {
+          "en": "The pump runs at the full stage at 45 W: the rotor turns fast, the motor head and the casing release 30 W.",
+          "de": "Die Pumpe läuft auf der großen Stufe mit 45 W: der Rotor dreht schnell, Motorkopf und Gehäuse geben 30 W ab."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "pipe-left",
+          "pipe-right"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "motor": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "terminal-box": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "rotor-window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "motor-plume": 1
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "run-high",
+        "title": {
+          "en": "Running at the full stage",
+          "de": "Läuft auf großer Stufe"
+        },
+        "description": {
+          "en": "The rotor indicator turns once in two seconds. The picture is a slow-motion view: the real rotor turns at several thousand revolutions per minute.",
+          "de": "Die Rotoranzeige dreht sich in zwei Sekunden einmal. Das Bild zeigt eine Zeitlupe: der echte Rotor dreht mit mehreren tausend Umdrehungen je Minute."
+        },
+        "durationS": 2,
+        "fps": 15,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "high",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2,
+            "pose": "high",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 360
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pipe-left",
+            "fromS": 0,
+            "toS": 2
+          },
+          {
+            "anchor": "pipe-right",
+            "fromS": 0,
+            "toS": 2
+          }
+        ],
+        "phases": [
+          {
+            "id": "run",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Turning",
+              "de": "Dreht"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "run-low",
+        "title": {
+          "en": "Running at the low stage",
+          "de": "Läuft auf kleiner Stufe"
+        },
+        "description": {
+          "en": "The rotor indicator turns once in four seconds, half as fast as at the full stage, in slow motion.",
+          "de": "Die Rotoranzeige dreht sich in vier Sekunden einmal, halb so schnell wie auf großer Stufe, in Zeitlupe."
+        },
+        "durationS": 4,
+        "fps": 15,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "low",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "low",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 360
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pipe-left",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "pipe-right",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "run",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Turning slowly",
+              "de": "Dreht langsam"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "start-and-throttle",
+        "title": {
+          "en": "Start, speed up and stop",
+          "de": "Anlaufen, hochschalten und stoppen"
+        },
+        "description": {
+          "en": "From standstill the pump starts on the low stage after three seconds, steps to the full stage after eight seconds and is switched off after fourteen seconds; the rotor speeds up and runs down.",
+          "de": "Aus dem Stillstand läuft die Pumpe nach drei Sekunden auf kleiner Stufe an, schaltet nach acht Sekunden auf große Stufe und wird nach vierzehn Sekunden ausgeschaltet; der Rotor beschleunigt und läuft aus."
+        },
+        "durationS": 16,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2,
+            "pose": "off",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "low",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 45
+              }
+            }
+          },
+          {
+            "t": 7,
+            "pose": "low",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 405
+              }
+            }
+          },
+          {
+            "t": 8,
+            "pose": "high",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 540
+              }
+            }
+          },
+          {
+            "t": 12,
+            "pose": "high",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 1260
+              }
+            }
+          },
+          {
+            "t": 14,
+            "pose": "off",
+            "ease": "out",
+            "bones": {
+              "rotor": {
+                "angleDeg": 1440
+              }
+            }
+          },
+          {
+            "t": 16,
+            "pose": "off",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 1440
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pipe-left",
+            "fromS": 0,
+            "toS": 16
+          },
+          {
+            "anchor": "pipe-right",
+            "fromS": 0,
+            "toS": 16
+          }
+        ],
+        "phases": [
+          {
+            "id": "standstill",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Standstill",
+              "de": "Stillstand"
+            }
+          },
+          {
+            "id": "start",
+            "fromS": 2,
+            "toS": 3,
+            "title": {
+              "en": "Starting",
+              "de": "Anlaufen"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 3,
+            "toS": 8,
+            "title": {
+              "en": "Low stage",
+              "de": "Kleine Stufe"
+            }
+          },
+          {
+            "id": "high",
+            "fromS": 8,
+            "toS": 14,
+            "title": {
+              "en": "Full stage",
+              "de": "Große Stufe"
+            }
+          },
+          {
+            "id": "run-down",
+            "fromS": 14,
+            "toS": 16,
+            "title": {
+              "en": "Run-down",
+              "de": "Auslaufen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "operating",
+            "title": {
+              "en": "Switched to the low stage",
+              "de": "Auf kleine Stufe geschaltet"
+            },
+            "target": "power"
+          },
+          {
+            "t": 8,
+            "kind": "operating",
+            "title": {
+              "en": "Switched to the full stage",
+              "de": "Auf große Stufe geschaltet"
+            },
+            "target": "power"
+          },
+          {
+            "t": 14,
+            "kind": "shutdown",
+            "title": {
+              "en": "Switched off",
+              "de": "Ausgeschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 0.111
+              },
+              {
+                "t": 7,
+                "v": 0.111
+              },
+              {
+                "t": 8,
+                "v": 1
+              },
+              {
+                "t": 12,
+                "v": 1
+              },
+              {
+                "t": 14,
+                "v": 0
+              },
+              {
+                "t": 16,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:motor-plume",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 0.3
+              },
+              {
+                "t": 7,
+                "v": 0.3
+              },
+              {
+                "t": 8,
+                "v": 1
+              },
+              {
+                "t": 12,
+                "v": 1
+              },
+              {
+                "t": 14,
+                "v": 0
+              },
+              {
+                "t": 16,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "power",
+          "title": {
+            "en": "Electrical power",
+            "de": "Elektrische Leistung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.111,
+              "title": {
+                "en": "Low stage (5 W)",
+                "de": "Kleine Stufe (5 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full speed (45 W)",
+                "de": "Volle Drehzahl (45 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Pump casing, unions and stubs",
+            "de": "Pumpengehäuse, Verschraubungen und Stutzen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "cast-iron",
+          "areaM2": 0.035,
+          "characteristicLengthM": 0.115,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Painted cast iron 5 mm",
+                "de": "Lackiertes Gusseisen 5 mm"
+              },
+              "kind": "metal",
+              "material": "cast-iron",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.0001,
+              "heatCapacityJM2K": 16600,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 16600,
+          "operating": {
+            "key": "power",
+            "heatW": 10
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "motor",
+          "title": {
+            "en": "Motor head",
+            "de": "Motorkopf"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "aluminium",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.09,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "head",
+              "title": {
+                "en": "Painted die-cast aluminium 3 mm",
+                "de": "Lackierter Aluminiumdruckguss 3 mm"
+              },
+              "kind": "metal",
+              "material": "aluminium",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.000013,
+              "heatCapacityJM2K": 7300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 7300,
+          "operating": {
+            "key": "power",
+            "heatW": 18
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "terminal-box",
+          "title": {
+            "en": "Terminal box with electronics",
+            "de": "Klemmenkasten mit Elektronik"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "polyamide",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.06,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "box",
+              "title": {
+                "en": "Polyamide shell 2.5 mm",
+                "de": "Polyamidschale 2,5 mm"
+              },
+              "kind": "polymer",
+              "material": "polyamide",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "operating": {
+            "key": "power",
+            "heatW": 2
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "rotor-window",
+          "title": {
+            "en": "Rotor window with indicator",
+            "de": "Rotorfenster mit Anzeige"
+          },
+          "kind": "glazing",
+          "model": "passive",
+          "material": "window-glass",
+          "areaM2": 0.0022,
+          "characteristicLengthM": 0.053,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "pane",
+              "title": {
+                "en": "Polycarbonate pane 2 mm",
+                "de": "Polycarbonatscheibe 2 mm"
+              },
+              "kind": "polymer",
+              "material": "window-glass",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "motor-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Warm air rising from the motor head",
+            "de": "Warme Luft über dem Motorkopf"
+          },
+          "anchor": "motor-top",
+          "directionDeg": 90,
+          "diameterM": 0.08,
+          "region": "motor",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Of the 45 W at full speed about 30 W leave through the surfaces into the room (motor head 18 W, casing 10 W, electronics 2 W); the remaining 15 W warm the pumped water and appear at the radiators.",
+          "de": "Von den 45 W bei voller Drehzahl verlassen etwa 30 W die Oberflächen in den Raum (Motorkopf 18 W, Gehäuse 10 W, Elektronik 2 W); die übrigen 15 W erwärmen das Fördermedium und erscheinen an den Heizkörpern."
+        },
+        {
+          "en": "The heat of the heating water itself (pipe temperature) is not modelled; the pump is shown as a heat source of its own electrical losses.",
+          "de": "Die Wärme des Heizwassers selbst (Rohrtemperatur) ist nicht modelliert; die Pumpe wird als Wärmequelle ihrer eigenen elektrischen Verluste gezeigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "pipe-left",
+        "pipe-right"
+      ],
+      "assumptions": [
+        {
+          "en": "The 2.8 kg pump hangs in the pipe on both union stubs: a pin on the left and a roller on the right carry its weight; the pipe itself is rigid.",
+          "de": "Die 2,8 kg schwere Pumpe hängt an beiden Verschraubungsstutzen im Rohr: ein Festlager links und ein Rollenlager rechts tragen ihr Gewicht; das Rohr selbst ist starr."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "high",
+      "defaultClip": "run-high",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

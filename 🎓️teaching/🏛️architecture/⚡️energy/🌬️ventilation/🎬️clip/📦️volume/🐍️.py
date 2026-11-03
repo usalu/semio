@@ -26,7 +26,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -56,7 +55,7 @@ highlight_param = _manim_module.highlight_param
 math_label = _manim_module.math_label
 math_readout = _manim_module.math_readout
 math_panel = _manim_module.math_panel
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 smooth_path = _manim_module.smooth_path
 flow_guides = _manim_module.flow_guides
 flow_animation = _manim_module.flow_animation
@@ -66,17 +65,19 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
-radiator = _manim_module.radiator
 window_opening = _manim_module.window_opening
-person_glyph = _manim_module.person_glyph
-seated_person_glyph = _manim_module.seated_person_glyph
-lamp_glyph = _manim_module.lamp_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
+fitted_staffage = _manim_module.fitted_staffage
 clock_glyph = _manim_module.clock_glyph
+tracked_clock = _manim_module.tracked_clock
 thermometer_glyph = _manim_module.thermometer_glyph
 ripples = _manim_module.ripples
 
@@ -109,14 +110,6 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 #region Moving air
-def _fan(pos, color, radius: float = 0.18):
-    """🌀 Ring plus three blades — marks a stream as fan-driven."""
-    ring = Circle(radius=radius, color=color, stroke_width=2.2).set_fill(P_DEEP_DARK, 1.0)
-    blades = VGroup(*[Line(ORIGIN, RIGHT * radius * 0.78, color=color, stroke_width=2.2).rotate(a, about_point=ORIGIN)
-                      for a in (0.0, TAU / 3, 2 * TAU / 3)])
-    return VGroup(ring, blades).move_to(pos)
-
-
 def _streams(streams, rt: float, *, speed: float = 0.8, waves: int = 3):
     """💨 Continuous particle streams for ``rt`` seconds at a steady ``speed`` in passes per second."""
     return flow_animation([(list(p), *c) for p, *c in streams], waves=waves, cycles=speed * rt)
@@ -278,7 +271,7 @@ def _open_sash(window, *, run_time: float = 0.9, close: bool = False):
 #region People, rooms and hand-over chips
 def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
           window_side="none", window_y=None, window_h=1.15):
-    """🏠 Closed room material around declared openings, with slabs centred on the outline."""
+    """🧱 Closed room material around declared openings, with slabs centred on the outline."""
     inner_h = height - t
     floor_y = float(center[1]) - inner_h / 2
     mid = float(center[1]) if window_y is None else window_y
@@ -289,11 +282,11 @@ def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
     return section_material(VGroup(body, section["floor"]))
 
 
-def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
-    """🧍 A 1.75 m occupant in a 2.5 m clear room, anchored to the slab top."""
+def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", rate: float = 1.0, t: float = 0.16):
+    """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
     height = 0.7 * (room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return person_glyph([x, floor_y + height / 2, 0], color=color, scale=height / 0.66)
+    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]), rate=rate)
 
 
 def _dim(mob, factor: float, **kwargs):
@@ -312,27 +305,10 @@ def _handover_chip(src: str, color, size: float = BODY_FONT_SIZE):
 
 def _amount(value: float) -> str:
     """🔢 German number with as many decimals as the magnitude needs to stay readable."""
-    return de_num(value, 0 if value >= 10 else 1 if value >= 1 else 3)
+    return label_number(value, 0 if value >= 10 else 1 if value >= 1 else 3)
 #endregion
 
 
-#region Instrument glyphs
-def _clock(center, r: float, minutes, *, color=P_PRIMARY):
-    """🕐 Physical Fundamentals ``clock_glyph`` whose minute hand follows ``minutes`` (a ``ValueTracker``) — one turn is one hour."""
-    dial = clock_glyph(center, r=r, color=color)
-    face = dial["face"].set_fill(P_DEEP_DARK, opacity=0.9)
-    ticks = dial["group"][1]
-
-    def hand():
-        mid, rad = face.get_center(), face.width / 2
-        a = TAU * minutes.get_value() / 60.0
-        return Line(mid, mid + 0.8 * rad * np.array([np.sin(a), np.cos(a), 0.0]), color=color, stroke_width=3)
-
-    hand_mob = always_redraw(hand)
-    pin = always_redraw(lambda: Dot(face.get_center(), radius=0.035, color=color))
-    return {"face": face, "group": VGroup(face, ticks, hand_mob, pin), "static": VGroup(face, ticks)}
-
-#endregion
 
 
 #region Air change scale
@@ -358,7 +334,7 @@ def _n_scale(x: float, y_lo: float, y_hi: float, *, lo: float = 0.1, hi: float =
         ticks.add(Line([x - (0.17 if major else 0.08), y, 0], [x, y, 0], color=P_WHITE,
                        stroke_width=2.0 if major else 1.1))
         if major:
-            labels.add(math_label(de_num(v, 1 if v < 1 else 0), np.array([x - 0.26, y - 0.07, 0]),
+            labels.add(math_label(label_number(v, 1 if v < 1 else 0), np.array([x - 0.26, y - 0.07, 0]),
                                   size=LABEL_FONT_SIZE, edge="right"))
     ticks.add(Line([x - 0.17, y_of(0), 0], [x, y_of(0), 0], color=P_WHITE, stroke_width=2.0))
     labels.add(math_label("0", np.array([x - 0.26, y_of(0) - 0.07, 0]), size=LABEL_FONT_SIZE, edge="right"))
@@ -400,6 +376,22 @@ def _mini_room(color, w: float = 1.6, h: float = 1.1, t: float = 0.1):
                   *[Rectangle(width=t, height=h, **style).move_to([sx * (w + t) / 2, 0, 0]) for sx in (-1, 1)])
 
 
+def _still(mob):
+    """🧊 Frame-frozen copy of an animated staffage figure — safe as the source of a morph."""
+    frozen = mob.copy()
+    for part in frozen.get_family():
+        part.clear_updaters()
+    return frozen
+
+
+_USE_UNIT = 0.44
+
+
+def _use_cast(cast: str, x: float, floor_y: float, rate: float = 1.0, mirror: bool = False):
+    """🎭 Staffage clip standing on ``floor_y`` at the one metre of every mini room (``_USE_UNIT``), so all people of the series share a scale."""
+    return staffage_motion(cast, unit=_USE_UNIT, anchor=np.array([x, floor_y, 0.0]), rate=rate, mirror=mirror)
+
+
 def _use_glyph(kind: str, color):
     """🏢 Small room for one use — storage, passive house, office, classroom, kitchen, operating room — drawn with the
     Physical Fundamentals people, lamp and slabs; ``.air`` holds the paths its room air takes.
@@ -412,40 +404,28 @@ def _use_glyph(kind: str, color):
 
     air = []
     if kind == "lager":
-        for cx, cy in ((-0.38, fy + 0.2), (0.04, fy + 0.2), (-0.17, fy + 0.6)):
-            box = Square(0.38, color=GREY_B, stroke_width=2).move_to([cx, cy, 0])
-            parts.add(box, Line(box.get_corner(DL), box.get_corner(UR), color=GREY_B, stroke_width=1.4),
-                      Line(box.get_corner(UL), box.get_corner(DR), color=GREY_B, stroke_width=1.4))
+        for cast, cx in (("ventilation-volume-crates-low", -0.45), ("ventilation-volume-crates-high", -0.05), ("ventilation-volume-crates-half", 0.35)):
+            parts.add(staffage(cast, unit=_USE_UNIT, anchor=np.array([cx, fy, 0.0])))
     elif kind == "passiv":
-        unit = Rectangle(width=0.5, height=0.24, color=P_GREEN, stroke_width=2).move_to([-0.2, 0.36, 0])
+        unit = fitted_staffage("shared-mvhr-normal", width=0.5, height=0.24).move_to([-0.2, 0.36, 0])
         parts.add(Line(unit.get_left(), [-0.8, 0.36, 0], color=P_BLUE, stroke_width=2.4),
                   Line(unit.get_right(), [0.8, 0.36, 0], color=P_ORANGE, stroke_width=2.4),
-                  unit, _fan(unit.get_center(), P_GREEN, radius=0.08),
-                  person_glyph([0.35, fy + 0.385, 0], color=P_ORANGE, scale=0.77 / 0.66))
+                  unit, _use_cast("shared-person-pathlines", 0.35, fy))
         air = [path((-0.3, 0.22), (-0.55, -0.05), (-0.35, -0.4)), path((0.65, -0.4), (0.62, 0.02), (0.1, 0.22))]
     elif kind == "buero":
-        parts.add(Line([-0.08, -0.12, 0], [0.66, -0.12, 0], color=GREY_B, stroke_width=3),
-                  *[Line([x, -0.12, 0], [x, fy, 0], color=GREY_B, stroke_width=2) for x in (-0.02, 0.6)],
-                  Rectangle(width=0.36, height=0.26, color=P_CYAN, stroke_width=2).move_to([0.36, 0.06, 0]),
-                  seated_person_glyph([-0.42, fy, 0], color=color, scale=1.15, chair_color=GREY_B)["group"])
+        parts.add(_use_cast("shared-office-worker-pathlines", -0.1, fy))
         air = [path((-0.72, y), (0.0, y - 0.04), (0.72, y)) for y in (0.36, 0.46)]
     elif kind == "klasse":
-        parts.add(Rectangle(width=1.0, height=0.3, color=P_GREEN, stroke_width=2).set_fill(semio_color("dark-7-9"), 0.9)
-                  .move_to([0, 0.32, 0]),
-                  *[seated_person_glyph([cx, fy, 0], color=color, scale=0.72, chair_color=GREY_B)["group"]
-                    for cx in (-0.6, -0.12, 0.36)])
+        parts.add(staffage("ventilation-volume-blackboard", unit=_USE_UNIT, anchor=np.array([0.0, 0.17, 0.0])),
+                  *[_use_cast("shared-office-worker-pathlines", cx, fy, 0.9 + 0.08 * i, mirror=True) for i, cx in enumerate((-0.35, 0.05, 0.45))])
         air = [path((-0.72, y), (0.0, y + 0.03), (0.72, y)) for y in (0.0, 0.08)]
     elif kind == "kueche":
-        stove = Rectangle(width=0.9, height=0.34, color=GREY_B, stroke_width=2).move_to([0, fy + 0.17, 0])
-        pot = Rectangle(width=0.32, height=0.2, color=P_WHITE, stroke_width=2).next_to(stove, UP, buff=0)
-        hood = Polygon([-0.42, 0.5, 0], [0.42, 0.5, 0], [0.28, 0.3, 0], [-0.28, 0.3, 0], color=GREY_B, stroke_width=2)
-        parts.add(stove, pot, hood)
-        air = [path((x, -0.0), (x + 0.04, 0.14), (x * 0.6, 0.3)) for x in (-0.09, 0.05)]
+        parts.add(_use_cast("ventilation-volume-cook", 0.3, fy),
+                  staffage("ventilation-volume-hood-mirrored", unit=_USE_UNIT, anchor=np.array([0.58, 0.26, 0.0])))
+        air = [path((x, -0.0), (x + 0.06, 0.14), (0.5, 0.26)) for x in (0.24, 0.34)]
     elif kind == "op":
-        parts.add(Line([-0.45, -0.2, 0], [0.45, -0.2, 0], color=P_WHITE, stroke_width=4),
-                  Line([0, -0.2, 0], [0, fy, 0], color=GREY_B, stroke_width=3),
-                  lamp_glyph([0, 0.55, 0], drop=0.08)["group"].set_color(P_YELLOW),
-                  person_glyph([0.6, fy + 0.29, 0], color=P_CYAN, scale=0.88))
+        parts.add(staffage("ventilation-volume-operating-table", unit=_USE_UNIT, anchor=np.array([-0.12, fy, 0.0])),
+                  _use_cast("shared-person-pathlines", 0.42, fy))
         air = [path((x, 0.5), (x, -0.12)) for x in (-0.66, -0.42, 0.34)]
     parts.air = air
     return parts
@@ -497,28 +477,27 @@ class Beat1_Innenvolumen(Scene):
         N = self.NARRATION
         H = HOUSE
 
-        subtitle = section_heading("Bruttovolumen und Nettovolumen")
+        subtitle = section_heading(tr("Gross volume and net volume", "Bruttovolumen und Nettovolumen"))
         din = _din_ref("DIN V 18599-1 · DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        #region outline and dimensions
-        S, O = 0.37, np.array([-5.75, -1.12, 0.0])
+        S, O = 0.37, np.array([-5.75, -0.7, 0.0])
         depth_vec = np.array([0.44, 0.32, 0.0])
         outer_pts = _to_scene(H["outer"], O, S)
         pf = _pf_house(H, O, S)
         outline = pf["outline"]
         x_l, x_r = outer_pts[0][0], outer_pts[1][0]
         w_dim = dim_arrow([x_l, O[1] - 0.24, 0], [x_r, O[1] - 0.24, 0], color=P_YELLOW)
-        w_lbl = math_label(rf"{de_num(H['w'])}\,\mathrm{{m}}", np.array([(x_l + x_r) / 2, O[1] - 0.52, 0]),
+        w_lbl = math_label(rf"{label_number(H['w'])}\,\mathrm{{m}}", np.array([(x_l + x_r) / 2, O[1] - 0.52, 0]),
                            size=LABEL_FONT_SIZE, color=P_YELLOW)
         e_dim = dim_arrow([x_l - 0.3, O[1], 0], [x_l - 0.3, outer_pts[4][1], 0], color=P_YELLOW)
-        e_lbl = math_label(rf"{de_num(H['eave'])}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
+        e_lbl = math_label(rf"{label_number(H['eave'])}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
         e_lbl.next_to(e_dim, LEFT, buff=0.1)
         r_x = x_r + depth_vec[0] + 0.3
         r_dim = dim_arrow([r_x, O[1], 0], [r_x, outer_pts[3][1], 0], color=P_YELLOW)
-        r_lbl = math_label(rf"{de_num(H['ridge'], 1)}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
+        r_lbl = math_label(rf"{label_number(H['ridge'], 1)}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
         r_lbl.next_to(r_dim, RIGHT, buff=0.1)
         out_paths = [smooth_path([np.array(p) + d for d in ([-0.16, -0.03, 0], [0.06, 0.03, 0], [0.28, -0.01, 0])])
                      for p in ([-6.6, 1.75, 0], [-5.2, 2.2, 0], [-6.75, 0.2, 0], [-2.35, 2.25, 0], [-1.05, 1.95, 0],
@@ -531,9 +510,7 @@ class Beat1_Innenvolumen(Scene):
         self.play(GrowFromCenter(w_dim), FadeIn(w_lbl), GrowFromCenter(e_dim), FadeIn(e_lbl),
                   GrowFromCenter(r_dim), FadeIn(r_lbl), *outdoor(1.2), run_time=1.2)
         hold_for(self, N, "intro", used=2.6, during=outdoor)
-        #endregion
 
-        #region gross section area and depth
         caption = swap_caption(self, caption, subtitle_text(N, "gross"))
         level = ValueTracker(0.001)
         depth = ValueTracker(0.0)
@@ -544,7 +521,7 @@ class Beat1_Innenvolumen(Scene):
 
         gross_fill = always_redraw(lambda: _poly(_clip_below(H["outer"], level.get_value()), O, S, stroke_width=0,
                                                  fill_color=P_TEAL, fill_opacity=0.28))
-        a_read = math_readout(lambda: rf"A_{{\mathrm{{e}}}} = {de_num(area_e(), 1)}\,\mathrm{{m^{{2}}}}",
+        a_read = math_readout(lambda: rf"A_{{\mathrm{{e}}}} = {label_number(area_e(), 1)}\,\mathrm{{m^{{2}}}}",
                               np.array([x0, 1.85, 0]), size=BODY_FONT_SIZE, color=P_TEAL)
         self.add(gross_fill, a_read)
         self.play(level.animate.set_value(H["ridge"]), *outdoor(2.0), run_time=2.0, rate_func=linear)
@@ -557,21 +534,19 @@ class Beat1_Innenvolumen(Scene):
 
         back_mob = always_redraw(back)
         ve_read = math_readout(
-            lambda: rf"V_{{\mathrm{{e}}}} = {de_num(H['A_e'], 1)} \cdot {de_num(depth.get_value(), 1)} = "
-                    rf"{de_num(H['A_e'] * depth.get_value())}\,\mathrm{{m^{{3}}}}",
+            lambda: rf"V_{{\mathrm{{e}}}} = {label_number(H['A_e'], 1)} \cdot {label_number(depth.get_value(), 1)} = "
+                    rf"{label_number(H['A_e'] * depth.get_value())}\,\mathrm{{m^{{3}}}}",
             np.array([x0, 1.28, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(back_mob, ve_read)
         self.play(depth.animate.set_value(H["depth"]), *outdoor(1.8), run_time=1.8, rate_func=linear)
         ve_read.clear_updaters()
         d_start = outer_pts[1] + RIGHT * 0.12 + DOWN * 0.1
         d_dim = dim_arrow(d_start, d_start + depth_vec, color=P_YELLOW)
-        d_lbl = math_label(rf"{de_num(H['depth'])}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
+        d_lbl = math_label(rf"{label_number(H['depth'])}\,\mathrm{{m}}", size=LABEL_FONT_SIZE, color=P_YELLOW)
         d_lbl.next_to(d_dim.get_center(), DR, buff=0.04)
         self.play(GrowFromCenter(d_dim), FadeIn(d_lbl), *outdoor(0.6), run_time=0.6)
         hold_for(self, N, "gross", during=outdoor)
-        #endregion
 
-        #region construction lights up
         caption = swap_caption(self, caption, subtitle_text(N, "focus"))
         pieces = {name: _poly(pts, O, S, stroke_width=1, color=P_YELLOW, fill_color=P_YELLOW, fill_opacity=0.0)
                   for name, pts in H["pieces"].items()}
@@ -581,14 +556,12 @@ class Beat1_Innenvolumen(Scene):
         self.remove(gross_fill)
         self.play(*[p.animate.set_fill(P_YELLOW, opacity=0.75) for p in pieces.values()], run_time=1.0)
         hold_for(self, N, "focus")
-        #endregion
 
-        #region subtract construction
         caption = swap_caption(self, caption, subtitle_text(N, "subtract"))
         removed = ValueTracker(0.0)
         a_net_read = math_readout(
-            lambda: rf"A = {de_num(H['A_e'], 1)} - {de_num(removed.get_value(), 1)} = "
-                    rf"{de_num(H['A_e'] - removed.get_value(), 1)}\,\mathrm{{m^{{2}}}}",
+            lambda: rf"A = {label_number(H['A_e'], 1)} - {label_number(removed.get_value(), 1)} = "
+                    rf"{label_number(H['A_e'] - removed.get_value(), 1)}\,\mathrm{{m^{{2}}}}",
             np.array([x0, 0.62, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
         self.add(a_net_read)
         for group in (("wall_l", "wall_r"), ("slab", "decke"), ("roof_l", "roof_r")):
@@ -598,15 +571,13 @@ class Beat1_Innenvolumen(Scene):
                       removed.animate.increment_value(share), run_time=0.9)
         inner_d = ValueTracker(H["depth"])
         di_read = math_readout(
-            lambda: rf"d_{{\mathrm{{i}}}} = {de_num(H['depth'])} - 2 \cdot {de_num(H['wall'], 2)} = "
-                    rf"{de_num(inner_d.get_value(), 2)}\,\mathrm{{m}}",
+            lambda: rf"d_{{\mathrm{{i}}}} = {label_number(H['depth'])} - 2 \cdot {label_number(H['wall'], 2)} = "
+                    rf"{label_number(inner_d.get_value(), 2)}\,\mathrm{{m}}",
             np.array([x0, 0.05, 0]), size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(di_read)
         self.play(inner_d.animate.set_value(H["d_i"]), run_time=1.0)
         hold_for(self, N, "subtract")
-        #endregion
 
-        #region net air volume fills
         caption = swap_caption(self, caption, subtitle_text(N, "fill"))
         lvl = ValueTracker(H["slab"])
         rooms = H["rooms"]
@@ -636,7 +607,7 @@ class Beat1_Innenvolumen(Scene):
         ]))
         room_edges = VGroup(*[prism(r, fill=0.0, stroke=1.6) for r in rooms])
         v_read = math_readout(
-            lambda: rf"V = {de_num(net_area(), 1)} \cdot {de_num(H['d_i'], 2)} = {de_num(net_area() * H['d_i'])}\,\mathrm{{m^{{3}}}}",
+            lambda: rf"V = {label_number(net_area(), 1)} \cdot {label_number(H['d_i'], 2)} = {label_number(net_area() * H['d_i'])}\,\mathrm{{m^{{3}}}}",
             np.array([x0, -0.52, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
         self.add(room_fill, v_read)
         self.play(Create(room_edges), pf["group"].animate.set_stroke(opacity=0.5), run_time=0.6)
@@ -655,9 +626,7 @@ class Beat1_Innenvolumen(Scene):
 
         self.play(FadeIn(v_sym, scale=1.3), *warm_air(0.5), run_time=0.5)
         hold_for(self, N, "fill", during=warm_air)
-        #endregion
 
-        #region ratio bars and formula
         caption = swap_caption(self, caption, subtitle_text(N, "ratio"))
         ratio = H["V"] / H["V_e"]
         bx, blen = 1.05, 3.9
@@ -667,17 +636,17 @@ class Beat1_Innenvolumen(Scene):
         bar_v.move_to([bx + blen * ratio / 2, -1.36, 0])
         lbl_e = math_label(r"V_{\mathrm{e}}", np.array([bx - 0.12, -1.07, 0]), size=LABEL_FONT_SIZE, edge="right")
         lbl_v = math_label("V", np.array([bx - 0.12, -1.43, 0]), size=LABEL_FONT_SIZE, color=P_ORANGE, edge="right")
-        val_e = math_label(rf"{de_num(H['V_e'])}\,\mathrm{{m^{{3}}}}", np.array([bx + blen + 0.14, -1.07, 0]),
+        val_e = math_label(rf"{label_number(H['V_e'])}\,\mathrm{{m^{{3}}}}", np.array([bx + blen + 0.14, -1.07, 0]),
                            size=LABEL_FONT_SIZE, edge="left")
-        val_v = math_label(rf"{de_num(H['V'])}\,\mathrm{{m^{{3}}}}", np.array([bx + blen * ratio + 0.14, -1.43, 0]),
+        val_v = math_label(rf"{label_number(H['V'])}\,\mathrm{{m^{{3}}}}", np.array([bx + blen * ratio + 0.14, -1.43, 0]),
                            size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
         self.play(TransformFromCopy(outline, bar_e), FadeIn(lbl_e), FadeIn(val_e), *warm_air(1.0), run_time=1.0)
         self.play(TransformFromCopy(room_edges, bar_v), FadeIn(lbl_v), FadeIn(val_v), *warm_air(1.0), run_time=1.0)
         row, box, items = math_panel([
             ("v", "V", P_ORANGE), (None, r"\approx", None),
-            ("f", de_num(ratio, 2), P_YELLOW), (None, r"\cdot", None),
+            ("f", label_number(ratio, 2), P_YELLOW), (None, r"\cdot", None),
             ("ve", r"V_{\mathrm{e}}", P_WHITE), (None, r"=", None),
-            ("num", rf"{de_num(ratio, 2)} \cdot {de_num(H['V_e'])} \approx {de_num(V_NET)}\,\mathrm{{m^{{3}}}}", P_WHITE),
+            ("num", rf"{label_number(ratio, 2)} \cdot {label_number(H['V_e'])} \approx {label_number(V_NET)}\,\mathrm{{m^{{3}}}}", P_WHITE),
         ])
         self.play(TransformFromCopy(v_sym, items["v"]), TransformFromCopy(lbl_e, items["ve"]), *warm_air(0.8), run_time=0.8)
         self.play(FadeIn(VGroup(*[m for m in row if m is not items["v"] and m is not items["ve"]])),
@@ -686,7 +655,6 @@ class Beat1_Innenvolumen(Scene):
         self.play(Create(ring), *warm_air(0.4), run_time=0.4)
         hold_for(self, N, "ratio", during=warm_air)
         self.play(FadeOut(ring), *warm_air(0.2), run_time=0.2)
-        #endregion
 
         caption = swap_caption(self, caption, subtitle_text(N, "label"))
         ring = highlight_param(items, "v", color=P_ORANGE)
@@ -706,6 +674,14 @@ AIR_CHANGE_USES = [
     ("kueche", 15.0, r"\text{Gewerbeküche}", P_ORANGE),
     ("op", 20.0, r"\text{Operationssaal}", P_RED),
 ]
+_USE_EN = {
+    r"\text{Lagerraum ohne Nutzung}": r"\text{Unused storage room}",
+    r"\text{Passivhaus mit Lüftungsanlage}": r"\text{Passive house with ventilation system}",
+    r"\text{Büro}": r"\text{Office}",
+    r"\text{Klassenzimmer}": r"\text{Classroom}",
+    r"\text{Gewerbeküche}": r"\text{Commercial kitchen}",
+    r"\text{Operationssaal}": r"\text{Operating theatre}",
+}
 
 
 class Beat2_Luftwechselrate(Scene):
@@ -746,13 +722,12 @@ class Beat2_Luftwechselrate(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Luftwechselrate n")
+        subtitle = section_heading(tr("Air change rate n", "Luftwechselrate n"))
         din = _din_ref("DIN EN 12831-1 · DIN 1946-4")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "volume"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        #region house with room air
         S, O = 0.36, np.array([-6.3, -1.3, 0.0])
         outer = HOUSE["outer"]
         pf = _pf_house(HOUSE, O, S)
@@ -766,22 +741,20 @@ class Beat2_Luftwechselrate(Scene):
                                            fill_opacity=0.32).set_z_index(-1))
         fresh = always_redraw(lambda: _poly(_clip_below(outer, fill_y()), O, S, stroke_width=0, fill_color=P_BLUE,
                                             fill_opacity=0.45).set_z_index(-1))
-        v_lbl = math_label(rf"V = {de_num(V_NET)}\,\mathrm{{m^{{3}}}}", np.array([O[0] + 5 * S, O[1] + 6.1 * S, 0]),
+        v_lbl = math_label(rf"V = {label_number(V_NET)}\,\mathrm{{m^{{3}}}}", np.array([O[0] + 5 * S, O[1] + 6.1 * S, 0]),
                            size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(fresh)
         self.play(Create(pf["group"]), FadeIn(warm), FadeIn(v_lbl), run_time=1.6)
         hold_for(self, N, "volume", used=1.6)
-        #endregion
 
-        #region clock and readouts
         caption = swap_caption(self, caption, subtitle_text(N, "rate"))
         hours = ValueTracker(0.0)
         minutes = ValueTracker(0.0)
-        clock = _clock([-1.0, 0.95, 0], 0.62, minutes)
-        t_read = math_readout(lambda: rf"t = {de_num(hours.get_value(), 1)}\,\mathrm{{h}}", np.array([-1.0, 0.0, 0]),
+        clock = tracked_clock([-1.0, 0.95, 0], 0.62, minutes)
+        t_read = math_readout(lambda: rf"t = {label_number(hours.get_value(), 1)}\,\mathrm{{h}}", np.array([-1.0, 0.0, 0]),
                               size=BODY_FONT_SIZE, color=P_CYAN, edge="center")
         x0 = 0.55
-        n_lbl = math_label(rf"n = {de_num(N_RATE, 1)}\,\mathrm{{h^{{-1}}}}", np.array([x0, 1.75, 0]),
+        n_lbl = math_label(rf"n = {label_number(N_RATE, 1)}\,\mathrm{{h^{{-1}}}}", np.array([x0, 1.75, 0]),
                            size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
         x_i, y_i = win_in["x"], win_in["center"][1]
         x_o, y_o = win_out["x"], win_out["center"][1]
@@ -801,9 +774,9 @@ class Beat2_Luftwechselrate(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "hour"))
         fresh_read = math_readout(
-            lambda: rf"V_{{\mathrm{{frisch}}}} = V \cdot n \cdot t = {de_num(V_NET * N_RATE * hours.get_value())}\,\mathrm{{m^{{3}}}}",
+            lambda: rf"V_{{\mathrm{{frisch}}}} = V \cdot n \cdot t = {label_number(V_NET * N_RATE * hours.get_value())}\,\mathrm{{m^{{3}}}}",
             np.array([x0, 1.05, 0]), size=BODY_FONT_SIZE, color=P_BLUE)
-        pct_read = math_readout(lambda: rf"{de_num(100 * frac.get_value())}\,\%\;\text{{der Raumluft getauscht}}",
+        pct_read = math_readout(lambda: tr(rf"{label_number(100 * frac.get_value())}\,\%\;\text{{of the room air exchanged}}", rf"{label_number(100 * frac.get_value())}\,\%\;\text{{der Raumluft getauscht}}"),
                                 np.array([x0, 0.45, 0]), size=LABEL_FONT_SIZE, color=P_BLUE)
         self.add(fresh_read, pct_read)
 
@@ -814,24 +787,22 @@ class Beat2_Luftwechselrate(Scene):
                       run_time=rt, rate_func=linear)
 
         run_hour(1.0)
-        flow_read = math_label(rf"\dot{{V}} = \frac{{{de_num(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}}}{{1\,\mathrm{{h}}}} = "
-                               rf"{de_num(V_NET * N_RATE)}\,\mathrm{{m^{{3}}/h}}", np.array([x0, -0.35, 0]),
+        flow_read = math_label(rf"\dot{{V}} = \frac{{{label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}}}{{1\,\mathrm{{h}}}} = "
+                               rf"{label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}/h}}", np.array([x0, -0.35, 0]),
                                size=BODY_FONT_SIZE, color=P_TEAL, edge="left")
-        snap = math_label(rf"V_{{\mathrm{{frisch}}}} = V \cdot n \cdot t = {de_num(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}",
+        snap = math_label(rf"V_{{\mathrm{{frisch}}}} = V \cdot n \cdot t = {label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}",
                           np.array([x0, 1.05, 0]), size=BODY_FONT_SIZE, color=P_BLUE, edge="left")
         self.play(TransformFromCopy(snap, flow_read), *exchange(0.9), run_time=0.9)
         hold_for(self, N, "hour", during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(N, "one_change"))
         run_hour(2.0)
-        full = math_label(rf"t = \frac{{1}}{{n}} = {de_num(1 / N_RATE)}\,\mathrm{{h}}", np.array([-1.0, -0.65, 0]),
+        full = math_label(rf"t = \frac{{1}}{{n}} = {label_number(1 / N_RATE)}\,\mathrm{{h}}", np.array([-1.0, -0.65, 0]),
                           size=BODY_FONT_SIZE, color=P_CYAN)
         self.play(FadeIn(full, shift=UP * 0.1), Indicate(fresh, color=P_CYAN, scale_factor=1.0), *exchange(0.8),
                   run_time=0.8)
         hold_for(self, N, "one_change", during=exchange)
-        #endregion
 
-        #region formula panel
         caption = swap_caption(self, caption, subtitle_text(N, "product"))
         row, box, items = math_panel([
             ("v", "V", P_ORANGE), (None, r"\cdot", None), ("n", "n", P_CYAN), (None, "=", None),
@@ -841,9 +812,7 @@ class Beat2_Luftwechselrate(Scene):
                   TransformFromCopy(flow_read, items["vd"]), *exchange(1.0), run_time=1.0)
         self.play(FadeIn(row), Create(box), *exchange(0.5), run_time=0.5)
         hold_for(self, N, "product", during=exchange)
-        #endregion
 
-        #region scale of uses
         caption = swap_caption(self, caption, subtitle_text(N, "home"))
         self.remove(fresh)
         fresh_static = _poly(outer, O, S, stroke_width=0, fill_color=P_BLUE, fill_opacity=0.45)
@@ -860,15 +829,15 @@ class Beat2_Luftwechselrate(Scene):
         self.play(FadeIn(scale["group"]), house.animate.scale_to_fit_height(1.35).move_to(stage), run_time=1.2)
         self.play(FadeIn(clock["group"]), run_time=0.4)
 
-        entries = [(N_RATE, r"\text{Wohnung} \approx 0{,}5", P_ORANGE)] + [
-            (n, rf"{name} \approx {de_num(n, 1) if 0 < n < 1 else de_num(n)}", c) for _k, n, name, c in AIR_CHANGE_USES
+        entries = [(N_RATE, tr(r"\text{Wohnung} \approx 0.5", r"\text{Wohnung} \approx 0{,}5"), P_ORANGE)] + [
+            (n, rf"{tr(_USE_EN[name], name)} \approx {label_number(n, 1) if 0 < n < 1 else label_number(n)}", c) for _k, n, name, c in AIR_CHANGE_USES
         ]
         dots, labels, leaders = _scale_marks(scale, entries, x_text=1.2, bottom=-1.15)
         count = ValueTracker(0.0)
 
         def stage_label(name, color):
             top = math_label(name, size=BODY_FONT_SIZE, color=color).move_to(stage + UP * 0.95)
-            val = math_readout(lambda: rf"n = {de_num(count.get_value(), 1)}\,\mathrm{{h^{{-1}}}}",
+            val = math_readout(lambda: rf"n = {label_number(count.get_value(), 1)}\,\mathrm{{h^{{-1}}}}",
                                stage + DOWN * 1.05, size=BODY_FONT_SIZE, color=color, edge="center")
             return top, val
 
@@ -897,21 +866,20 @@ class Beat2_Luftwechselrate(Scene):
             self.play(ReplacementTransform(glyph, dots[idx]), ReplacementTransform(VGroup(top, val), labels[idx]),
                       Create(leaders[idx]), run_time=1.0)
 
-        show_use(house, r"\text{Wohnung}", N_RATE, P_ORANGE, 0)
+        show_use(house, tr(r"\text{Dwelling}", r"\text{Wohnung}"), N_RATE, P_ORANGE, 0)
         hold_for(self, N, "home")
         for key, idxs in (("low", (0, 1)), ("mid", (2, 3)), ("high", (4, 5))):
             caption = swap_caption(self, caption, subtitle_text(N, key))
             for i in idxs:
                 kind, value, name, color = AIR_CHANGE_USES[i]
-                show_use(_use_glyph(kind, color), name, value, color, i + 1)
+                show_use(_use_glyph(kind, color), tr(_USE_EN[name], name), value, color, i + 1)
             if key == "high":
-                renew = math_label(rf"\frac{{60\,\mathrm{{min}}}}{{{de_num(20.0)}}} = {de_num(60 / 20.0)}\,\mathrm{{min}}",
+                renew = math_label(rf"\frac{{60\,\mathrm{{min}}}}{{{label_number(20.0)}}} = {label_number(60 / 20.0)}\,\mathrm{{min}}",
                                    stage + DOWN * 0.1, size=BODY_FONT_SIZE, color=P_RED)
                 self.wait(1.0)
                 self.play(TransformFromCopy(labels[6], renew), run_time=1.5)
                 self.play(Indicate(renew, color=P_RED, scale_factor=1.12), run_time=0.8)
             hold_for(self, N, key)
-        #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -920,7 +888,7 @@ class Beat2_Luftwechselrate(Scene):
 
 #region Beat3 – Volume flow V̇ in two spellings
 class Beat3_Volumenstrom(Scene):
-    """💨 V · n as an area, per hour and per second — one airflow that Heating writes V · n and Cooling writes q_v,R."""
+    """🌀 V · n as an area, per hour and per second — one airflow that Heating writes V · n and Cooling writes q_v,R."""
 
     NARRATION = [
         ("area",
@@ -947,13 +915,12 @@ class Beat3_Volumenstrom(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Volumenstrom: ein Luftstrom, zwei Schreibweisen")
+        subtitle = section_heading(tr("Volume flow: one airflow, two notations", "Volumenstrom: ein Luftstrom, zwei Schreibweisen"))
         din = _din_ref("DIN EN 12831-1 · DIN EN 16798-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "area"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        #region area V times n
         ox, oy, ux, uy = -5.0, -0.6, 3.4, 0.0040
         v_tr, n_tr = ValueTracker(0.0), ValueTracker(0.0)
         x_end, y_end = ox + 1.08 * ux, oy + 640 * uy
@@ -961,7 +928,7 @@ class Beat3_Volumenstrom(Scene):
             Arrow([ox, oy, 0], [x_end, oy, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16),
             Arrow([ox, oy, 0], [ox, y_end, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16),
             *[Line([ox + n * ux, oy, 0], [ox + n * ux, oy - 0.1, 0], color=P_WHITE, stroke_width=2) for n in (0.5, 1.0)],
-            math_label(de_num(0.5, 1), np.array([ox + 0.5 * ux, oy - 0.3, 0]), size=LABEL_FONT_SIZE),
+            math_label(label_number(0.5, 1), np.array([ox + 0.5 * ux, oy - 0.3, 0]), size=LABEL_FONT_SIZE),
             math_label("1", np.array([ox + ux, oy - 0.3, 0]), size=LABEL_FONT_SIZE),
             math_label(r"n\;[\mathrm{h^{-1}}]", np.array([x_end + 0.2, oy - 0.07, 0]), size=LABEL_FONT_SIZE, edge="left"),
             math_label(r"V\;[\mathrm{m^{3}}]", np.array([ox, y_end + 0.3, 0]), size=LABEL_FONT_SIZE),
@@ -977,12 +944,12 @@ class Beat3_Volumenstrom(Scene):
         n_slide = always_redraw(lambda: Line([ox, oy, 0], [ox + max(0.004, n_tr.get_value() * ux), oy, 0],
                                              color=P_CYAN, stroke_width=7))
         area = always_redraw(area_rect)
-        v_read = math_readout(lambda: rf"V = {de_num(v_tr.get_value())}\,\mathrm{{m^{{3}}}}",
+        v_read = math_readout(lambda: rf"V = {label_number(v_tr.get_value())}\,\mathrm{{m^{{3}}}}",
                               lambda: [ox - 0.2, oy + max(0.15, v_tr.get_value() * uy), 0],
                               size=BODY_FONT_SIZE, color=P_ORANGE, edge="right")
-        n_read = math_readout(lambda: rf"n = {de_num(n_tr.get_value(), 1)}\,\mathrm{{h^{{-1}}}}",
+        n_read = math_readout(lambda: rf"n = {label_number(n_tr.get_value(), 1)}\,\mathrm{{h^{{-1}}}}",
                               [ox + 0.5 * ux, oy - 0.68, 0], size=BODY_FONT_SIZE, color=P_CYAN, edge="center")
-        a_read = math_readout(lambda: rf"\dot{{V}} = {de_num(v_tr.get_value() * n_tr.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        a_read = math_readout(lambda: rf"\dot{{V}} = {label_number(v_tr.get_value() * n_tr.get_value())}\,\mathrm{{m^{{3}}/h}}",
                               [ox + 0.5 * ux + 0.4, oy + 440 * uy / 2, 0], size=BODY_FONT_SIZE, color=P_TEAL)
         self.play(FadeIn(axes), run_time=0.8)
         self.add(area, v_slide, n_slide, v_read, n_read, a_read)
@@ -991,16 +958,14 @@ class Beat3_Volumenstrom(Scene):
         row, box, items = math_panel([
             ("v", "V", P_ORANGE), (None, r"\cdot", None), ("n", "n", P_CYAN), (None, "=", None),
             ("vd", r"\dot{V}", P_TEAL), (None, "=", None),
-            ("num", rf"{de_num(V_NET)} \cdot {de_num(N_RATE, 1)} = {de_num(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
+            ("num", rf"{label_number(V_NET)} \cdot {label_number(N_RATE, 1)} = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
         ])
         self.play(TransformFromCopy(v_read, items["v"]), TransformFromCopy(n_read, items["n"]),
                   TransformFromCopy(a_read, items["vd"]), run_time=1.0)
         self.play(FadeIn(VGroup(*[m for m in row if m not in (items["v"], items["n"], items["vd"])])), Create(box),
                   run_time=0.6)
         hold_for(self, N, "area")
-        #endregion
 
-        #region per hour and per second
         caption = swap_caption(self, caption, subtitle_text(N, "hour"))
         x0, width, sy = 1.3, 5.0, 0.95
         t_tr = ValueTracker(0.0)
@@ -1014,7 +979,7 @@ class Beat3_Volumenstrom(Scene):
         hour_dim = dim_arrow([x0, sy + 0.55, 0], [x0 + width, sy + 0.55, 0], color=P_YELLOW)
         hour_lbl = math_label(r"1\,\mathrm{h} = 3600\,\mathrm{s}", np.array([x0 + width / 2, sy + 0.9, 0]),
                               size=BODY_FONT_SIZE, color=P_YELLOW)
-        t_read = math_readout(lambda: rf"t = {de_num(t_tr.get_value())}\,\mathrm{{s}}", [x0, sy - 0.65, 0],
+        t_read = math_readout(lambda: rf"t = {label_number(t_tr.get_value())}\,\mathrm{{s}}", [x0, sy - 0.65, 0],
                               size=BODY_FONT_SIZE, color=P_YELLOW)
         dv_read = math_readout(
             lambda: rf"\Delta V = \dot{{V}} \cdot t = {_amount(V_DOT_S * t_tr.get_value())}\,\mathrm{{m^{{3}}}}",
@@ -1027,14 +992,12 @@ class Beat3_Volumenstrom(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "second"))
         self.play(t_tr.animate.set_value(1.0), run_time=3.0)
         per_s = math_label(
-            rf"\frac{{{de_num(V_DOT)}\,\mathrm{{m^{{3}}/h}}}}{{3600\,\mathrm{{s/h}}}} = {de_num(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}"
-            rf" \approx {de_num(V_DOT_S * 1000)}\,\mathrm{{l/s}}",
+            rf"\frac{{{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}}}{{3600\,\mathrm{{s/h}}}} = {label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}"
+            rf" \approx {label_number(V_DOT_S * 1000)}\,\mathrm{{l/s}}",
             np.array([x0 + width / 2, -1.0, 0]), size=BODY_FONT_SIZE, color=P_TEAL)
         self.play(TransformFromCopy(a_read, per_s), run_time=1.0)
         hold_for(self, N, "second")
-        #endregion
 
-        #region two spellings
         caption = swap_caption(self, caption, subtitle_text(N, "spell"))
         live = [area, v_slide, n_slide, v_read, n_read, a_read, flow_fill, t_read, dv_read]
         for m in live:
@@ -1050,8 +1013,8 @@ class Beat3_Volumenstrom(Scene):
                            math_label(value, size=BODY_FONT_SIZE, color=color)).arrange(DOWN, buff=0.3)
             return VGroup(frame, lines).move_to([cx, 0.35, 0])
 
-        card_h = card("Heizung · Winter", r"V \cdot n", rf"{de_num(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_ORANGE, -3.4)
-        card_k = card("Kühlung · Sommer", r"q_{v,\mathrm{R}}", rf"{de_num(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN, 3.4)
+        card_h = card(tr("Heating · Winter", "Heizung · Winter"), r"V \cdot n", rf"{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_ORANGE, -3.4)
+        card_k = card(tr("Cooling · Summer", "Kühlung · Sommer"), r"q_{v,\mathrm{R}}", rf"{label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN, 3.4)
         to_s = Arrow([-1.05, 0.65, 0], [1.05, 0.65, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16)
         to_h = Arrow([1.05, 0.0, 0], [-1.05, 0.0, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16)
         to_s_lbl = math_label(r"÷\,3600", np.array([0, 1.0, 0]), size=BODY_FONT_SIZE)
@@ -1062,8 +1025,8 @@ class Beat3_Volumenstrom(Scene):
                   GrowArrow(to_s), FadeIn(to_s_lbl), GrowArrow(to_h), FadeIn(to_h_lbl), run_time=1.2)
         row2, box2, items2 = math_panel([
             ("vd", r"\dot{V}", P_TEAL), (None, "=", None), ("vn", r"V \cdot n", P_ORANGE), (None, "=", None),
-            ("h", rf"{de_num(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_ORANGE), (None, "=", None),
-            ("s", rf"{de_num(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN), (None, "=", None),
+            ("h", rf"{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_ORANGE), (None, "=", None),
+            ("s", rf"{label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN), (None, "=", None),
             ("q", r"q_{v,\mathrm{R}}", P_CYAN),
         ])
         self.play(TransformFromCopy(card_h[1][1], items2["vn"]), TransformFromCopy(card_h[1][2], items2["h"]),
@@ -1071,22 +1034,20 @@ class Beat3_Volumenstrom(Scene):
                   FadeIn(items2["vd"]), Create(box2), FadeIn(VGroup(*[m for m in row2 if m not in items2.values()])),
                   run_time=1.2)
         hold_for(self, N, "spell")
-        #endregion
 
-        #region hygiene per person
         caption = swap_caption(self, caption, subtitle_text(N, "people"))
         room_c, room_w, room_h = np.array([-4.1, 0.58, 0.0]), 4.0, 2.4
         room = _room(room_c, room_w, room_h)
         persons = [_stand(room_c, room_h, room_c[0] + dx) for dx in (-1.35, -0.45, 0.45, 1.35)]
-        room_lbl = math_label(rf"{PERSONS}\;\text{{Personen}}", np.array([room_c[0], room_c[1] + room_h / 2 + 0.38, 0]),
+        room_lbl = math_label(tr(rf"{PERSONS}\;\text{{people}}", rf"{PERSONS}\;\text{{Personen}}"), np.array([room_c[0], room_c[1] + room_h / 2 + 0.38, 0]),
                               size=BODY_FONT_SIZE, color=P_ORANGE)
         bx, unit, row_h = -0.4, 5.6 / V_DOT, 0.45
         bar_n = Rectangle(width=V_DOT * unit, height=row_h, color=P_TEAL, stroke_width=1.6, fill_color=P_TEAL,
                           fill_opacity=0.5).move_to([bx + V_DOT * unit / 2, 1.2, 0])
-        lbl_n = math_label(rf"V \cdot n = {de_num(V_DOT)}\,\mathrm{{m^{{3}}/h}}", np.array([bx, 1.75, 0]),
+        lbl_n = math_label(rf"V \cdot n = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", np.array([bx, 1.75, 0]),
                            size=BODY_FONT_SIZE, color=P_TEAL, edge="left")
         count = ValueTracker(0.0)
-        lbl_p = math_readout(lambda: rf"{PERSONS} \cdot {de_num(PER_PERSON)} = {de_num(count.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        lbl_p = math_readout(lambda: rf"{PERSONS} \cdot {label_number(PER_PERSON)} = {label_number(count.get_value())}\,\mathrm{{m^{{3}}/h}}",
                              [bx, 0.55, 0], size=BODY_FONT_SIZE, color=P_BLUE)
         value_h, value_k = card_h[1][2], card_k[1][2]
         card_h[1].remove(value_h)
@@ -1099,31 +1060,29 @@ class Beat3_Volumenstrom(Scene):
             seg = Rectangle(width=PER_PERSON * unit, height=row_h, color=P_BLUE, stroke_width=1.6,
                             fill_color=P_BLUE, fill_opacity=0.6)
             seg.move_to([bx + (i + 0.5) * PER_PERSON * unit, 0.1, 0])
-            seg_lbl = math_label(de_num(PER_PERSON), seg.get_center() + DOWN * 0.07, size=LABEL_FONT_SIZE, color=P_WHITE)
-            self.play(TransformFromCopy(person, seg), FadeIn(seg_lbl, scale=0.8, rate_func=rush_from),
+            seg_lbl = math_label(label_number(PER_PERSON), seg.get_center() + DOWN * 0.07, size=LABEL_FONT_SIZE, color=P_WHITE)
+            self.play(TransformFromCopy(_still(person), seg), FadeIn(seg_lbl, scale=0.8, rate_func=rush_from),
                       count.animate.set_value(PER_PERSON * (i + 1)), run_time=0.8)
         count.set_value(PER_PERSON * PERSONS)
         lbl_p.clear_updaters()
         hold_for(self, N, "people")
-        #endregion
 
-        #region covered by the air change rate
         caption = swap_caption(self, caption, subtitle_text(N, "cover"))
         x_a, x_b = bx + PERSONS * PER_PERSON * unit, bx + V_DOT * unit
         reserve = dim_arrow([x_a, -0.35, 0], [x_b, -0.35, 0], color=P_YELLOW)
-        reserve_lbl = math_label(rf"\mathrm{{Reserve}}\;{de_num(V_DOT - PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}",
+        reserve_lbl = math_label(tr(rf"\mathrm{{reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}", rf"\mathrm{{Reserve}}\;{label_number(V_DOT - PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}"),
                                  np.array([(x_a + x_b) / 2, -0.72, 0]), size=LABEL_FONT_SIZE, color=P_YELLOW)
         row3, box3, items3 = math_panel([
-            ("p", rf"{PERSONS} \cdot {de_num(PER_PERSON)}\,\mathrm{{m^{{3}}/h}} = {de_num(PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}", P_BLUE),
+            ("p", rf"{PERSONS} \cdot {label_number(PER_PERSON)}\,\mathrm{{m^{{3}}/h}} = {label_number(PERSONS * PER_PERSON)}\,\mathrm{{m^{{3}}/h}}", P_BLUE),
             (None, "<", None),
-            ("n", rf"V \cdot n = {de_num(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_TEAL),
+            ("n", rf"V \cdot n = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_TEAL),
         ])
         self.play(TransformFromCopy(lbl_p, items3["p"]), TransformFromCopy(lbl_n, items3["n"]),
                   FadeIn(VGroup(*[m for m in row3 if m not in items3.values()])), Create(box3), run_time=1.0)
         self.play(GrowFromCenter(reserve), FadeIn(reserve_lbl), FadeOut(lbl_n), FadeOut(lbl_p),
                   _dim(VGroup(room_lbl, *persons), 0.25), run_time=0.8)
-        chips = VGroup(_handover_chip(r"\to\;\text{Heizung:}\;V \cdot n", P_ORANGE, LABEL_FONT_SIZE),
-                       _handover_chip(r"\to\;\text{Kühlung:}\;q_{v,\mathrm{R}}", P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
+        chips = VGroup(_handover_chip(tr(r"\to\;\text{Heating:}\;V \cdot n", r"\to\;\text{Heizung:}\;V \cdot n"), P_ORANGE, LABEL_FONT_SIZE),
+                       _handover_chip(tr(r"\to\;\text{Cooling:}\;q_{v,\mathrm{R}}", r"\to\;\text{Kühlung:}\;q_{v,\mathrm{R}}"), P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
         chips.move_to([0.0, -1.25, 0])
         self.play(FadeIn(chips, shift=UP * 0.1), run_time=0.6)
         hold_for(self, N, "cover")

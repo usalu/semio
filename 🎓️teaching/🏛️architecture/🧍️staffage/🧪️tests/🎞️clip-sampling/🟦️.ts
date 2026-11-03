@@ -8,7 +8,7 @@ import { easeLinear, easeQuadIn, easeQuadOut } from "d3-ease";
 import { MathUtils } from "three";
 import { describe, expect, it } from "vitest";
 import type { Asset, Ease } from "../../🧬️schema/🟦️.ts";
-import { clipOf, contactsAt, ease, frameAt, phaseAt, sampleClip, wrapTime } from "../../🔨️modules/🎞️animation/🟦️.ts";
+import { clipOf, contactsAt, ease, frameAt, phaseAt, sampleClip, sampleTrack, wrapTime } from "../../🔨️modules/🎞️animation/🟦️.ts";
 import { samplingAsset } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 
@@ -108,5 +108,15 @@ describe("🎞️ clip sampling", () => {
         }
       }
     }
+  });
+
+  it("never lets spline overshoot of a rising load track reverse the load", () => {
+    const clip = clipOf(asset, asset.clips[0]!.id);
+    const track = { target: "load:overshoot", ease: "smooth" as const, keys: [{ t: 0, v: 0 }, { t: 1, v: 0 }, { t: 2, v: 1 }, { t: 3, v: 1 }] };
+    const raw = Array.from({ length: 31 }, (_, i) => sampleTrack(track, i / 10, false, 3)!);
+    expect(Math.min(...raw)).toBeLessThan(0);
+    const probe = { ...clip, loop: false, durationS: 3, tracks: [track] };
+    const scales = Array.from({ length: 31 }, (_, i) => sampleClip(asset, probe, i / 10).loadScales["overshoot"]!);
+    expect(Math.min(...scales)).toBe(0);
   });
 });

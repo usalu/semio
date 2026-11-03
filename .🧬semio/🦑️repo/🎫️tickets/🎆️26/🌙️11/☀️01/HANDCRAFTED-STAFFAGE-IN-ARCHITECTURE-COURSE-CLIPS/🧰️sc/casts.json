@@ -1,0 +1,10 @@
+{ "version": 1, "casts": {
+  "sc-op": { "asset": "solar-thermal-collector", "pose": "operating", "view": "thermal", "environment": "summer-heatwave-calm", "theme": "dark", "thermalSpanK": 70, "scale": 50 },
+  "sc-stag": { "asset": "solar-thermal-collector", "pose": "stagnation", "view": "thermal", "environment": "summer-heatwave-calm", "theme": "dark", "thermalSpanK": 70, "scale": 50 },
+  "sc-idle": { "asset": "solar-thermal-collector", "pose": "night-idle", "view": "thermal", "environment": "summer-heatwave-calm", "theme": "dark", "thermalSpanK": 70, "scale": 50 },
+  "sc-line-elev": { "asset": "solar-thermal-collector", "pose": "operating", "view": "dark-line", "theme": "dark", "scale": 50 },
+  "sc-line-front": { "asset": "solar-thermal-collector", "pose": "operating", "view": "dark-line", "viewpoint": "front", "theme": "dark", "scale": 50 },
+  "sc-line-plan": { "asset": "solar-thermal-collector", "pose": "operating", "view": "dark-line", "viewpoint": "plan", "theme": "dark", "scale": 50 },
+  "sc-line-elev100": { "asset": "solar-thermal-collector", "pose": "operating", "view": "dark-line", "theme": "dark", "scale": 100 },
+  "sc-line-elev200": { "asset": "solar-thermal-collector", "pose": "operating", "view": "dark-line", "theme": "dark", "scale": 200 }
+} }

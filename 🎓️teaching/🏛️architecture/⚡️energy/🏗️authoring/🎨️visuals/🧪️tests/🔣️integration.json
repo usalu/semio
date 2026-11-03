@@ -17,6 +17,11 @@
     "🔁️recap": "home",
     "🧪️practice": "floor"
   },
+  "demand_radiator_casts": {
+    "🏷️certificate": "shared-radiator-front-winter",
+    "🔁️recap": "shared-radiator-winter",
+    "🧪️practice": "shared-radiator-front-winter"
+  },
   "demand_people": {
     "🏷️certificate": "house",
     "🔁️recap": "home",
@@ -24,8 +29,7 @@
   },
   "physics": {
     "room_height": 2.5,
-    "conceptual_heater_height": 0.855,
-    "conceptual_heater_width": 1.38
+    "radiator_tolerance": 0.03
   },
   "native_font_map": {
     "unique_labels": 12,

@@ -14,7 +14,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -26,6 +25,7 @@ BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+staffage_width = _manim_module.staffage_width
 P_PRIMARY = _manim_module.P_PRIMARY
 window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -40,18 +40,20 @@ highlight_param = _manim_module.highlight_param
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 room_section = _manim_module.room_section
 smooth_path = _manim_module.smooth_path
 flow_animation = _manim_module.flow_animation
 meter = _manim_module.meter
 set_meter = _manim_module.set_meter
+staffage = _manim_module.staffage
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
@@ -110,16 +112,9 @@ def _build_room(center=CONTENT_CENTER, width=7.4, height=3.55):
     return r
 
 
-def _vent_unit(pos, color=P_PRIMARY, width=1.55, height=0.3):
-    """🔧 Ceiling grille seen in section — a slotted strip hanging from the slab."""
-    body = Rectangle(width=width, height=height, color=color, stroke_width=1.8,
-                     fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(pos)
-    slots = VGroup(*[
-        Line(body.get_bottom() + RIGHT * dx + UP * 0.05, body.get_top() + RIGHT * dx + DOWN * 0.05,
-             color=color, stroke_width=1.3)
-        for dx in np.linspace(-width / 2 + 0.16, width / 2 - 0.16, 6)
-    ])
-    return VGroup(body, slots)
+def _diffuser(pos, width=1.4):
+    """🔧 Handcrafted four-way ceiling diffuser in the thermal view, ``width`` units wide, flush with the ceiling soffit at ``pos`` with the cooled supply air behind its plate."""
+    return staffage("cooling-system-sizing-diffuser", unit=width / staffage_width("cooling-system-sizing-diffuser"), anchor=np.array(pos, dtype=float))
 
 
 def _supply_paths(supply_bottom, room_c, n=16, seed=3, half_w=2.2, half_h=0.9, margin=0.22):
@@ -224,7 +219,7 @@ class Beat2_VolumeFlowEquation(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Konvektive Kühlleistung der Zuluft")
+        subtitle = section_heading(tr("Convective cooling power of the supply air", "Konvektive Kühlleistung der Zuluft"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -233,7 +228,7 @@ class Beat2_VolumeFlowEquation(Scene):
 
         built = _build_room(center=LEFT * 2.6 + UP * 0.5, width=4.6, height=1.35)
         room, room_c = built["room"], built["center"]
-        supply = _vent_unit(np.array([room_c[0] - 1.2, built["y_c"] - 0.13, 0.0]), color=P_CYAN, width=1.1, height=0.26)
+        supply = _diffuser(np.array([room_c[0] - 1.2, built["y_c"], 0.0]))
 
         t_supply = VGroup(
             math_label(r"\theta_{Zu}", size=LABEL_FONT_SIZE, color=P_CYAN),
@@ -256,7 +251,7 @@ class Beat2_VolumeFlowEquation(Scene):
         delta_line = math_label(r"25-18=7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE)
         delta_line.set_opacity(0)
         delta_body = VGroup(
-            Text("Temperaturhub", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+            Text(tr("Temperature lift", "Temperaturhub"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
             delta_line,
         ).arrange(DOWN, buff=0.06)
         delta_card = VGroup(
@@ -265,7 +260,7 @@ class Beat2_VolumeFlowEquation(Scene):
         ).next_to(room, UP, buff=0.20).set_x(room_c[0])
         delta_tr = ValueTracker(0.0)
         delta_read = math_readout(
-            lambda: rf"25-18={de_num(delta_tr.get_value())}\,\mathrm{{K}}",
+            lambda: rf"25-18={label_number(delta_tr.get_value())}\,\mathrm{{K}}",
             lambda: delta_line.get_center() + DOWN * 0.07,
             size=BODY_FONT_SIZE, color=P_BLUE, edge="center",
         )
@@ -299,24 +294,22 @@ class Beat2_VolumeFlowEquation(Scene):
 
         card_bodies = [
             VGroup(
-                Text("Luftdichte", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
-                math_label(r"\rho_{a} = 1{,}2\,\mathrm{kg/m^{3}}", size=BODY_FONT_SIZE, color=P_GREEN),
+                Text(tr("Air density", "Luftdichte"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+                math_label(tr(r"\rho_{a} = 1.2\,\mathrm{kg/m^{3}}", r"\rho_{a} = 1{,}2\,\mathrm{kg/m^{3}}"), size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
-                Text("spez. Wärmekapazität", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
-                math_label(r"c_{p,a} = 1{,}0\,\mathrm{kJ/(kg\,K)}", size=BODY_FONT_SIZE, color=P_GREEN),
+                Text(tr("Specific heat capacity", "spez. Wärmekapazität"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+                math_label(tr(r"c_{p,a} = 1.0\,\mathrm{kJ/(kg\,K)}", r"c_{p,a} = 1{,}0\,\mathrm{kJ/(kg\,K)}"), size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
-                Text("Temperaturdifferenz", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+                Text(tr("Temperature difference", "Temperaturdifferenz"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
                 math_label(r"Δθ = 7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE),
             ).arrange(DOWN, buff=0.06),
             VGroup(
-                Text("Volumenstrom", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+                Text(tr("Volume flow", "Volumenstrom"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
                 math_label(r"q_{v,R}\;[\mathrm{m^{3}/s}]", size=BODY_FONT_SIZE, color=P_YELLOW),
             ).arrange(DOWN, buff=0.06),
         ]
-        # Same-size frames so the 2×2 grid lines up. Tight padding keeps the grid
-        # narrow enough to clear the room on the left without shrinking the text.
         card_w = max(b.width for b in card_bodies) + 0.32
         card_h = max(b.height for b in card_bodies) + 0.28
         cards = VGroup()
@@ -328,10 +321,9 @@ class Beat2_VolumeFlowEquation(Scene):
             body.move_to(frame.get_center())
             cards.add(VGroup(frame, body))
         cards.arrange_in_grid(rows=2, cols=2, buff=(0.20, 0.20))
-        # Right of the room, vertically centred on it (room right edge ≈ -0.2).
         cards.move_to(np.array([3.4, room_c[1], 0.0]))
 
-        system_chip = _back_chip("← Lüftung · Kapitel 5: Zu-/Abluftsystem").move_to(np.array([3.4, 2.0, 0.0]))
+        system_chip = _back_chip(tr("← Ventilation · Chapter 5: Supply/extract system", "← Lüftung · Kapitel 5: Zu-/Abluftsystem")).move_to(np.array([3.4, 2.0, 0.0]))
 
         self.play(Create(room), FadeIn(supply), FadeIn(system_chip), run_time=1.5)
         self.play(FadeIn(t_supply), FadeIn(t_room), *cool_air(1.0), run_time=1.0)
@@ -399,7 +391,7 @@ class Beat3_IsolateAirflow(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Gleichgewicht: Kühlleistung = Kühllast")
+        subtitle = section_heading(tr("Balance: cooling power = cooling load", "Gleichgewicht: Kühlleistung = Kühllast"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -418,11 +410,11 @@ class Beat3_IsolateAirflow(Scene):
         ).next_to(beam.get_right(), DOWN, buff=0.35).shift(LEFT * 0.9)
         left_txt = VGroup(
             math_label(r"\dot{Q}_{V}", size=BODY_FONT_SIZE, color=P_CYAN),
-            Text("Kühlleistung", font_size=LABEL_FONT_SIZE, color=P_CYAN),
+            Text(tr("Cooling power", "Kühlleistung"), font_size=LABEL_FONT_SIZE, color=P_CYAN),
         ).arrange(DOWN, buff=0.08).move_to(left_pan)
         right_txt = VGroup(
             math_label(r"\dot{Q}_{S,tr}", size=BODY_FONT_SIZE, color=P_YELLOW),
-            Text("Kühllast", font_size=LABEL_FONT_SIZE, color=P_YELLOW),
+            Text(tr("Cooling load", "Kühllast"), font_size=LABEL_FONT_SIZE, color=P_YELLOW),
         ).arrange(DOWN, buff=0.08).move_to(right_pan)
         eq_mark = Text("=", font_size=FORMULA_FONT_SIZE, color=P_WHITE).move_to(beam.get_center() + DOWN * 0.55)
         balance = VGroup(beam, pivot, left_pan, right_pan, left_txt, right_txt, eq_mark)
@@ -464,12 +456,11 @@ class Beat3_IsolateAirflow(Scene):
 
         bridge = VGroup(
             math_label(r"\dot{Q}_{V} = \dot{Q}_{S,tr}", size=BODY_FONT_SIZE, color=P_YELLOW),
-            math_label(r"↓\;\text{umstellen nach}\;q_{v,R}", size=LABEL_FONT_SIZE, color=P_PRIMARY),
+            math_label(tr(r"↓\;\text{solve for}\;q_{v,R}", r"↓\;\text{umstellen nach}\;q_{v,R}"), size=LABEL_FONT_SIZE, color=P_PRIMARY),
         ).arrange(DOWN, buff=0.12)
         bridge.next_to(start_panel, DOWN, buff=0.28)
 
         final_eq, final_box, final_items = math_panel(final_parts, color=P_CYAN)
-        # The one typeset fraction box: [numerator, bar, denominator, marker].
         final_frac = final_items["frac"][0]
         final_items["qstr"] = final_frac[0]
         final_items["rho"] = final_frac[2]
@@ -498,7 +489,6 @@ class Beat3_IsolateAirflow(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "result"))
         hold_for(self, self.NARRATION, "result", used=0.35)
 
-        #region solar load from part 4
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "load"))
         ff, fv, g, i = (ValueTracker(v) for v in (1.0, 1.0, 0.0, 0.0))
 
@@ -506,12 +496,12 @@ class Beat3_IsolateAirflow(Scene):
             return A_GLAZING * ff.get_value() * fv.get_value() * g.get_value() * i.get_value()
 
         load_line = math_readout(
-            lambda: (rf"\dot{{Q}}_{{S,tr}} = {de_num(A_GLAZING)}\,\mathrm{{m^{{2}}}} \cdot {de_num(ff.get_value(), 2)}"
-                     rf" \cdot {de_num(fv.get_value(), 2)} \cdot {de_num(g.get_value(), 2)}"
-                     rf" \cdot {de_num(i.get_value())}\,\mathrm{{W/m^{{2}}}} \approx {de_num(round(q_live(), -1))}\,\mathrm{{W}}"),
+            lambda: (rf"\dot{{Q}}_{{S,tr}} = {label_number(A_GLAZING)}\,\mathrm{{m^{{2}}}} \cdot {label_number(ff.get_value(), 2)}"
+                     rf" \cdot {label_number(fv.get_value(), 2)} \cdot {label_number(g.get_value(), 2)}"
+                     rf" \cdot {label_number(i.get_value())}\,\mathrm{{W/m^{{2}}}} \approx {label_number(round(q_live(), -1))}\,\mathrm{{W}}"),
             np.array([-6.4, 0.9, 0.0]), size=FORMULA_FONT_SIZE, color=P_YELLOW, edge="left",
         )
-        solar_chip = _back_chip("← Teil 4:", r"\dot{Q}_{S,tr}", P_YELLOW).move_to(np.array([-4.2, 2.3, 0.0]))
+        solar_chip = _back_chip(tr("← Part 4:", "← Teil 4:"), r"\dot{Q}_{S,tr}", P_YELLOW).move_to(np.array([-4.2, 2.3, 0.0]))
         self.play(FadeOut(start_panel), FadeOut(bridge), FadeIn(solar_chip), run_time=0.7)
         self.add(load_line)
         self.play(_ramp(ff, F_F), run_time=0.8)
@@ -519,32 +509,30 @@ class Beat3_IsolateAirflow(Scene):
         self.play(_ramp(g, G_TOT), run_time=0.8)
         self.play(_ramp(i, I_S_MAX), run_time=1.0)
         hold_for(self, self.NARRATION, "load", used=0.7 + 0.8 + 0.8 + 0.8 + 1.0 + 0.35)
-        #endregion
 
-        #region airflow against the hygiene airflow
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "compare"))
         x0, y_h, y_s, length, full = -6.2, 0.35, -0.6, 3.6, 0.14
         k_h, k_s = ValueTracker(0.0), ValueTracker(0.0)
         h_row = _row(_name(r"q_{v,\mathrm{R}}", "Hygiene", AIR), x0, y_h, length, AIR, lambda: k_h.get_value() * Q_V_R_HYGIENE / full)
-        s_row = _row(_name(r"q_{v,\mathrm{R}}", "Solarlast", P_YELLOW), x0, y_s, length, P_YELLOW,
+        s_row = _row(_name(r"q_{v,\mathrm{R}}", tr("Solar load", "Solarlast"), P_YELLOW), x0, y_s, length, P_YELLOW,
                      lambda: k_s.get_value() * Q_V_R_SOLAR / full)
-        h_read = math_readout(lambda: rf"{de_num(Q_V_R_HYGIENE * k_h.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
+        h_read = math_readout(lambda: rf"{label_number(Q_V_R_HYGIENE * k_h.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
                               np.array([h_row["x_end"] + 0.25, y_h, 0.0]), size=BODY_FONT_SIZE, color=AIR)
-        s_read = math_readout(lambda: rf"{de_num(Q_V_R_SOLAR * k_s.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
+        s_read = math_readout(lambda: rf"{label_number(Q_V_R_SOLAR * k_s.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
                               np.array([s_row["x_end"] + 0.25, y_s, 0.0]), size=BODY_FONT_SIZE, color=P_YELLOW)
-        hygiene_chip = _back_chip("← Lüftung · Kapitel 2:", r"q_{v,\mathrm{R}}").move_to(np.array([-4.2, 2.3, 0.0]))
+        hygiene_chip = _back_chip(tr("← Ventilation · Chapter 2:", "← Lüftung · Kapitel 2:"), r"q_{v,\mathrm{R}}").move_to(np.array([-4.2, 2.3, 0.0]))
         factor = VGroup(
-            math_label(rf"\frac{{{de_num(Q_V_R_SOLAR, 3)}}}{{{de_num(Q_V_R_HYGIENE, 3)}}} \approx {de_num(FACTOR, 1)}",
+            math_label(rf"\frac{{{label_number(Q_V_R_SOLAR, 3)}}}{{{label_number(Q_V_R_HYGIENE, 3)}}} \approx {label_number(FACTOR, 1)}",
                        size=BODY_FONT_SIZE, color=P_ORANGE),
         )
         factor_box = SurroundingRectangle(factor, color=P_ORANGE, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER)
         factor_group = VGroup(factor_box, factor).move_to(np.array([2.6, (y_h + y_s) / 2, 0.0]))
         num_eq, num_box, _ = math_panel([
             ("qvr", r"q_{v,R}", P_CYAN), (None, "=", P_WHITE),
-            ("frac", rf"\frac{{{de_num(W_SOLAR / 1000, 2)}\,\mathrm{{kW}}}}"
-                     rf"{{{de_num(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}} \cdot {de_num(CP_AIR, 1)}\,\mathrm{{kJ/(kg\,K)}} \cdot {de_num(D_THETA)}\,\mathrm{{K}}}}",
+            ("frac", rf"\frac{{{label_number(W_SOLAR / 1000, 2)}\,\mathrm{{kW}}}}"
+                     rf"{{{label_number(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}} \cdot {label_number(CP_AIR, 1)}\,\mathrm{{kJ/(kg\,K)}} \cdot {label_number(D_THETA)}\,\mathrm{{K}}}}",
              P_WHITE),
-            (None, "=", P_WHITE), (None, rf"{de_num(Q_V_R_SOLAR, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN),
+            (None, "=", P_WHITE), (None, rf"{label_number(Q_V_R_SOLAR, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN),
         ], color=P_CYAN)
         self.play(FadeOut(load_line), ReplacementTransform(solar_chip, hygiene_chip),
                   ReplacementTransform(final_eq, num_eq), ReplacementTransform(final_box, num_box), run_time=0.9)
@@ -554,9 +542,7 @@ class Beat3_IsolateAirflow(Scene):
         self.play(_ramp(k_h, 1.0), run_time=1.2)
         self.play(FadeIn(factor_group, shift=LEFT * 0.2), run_time=0.7)
         hold_for(self, self.NARRATION, "compare", used=0.9 + 0.6 + 1.4 + 1.2 + 0.7 + 0.35)
-        #endregion
 
-        #region duct from the airflow
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "duct"))
         units_per_m, k_c = 9.0, ValueTracker(0.0)
         cy, cx_h, cx_s = 0.65, 2.1, 4.8
@@ -565,19 +551,19 @@ class Beat3_IsolateAirflow(Scene):
         disc_s = always_redraw(lambda: Circle(radius=max(0.01, R_SOLAR * units_per_m * k_c.get_value()), color=P_YELLOW,
                                               stroke_width=3, fill_color=P_YELLOW, fill_opacity=0.3).move_to(np.array([cx_s, cy, 0.0])))
         tag_h = VGroup(body_text("Hygiene", font_size=LABEL_FONT_SIZE, color=AIR),
-                       math_readout(lambda: rf"A = {de_num(A_HYGIENE * k_c.get_value(), 4)}\,\mathrm{{m^{{2}}}}",
+                       math_readout(lambda: rf"A = {label_number(A_HYGIENE * k_c.get_value(), 4)}\,\mathrm{{m^{{2}}}}",
                                     np.array([cx_h, -1.12, 0.0]), size=LABEL_FONT_SIZE + 1, color=AIR, edge="center"))
         tag_h[0].move_to(np.array([cx_h, -0.72, 0.0]))
-        tag_s = VGroup(body_text("Solarlast", font_size=LABEL_FONT_SIZE, color=P_YELLOW),
-                       math_readout(lambda: rf"A = {de_num(A_SOLAR * k_c.get_value(), 4)}\,\mathrm{{m^{{2}}}}",
+        tag_s = VGroup(body_text(tr("Solar load", "Solarlast"), font_size=LABEL_FONT_SIZE, color=P_YELLOW),
+                       math_readout(lambda: rf"A = {label_number(A_SOLAR * k_c.get_value(), 4)}\,\mathrm{{m^{{2}}}}",
                                     np.array([cx_s, -1.12, 0.0]), size=LABEL_FONT_SIZE + 1, color=P_YELLOW, edge="center"))
         tag_s[0].move_to(np.array([cx_s, -0.72, 0.0]))
-        duct_chip = _back_chip("← Lüftung · Kapitel 5:", r"A = q_{v,\mathrm{R}} / v_{m}").move_to(np.array([-3.4, 2.3, 0.0]))
+        duct_chip = _back_chip(tr("← Ventilation · Chapter 5:", "← Lüftung · Kapitel 5:"), r"A = q_{v,\mathrm{R}} / v_{m}").move_to(np.array([-3.4, 2.3, 0.0]))
         area_eq, area_box, _ = math_panel([
             ("A", "A", P_BLUE), (None, "=", P_WHITE),
             ("frac", rf"\frac{{\textcolor{{{P_CYAN}}}{{q_{{v,R}}}}}}{{\textcolor{{{P_TEAL}}}{{v_{{m}}}}}}", P_WHITE),
             (None, "=", P_WHITE),
-            ("val", rf"\frac{{{de_num(Q_V_R_SOLAR, 3)}\,\mathrm{{m^{{3}}/s}}}}{{{de_num(V_M, 1)}\,\mathrm{{m/s}}}} \approx {de_num(A_SOLAR, 4)}\,\mathrm{{m^{{2}}}}",
+            ("val", rf"\frac{{{label_number(Q_V_R_SOLAR, 3)}\,\mathrm{{m^{{3}}/s}}}}{{{label_number(V_M, 1)}\,\mathrm{{m/s}}}} \approx {label_number(A_SOLAR, 4)}\,\mathrm{{m^{{2}}}}",
              P_BLUE),
         ], color=P_BLUE)
         self.play(ReplacementTransform(hygiene_chip, duct_chip), ReplacementTransform(num_eq, area_eq),
@@ -585,7 +571,6 @@ class Beat3_IsolateAirflow(Scene):
         self.add(disc_h, disc_s, tag_h, tag_s)
         self.play(_ramp(k_c, 1.0), run_time=2.4)
         hold_for(self, self.NARRATION, "duct", used=0.9 + 2.4 + 0.35)
-        #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)

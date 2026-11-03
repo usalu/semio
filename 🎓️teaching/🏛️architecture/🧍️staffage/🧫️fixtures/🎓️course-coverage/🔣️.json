@@ -1,0 +1,124 @@
+{
+  "root": "🎓️teaching",
+  "architecture": "🏛️architecture",
+  "manifest": "⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🔣️.json",
+  "catalog": "🧍️staffage/🗂️catalog",
+  "series": ["⚡️energy", "🎯️optimization", "🏗️bim", "📊️excel", "🦗️grasshopper", "🏢️nakagin", "🏙️typology", "🔀️morph", "📐️parametric", "🧲️fit", "📚️course"],
+  "sources": {
+    "extension": ".py",
+    "skip_folders": ["🧪️tests", ".venv", ".🧬semio", "site-packages", "node_modules", "__pycache__"],
+    "cast_calls": ["staffage", "fitted_staffage", "staffage_motion", "staffage_height", "staffage_width", "staffage_parts", "staffage_provenance", "_staffage", "_fitted_staffage", "_staffage_motion", "_staffage_parts"],
+    "cast_keywords": ["on_cast", "off_cast"]
+  },
+  "enums": {
+    "scales": [500, 200, 100, 50],
+    "viewpoints": ["elevation", "front", "plan"],
+    "styles": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"],
+    "themes": ["dark", "light"],
+    "eases": ["step", "linear"],
+    "transport": ["parcels", "pathlines", "streamlines", "condensation"],
+    "dynamics": ["quasi-static", "inertial"]
+  },
+  "cast_fields": ["asset", "pose", "clip", "view", "viewpoint", "theme", "mirror", "scale", "fps", "environment", "timeline", "thermalSpanK", "transport", "transportAgeS", "transportStrokeMm", "transportTrailS"],
+  "codes": ["asset-unknown", "asset-ambiguous", "category-mismatch", "row-missing", "row-mismatch", "units", "scale-missing", "scale-preset", "scale-unauthored", "scale-denominator", "view-style", "viewpoint-unknown", "theme-unknown", "viewpoint-empty", "mirror-viewpoint", "state-count", "pose-unknown", "pose-key", "clip-unknown", "fps-missing", "fps-forbidden", "fps-range", "thermal-scenario", "scenario-forbidden", "preset-unknown", "ease-missing", "timeline-key", "thermal-regions", "span-range", "transport-layer", "transport-age", "structural-model", "analytics", "field-unknown", "ref-unknown", "cast-orphan", "series-missing"],
+  "synthetic": {
+    "catalog": [
+      {
+        "category": "humans",
+        "row": { "id": "probe-sitter", "category": "humans", "heightM": 1.2, "poses": ["rest", "lean"], "clips": ["loop"], "representations": { "50": "authored", "100": "authored", "200": "unavailable", "500": "authored" }, "analytics": ["thermal", "transport", "structural"] },
+        "asset": {
+          "id": "probe-sitter",
+          "category": "humans",
+          "dimensions": { "heightM": 1.2, "widthM": 0.5, "depthM": 0.6, "massKg": 70 },
+          "representations": {
+            "50": { "status": "authored", "denominator": 50, "geometry": { "elevation": [1], "front": [1], "plan": [] } },
+            "100": { "status": "authored", "denominator": 100, "geometry": { "elevation": [1], "front": [1], "plan": [1] } },
+            "200": { "status": "unavailable", "denominator": 200 },
+            "500": { "status": "authored", "denominator": 500, "geometry": { "elevation": [1], "front": [], "plan": [] } }
+          },
+          "poses": [{ "id": "rest" }, { "id": "lean" }, { "id": "mid-stride", "key": true }],
+          "clips": [{ "id": "loop" }],
+          "thermal": { "regions": [{ "id": "skin" }] },
+          "structure": { "supports": ["seat"], "dynamics": "quasi-static", "gravityMS2": 9.80665 }
+        }
+      },
+      {
+        "category": "objects",
+        "row": { "id": "probe-slab", "category": "objects", "heightM": 0.3, "poses": ["rest"], "clips": [], "representations": { "50": "authored" }, "analytics": ["structural"] },
+        "asset": {
+          "id": "probe-slab",
+          "category": "objects",
+          "dimensions": { "heightM": 0.3, "widthM": 1, "depthM": 1, "massKg": 0 },
+          "representations": { "50": { "status": "authored", "denominator": 50, "geometry": { "elevation": [1], "front": [1], "plan": [1] } } },
+          "poses": [{ "id": "rest" }],
+          "clips": [],
+          "thermal": { "regions": [] },
+          "structure": { "supports": [], "dynamics": "quasi-static", "gravityMS2": 9.80665 }
+        }
+      }
+    ],
+    "presets": ["summer", "winter"],
+    "valid": {
+      "version": 1,
+      "casts": {
+        "sitter-still": { "asset": "probe-sitter", "pose": "rest", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 50 },
+        "sitter-mirrored": { "asset": "probe-sitter", "pose": "lean", "view": "light-solid", "viewpoint": "elevation", "theme": "light", "scale": 100, "mirror": true },
+        "sitter-plan": { "asset": "probe-sitter", "clip": "loop", "view": "dark-line", "viewpoint": "plan", "theme": "dark", "scale": 100, "fps": 15 },
+        "sitter-thermal": { "asset": "probe-sitter", "clip": "loop", "view": "thermal", "viewpoint": "elevation", "theme": "dark", "scale": 50, "fps": 15, "environment": "summer", "thermalSpanK": 25, "transport": ["pathlines"], "transportAgeS": 2 },
+        "sitter-day": { "asset": "probe-sitter", "pose": "rest", "view": "thermal", "viewpoint": "front", "theme": "dark", "scale": 50, "fps": 1, "timeline": [{ "t": 0, "environment": "winter", "ease": "step" }, { "t": 60, "environment": "summer", "ease": "linear" }] },
+        "sitter-forces": { "asset": "probe-sitter", "pose": "rest", "view": "forces", "viewpoint": "elevation", "theme": "light", "scale": 500 }
+      }
+    },
+    "valid_sources": [
+      { "series": "probe", "path": "a/🐍️.py", "text": "x = staffage('sitter-still', unit=1)\ny = staffage_motion('sitter-plan', unit=1)\nz = fitted_staffage(\"sitter-mirrored\", width=1)\n" },
+      { "series": "probe", "path": "b/🐍️.py", "text": "name = 'sitter-th'\nA = on_cast('x')\nB = Thing(on_cast='sitter-forces')\nC = f(off_cast='sitter-day')\n" }
+    ],
+    "valid_expect": { "references": ["sitter-day", "sitter-forces", "sitter-mirrored", "sitter-plan", "sitter-still"], "prefixes": [], "orphans": ["sitter-thermal"], "broken": [] },
+    "prefix_sources": [{ "series": "probe", "path": "c/🐍️.py", "text": "family = 'sitter-'\n" }],
+    "prefix_expect": { "references": [], "prefixes": ["sitter-"], "orphans": [], "broken": [] },
+    "invalid": [
+      { "name": "an unknown asset", "cast": "sitter-still", "patch": { "asset": "ghost" }, "code": "asset-unknown" },
+      { "name": "a missing scale", "cast": "sitter-still", "remove": ["scale"], "code": "scale-missing" },
+      { "name": "a derived scale", "cast": "sitter-still", "patch": { "scale": 75 }, "code": "scale-preset" },
+      { "name": "an unavailable scale", "cast": "sitter-still", "patch": { "scale": 200 }, "code": "scale-unauthored" },
+      { "name": "a scale the asset never authored", "cast": "sitter-forces", "patch": { "asset": "probe-slab", "scale": 100 }, "code": "scale-unauthored" },
+      { "name": "an empty view at the scale", "cast": "sitter-still", "patch": { "viewpoint": "plan" }, "code": "viewpoint-empty" },
+      { "name": "an empty front view at 1:500", "cast": "sitter-forces", "patch": { "viewpoint": "front" }, "code": "viewpoint-empty" },
+      { "name": "an unknown viewpoint", "cast": "sitter-still", "patch": { "viewpoint": "back" }, "code": "viewpoint-unknown" },
+      { "name": "an unknown style", "cast": "sitter-still", "patch": { "view": "ghost" }, "code": "view-style" },
+      { "name": "an unknown theme", "cast": "sitter-still", "patch": { "theme": "sepia" }, "code": "theme-unknown" },
+      { "name": "a mirrored plan", "cast": "sitter-plan", "patch": { "mirror": true }, "code": "mirror-viewpoint" },
+      { "name": "no pose and no clip", "cast": "sitter-still", "remove": ["pose"], "code": "state-count" },
+      { "name": "both a pose and a clip", "cast": "sitter-still", "patch": { "clip": "loop" }, "code": "state-count" },
+      { "name": "an unknown pose", "cast": "sitter-still", "patch": { "pose": "dance" }, "code": "pose-unknown" },
+      { "name": "a pose that is only a clip key", "cast": "sitter-still", "patch": { "pose": "mid-stride" }, "code": "pose-key" },
+      { "name": "an unknown clip", "cast": "sitter-plan", "patch": { "clip": "dance" }, "code": "clip-unknown" },
+      { "name": "a clip without a frame rate", "cast": "sitter-plan", "remove": ["fps"], "code": "fps-missing" },
+      { "name": "a still pose with a frame rate", "cast": "sitter-still", "patch": { "fps": 15 }, "code": "fps-forbidden" },
+      { "name": "a zero frame rate", "cast": "sitter-plan", "patch": { "fps": 0 }, "code": "fps-range" },
+      { "name": "a thermal cast without a scenario", "cast": "sitter-thermal", "remove": ["environment"], "code": "thermal-scenario" },
+      { "name": "a thermal cast with both scenarios", "cast": "sitter-thermal", "patch": { "timeline": [{ "t": 0, "environment": "winter", "ease": "step" }], "fps": 15 }, "code": "thermal-scenario" },
+      { "name": "an environment on a line view", "cast": "sitter-still", "patch": { "environment": "summer" }, "code": "scenario-forbidden" },
+      { "name": "a span on a line view", "cast": "sitter-still", "patch": { "thermalSpanK": 25 }, "code": "scenario-forbidden" },
+      { "name": "an unknown preset", "cast": "sitter-thermal", "patch": { "environment": "monsoon" }, "code": "preset-unknown" },
+      { "name": "a timeline key without ease", "cast": "sitter-day", "patch": { "timeline": [{ "t": 0, "environment": "winter" }] }, "code": "ease-missing" },
+      { "name": "a timeline with a repeated time", "cast": "sitter-day", "patch": { "timeline": [{ "t": 0, "environment": "winter", "ease": "step" }, { "t": 0, "environment": "summer", "ease": "step" }] }, "code": "timeline-key" },
+      { "name": "a thermal cast of an asset without thermal regions", "cast": "sitter-thermal", "patch": { "asset": "probe-slab" }, "code": "thermal-regions" },
+      { "name": "a zero span", "cast": "sitter-thermal", "patch": { "thermalSpanK": 0 }, "code": "span-range" },
+      { "name": "an unknown transport layer", "cast": "sitter-thermal", "patch": { "transport": ["fog"] }, "code": "transport-layer" },
+      { "name": "a transport offset without transport", "cast": "sitter-thermal", "remove": ["transport"], "code": "transport-age" },
+      { "name": "a structural cast of an asset with an unknown dynamics", "cast": "sitter-forces", "asset_patch": { "structure": { "supports": [], "dynamics": "chaotic", "gravityMS2": 9.8 } }, "code": "structural-model" },
+      { "name": "a cast field no schema names", "cast": "sitter-still", "patch": { "colour": "red" }, "code": "field-unknown" },
+      { "name": "a thermal cast of an asset whose row lacks thermal analytics", "cast": "sitter-thermal", "row_patch": { "analytics": ["structural"] }, "code": "analytics" },
+      { "name": "an asset row that disagrees with its asset", "cast": "sitter-still", "row_patch": { "heightM": 9 }, "code": "row-mismatch" },
+      { "name": "an asset without a row", "cast": "sitter-still", "row_remove": true, "code": "row-missing" },
+      { "name": "an asset without a mass", "cast": "sitter-still", "asset_patch": { "dimensions": { "heightM": 1.2, "widthM": 0.5, "depthM": 0.6, "massKg": "heavy" } }, "code": "units" },
+      { "name": "an asset in another category than its folder", "cast": "sitter-still", "asset_patch": { "category": "objects" }, "code": "category-mismatch" }
+    ],
+    "invalid_sources": [
+      { "name": "a cast name no manifest row carries", "sources": [{ "series": "probe", "path": "a/🐍️.py", "text": "x = staffage('sitter-ghost', unit=1)\n" }], "code": "ref-unknown", "mention": "sitter-ghost" },
+      { "name": "a keyword cast no manifest row carries", "sources": [{ "series": "probe", "path": "a/🐍️.py", "text": "x = Thing(on_cast='sitter-ghost')\n" }], "code": "ref-unknown", "mention": "sitter-ghost" },
+      { "name": "a manifest row no source names", "sources": [{ "series": "probe", "path": "a/🐍️.py", "text": "x = staffage('sitter-still', unit=1)\n" }], "code": "cast-orphan", "mention": "sitter-thermal" }
+    ]
+  }
+}

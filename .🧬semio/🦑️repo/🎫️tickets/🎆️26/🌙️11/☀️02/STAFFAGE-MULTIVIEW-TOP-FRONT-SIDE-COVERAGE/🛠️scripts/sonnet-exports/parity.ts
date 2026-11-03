@@ -1,0 +1,14 @@
+import { loadCatalogFromFiles, DEFAULT_CATALOG_ROOT } from "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { evaluate } from "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { modelScene } from "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🟦️.ts";
+import { solveStructure } from "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🏗️structure/🟦️.ts";
+const c = await loadCatalogFromFiles(DEFAULT_CATALOG_ROOT);
+const a = c.assets.find((x) => x.id === "forklift")!;
+const s = evaluate(a, { kind: "pose", pose: a.presentation.defaultPose }, { kind: "scale", scale: { denominator: 50 } });
+const m = modelScene(s, { viewpoint: "elevation", analysis: { structure: solveStructure(s) }, diagrams: ["moment"] });
+console.log(m.layers.map((l) => `${l.name}:${l.polylines.length}`).join(" "));
+const m2 = modelScene(s, { viewpoint: "elevation", analysis: { structure: solveStructure(s) }, diagrams: ["moment"] });
+console.log(m2.layers.map((l) => `${l.name}:${l.polylines.length}`).join(" "));
+import { writeDxf } from "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/📐️dxf/🟦️.ts";
+const t = writeDxf(m);
+console.log([...t.matchAll(/\n {2}0\nLWPOLYLINE\n/gu)].length, (t.match(/LWPOLYLINE/g) ?? []).length, [...t.matchAll(/\n {2}0\nLWPOLYLINE\n/gu)].length);

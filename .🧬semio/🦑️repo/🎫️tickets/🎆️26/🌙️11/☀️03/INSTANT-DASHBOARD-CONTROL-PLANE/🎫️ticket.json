@@ -1,0 +1,81 @@
+{
+  "title": "Instant Dashboard Control Plane",
+  "emoji": "🎛️",
+  "status": "closed",
+  "description": "repo dashboard is the control plane for human developers. It must start immediately and then be able to run dev, build and the other commands. Today it admits the build implementation, nests repo run of the dashboard build, and spends minutes in parser-source and dependencies:current-input before failing.",
+  "summary": "Native dashboard run, daemon and preferences leave the build door before source admission. A missing install compiles the dashboard crate in-process instead of nesting repo run. The known-command cargo test passed: workspace:dev and workspace:build are dispatchable before the walk. Door tests passed 9 tests and 447 expects. See startup-route.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2781"
+  },
+  "goal": "🎯repoclient",
+  "sessions": [
+    "70dea7e5-7264-491c-80db-7299f0cdbf6e",
+    "bf4246f0-ed3b-4d9e-8b9b-e602659be2d1"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-03 00:30:13",
+      "author": "",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "",
+      "prompt": "repo dashboard is the control plane for human developers. It must start immediately and then be able to run dev, build and the other commands. Today it admits the build implementation, nests repo run of the dashboard build, and spends minutes in parser-source and dependencies:current-input before failing.",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-03 00:31:06",
+      "author": "ueli",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "ccac6866cc11544b90ee55a9e0c78184fd689766",
+      "summary": "Native dashboard run, daemon and preferences leave the build door before source admission. A missing install compiles the dashboard crate in-process instead of nesting repo run. Door plans and the launch law pass. See startup-route.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-03 01:30:46",
+      "author": "",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "",
+      "prompt": "Prove repo dashboard uses the installed control plane for the launcher argv and can offer dev and build without the source-admission rebuild.",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-03 02:59:28",
+      "author": "ueli",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "ccac6866cc11544b90ee55a9e0c78184fd689766",
+      "summary": "Native dashboard run, daemon and preferences leave the build door before source admission. A missing install compiles the dashboard crate in-process instead of nesting repo run. The known-command cargo test passed: workspace:dev and workspace:build are dispatchable before the walk. Door tests passed 9 tests and 447 expects. See startup-route.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🛤️taskroutes💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🛅🛠️tools🗃️🦀️rustup🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️📚️inventory🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️📦️artifacts🗃️📋️nativeorchestration🗃️📥️invocation🗃️🛠️preparation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🛅🛠️tools🗃️🦀️rustup🗃️📥️bootstrap💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🛅🛠️tools🗃️🦀️rustup🗃️📥️installation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏃️process🗃️🦀️cargo🗃️🎟️admission💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏃️process🗃️🦀️cargo🗃️🚪️launcher💻🟦️"
+        }
+      ]
+    }
+  ]
+}

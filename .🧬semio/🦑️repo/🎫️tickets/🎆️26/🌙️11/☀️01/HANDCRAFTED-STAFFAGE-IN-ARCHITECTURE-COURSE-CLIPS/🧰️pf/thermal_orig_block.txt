@@ -1,0 +1,26 @@
+    const sampleAt = (time: number): ThermalSample => options.history?.(time) ?? { inputs: state.thermal, comVelocity: state.kinematics.comVelocity };
+    const start = instantOf(sys, sampleAt(plan.startS), environmentAt(input, plan.startS));
+    temps = sys.regions.map((s, j) => (sys.place.has(j) ? steadyTemps[j]! : steadyOf(start.frames[j]!, start.amb, start.levels[j]!, start.env.airTempC).target));
+    bodyStates = sys.bodies.map((b) => steadyBody(b.setup, subjectInputs(start.inputs, b.subject), bodyFrames(b, start), start.amb).state);
+    let previous = plan.startS;
+    plan.times.forEach((at, k) => {
+      options.signal?.throwIfAborted();
+      const dt = at - previous;
+      const mid = previous + dt / 2;
+      const instant = instantOf(sys, sampleAt(mid), environmentAt(input, mid));
+      temps = temps.map((temp, j) => {
+        if (sys.place.has(j)) return temp;
+        const f = instant.frames[j]!;
+        const region = f.setup.region;
+        if (region.model === "fixed") return region.fixed?.surfaceTempC ?? temp;
+        const inflow = inflowOf(f, instant.levels[j]!);
+        const g = restoringConductance(f, instant.amb, inflow, temp);
+        return relax(temp, temp + residualWM2(f, instant.amb, inflow, temp) / g, dt, region.heatCapacityJM2K / g);
+      });
+      bodyStates = sys.bodies.map((b, i) => stepBody(b.setup, bodyStates[i]!, subjectInputs(instant.inputs, b.subject), bodyFrames(b, instant), instant.amb, dt).state);
+      previous = at;
+      options.progress?.(k + 1, plan.times.length, label("Thermal history", "Thermischer Verlauf"));
+    });
+    const last = instantOf(sys, sampleAt(t), environmentAt(input, t));
+    return assemble(asset, sys, last, temps, steadyTemps, taus, bodyStates, input, true);
+  }

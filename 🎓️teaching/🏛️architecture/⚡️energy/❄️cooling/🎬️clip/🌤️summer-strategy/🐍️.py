@@ -14,7 +14,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -50,9 +49,14 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
+unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
-person_glyph = _manim_module.person_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
+fitted_staffage = _manim_module.fitted_staffage
 sun_glyph = _manim_module.sun_glyph
 ripples = _manim_module.ripples
 flow_animation = _manim_module.flow_animation
@@ -68,6 +72,11 @@ if _VO_TIMING.is_file():
 TITLE_DE = "Sommerstrategie"
 
 AIR = semio_color("secondary")
+
+# ⏩ The sorption wheel clip runs in real time at 12 revolutions per hour (5 minutes per turn): the scene plays it 30 times faster, one turn in 10 s.
+WHEEL_TIMELAPSE = 30.0
+# ⏩ The collector clip start-up takes 300 s of sun and pump; the scene plays it 60 times faster, the absorber settles within the regeneration step.
+COLLECTOR_RATE = 60.0
 
 
 #region DIN citation
@@ -88,10 +97,22 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 
-def _person(house, x, color=P_ORANGE):
-    """🧍 A 1.75 m occupant with feet on the ground-floor slab."""
-    height = 0.7 * house["w_height"] / 2
-    return person_glyph(np.array([x, house["bottom_left"][1] + height / 2, 0.0]), color=color, scale=height / 0.66)
+def _person(house, x):
+    """🧍 Handcrafted thermal occupant fanning herself, feet on the ground-floor slab."""
+    cast = "shared-person-fanning"
+    unit = 0.7 * house["w_height"] / 2 / staffage_height(cast)
+    return staffage_motion(cast, unit=unit, anchor=np.array([x, house["bottom_left"][1], 0.0]))
+
+
+def _blinds(house):
+    """🪟 External venetian blinds in front of both window openings, each scaled to its opening."""
+    cast = "cooling-summer-strategy-blind"
+    blinds = []
+    for win in house["windows"]:
+        unit = (win["lintel"] - win["sill"] + 0.12) / staffage_height(cast)
+        blind = staffage_motion(cast, unit=unit, anchor=np.array([win["x"] - 0.27, win["sill"] - 0.06, 0.0]))
+        blinds.append(blind)
+    return VGroup(*blinds)
 
 
 def _streams(streams, rt: float, *, speed: float = 0.85, waves: int = 3):
@@ -144,7 +165,7 @@ class Beat1_LastZuerstSenken(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Erst die Last senken, dann lüften")
+        subtitle = section_heading(tr("Reduce the load first, then ventilate", "Erst die Last senken, dann lüften"))
         din = _din_ref("DIN 4108-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -152,27 +173,22 @@ class Beat1_LastZuerstSenken(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         hs = house_section(np.array([-3.85, -0.05, 0.0]), scale=0.8)
-        bl, br, tl, tr, peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
+        bl, br, tl, eave_right, peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
         lo_win, up_win = hs["windows"]
         person = _person(hs, -3.25)
 
         off = 0.09
         envelope = VMobject(color=P_PRIMARY, stroke_width=6, stroke_opacity=0.85).set_points_as_corners([
             bl + LEFT * off, tl + LEFT * off, tl + LEFT * (0.26 * 0.8 + off) + UP * 0.02, peak + UP * off,
-            tr + RIGHT * (0.26 * 0.8 + off) + UP * 0.02, tr + RIGHT * off, br + RIGHT * off,
+            eave_right + RIGHT * (0.26 * 0.8 + off) + UP * 0.02, eave_right + RIGHT * off, br + RIGHT * off,
         ])
-        louvre = VGroup(*[
-            Line(np.array([w["x"] - 0.40, y - 0.07, 0.0]), np.array([w["x"] - 0.14, y + 0.07, 0.0]),
-                 color=P_PRIMARY, stroke_width=3)
-            for w in (lo_win, up_win)
-            for y in np.linspace(w["sill"] + 0.07, w["lintel"] - 0.07, 4)
-        ])
+        louvre = _blinds(hs)
         warm_spots = [person.get_top() + UP * 0.05, np.array([-2.75, hs["level_1"].get_center()[1] + 0.02, 0.0])]
 
         def heat(rt, r_max=0.45):
             return [ripples(warm_spots, r_max=r_max, cycles=rt / 1.4)]
 
-        load_bar = meter("Kühllast", length=4.5, thickness=0.5, color=P_RED, vertical=False)
+        load_bar = meter(tr("Cooling load", "Kühllast"), length=4.5, thickness=0.5, color=P_RED, vertical=False)
         load_bar["group"].move_to(np.array([2.35, 1.62, 0.0]))
         load = ValueTracker(1.0)
         bind_meter(load_bar, load)
@@ -187,14 +203,14 @@ class Beat1_LastZuerstSenken(Scene):
             ).arrange(RIGHT, buff=0.20)
 
         steps = VGroup(
-            _step("1", "Hülle + Sonnenschutz", "Last sinkt", P_PRIMARY),
-            _step("2", "Fenster · Quer · Nacht", "freie Kühlung", P_CYAN),
-            _step("3", "Zu-/Abluft mit WRG", "Hauptweg", P_ORANGE),
+            _step("1", tr("Envelope + sun shading", "Hülle + Sonnenschutz"), tr("load falls", "Last sinkt"), P_PRIMARY),
+            _step("2", tr("Window · cross · night", "Fenster · Quer · Nacht"), tr("free cooling", "freie Kühlung"), P_CYAN),
+            _step("3", tr("Supply/extract air with HRV", "Zu-/Abluft mit WRG"), tr("main path", "Hauptweg"), P_ORANGE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.34)
         steps.move_to(np.array([2.55, -0.30, 0.0]))
 
-        chip_nat = _back_chip("← Lüftung · Kapitel 4: Fenster · Quer · Auftrieb · Nacht")
-        chip_mech = _back_chip("← Lüftung · Kapitel 5: Zu-/Abluft · WRG")
+        chip_nat = _back_chip(tr("← Ventilation · Chapter 4: Window · Cross · Stack · Night", "← Lüftung · Kapitel 4: Fenster · Quer · Auftrieb · Nacht"))
+        chip_mech = _back_chip(tr("← Ventilation · Chapter 5: Supply/extract air · HRV", "← Lüftung · Kapitel 5: Zu-/Abluft · WRG"))
         chip_nat.move_to(np.array([2.55, -1.8, 0.0]))
         chip_mech.move_to(chip_nat)
 
@@ -205,7 +221,7 @@ class Beat1_LastZuerstSenken(Scene):
                  during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "envelope"))
-        self.play(Create(envelope), Create(louvre), *heat(1.2), run_time=1.2)
+        self.play(Create(envelope), FadeIn(louvre), *heat(1.2), run_time=1.2)
         self.play(
             load.animate.set_value(0.55),
             load_bar["fill"].animate.set_fill(P_YELLOW),
@@ -282,7 +298,7 @@ class Beat2_SorptionsKuehlung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Sorptionsgestützte Kühlung (DEC)")
+        subtitle = section_heading(tr("Sorption-assisted cooling (DEC)", "Sorptionsgestützte Kühlung (DEC)"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -292,53 +308,46 @@ class Beat2_SorptionsKuehlung(Scene):
         y_sup, y_exh = 1.05, -0.25
 
         wheel_c = np.array([-2.9, 0.4, 0.0])
-        wheel = Circle(radius=0.95, color=P_ORANGE, stroke_width=3).move_to(wheel_c)
-        wheel_spokes = VGroup(*[
-            Line(wheel_c, wheel_c + 0.95 * np.array([np.cos(a), np.sin(a), 0.0]),
-                 color=P_ORANGE, stroke_width=1.4).set_stroke(opacity=0.5)
-            for a in np.linspace(0, TAU, 8, endpoint=False)
-        ])
-        wheel_tag = Text("Sorptionsrad", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        wheel = fitted_staffage("cooling-summer-strategy-wheel", width=1.9, height=1.9, rate=0.0, loop=True).move_to(wheel_c)
+        wheel_tag = Text(tr("Desiccant wheel", "Sorptionsrad"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         wheel_tag.move_to(np.array([-2.9, -1.05, 0.0]))
 
-        hx = Rectangle(width=1.5, height=1.9, color=P_WHITE, stroke_width=3).move_to(np.array([-0.3, 0.4, 0.0]))
-        hx_diag = VGroup(
-            Line(hx.get_corner(DL), hx.get_corner(UR), color=P_TEAL, stroke_width=1.6, stroke_opacity=0.7),
-            Line(hx.get_corner(UL), hx.get_corner(DR), color=P_TEAL, stroke_width=1.6, stroke_opacity=0.7),
-        )
-        hx_tag = Text("Plattentauscher", font_size=LABEL_FONT_SIZE, color=P_TEAL)
-        hx_tag.move_to(np.array([-0.45, -1.05, 0.0]))
+        hx = fitted_staffage("cooling-summer-strategy-exchanger", width=1.5, height=1.9).move_to(np.array([-0.3, 0.4, 0.0])).set_z_index(-1)
+        hx_tag = Text(tr("Plate exchanger", "Plattentauscher"), font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        hx_tag.move_to(np.array([-0.6, -1.05, 0.0]))
 
-        def _humidifier(pos, color=P_BLUE):
-            box = Rectangle(width=0.72, height=0.72, color=color, stroke_width=2.4).move_to(pos)
-            return VGroup(box, droplets(pos, n=5, spread=(0.2, 0.2), seed=5, color=color))
+        def _humidifier(pos):
+            return fitted_staffage("cooling-summer-strategy-humidifier", width=0.9, height=1.05, rate=1.0, loop=True).move_to(pos)
 
         hum_sup = _humidifier(np.array([2.0, y_sup, 0.0]))
         hum_exh = _humidifier(np.array([2.0, y_exh, 0.0]))
-        hum_tag = Text("Verdunstungskühlung", font_size=LABEL_FONT_SIZE, color=P_BLUE)
-        hum_tag.move_to(np.array([2.25, -1.05, 0.0]))
+        hum_tag = Text(tr("Evaporative cooling", "Verdunstungskühlung"), font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        hum_tag.move_to(np.array([2.6, -1.05, 0.0]))
 
         heater_c = np.array([-1.5, y_exh, 0.0])
-        heater = Rectangle(width=0.72, height=0.6, color=P_RED, stroke_width=2.4).move_to(heater_c)
-        coil_pts = [heater_c + np.array([-0.26 + i * 0.087, 0.12 if i % 2 else -0.12, 0.0]) for i in range(7)]
-        coil = VMobject(color=P_RED, stroke_width=2.2).set_points_as_corners(coil_pts)
+        heater = fitted_staffage("cooling-summer-strategy-heater", width=0.72, height=1.05, rate=0.0).move_to(heater_c)
 
-        # Below the regeneration heater: the solar duct stays on the exhaust
-        # side and never crosses the supply-air state readouts above.
-        sun_c = np.array([-1.5, -1.5, 0.0])
-        sun = sun_glyph(sun_c).scale(0.34)
-        solar_duct = DashedLine(
-            sun_c + UP * 0.36, heater.get_bottom() + DOWN * 0.04,
-            color=P_YELLOW, stroke_width=2.4, dash_length=0.08,
-        )
-        solar_tag = Text("Solarwärme", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
-        solar_tag.next_to(sun, RIGHT, buff=0.18).shift(DOWN * 0.12)
+        sun = sun_glyph(np.array([-5.0, -1.8, 0.0])).scale(0.34)
+        collector = fitted_staffage("cooling-summer-strategy-collector", width=1.6, height=0.75, rate=0.0).move_to(np.array([-3.6, -1.8, 0.0]))
+        sun_rays = VGroup(*[
+            Arrow(np.array([-4.72, -1.87 - 0.1 * k, 0.0]), np.array([-4.35, -2.1 - 0.12 * k, 0.0]),
+                  buff=0, color=P_YELLOW, stroke_width=2.4, max_tip_length_to_length_ratio=0.3)
+            for k in (0, 1)
+        ])
+        solar_flow = smooth_path([collector.get_corner(UR) + LEFT * 0.1 + DOWN * 0.05, np.array([-1.7, -2.0, 0.0]),
+                                  heater.get_bottom() + LEFT * 0.2 + DOWN * 0.04])
+        solar_duct = flow_guides(VGroup(solar_flow), P_YELLOW, opacity=0.5)
+        collector_tag = Text(tr("Solar collector", "Solarkollektor"), font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        collector_tag.next_to(collector, DOWN, buff=0.08)
+        solar_tag = Text(tr("Solar heat → heating coil", "Solarwärme → Heizregister"), font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        solar_tag.move_to(np.array([0.0, -2.3, 0.0]))
+        regen_read = math_label(r"70\,\mathrm{°C}", at=np.array([-1.5, 0.58, 0.0]), size=LABEL_FONT_SIZE, color=P_RED)
+        solar_all = VGroup(sun, sun_rays, collector, collector_tag, solar_tag, solar_duct, regen_read)
 
-        # Zustände entlang der Zuluft — jeder Wert ist das Ergebnis des Bauteils davor.
         t_reads = VGroup(
-            math_label(r"32\,\mathrm{°C}\;\text{feucht}", at=np.array([-4.1, y_sup + 0.55, 0.0]),
+            math_label(rf"32\,\mathrm{{°C}}\;\text{{{tr('humid', 'feucht')}}}", at=np.array([-4.1, y_sup + 0.55, 0.0]),
                        size=LABEL_FONT_SIZE, color=P_ORANGE),
-            math_label(r"48\,\mathrm{°C}\;\text{trocken}", at=np.array([-1.5, y_sup + 0.55, 0.0]),
+            math_label(rf"48\,\mathrm{{°C}}\;\text{{{tr('dry', 'trocken')}}}", at=np.array([-1.5, y_sup + 0.55, 0.0]),
                        size=LABEL_FONT_SIZE, color=P_RED),
             math_label(r"24\,\mathrm{°C}", at=np.array([0.95, y_sup + 0.55, 0.0]),
                        size=LABEL_FONT_SIZE, color=P_YELLOW),
@@ -346,10 +355,10 @@ class Beat2_SorptionsKuehlung(Scene):
                        size=LABEL_FONT_SIZE, color=P_CYAN),
         )
         end_tags = VGroup(
-            Text("Außenluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-5.9, y_sup + 0.55, 0.0]),
-            Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to([5.0, y_sup + 0.55, 0.0]),
-            Text("Abluft 26 °C", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to([5.0, y_exh - 0.62, 0.0]),
-            Text("Fortluft\nfeucht · warm", font_size=LABEL_FONT_SIZE, color=P_ORANGE, line_spacing=0.8).move_to([-5.55, y_exh - 0.62, 0.0]),
+            Text(tr("Outdoor air", "Außenluft"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-5.9, y_sup + 0.55, 0.0]),
+            Text(tr("Supply air", "Zuluft"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to([5.0, y_sup + 0.55, 0.0]),
+            Text(tr(f"Extract air {unit_text('26', '°C')}", "Abluft 26 °C"), font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to([5.0, y_exh - 0.62, 0.0]),
+            Text(tr("Exhaust air\nhumid · warm", "Fortluft\nfeucht · warm"), font_size=LABEL_FONT_SIZE, color=P_ORANGE, line_spacing=0.8).move_to([-5.55, y_exh - 0.62, 0.0]),
         )
 
         def _lane(x0, x1, y):
@@ -363,16 +372,11 @@ class Beat2_SorptionsKuehlung(Scene):
         exh_seg2 = _lane(0.5, -2.1, y_exh)
         exh_seg3 = _lane(-2.1, -5.3, y_exh)
 
-        components = VGroup(
-            wheel, wheel_spokes, wheel_tag, hx, hx_diag, hx_tag,
-            hum_sup, hum_exh, hum_tag, heater, coil,
-        )
-
         self.play(
-            Create(wheel), Create(wheel_spokes), FadeIn(wheel_tag),
-            Create(hx), Create(hx_diag), FadeIn(hx_tag),
+            FadeIn(wheel), FadeIn(wheel_tag),
+            FadeIn(hx), FadeIn(hx_tag),
             FadeIn(hum_sup), FadeIn(hum_exh), FadeIn(hum_tag),
-            FadeIn(heater), Create(coil),
+            FadeIn(heater),
             Create(flow_guides(VGroup(*sup_seg1, *sup_seg2, *sup_seg3), P_CYAN, opacity=0.2)),
             Create(flow_guides(VGroup(*exh_seg1, *exh_seg2, *exh_seg3), P_TEAL, opacity=0.2)),
             FadeIn(end_tags[0]), FadeIn(end_tags[2]),
@@ -381,8 +385,8 @@ class Beat2_SorptionsKuehlung(Scene):
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 2.6)
 
         def _spin(run_time):
-            return Rotate(wheel_spokes, angle=-TAU * run_time / 5.2, about_point=wheel_c,
-                          run_time=run_time, rate_func=linear)
+            wheel.rate = WHEEL_TIMELAPSE
+            return Wait(run_time)
 
         running = []
 
@@ -414,23 +418,20 @@ class Beat2_SorptionsKuehlung(Scene):
         hold_for(self, self.NARRATION, "verdunsten", during=dec)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "regeneration"))
-        self.play(FadeIn(sun, scale=0.7), FadeIn(solar_tag), Create(solar_duct), *dec(1.0), run_time=1.0)
+        heater.rate = 3.0
+        collector.rate = COLLECTOR_RATE
+        self.play(FadeIn(sun, scale=0.7), FadeIn(sun_rays), FadeIn(collector), FadeIn(collector_tag), *dec(1.0), run_time=1.0)
+        running.append(([solar_flow], P_YELLOW, P_ORANGE))
+        self.play(Create(solar_duct), FadeIn(solar_tag), Indicate(collector, color=P_YELLOW, scale_factor=1.1), *dec(1.4), run_time=1.4)
         running.extend([(exh_seg1, P_TEAL, P_BLUE), (exh_seg2, P_BLUE, P_ORANGE), (exh_seg3, P_ORANGE, P_RED)])
-        self.play(
-            heater.animate.set_fill(P_RED, opacity=0.25),
-            Indicate(sun, color=P_YELLOW, scale_factor=1.1), *dec(3.0),
-            run_time=3.0,
-        )
+        self.play(Indicate(heater, color=P_RED, scale_factor=1.1), FadeIn(regen_read), *dec(1.6), run_time=1.6)
         self.play(FadeIn(end_tags[3]), *dec(0.5), run_time=0.5)
         hold_for(self, self.NARRATION, "regeneration", during=dec)
 
-        # 🦠 Mikrobieller Preis: Hitze-/Feuchtezyklen selektieren resistente Keime.
         def _microbe(pos, color):
-            return VGroup(_manim_module.object_silhouette("microbe", color=color, width=0.3)).move_to(pos)
+            return VGroup(_manim_module.icon_glyph("microbe", color=color, width=0.3)).move_to(pos)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "nachteil"))
-        # Compact strip between the component labels (bottom ≈ −1.2) and the
-        # caption box (top ≈ −2.6): every microbe and the verdict stay inside it.
         strip_y = -1.86
         panel = RoundedRectangle(
             width=10.0, height=1.0, corner_radius=0,
@@ -442,10 +443,10 @@ class Beat2_SorptionsKuehlung(Scene):
         survivors = (normal[2], normal[3])
         cycle_tag = math_label(r"ΔT\!\uparrow\;\;Δx\!\uparrow", at=np.array([-4.75, strip_y - 0.08, 0.0]),
                                size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
-        verdict = Text("Mutation:\ndie Schädlichen überleben",
+        verdict = Text(tr("Mutation:\nthe harmful survive", "Mutation:\ndie Schädlichen überleben"),
                        font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
         verdict.move_to(np.array([2.9, strip_y, 0.0]))
-        self.play(FadeOut(VGroup(sun, solar_tag, solar_duct)), *dec(0.4), run_time=0.4)
+        self.play(FadeOut(solar_all), *dec(0.4), run_time=0.4)
         self.play(FadeIn(panel), FadeIn(normal), FadeIn(cycle_tag), *dec(0.9), run_time=0.9)
         for flash in (P_RED, P_CYAN):
             self.play(panel.animate.set_stroke(color=flash), *dec(0.35), run_time=0.35)
@@ -494,16 +495,16 @@ class Beat3_KomfortStrategie(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Strategie: freie Kühlung zuerst")
+        subtitle = section_heading(tr("Strategy: free cooling first", "Strategie: freie Kühlung zuerst"))
         din = _din_ref("DIN EN 16798-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        start = chip("Sommertag", P_WHITE).move_to(np.array([0.0, 2.28, 0.0]))
+        start = chip(tr("Summer day", "Sommertag"), P_WHITE).move_to(np.array([0.0, 2.28, 0.0]))
 
-        q_text = Text("Außenluft kühler\nals der Raum?", font_size=LABEL_FONT_SIZE,
+        q_text = Text(tr("Outdoor air cooler\nthan the room?", "Außenluft kühler\nals der Raum?"), font_size=LABEL_FONT_SIZE,
                       color=P_YELLOW, line_spacing=0.7)
         diamond = Polygon(
             np.array([0.0, 0.66, 0.0]), np.array([2.6, 0.0, 0.0]),
@@ -513,15 +514,15 @@ class Beat3_KomfortStrategie(Scene):
         q_text.move_to(diamond.get_center())
         question = VGroup(diamond, q_text).move_to(np.array([0.0, 1.22, 0.0]))
 
-        yes_box = chip("Natürlich lüften", P_CYAN).move_to(np.array([-3.45, 0.02, 0.0]))
-        yes_sub = chip("Öffnung · Luftweg · Zeitplan", P_PRIMARY, font_size=LABEL_FONT_SIZE)
+        yes_box = chip(tr("Ventilate naturally", "Natürlich lüften"), P_CYAN).move_to(np.array([-3.45, 0.02, 0.0]))
+        yes_sub = chip(tr("Opening · air path · schedule", "Öffnung · Luftweg · Zeitplan"), P_PRIMARY, font_size=LABEL_FONT_SIZE)
         yes_sub.move_to(np.array([-3.45, -0.78, 0.0]))
-        no_box = chip("Schließen + verschatten", P_ORANGE).move_to(np.array([3.45, 0.02, 0.0]))
-        no_sub = chip("Speichermasse puffert", P_PRIMARY, font_size=LABEL_FONT_SIZE)
+        no_box = chip(tr("Close + shade", "Schließen + verschatten"), P_ORANGE).move_to(np.array([3.45, 0.02, 0.0]))
+        no_sub = chip(tr("Thermal mass buffers", "Speichermasse puffert"), P_PRIMARY, font_size=LABEL_FONT_SIZE)
         no_sub.move_to(np.array([3.45, -0.78, 0.0]))
 
-        mech = chip("Reserve: Zu-/Abluft mit WRG", P_ORANGE).move_to(np.array([0.0, -1.60, 0.0]))
-        goal = chip("Komfort", P_GREEN).move_to(np.array([0.0, -2.46, 0.0]))
+        mech = chip(tr("Reserve: supply/extract air with HRV", "Reserve: Zu-/Abluft mit WRG"), P_ORANGE).move_to(np.array([0.0, -1.60, 0.0]))
+        goal = chip(tr("Comfort", "Komfort"), P_GREEN).move_to(np.array([0.0, -2.46, 0.0]))
 
         def _link(a, b, color=P_WHITE):
             return Arrow(a, b, buff=0.10, color=color, stroke_width=3,
@@ -537,18 +538,16 @@ class Beat3_KomfortStrategie(Scene):
             _link(no_sub.get_bottom(), mech.get_right(), P_PRIMARY),
             _link(mech.get_bottom(), goal.get_top(), P_GREEN),
         )
-        # Inside the elbow of each link, away from the diamond corner where the token parks.
-        yes_lbl = Text("ja", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(links[1].get_center(), RIGHT, buff=0.14)
-        no_lbl = Text("nein", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(links[2].get_center(), LEFT, buff=0.14)
+        yes_lbl = Text(tr("yes", "ja"), font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(links[1].get_center(), RIGHT, buff=0.14)
+        no_lbl = Text(tr("no", "nein"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(links[2].get_center(), LEFT, buff=0.14)
 
         chart = VGroup(start, question, yes_box, yes_sub, no_box, no_sub,
                        mech, goal, links, yes_lbl, no_lbl)
-        # Inner band: clear of the beat subtitle above and the two-line caption box below.
         fit_band(chart, top=2.35, bottom=-2.42)
 
         token = Dot(radius=0.11, color=P_YELLOW, fill_opacity=1.0).move_to(_park(start))
-        chip_nat = _back_chip("← Lüftung · Kapitel 4").move_to(np.array([-4.9, -1.6, 0.0]))
-        chip_mech = _back_chip("← Lüftung · Kapitel 5").move_to(np.array([4.9, -1.6, 0.0]))
+        chip_nat = _back_chip(tr("← Ventilation · Chapter 4", "← Lüftung · Kapitel 4")).move_to(np.array([-4.9, -1.6, 0.0]))
+        chip_mech = _back_chip(tr("← Ventilation · Chapter 5", "← Lüftung · Kapitel 5")).move_to(np.array([4.9, -1.6, 0.0]))
 
         self.play(FadeIn(start), Create(question), run_time=1.2)
         self.play(
@@ -579,8 +578,6 @@ class Beat3_KomfortStrategie(Scene):
         hold_for(self, self.NARRATION, "yes", used=1.2 + 1.1 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "no"))
-        # Un-dim before Indicate, never alongside it: Indicate snapshots the starting
-        # state and restores it, which silently undoes a same-play opacity change.
         self.play(
             *dim_chip(no_box, 1.0), *dim_chip(no_sub, 1.0),
             token.animate.set_color(P_ORANGE).move_to(_park(no_box)),

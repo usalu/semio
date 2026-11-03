@@ -1,0 +1,194 @@
+{
+  "description": "Language-agnostic vectors of the solid placements of front and plan shapes. The profile is a rectangle in the local frame of the left thigh (0.45 m along the bone, 0.05 m to its side), a bone that hangs straight down at rest (world angle -90 degrees) and has a world angle of -68 degrees in the stride pose (hand-computed: cos 68 = 0.374607, sin 68 = 0.927184). Every number is relative to the pelvis origin, which is the thigh origin and the axis of the revolved shapes. Rest profile: x 0..0.05, y -0.45..0. Stride profile: x 0..0.45cos68+0.05sin68 = 0.214932, y -0.45sin68..0.05cos68 = -0.417233..0.018730.",
+  "asset": "sample-figure",
+  "scale": 100,
+  "toleranceM": 1e-05,
+  "ovalToleranceM": 0.001,
+  "bones": {
+    "thigh-l": {
+      "worldAngleDeg": {
+        "stand": -90,
+        "stride-left-forward": -68
+      }
+    }
+  },
+  "shapes": {
+    "front": [
+      {
+        "id": "canopy",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "pelvis",
+          "axis": "u",
+          "axisX": 0,
+          "mirror": true
+        }
+      },
+      {
+        "id": "half",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "pelvis",
+          "axis": "u",
+          "axisX": 0.1
+        }
+      },
+      {
+        "id": "slat",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.2,
+          "z1": 0.3
+        }
+      }
+    ],
+    "plan": [
+      {
+        "id": "crown",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "pelvis",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0.1
+        }
+      },
+      {
+        "id": "slat",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.2,
+          "z1": 0.3
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "at rest a revolved half profile mirrors about the axis, an offset axis shifts it, an extruded profile spans its lateral range",
+      "pose": "stand",
+      "front": {
+        "canopy": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": -0.45,
+          "maxY": 0
+        },
+        "half": {
+          "minX": -0.1,
+          "maxX": -0.05,
+          "minY": -0.45,
+          "maxY": 0
+        },
+        "slat": {
+          "minX": -0.2,
+          "maxX": 0.3,
+          "minY": -0.45,
+          "maxY": 0
+        }
+      },
+      "plan": {
+        "crown": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.05,
+          "maxY": 0.15
+        },
+        "slat": {
+          "minX": 0,
+          "maxX": 0.05,
+          "minY": -0.2,
+          "maxY": 0.3
+        }
+      }
+    },
+    {
+      "name": "in the stride the revolved canopy narrows and rises with the rotated profile, the extruded slat follows its tilt",
+      "pose": "stride-left-forward",
+      "front": {
+        "canopy": {
+          "minX": -0.214932,
+          "maxX": 0.214932,
+          "minY": -0.417233,
+          "maxY": 0.01873
+        },
+        "half": {
+          "minX": -0.1,
+          "maxX": 0.114932,
+          "minY": -0.417233,
+          "maxY": 0.01873
+        },
+        "slat": {
+          "minX": -0.2,
+          "maxX": 0.3,
+          "minY": -0.417233,
+          "maxY": 0.01873
+        }
+      },
+      "plan": {
+        "crown": {
+          "minX": -0.214932,
+          "maxX": 0.214932,
+          "minY": -0.114932,
+          "maxY": 0.314932
+        },
+        "slat": {
+          "minX": 0,
+          "maxX": 0.214932,
+          "minY": -0.2,
+          "maxY": 0.3
+        }
+      }
+    }
+  ]
+}

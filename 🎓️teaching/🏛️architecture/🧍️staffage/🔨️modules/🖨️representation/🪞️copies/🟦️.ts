@@ -7,36 +7,56 @@
  * @see ../../🗂️catalog/🟦️.ts — issue `representation-copied`
  * @see ../../🧮️evaluation/🟦️.ts — `flattenGeometry`
  */
-import type { AuthoredRepresentation, Shape } from "../../../🧬️schema/🟦️.ts";
+import { VIEWPOINTS, type AuthoredRepresentation, type Shape, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
 import { flattenGeometry } from "../../🧮️evaluation/🟦️.ts";
 
-/** 🪞️ How two representations relate: `identical` (same shapes), `subset` (all shapes of `coarse` occur identically in `fine`), `scaled` (equal up to a common factor) or `distinct`. */
+/** 🔗️ How two representations relate: `identical` (same shapes), `subset` (all shapes of `coarse` occur identically in `fine`), `scaled` (equal up to a common factor) or `distinct`. */
 export type Similarity = { readonly kind: "identical" | "subset" | "scaled" | "distinct"; readonly sharedShapes: number; readonly coarseShapes: number; readonly fineShapes: number; readonly factor?: number };
 
 const ROUND_M = 1e-4;
+
+const NUMBER = /-?\d*\.?\d+(?:e-?\d+)?/giu;
+
+/** 📏️ A path with its lengths multiplied by `factor`; of an arc (`A`, `a`) only `rx`, `ry`, `x` and `y` scale, the rotation and the large-arc and sweep flags stay. */
+function scaledPath(d: string, factor: number): string {
+  return d.replace(/([a-df-zA-DF-Z])([^a-df-zA-DF-Z]*)/gu, (_, command: string, args: string) => {
+    let index = 0;
+    return command + args.replace(NUMBER, (n) => {
+      const position = index++ % 7;
+      const keep = command.toLowerCase() === "a" && (position === 2 || position === 3 || position === 4);
+      return keep ? n : String(Number(n) * factor);
+    });
+  });
+}
 
 function scaled(shape: Shape, factor: number): Shape {
   if (factor === 1) return shape;
   const out: Record<string, unknown> = { ...shape };
   for (const key of ["x0", "y0", "x1", "y1", "r0", "r1", "cx", "cy", "rx", "ry", "x", "y", "w", "h", "r"]) if (typeof out[key] === "number") out[key] = (out[key] as number) * factor;
   if (shape.kind === "poly") out.points = shape.points.map(([x, y]) => [x * factor, y * factor]);
-  if (shape.kind === "path") out.d = shape.d.replace(/-?\d*\.?\d+(?:e-?\d+)?/giu, (n) => String(Number(n) * factor));
+  if (shape.kind === "path") out.d = scaledPath(shape.d, factor);
   return out as Shape;
 }
 
-function signature(shape: Shape, factor: number): string {
+type Placed = { readonly shape: Shape; readonly viewpoint: Viewpoint };
+
+function placed(rep: AuthoredRepresentation): Placed[] {
+  return VIEWPOINTS.flatMap((viewpoint) => rep.geometry[viewpoint].map((shape) => ({ shape, viewpoint })));
+}
+
+function signature({ shape, viewpoint }: Placed, factor: number): string {
   const flat = flattenGeometry(scaled(shape, factor));
   const rounded = flat.rings.map((ring) => ring.map((p) => `${Math.round(p.x / ROUND_M)},${Math.round(p.y / ROUND_M)}`).join(";")).join("|");
-  return `${shape.bone}/${shape.role}/${flat.closed ? "c" : "o"}/${rounded}`;
+  return `${viewpoint}/${shape.bone}/${shape.role}/${flat.closed ? "c" : "o"}/${rounded}`;
 }
 
-function signatures(shapes: readonly Shape[], factor = 1): string[] {
-  return shapes.map((shape) => signature(shape, factor));
+function signatures(shapes: readonly Placed[], factor = 1): string[] {
+  return shapes.map((item) => signature(item, factor));
 }
 
-function extentOf(shapes: readonly Shape[]): number {
+function extentOf(shapes: readonly Placed[]): number {
   let max = 0;
-  for (const shape of shapes) for (const ring of flattenGeometry(shape).rings) for (const p of ring) max = Math.max(max, Math.abs(p.x), Math.abs(p.y));
+  for (const { shape } of shapes) for (const ring of flattenGeometry(shape).rings) for (const p of ring) max = Math.max(max, Math.abs(p.x), Math.abs(p.y));
   return max;
 }
 
@@ -52,10 +72,10 @@ function multisetEqual(a: readonly string[], b: readonly string[]): boolean {
   return true;
 }
 
-/** 🪞️ Compares the elevation (and plan) geometry of two authored representations; `coarse` is the one with the larger denominator. */
+/** 🔬️ Compares the elevation, front and plan geometry of two authored representations; `coarse` is the one with the larger denominator. */
 export function compareRepresentations(coarse: AuthoredRepresentation, fine: AuthoredRepresentation): Similarity {
-  const a = [...coarse.geometry.elevation, ...(coarse.geometry.plan ?? [])];
-  const b = [...fine.geometry.elevation, ...(fine.geometry.plan ?? [])];
+  const a = placed(coarse);
+  const b = placed(fine);
   const sa = signatures(a);
   const sb = signatures(b);
   const pool = new Map<string, number>();

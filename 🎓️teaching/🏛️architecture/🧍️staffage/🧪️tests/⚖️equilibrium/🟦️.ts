@@ -16,18 +16,18 @@ describe("seeded random rigid trees", () => {
     const result = solveStructure(buildState(tree));
     const forces = [...result.segmentWeights, ...result.applied];
     const scale = 1 + forces.reduce((a, f) => a + Math.hypot(f.fxN, f.fyN), 0);
-    const moments = 1 + forces.reduce((a, f) => a + Math.abs(f.at.x * f.fyN - f.at.y * f.fxN) + Math.abs(f.momentNm), 0);
+    const moments = 1 + forces.reduce((a, f) => a + Math.abs(f.at.x * f.fyN - f.at.y * f.fxN) + Math.abs(f.mzNm), 0);
     describe(`${tree.case} (${tree.kindOfSupports})`, () => {
       it("has a residual below 1e-9 relative", () => {
         expect(Math.hypot(result.residual.fxN, result.residual.fyN) / scale).toBeLessThan(1e-9);
-        expect(Math.abs(result.residual.momentNm) / moments).toBeLessThan(1e-9);
+        expect(Math.abs(result.residual.mzNm) / moments).toBeLessThan(1e-9);
       });
       it("reproduces the oracle reactions", () => {
         const expected = fixture.oracle.values[tree.case]!;
         result.reactions.forEach((r, i) => {
           expect(near(r.fxN, expected[i]!.fxN, 1e-9, 1e-9 * scale)).toBe(true);
           expect(near(r.fyN, expected[i]!.fyN, 1e-9, 1e-9 * scale)).toBe(true);
-          if (tree.kindOfSupports === "fixed") expect(near(r.momentNm, expected[i]!.momentNm, 1e-9, 1e-9 * moments)).toBe(true);
+          if (tree.kindOfSupports === "fixed") expect(near(r.mzNm, expected[i]!.momentNm, 1e-9, 1e-9 * moments)).toBe(true);
         });
       });
       it("balances every bone against its children at the joints", () => {

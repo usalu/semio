@@ -1,0 +1,458 @@
+{
+  "description": "Language-agnostic vectors of the three views (side = elevation, front, top = plan). A synthetic asset on the rig of the sample figure (pelvis up, thigh 0.45 m, shank 0.43 m, hip height 0.96 m at rest = 0.45 + 0.43 + 0.08 ankle height) carries one block, one stretching thigh and one rigid thigh in every view. Coordinate contract: elevation x forward and y up (the shape is bone-local and follows the full bone transform; the pelvis bone points up, so local (u, v) is world (-v, u) + the pelvis origin), front x lateral (the left is +x, centred on the symmetry plane) and y up, plan x forward (the elevation x) and y lateral (the left is +y, the front x); front and plan shapes are authored in the rest pose (root at the origin) and follow their bone by its y travel (front, a followTip rect/poly stretches from the origin travel to the tip travel) or its x travel (plan, a followTip capsule stretches from the origin to the tip). Hand computations: the thigh tip at a thigh angle of 22 degrees is 0.45 * (cos(-68 deg) - cos(-90 deg)) = 0.168573 m further ahead than at rest, and 0.45 * (sin(-68 deg) - sin(-90 deg)) = 0.032767 m higher relative to the thigh origin, so a front thigh of rest height 0.45 m is 0.45 * sin(68 deg) = 0.417233 m high at the stride. The lift is the pelvis height above the rest root (0.96 m standing; the stride pose lowers it, so its value is measured by the evaluation and handed to the oracle). Ground shapes never count. Extents are compared within extentToleranceM (1 mm, twice the path flattening tolerance of 0.5 mm), because curved shapes are polygons. Single 3D path: a rigid front shape is carried by the full 3D transform of its bone, so the rigid thigh (rest height 0.45 m) is, like the followTip one, 0.45 sin(68 deg) = 0.417233 m high in the stride.",
+  "tolerance": {
+    "absoluteM": 0.02,
+    "relative": 0.03,
+    "cases": [
+      {
+        "heightM": 0.3,
+        "widthM": 0.2,
+        "depthM": 0.4,
+        "toleranceM": 0.02
+      },
+      {
+        "heightM": 1.8,
+        "widthM": 0.4,
+        "depthM": 0.5,
+        "toleranceM": 0.054
+      },
+      {
+        "heightM": 4,
+        "widthM": 12,
+        "depthM": 3,
+        "toleranceM": 0.36
+      }
+    ]
+  },
+  "asset": "sample-figure",
+  "scale": 100,
+  "dimensions": {
+    "heightM": 0.3,
+    "widthM": 0.2,
+    "depthM": 0.4
+  },
+  "bones": {
+    "pelvis": {
+      "angleDeg": 90,
+      "lengthM": 0.1,
+      "restOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "restTip": {
+        "x": 0,
+        "y": 0.1
+      }
+    },
+    "thigh-l": {
+      "angleDeg": -90,
+      "lengthM": 0.45,
+      "restOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "restTip": {
+        "x": 0,
+        "y": -0.45
+      }
+    }
+  },
+  "poses": {
+    "stand": {
+      "pose": "stand",
+      "originTravel": {
+        "pelvis": {
+          "dx": 0,
+          "dy": "lift"
+        },
+        "thigh-l": {
+          "dx": 0,
+          "dy": "lift"
+        }
+      },
+      "tipTravel": {
+        "pelvis": {
+          "dx": 0,
+          "dy": "lift"
+        },
+        "thigh-l": {
+          "dx": 0,
+          "dy": "lift"
+        }
+      },
+      "liftM": 0.96
+    },
+    "stride": {
+      "pose": "stride-left-forward",
+      "originTravel": {
+        "pelvis": {
+          "dx": 0,
+          "dy": "lift"
+        },
+        "thigh-l": {
+          "dx": 0,
+          "dy": "lift"
+        }
+      },
+      "tipTravel": {
+        "pelvis": {
+          "dx": 0,
+          "dy": "lift"
+        },
+        "thigh-l": {
+          "dx": 0.168573,
+          "dy": "lift+0.032767"
+        }
+      }
+    }
+  },
+  "shapes": {
+    "elevation": [
+      {
+        "id": "block",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.1,
+        "w": 0.3,
+        "h": 0.2
+      },
+      {
+        "id": "ground-line",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "ground",
+        "z": 0,
+        "filled": false,
+        "tone": 0.5,
+        "x": -3,
+        "y": -5,
+        "w": 6,
+        "h": 0.1
+      }
+    ],
+    "front": [
+      {
+        "id": "block",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.2,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.3
+      },
+      {
+        "id": "thigh-follow",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.45,
+        "w": 0.1,
+        "h": 0.45,
+        "followTip": true
+      },
+      {
+        "id": "thigh-rigid",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0.2,
+        "y": -0.45,
+        "w": 0.1,
+        "h": 0.45
+      },
+      {
+        "id": "ground-line",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "ground",
+        "z": 0,
+        "filled": false,
+        "tone": 0.5,
+        "x": -3,
+        "y": -5,
+        "w": 6,
+        "h": 0.1
+      }
+    ],
+    "plan": [
+      {
+        "id": "block",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.1,
+        "y": -0.2,
+        "w": 0.2,
+        "h": 0.4
+      },
+      {
+        "id": "thigh-capsule",
+        "kind": "capsule",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.5,
+        "x0": 0,
+        "y0": 0.12,
+        "x1": 0,
+        "y1": 0.12,
+        "r0": 0.08,
+        "r1": 0.08,
+        "followTip": true
+      },
+      {
+        "id": "ground-line",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "ground",
+        "z": 0,
+        "filled": false,
+        "tone": 0.5,
+        "x": -3,
+        "y": -5,
+        "w": 6,
+        "h": 0.1
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "the rest pose gives every view its authored extent and the ground line does not count",
+      "pose": "stand",
+      "extents": {
+        "elevation/block": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 0.96,
+          "maxY": 1.26
+        },
+        "front/block": {
+          "minX": -0.2,
+          "maxX": 0.2,
+          "minY": 0.96,
+          "maxY": 1.26
+        },
+        "front/thigh-follow": {
+          "minX": 0,
+          "maxX": 0.1,
+          "minY": 0.51,
+          "maxY": 0.96
+        },
+        "front/thigh-rigid": {
+          "minX": 0.2,
+          "maxX": 0.3,
+          "minY": 0.51,
+          "maxY": 0.96
+        },
+        "plan/block": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.2,
+          "maxY": 0.2
+        },
+        "plan/thigh-capsule": {
+          "minX": -0.08,
+          "maxX": 0.08,
+          "minY": 0.04,
+          "maxY": 0.2
+        }
+      },
+      "views": {
+        "elevation": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 0.96,
+          "maxY": 1.26
+        },
+        "front": {
+          "minX": -0.2,
+          "maxX": 0.3,
+          "minY": 0.51,
+          "maxY": 1.26
+        },
+        "plan": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.2,
+          "maxY": 0.2
+        }
+      },
+      "heightsM": {
+        "front/thigh-follow": 0.45,
+        "front/thigh-rigid": 0.45
+      }
+    },
+    {
+      "name": "a stride stretches the followTip front thigh to 0.45 sin(68 deg) and the plan capsule 0.168573 m ahead and the rigid thigh is carried by the full transform of its bone to the same 0.417233 m while the lateral coordinates stay",
+      "pose": "stride",
+      "extents": {
+        "front/thigh-follow": {
+          "minX": 0,
+          "maxX": 0.1
+        },
+        "front/thigh-rigid": {
+          "minX": 0.2,
+          "maxX": 0.3
+        },
+        "plan/block": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.2,
+          "maxY": 0.2
+        },
+        "plan/thigh-capsule": {
+          "minX": -0.08,
+          "maxX": 0.248573,
+          "minY": 0.04,
+          "maxY": 0.2
+        }
+      },
+      "heightsM": {
+        "front/thigh-follow": 0.417233,
+        "front/thigh-rigid": 0.417233
+      },
+      "offsetsM": [
+        {
+          "name": "the stretching thigh keeps its top at the pelvis block",
+          "of": "front/thigh-follow",
+          "edge": "maxY",
+          "from": "front/block",
+          "fromEdge": "minY",
+          "valueM": 0
+        },
+        {
+          "name": "the rigid thigh moves with its origin, so its top stays at the pelvis block",
+          "of": "front/thigh-rigid",
+          "edge": "maxY",
+          "from": "front/block",
+          "fromEdge": "minY",
+          "valueM": 0
+        }
+      ]
+    }
+  ],
+  "consistency": {
+    "pose": "stand",
+    "cases": [
+      {
+        "name": "views that agree pass",
+        "patch": [],
+        "failing": []
+      },
+      {
+        "name": "a plan 15 mm ahead is inside the tolerance of 20 mm",
+        "patch": [
+          {
+            "view": "plan",
+            "shape": "block",
+            "set": {
+              "x": -0.085
+            }
+          }
+        ],
+        "failing": []
+      },
+      {
+        "name": "a plan 50 mm ahead breaks only the forward ranges",
+        "patch": [
+          {
+            "view": "plan",
+            "shape": "block",
+            "set": {
+              "x": -0.05
+            }
+          }
+        ],
+        "failing": [
+          "elevation-x-plan-x"
+        ]
+      },
+      {
+        "name": "a front 50 mm too high breaks the height ranges and the front height",
+        "patch": [
+          {
+            "view": "front",
+            "shape": "block",
+            "set": {
+              "h": 0.35
+            }
+          }
+        ],
+        "failing": [
+          "elevation-y-front-y",
+          "front-height"
+        ]
+      },
+      {
+        "name": "a plan 100 mm too wide breaks the lateral ranges and the plan width",
+        "patch": [
+          {
+            "view": "plan",
+            "shape": "block",
+            "set": {
+              "h": 0.5
+            }
+          }
+        ],
+        "failing": [
+          "front-x-plan-y",
+          "plan-width"
+        ]
+      },
+      {
+        "name": "an elevation 120 mm too long breaks the forward ranges, the elevation width and the plan length",
+        "patch": [
+          {
+            "view": "elevation",
+            "shape": "block",
+            "set": {
+              "h": 0.32
+            }
+          }
+        ],
+        "failing": [
+          "elevation-width",
+          "elevation-x-plan-x"
+        ]
+      }
+    ]
+  },
+  "catalog": {
+    "complete": [
+      "solar-thermal-collector",
+      "split-ac-indoor-unit"
+    ],
+    "scales": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "dimensionsReading": {
+      "widthM": "elevation x extent",
+      "depthM": "lateral extent (front x, plan y)",
+      "heightM": "height"
+    }
+  },
+  "extentToleranceM": 0.001
+}

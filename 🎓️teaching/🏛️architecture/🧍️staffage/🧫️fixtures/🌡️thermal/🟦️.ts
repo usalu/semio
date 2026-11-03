@@ -43,19 +43,21 @@ export function thermalState(fixture: { readonly asset: ThermalFixtureAsset; rea
   const bones: Record<Slug, EvaluatedBone> = {};
   for (const [id, b] of Object.entries(state.bones)) {
     const angleRad = (b.angleDeg * Math.PI) / 180;
-    bones[id] = { id, world: [Math.cos(angleRad), Math.sin(angleRad), -Math.sin(angleRad), Math.cos(angleRad), 0, 0], origin: { x: 0, y: 0 }, tip: { x: 0, y: 0 }, angleRad, offset: { angleDeg: 0, dx: 0, dy: 0 } };
+    bones[id] = { id, world: [Math.cos(angleRad), Math.sin(angleRad), -Math.sin(angleRad), Math.cos(angleRad), 0, 0], origin: { x: 0, y: 0 }, tip: { x: 0, y: 0, z: 0 }, frame: { o: { x: 0, y: 0, z: 0 }, u: { x: Math.cos(angleRad), y: Math.sin(angleRad), z: 0 }, v: { x: -Math.sin(angleRad), y: Math.cos(angleRad), z: 0 }, w: { x: 0, y: 0, z: 1 } }, angleRad, offset: { angleDeg: 0, abductionDeg: 0, twistDeg: 0, dx: 0, dy: 0 } };
   }
-  const anchors: Record<Slug, { anchor: Anchor; at: Point }> = {};
-  for (const [id, a] of Object.entries(state.anchors)) anchors[id] = { anchor: { id, bone: a.bone, x: 0, y: 0, kind: "emitter", title: { en: id, de: id } }, at: { x: a.x, y: a.y } };
+  const anchors: Record<Slug, { anchor: Anchor; at: Point; z: number }> = {};
+  for (const [id, a] of Object.entries(state.anchors)) anchors[id] = { anchor: { id, bone: a.bone, x: 0, y: 0, kind: "emitter", title: { en: id, de: id } }, at: { x: a.x, y: a.y }, z: 0 };
   const asset = { id: fixture.asset.thermal.regions[0]?.id ?? "fixture", materials: fixture.asset.materials, dimensions: { ...fixture.asset.dimensions, widthM: 0.5, depthM: 0.3 }, thermal: fixture.asset.thermal } as unknown as Asset;
   return {
     asset,
     query: { kind: "pose", pose: "fixture" },
     timeS: state.timeS,
+    clipTimeS: state.timeS,
     frame: 0,
     phase: null,
+    root: { x: 0, y: 0, z: 0, angleDeg: 0 },
     bones,
-    shapes: { elevation: [], plan: [] },
+    shapes: { elevation: [], front: [], plan: [] },
     anchors,
     contacts: [],
     loads: [],
@@ -64,7 +66,7 @@ export function thermalState(fixture: { readonly asset: ThermalFixtureAsset; rea
     respiration: null,
     cycle: 0,
     representation: { kind: "none" },
-    kinematics: { comVelocity: state.comVelocity ?? { x: 0, y: 0 }, segmentAccelerations: {} },
+    kinematics: { comVelocity: { x: state.comVelocity?.x ?? 0, y: state.comVelocity?.y ?? 0, z: 0 }, segmentAccelerations: {} },
   } satisfies EvaluatedState;
 }
 

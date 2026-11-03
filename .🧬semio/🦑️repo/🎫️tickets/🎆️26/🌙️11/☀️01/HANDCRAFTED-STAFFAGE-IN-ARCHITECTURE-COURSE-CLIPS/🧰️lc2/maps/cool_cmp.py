@@ -1,0 +1,15 @@
+MAP = {
+    "Raumtemperatur": "Room temperature",
+    "Außenluft": "Outdoor air",
+    "Zuluft": "Supply air",
+    "Abluft": "Extract air",
+    "Fortluft": "Exhaust air",
+    "Lüftungsgerät\nmit Kühlregister": "Ventilation unit\nwith cooling coil",
+    "Im Winter: Erwünschte kostenlose Wärme": "In winter: welcome free heat",
+    "Solare Gewinne": "Solar gains",
+    "Interne Gewinne": "Internal gains",
+    "Im Sommer: Überhitzung hinter Glas": "In summer: overheating behind glass",
+    "Übermäßige\nsolare Gewinne": "Excessive\nsolar gains",
+    "Die Kühllast als abzuführende Leistung": "The cooling load as power to be removed",
+    "Kühllast": "Cooling load",
+}

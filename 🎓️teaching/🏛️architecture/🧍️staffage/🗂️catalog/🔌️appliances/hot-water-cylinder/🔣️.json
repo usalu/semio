@@ -1,0 +1,5154 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "hot-water-cylinder",
+    "category": "appliances",
+    "title": {
+      "en": "Hot-Water Storage Cylinder, 200 L",
+      "de": "Warmwasser-Standspeicher, 200 l"
+    },
+    "summary": {
+      "en": "A free-standing insulated hot-water storage tank of 0.6 m diameter and 1.48 m height in front elevation: four jacket quarters that carry the stratification (cold, half charged, fully charged), a domed cover, side stubs and a thermometer; the standby loss is 76 W when fully charged.",
+      "de": "Ein freistehender gedämmter Warmwasser-Standspeicher von 0,6 m Durchmesser und 1,48 m Höhe in der Vorderansicht: vier Mantelviertel, die die Schichtung tragen (kalt, halb geladen, voll geladen), eine gewölbte Abdeckung, seitliche Stutzen und ein Thermometer; der Bereitschaftsverlust beträgt 76 W bei voller Ladung."
+    },
+    "tags": [
+      "hot-water-cylinder",
+      "storage-tank",
+      "buffer",
+      "dhw",
+      "stratification",
+      "heating",
+      "hydronic",
+      "appliance",
+      "heating-plant",
+      "standby-loss"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A9)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-12897-2016",
+          "citation": "EN 12897:2016 Water supply - Specification for indirectly heated unvented (closed) storage water heaters (dimensions, insulation and standby heat loss of storage cylinders)."
+        },
+        {
+          "id": "eu-812-2013",
+          "citation": "Commission Delegated Regulation (EU) No 812/2013 supplementing Directive 2010/30/EU with regard to the energy labelling of water heaters, hot water storage tanks (standby loss as a function of the volume)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Front elevation of a floor-standing hot-water storage cylinder of 200 litres (product class of EN 12897, as built by the usual makers at 0.58 to 0.60 m and 1.3 to 1.5 m): outer diameter of the foam jacket 0.60 m (a steel tank of 0.48 m with 60 mm of foam), 0.66 m with the side stubs, height 1.48 m with the dome, standing on feet 0.06 m high; the tank body of about 1.1 m holds the 200 litres. The mass of 80 kg is the empty cylinder like the dry mass of the other appliances (authored estimate: 62 kg steel tank and coil, foam jacket, cover and fittings); the 200 kg of water are the filling and are not part of massKg (filled 280 kg, 2.7 kN on the floor). The origin is the floor at the tank axis. The jacket is drawn in four quarters because the thermal stratification of the water is shown through them: charged, every quarter loses heat, the upper ones more (20, 17, 14 and 10 W: together 61 W); the dome with the hot-water stub adds 6 W and the connections 9 W, so the standby loss at full charge is 76 W (the 60 mm of foam, R 1.7, lets about 51 W through the jacket and the feet, seams and stub bridges add the rest of the 61 W of the quarters; energy label class B limit for 200 l about 80 W, Delegated Regulation 812/2013, authored estimate). Half charged, the upper half is hot, the lower half cold and a thin transition lies between them, therefore the operating levels of the quarters are 1, 0.9, 0.15 and 0 (a thermocline of about 0.1 m height). The heat of the stored water itself (60 degrees C) is not released in the room except through these losses.",
+        "de": "Vorderansicht eines bodenstehenden Warmwasser-Standspeichers von 200 Litern (Produktklasse nach EN 12897, bei den üblichen Herstellern 0,58 bis 0,60 m und 1,3 bis 1,5 m): Außendurchmesser des Schaummantels 0,60 m (ein Stahlbehälter von 0,48 m mit 60 mm Schaum), mit den seitlichen Stutzen 0,66 m, Höhe 1,48 m mit der Wölbung, auf Füßen von 0,06 m Höhe; der Behälterkörper von etwa 1,1 m fasst die 200 Liter. Die Masse von 80 kg ist der leere Speicher wie die Trockenmasse der übrigen Geräte (Schätzwert: 62 kg Stahlbehälter und Rohrwendel, Schaummantel, Abdeckung und Armaturen); die 200 kg Wasser sind die Füllung und gehören nicht zu massKg (gefüllt 280 kg, 2,7 kN auf dem Boden). Der Ursprung ist der Boden in der Speicherachse. Der Mantel ist in vier Vierteln gezeichnet, weil durch sie die thermische Schichtung des Wassers gezeigt wird: geladen verliert jedes Viertel Wärme, die oberen mehr (20, 17, 14 und 10 W: zusammen 61 W); die Wölbung mit dem Warmwasserstutzen fügt 6 W und die Anschlüsse 9 W hinzu, sodass der Bereitschaftsverlust bei voller Ladung 76 W beträgt (die 60 mm Schaum, R 1,7, lassen etwa 51 W durch den Mantel und Füße, Fugen und Stutzenbrücken liefern den Rest der 61 W der Viertel; Grenze der Energieeffizienzklasse B für 200 l etwa 80 W, Delegierte Verordnung 812/2013, Schätzwert). Halb geladen ist die obere Hälfte heiß, die untere kalt und dazwischen liegt ein dünner Übergang, daher sind die Betriebsstufen der Viertel 1, 0,9, 0,15 und 0 (eine Sprungschicht von etwa 0,1 m Höhe). Die Wärme des gespeicherten Wassers selbst (60 Grad C) wird nur über diese Verluste in den Raum abgegeben."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.48,
+      "widthM": 0.66,
+      "depthM": 0.6,
+      "massKg": 80
+    },
+    "materials": [
+      {
+        "id": "foam-jacket",
+        "title": {
+          "en": "Polyurethane foam jacket with sheet skin",
+          "de": "Polyurethan-Schaummantel mit Blechhaut"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 40,
+        "conductivityWmK": 0.035,
+        "specificHeatJKgK": 1400,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "cap-plastic",
+        "title": {
+          "en": "ABS cover",
+          "de": "ABS-Abdeckung"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "powder-steel",
+        "title": {
+          "en": "Powder-coated steel",
+          "de": "Pulverbeschichteter Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 460,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "window-glass",
+        "title": {
+          "en": "Thermometer glass",
+          "de": "Thermometerglas"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1,
+        "specificHeatJKgK": 840,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "brass",
+        "title": {
+          "en": "Brass connection stub",
+          "de": "Anschlussstutzen aus Messing"
+        },
+        "emissivity": 0.5,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 8500,
+        "conductivityWmK": 120,
+        "specificHeatJKgK": 380,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Feet and base ring",
+            "de": "Füße und Bodenring"
+          },
+          "lengthM": 0.06,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "zone-4",
+          "parent": "base",
+          "x": 0,
+          "y": 0.06,
+          "angleDeg": 0,
+          "title": {
+            "en": "Lower quarter of the tank",
+            "de": "Unteres Viertel des Speichers"
+          },
+          "lengthM": 0.33,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 16,
+            "comX": 0,
+            "comY": 0.165,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "zone-3",
+          "parent": "zone-4",
+          "x": 0,
+          "y": 0.33,
+          "angleDeg": 0,
+          "title": {
+            "en": "Second quarter from below",
+            "de": "Zweites Viertel von unten"
+          },
+          "lengthM": 0.33,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 16,
+            "comX": 0,
+            "comY": 0.165,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "zone-2",
+          "parent": "zone-3",
+          "x": 0,
+          "y": 0.33,
+          "angleDeg": 0,
+          "title": {
+            "en": "Second quarter from above",
+            "de": "Zweites Viertel von oben"
+          },
+          "lengthM": 0.33,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 16,
+            "comX": 0,
+            "comY": 0.165,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "zone-1",
+          "parent": "zone-2",
+          "x": 0,
+          "y": 0.33,
+          "angleDeg": 0,
+          "title": {
+            "en": "Upper quarter of the tank",
+            "de": "Oberes Viertel des Speichers"
+          },
+          "lengthM": 0.33,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 16,
+            "comX": 0,
+            "comY": 0.165,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "cap",
+          "parent": "zone-1",
+          "x": 0,
+          "y": 0.33,
+          "angleDeg": 0,
+          "title": {
+            "en": "Domed top cover",
+            "de": "Gewölbte Abdeckung oben"
+          },
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 6,
+            "comX": 0,
+            "comY": 0.04,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "connections",
+          "parent": "base",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Connection stubs",
+            "de": "Anschlussstutzen"
+          },
+          "lengthM": 1.48,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5,
+            "comX": 0,
+            "comY": 0.74,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "needle",
+          "parent": "zone-2",
+          "x": 0,
+          "y": 0.165,
+          "angleDeg": 0,
+          "title": {
+            "en": "Thermometer needle",
+            "de": "Thermometernadel"
+          },
+          "lengthM": 0.04,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -85,
+            "maxDeg": 85
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-left",
+        "bone": "base",
+        "x": -0.215,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left foot",
+          "de": "Linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "foot-right",
+        "bone": "base",
+        "x": 0.215,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right foot",
+          "de": "Rechter Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "top",
+        "bone": "cap",
+        "x": 0,
+        "y": 0.1,
+        "kind": "emitter",
+        "title": {
+          "en": "Apex of the dome",
+          "de": "Scheitel der Wölbung"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-l",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.06,
+              "material": "powder-steel"
+            },
+            {
+              "id": "foot-r",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.18,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.06,
+              "material": "powder-steel"
+            },
+            {
+              "id": "base-ring",
+              "bone": "base",
+              "role": "body",
+              "z": 2.95,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.28,
+              "y": 0.04,
+              "w": 0.56,
+              "h": 0.025,
+              "material": "powder-steel"
+            },
+            {
+              "id": "zone-4",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-4",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "zone-3",
+              "bone": "zone-3",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-3",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "zone-2",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-2",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "zone-1",
+              "bone": "zone-1",
+              "role": "body",
+              "z": 3.03,
+              "filled": true,
+              "tone": 0.8400000000000001,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-1",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29743,
+                  0.01305
+                ],
+                [
+                  0.28978,
+                  0.02588
+                ],
+                [
+                  0.27717,
+                  0.03827
+                ],
+                [
+                  0.25981,
+                  0.05
+                ],
+                [
+                  0.23801,
+                  0.06088
+                ],
+                [
+                  0.21213,
+                  0.07071
+                ],
+                [
+                  0.18263,
+                  0.07934
+                ],
+                [
+                  0.15,
+                  0.0866
+                ],
+                [
+                  0.1148,
+                  0.09239
+                ],
+                [
+                  0.07764,
+                  0.09659
+                ],
+                [
+                  0.03916,
+                  0.09914
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  -0.03916,
+                  0.09914
+                ],
+                [
+                  -0.07764,
+                  0.09659
+                ],
+                [
+                  -0.1148,
+                  0.09239
+                ],
+                [
+                  -0.15,
+                  0.0866
+                ],
+                [
+                  -0.18263,
+                  0.07934
+                ],
+                [
+                  -0.21213,
+                  0.07071
+                ],
+                [
+                  -0.23801,
+                  0.06088
+                ],
+                [
+                  -0.25981,
+                  0.05
+                ],
+                [
+                  -0.27717,
+                  0.03827
+                ],
+                [
+                  -0.28978,
+                  0.02588
+                ],
+                [
+                  -0.29743,
+                  0.01305
+                ],
+                [
+                  -0.3,
+                  0
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "cap-seam",
+              "bone": "cap",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2476,
+                  0.05646
+                ],
+                [
+                  0.21711,
+                  0.06901
+                ],
+                [
+                  0.18094,
+                  0.07976
+                ],
+                [
+                  0.14008,
+                  0.08843
+                ],
+                [
+                  0.09554,
+                  0.09479
+                ],
+                [
+                  0.04852,
+                  0.09868
+                ],
+                [
+                  0.00024,
+                  0.1
+                ],
+                [
+                  -0.04806,
+                  0.09871
+                ],
+                [
+                  -0.09509,
+                  0.09484
+                ],
+                [
+                  -0.13966,
+                  0.0885
+                ],
+                [
+                  -0.18057,
+                  0.07986
+                ],
+                [
+                  -0.21678,
+                  0.06913
+                ],
+                [
+                  -0.24733,
+                  0.0566
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "stub-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 1.18567,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 1.18108,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-1",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 0.77317,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-1",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 0.76858,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-2",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 0.17733,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-2",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 0.17275,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.91067,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.318,
+              "y": 0.90608,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.49817,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "nut-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.318,
+              "y": 0.49358,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.18889,
+              "y": 1.43,
+              "w": 0.03,
+              "h": 0.048,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "dial-bezel",
+              "bone": "zone-2",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.165
+                ],
+                [
+                  0.04875,
+                  0.17613
+                ],
+                [
+                  0.04505,
+                  0.18669
+                ],
+                [
+                  0.03909,
+                  0.19617
+                ],
+                [
+                  0.03117,
+                  0.20409
+                ],
+                [
+                  0.02169,
+                  0.21005
+                ],
+                [
+                  0.01113,
+                  0.21375
+                ],
+                [
+                  0,
+                  0.215
+                ],
+                [
+                  -0.01113,
+                  0.21375
+                ],
+                [
+                  -0.02169,
+                  0.21005
+                ],
+                [
+                  -0.03117,
+                  0.20409
+                ],
+                [
+                  -0.03909,
+                  0.19617
+                ],
+                [
+                  -0.04505,
+                  0.18669
+                ],
+                [
+                  -0.04875,
+                  0.17613
+                ],
+                [
+                  -0.05,
+                  0.165
+                ],
+                [
+                  -0.04875,
+                  0.15387
+                ],
+                [
+                  -0.04505,
+                  0.14331
+                ],
+                [
+                  -0.03909,
+                  0.13383
+                ],
+                [
+                  -0.03117,
+                  0.12591
+                ],
+                [
+                  -0.02169,
+                  0.11995
+                ],
+                [
+                  -0.01113,
+                  0.11625
+                ],
+                [
+                  0,
+                  0.115
+                ],
+                [
+                  0.01113,
+                  0.11625
+                ],
+                [
+                  0.02169,
+                  0.11995
+                ],
+                [
+                  0.03117,
+                  0.12591
+                ],
+                [
+                  0.03909,
+                  0.13383
+                ],
+                [
+                  0.04505,
+                  0.14331
+                ],
+                [
+                  0.04875,
+                  0.15387
+                ]
+              ],
+              "closed": true,
+              "material": "window-glass"
+            },
+            {
+              "id": "tick-cold",
+              "bone": "zone-2",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03195,
+                  0.17663
+                ],
+                [
+                  -0.03947,
+                  0.17936
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tick-mid",
+              "bone": "zone-2",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.199
+                ],
+                [
+                  0,
+                  0.207
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tick-hot",
+              "bone": "zone-2",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.03195,
+                  0.17663
+                ],
+                [
+                  0.03947,
+                  0.17936
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "needle",
+              "bone": "needle",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.036
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "label",
+              "bone": "zone-3",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.185
+                ],
+                [
+                  0.1,
+                  0.185
+                ],
+                [
+                  0.1,
+                  0.085
+                ],
+                [
+                  -0.1,
+                  0.085
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "label-line",
+              "bone": "zone-3",
+              "role": "detail",
+              "z": 3.31,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.145
+                ],
+                [
+                  0.07,
+                  0.145
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "zip",
+              "bone": "zone-3",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.22,
+                  0.03
+                ],
+                [
+                  0.22,
+                  0.3
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29743,
+                  0.03916
+                ],
+                [
+                  0.28978,
+                  0.07765
+                ],
+                [
+                  0.27716,
+                  0.11481
+                ],
+                [
+                  0.25981,
+                  0.15
+                ],
+                [
+                  0.23801,
+                  0.18263
+                ],
+                [
+                  0.21213,
+                  0.21213
+                ],
+                [
+                  0.18263,
+                  0.23801
+                ],
+                [
+                  0.15,
+                  0.25981
+                ],
+                [
+                  0.11481,
+                  0.27716
+                ],
+                [
+                  0.07765,
+                  0.28978
+                ],
+                [
+                  0.03916,
+                  0.29743
+                ],
+                [
+                  0,
+                  0.3
+                ],
+                [
+                  -0.03916,
+                  0.29743
+                ],
+                [
+                  -0.07765,
+                  0.28978
+                ],
+                [
+                  -0.11481,
+                  0.27716
+                ],
+                [
+                  -0.15,
+                  0.25981
+                ],
+                [
+                  -0.18263,
+                  0.23801
+                ],
+                [
+                  -0.21213,
+                  0.21213
+                ],
+                [
+                  -0.23801,
+                  0.18263
+                ],
+                [
+                  -0.25981,
+                  0.15
+                ],
+                [
+                  -0.27716,
+                  0.11481
+                ],
+                [
+                  -0.28978,
+                  0.07765
+                ],
+                [
+                  -0.29743,
+                  0.03916
+                ],
+                [
+                  -0.3,
+                  0
+                ],
+                [
+                  -0.29743,
+                  -0.03916
+                ],
+                [
+                  -0.28978,
+                  -0.07765
+                ],
+                [
+                  -0.27716,
+                  -0.11481
+                ],
+                [
+                  -0.25981,
+                  -0.15
+                ],
+                [
+                  -0.23801,
+                  -0.18263
+                ],
+                [
+                  -0.21213,
+                  -0.21213
+                ],
+                [
+                  -0.18263,
+                  -0.23801
+                ],
+                [
+                  -0.15,
+                  -0.25981
+                ],
+                [
+                  -0.11481,
+                  -0.27716
+                ],
+                [
+                  -0.07765,
+                  -0.28978
+                ],
+                [
+                  -0.03916,
+                  -0.29743
+                ],
+                [
+                  0,
+                  -0.3
+                ],
+                [
+                  0.03916,
+                  -0.29743
+                ],
+                [
+                  0.07765,
+                  -0.28978
+                ],
+                [
+                  0.11481,
+                  -0.27716
+                ],
+                [
+                  0.15,
+                  -0.25981
+                ],
+                [
+                  0.18263,
+                  -0.23801
+                ],
+                [
+                  0.21213,
+                  -0.21213
+                ],
+                [
+                  0.23801,
+                  -0.18263
+                ],
+                [
+                  0.25981,
+                  -0.15
+                ],
+                [
+                  0.27716,
+                  -0.11481
+                ],
+                [
+                  0.28978,
+                  -0.07765
+                ],
+                [
+                  0.29743,
+                  -0.03916
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "plan-cap-seam",
+              "bone": "cap",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2547,
+                  0
+                ],
+                [
+                  0.25156,
+                  0.03984
+                ],
+                [
+                  0.24223,
+                  0.07871
+                ],
+                [
+                  0.22694,
+                  0.11563
+                ],
+                [
+                  0.20606,
+                  0.14971
+                ],
+                [
+                  0.1801,
+                  0.1801
+                ],
+                [
+                  0.14971,
+                  0.20606
+                ],
+                [
+                  0.11563,
+                  0.22694
+                ],
+                [
+                  0.07871,
+                  0.24223
+                ],
+                [
+                  0.03984,
+                  0.25156
+                ],
+                [
+                  0,
+                  0.2547
+                ],
+                [
+                  -0.03984,
+                  0.25156
+                ],
+                [
+                  -0.07871,
+                  0.24223
+                ],
+                [
+                  -0.11563,
+                  0.22694
+                ],
+                [
+                  -0.14971,
+                  0.20606
+                ],
+                [
+                  -0.1801,
+                  0.1801
+                ],
+                [
+                  -0.20606,
+                  0.14971
+                ],
+                [
+                  -0.22694,
+                  0.11563
+                ],
+                [
+                  -0.24223,
+                  0.07871
+                ],
+                [
+                  -0.25156,
+                  0.03984
+                ],
+                [
+                  -0.2547,
+                  0
+                ],
+                [
+                  -0.25156,
+                  -0.03984
+                ],
+                [
+                  -0.24223,
+                  -0.07871
+                ],
+                [
+                  -0.22694,
+                  -0.11563
+                ],
+                [
+                  -0.20606,
+                  -0.14971
+                ],
+                [
+                  -0.1801,
+                  -0.1801
+                ],
+                [
+                  -0.14971,
+                  -0.20606
+                ],
+                [
+                  -0.11563,
+                  -0.22694
+                ],
+                [
+                  -0.07871,
+                  -0.24223
+                ],
+                [
+                  -0.03984,
+                  -0.25156
+                ],
+                [
+                  0,
+                  -0.2547
+                ],
+                [
+                  0.03984,
+                  -0.25156
+                ],
+                [
+                  0.07871,
+                  -0.24223
+                ],
+                [
+                  0.11563,
+                  -0.22694
+                ],
+                [
+                  0.14971,
+                  -0.20606
+                ],
+                [
+                  0.1801,
+                  -0.1801
+                ],
+                [
+                  0.20606,
+                  -0.14971
+                ],
+                [
+                  0.22694,
+                  -0.11563
+                ],
+                [
+                  0.24223,
+                  -0.07871
+                ],
+                [
+                  0.25156,
+                  -0.03984
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stub-0",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": -0.012,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections"
+            },
+            {
+              "id": "nut-0",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.33,
+              "y": -0.017,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.3,
+              "y": -0.012,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections"
+            },
+            {
+              "id": "nut-3",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.318,
+              "y": -0.017,
+              "w": 0.012,
+              "h": 0.034,
+              "region": "connections"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2189,
+                  0
+                ],
+                [
+                  0.21776,
+                  0.00574
+                ],
+                [
+                  0.21451,
+                  0.01061
+                ],
+                [
+                  0.20964,
+                  0.01386
+                ],
+                [
+                  0.2039,
+                  0.015
+                ],
+                [
+                  0.19816,
+                  0.01386
+                ],
+                [
+                  0.19329,
+                  0.01061
+                ],
+                [
+                  0.19004,
+                  0.00574
+                ],
+                [
+                  0.1889,
+                  0
+                ],
+                [
+                  0.19004,
+                  -0.00574
+                ],
+                [
+                  0.19329,
+                  -0.01061
+                ],
+                [
+                  0.19816,
+                  -0.01386
+                ],
+                [
+                  0.2039,
+                  -0.015
+                ],
+                [
+                  0.20964,
+                  -0.01386
+                ],
+                [
+                  0.21451,
+                  -0.01061
+                ],
+                [
+                  0.21776,
+                  -0.00574
+                ]
+              ],
+              "closed": true,
+              "region": "connections"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-l",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.18,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.06
+            },
+            {
+              "id": "foot-r",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.06
+            },
+            {
+              "id": "base-ring",
+              "bone": "base",
+              "role": "body",
+              "z": 2.95,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.28,
+              "y": 0.04,
+              "w": 0.56,
+              "h": 0.025
+            },
+            {
+              "id": "zone-4",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.06,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-4"
+            },
+            {
+              "id": "zone-3",
+              "bone": "zone-3",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.39,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-3"
+            },
+            {
+              "id": "zone-2",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.72,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-2"
+            },
+            {
+              "id": "zone-1",
+              "bone": "zone-1",
+              "role": "body",
+              "z": 3.03,
+              "filled": true,
+              "tone": 0.84,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 1.05,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-1"
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  1.38
+                ],
+                [
+                  0.29743,
+                  1.39305
+                ],
+                [
+                  0.28978,
+                  1.40588
+                ],
+                [
+                  0.27716,
+                  1.41827
+                ],
+                [
+                  0.25981,
+                  1.43
+                ],
+                [
+                  0.23801,
+                  1.44088
+                ],
+                [
+                  0.21213,
+                  1.45071
+                ],
+                [
+                  0.18263,
+                  1.45934
+                ],
+                [
+                  0.15,
+                  1.4666
+                ],
+                [
+                  0.11481,
+                  1.47239
+                ],
+                [
+                  0.07765,
+                  1.47659
+                ],
+                [
+                  0.03916,
+                  1.47914
+                ],
+                [
+                  0,
+                  1.48
+                ],
+                [
+                  -0.03916,
+                  1.47914
+                ],
+                [
+                  -0.07765,
+                  1.47659
+                ],
+                [
+                  -0.11481,
+                  1.47239
+                ],
+                [
+                  -0.15,
+                  1.4666
+                ],
+                [
+                  -0.18263,
+                  1.45934
+                ],
+                [
+                  -0.21213,
+                  1.45071
+                ],
+                [
+                  -0.23801,
+                  1.44088
+                ],
+                [
+                  -0.25981,
+                  1.43
+                ],
+                [
+                  -0.27716,
+                  1.41827
+                ],
+                [
+                  -0.28978,
+                  1.40588
+                ],
+                [
+                  -0.29743,
+                  1.39305
+                ],
+                [
+                  -0.3,
+                  1.38
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "cap-seam",
+              "bone": "cap",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2476,
+                  1.4365
+                ],
+                [
+                  0.1809,
+                  1.4598
+                ],
+                [
+                  0.0955,
+                  1.4748
+                ],
+                [
+                  0,
+                  1.48
+                ],
+                [
+                  -0.0955,
+                  1.4748
+                ],
+                [
+                  -0.1809,
+                  1.4598
+                ],
+                [
+                  -0.2476,
+                  1.4365
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "zip",
+              "bone": "zone-3",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.204,
+                  0.42
+                ],
+                [
+                  -0.204,
+                  0.69
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "nut-3",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  0.01645,
+                  0.9322
+                ],
+                [
+                  0,
+                  0.9417
+                ],
+                [
+                  -0.01645,
+                  0.9322
+                ],
+                [
+                  -0.01645,
+                  0.9132
+                ],
+                [
+                  0,
+                  0.9037
+                ],
+                [
+                  0.01645,
+                  0.9132
+                ]
+              ],
+              "closed": true,
+              "region": "connections"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.012,
+                  0.9227
+                ],
+                [
+                  0.01109,
+                  0.92729
+                ],
+                [
+                  0.00849,
+                  0.93119
+                ],
+                [
+                  0.00459,
+                  0.93379
+                ],
+                [
+                  0,
+                  0.9347
+                ],
+                [
+                  -0.00459,
+                  0.93379
+                ],
+                [
+                  -0.00849,
+                  0.93119
+                ],
+                [
+                  -0.01109,
+                  0.92729
+                ],
+                [
+                  -0.012,
+                  0.9227
+                ],
+                [
+                  -0.01109,
+                  0.91811
+                ],
+                [
+                  -0.00849,
+                  0.91421
+                ],
+                [
+                  -0.00459,
+                  0.91161
+                ],
+                [
+                  0,
+                  0.9107
+                ],
+                [
+                  0.00459,
+                  0.91161
+                ],
+                [
+                  0.00849,
+                  0.91421
+                ],
+                [
+                  0.01109,
+                  0.91811
+                ]
+              ],
+              "closed": true,
+              "region": "connections"
+            },
+            {
+              "id": "nut-4",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  0.01645,
+                  0.5197
+                ],
+                [
+                  0,
+                  0.5292
+                ],
+                [
+                  -0.01645,
+                  0.5197
+                ],
+                [
+                  -0.01645,
+                  0.5007
+                ],
+                [
+                  0,
+                  0.4912
+                ],
+                [
+                  0.01645,
+                  0.5007
+                ]
+              ],
+              "closed": true,
+              "region": "connections"
+            },
+            {
+              "id": "stub-4",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.012,
+                  0.5102
+                ],
+                [
+                  0.01109,
+                  0.51479
+                ],
+                [
+                  0.00849,
+                  0.51869
+                ],
+                [
+                  0.00459,
+                  0.52129
+                ],
+                [
+                  0,
+                  0.5222
+                ],
+                [
+                  -0.00459,
+                  0.52129
+                ],
+                [
+                  -0.00849,
+                  0.51869
+                ],
+                [
+                  -0.01109,
+                  0.51479
+                ],
+                [
+                  -0.012,
+                  0.5102
+                ],
+                [
+                  -0.01109,
+                  0.50561
+                ],
+                [
+                  -0.00849,
+                  0.50171
+                ],
+                [
+                  -0.00459,
+                  0.49911
+                ],
+                [
+                  0,
+                  0.4982
+                ],
+                [
+                  0.00459,
+                  0.49911
+                ],
+                [
+                  0.00849,
+                  0.50171
+                ],
+                [
+                  0.01109,
+                  0.50561
+                ]
+              ],
+              "closed": true,
+              "region": "connections"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.015,
+              "y": 1.43,
+              "w": 0.03,
+              "h": 0.048,
+              "region": "connections"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.66 m by 1.48 m front elevation, 13 mm by 30 mm on paper: a tall insulated cylinder on two feet with a domed cover, four stacked jacket shells, five side stubs and one stub on the dome, and a round thermometer in the upper half. Front view: the 0.6 m cylinder with its two feet, four stacked shells, the dome with its seam, the zip seam on the right-hand side and the two front stubs with union nuts seen end-on on the axis. Top view: the 0.6 m dome with its seam ring, the hot-water stub and the rear and the front stub with union nuts.",
+            "de": "Eine Vorderansicht von 0,66 m mal 1,48 m, auf Papier 13 mm mal 30 mm: ein hoher gedämmter Zylinder auf zwei Füßen mit gewölbter Abdeckung, vier übereinanderliegende Mantelschalen, fünf seitliche Stutzen und ein Stutzen auf der Wölbung und ein rundes Thermometer in der oberen Hälfte. Vorderansicht: der 0,6 m breite Zylinder mit seinen zwei Füßen, den vier übereinanderliegenden Schalen, der Wölbung mit ihrer Fuge, der Reißverschlussnaht auf der rechten Seite und den beiden vorderen Stutzen mit Überwurfmuttern in der Stirnansicht auf der Achse. Draufsicht: die 0,6 m große Wölbung mit ihrem Fugenring, der Warmwasserstutzen sowie der hintere und der vordere Stutzen mit Überwurfmuttern."
+          },
+          "retained": {
+            "en": "Both feet, the base ring, the four jacket shells with their seams (the thermal quarters), the domed cover with its seam, five side stubs with union nuts, the hot-water stub on the dome, the thermometer with three ticks and its needle, and the label with the zip seam.",
+            "de": "Beide Füße, der Bodenring, die vier Mantelschalen mit ihren Fugen (die Wärmeviertel), die gewölbte Abdeckung mit ihrer Fuge, fünf seitliche Stutzen mit Überwurfmuttern, der Warmwasserstutzen auf der Wölbung, das Thermometer mit drei Marken und seiner Nadel und das Schild mit der Reißverschlussnaht."
+          },
+          "merged": {
+            "en": "The steel tank, the coil and the foam jacket are one shell per quarter; the third foot behind is hidden.",
+            "de": "Stahlbehälter, Rohrwendel und Schaumummantelung sind eine Schale je Viertel; der dritte Fuß dahinter ist verdeckt."
+          },
+          "omitted": {
+            "en": "The tank, coil and anode inside, the sensor pockets, the drain and the safety valve. Front and top view leave out the thermometer and the label, which sit on the right side face and are seen edge-on there, and the rear stubs behind the shells; the top view also omits the feet and shells below the dome.",
+            "de": "Behälter, Rohrwendel und Anode im Inneren, die Fühlertaschen, die Entleerung und das Sicherheitsventil. Vorder- und Draufsicht lassen Thermometer und Schild weg, die auf der rechten Seitenfläche sitzen und dort nur von der Kante zu sehen wären, außerdem die hinteren Stutzen hinter den Schalen; die Draufsicht lässt zudem Füße und Schalen unter der Wölbung weg."
+          },
+          "thinElements": {
+            "en": "Ticks, needle, seam, label lines and the zip are 0.13 mm detail strokes; the stubs are 24 mm high (0.48 mm on paper).",
+            "de": "Marken, Nadel, Fuge, Schildlinien und Naht sind 0,13-mm-Detailstriche; die Stutzen sind 24 mm hoch (0,48 mm auf Papier)."
+          },
+          "hatching": {
+            "en": "None; the quarters step lightly in tone from 0.90 at the bottom to 0.84 at the top.",
+            "de": "Keine; die Viertel verlaufen im Ton leicht von 0,90 unten bis 0,84 oben."
+          },
+          "styles": {
+            "en": "Jacket 0.84 to 0.90, cover 0.78, feet 0.35, base ring 0.4, stubs 0.7 with nuts 0.45, dial 0.95; body pen 0.18 mm, detail 0.13 mm, glazing 0.1 mm.",
+            "de": "Mantel 0,84 bis 0,90, Abdeckung 0,78, Füße 0,35, Bodenring 0,4, Stutzen 0,7 mit Muttern 0,45, Thermometer 0,95; Körperstift 0,18 mm, Detail 0,13 mm, Verglasung 0,1 mm."
+          },
+          "overlays": {
+            "en": "Each quarter is its own region: in the thermal view a half-charged tank is warm in the upper two quarters and cold below, a charged tank warm top to bottom with the warmest top; the cover and stubs release heat at the top.",
+            "de": "Jedes Viertel ist eine eigene Region: in der Thermalansicht ist ein halbgeladener Speicher in den oberen zwei Vierteln warm und unten kalt, ein geladener von oben bis unten warm mit dem wärmsten Kopf; Abdeckung und Stutzen geben oben Wärme ab."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.06,
+              "material": "powder-steel"
+            },
+            {
+              "id": "zone-4",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-4",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "zone-3",
+              "bone": "zone-3",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-3",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "zone-2",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-2",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "zone-1",
+              "bone": "zone-1",
+              "role": "body",
+              "z": 3.03,
+              "filled": true,
+              "tone": 0.8400000000000001,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-1",
+              "material": "foam-jacket"
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29743,
+                  0.01305
+                ],
+                [
+                  0.28978,
+                  0.02588
+                ],
+                [
+                  0.27717,
+                  0.03827
+                ],
+                [
+                  0.25981,
+                  0.05
+                ],
+                [
+                  0.23801,
+                  0.06088
+                ],
+                [
+                  0.21213,
+                  0.07071
+                ],
+                [
+                  0.18263,
+                  0.07934
+                ],
+                [
+                  0.15,
+                  0.0866
+                ],
+                [
+                  0.1148,
+                  0.09239
+                ],
+                [
+                  0.07764,
+                  0.09659
+                ],
+                [
+                  0.03916,
+                  0.09914
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  -0.03916,
+                  0.09914
+                ],
+                [
+                  -0.07764,
+                  0.09659
+                ],
+                [
+                  -0.1148,
+                  0.09239
+                ],
+                [
+                  -0.15,
+                  0.0866
+                ],
+                [
+                  -0.18263,
+                  0.07934
+                ],
+                [
+                  -0.21213,
+                  0.07071
+                ],
+                [
+                  -0.23801,
+                  0.06088
+                ],
+                [
+                  -0.25981,
+                  0.05
+                ],
+                [
+                  -0.27717,
+                  0.03827
+                ],
+                [
+                  -0.28978,
+                  0.02588
+                ],
+                [
+                  -0.29743,
+                  0.01305
+                ],
+                [
+                  -0.3,
+                  0
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "stub-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 1.18567,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-1",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 0.77317,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-2",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 0.17733,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.91067,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "stub-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.49817,
+              "w": 0.03,
+              "h": 0.024,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.18889,
+              "y": 1.43,
+              "w": 0.03,
+              "h": 0.048,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "dial",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.165
+                ],
+                [
+                  0.04755,
+                  0.18045
+                ],
+                [
+                  0.04045,
+                  0.19439
+                ],
+                [
+                  0.02939,
+                  0.20545
+                ],
+                [
+                  0.01545,
+                  0.21255
+                ],
+                [
+                  0,
+                  0.215
+                ],
+                [
+                  -0.01545,
+                  0.21255
+                ],
+                [
+                  -0.02939,
+                  0.20545
+                ],
+                [
+                  -0.04045,
+                  0.19439
+                ],
+                [
+                  -0.04755,
+                  0.18045
+                ],
+                [
+                  -0.05,
+                  0.165
+                ],
+                [
+                  -0.04755,
+                  0.14955
+                ],
+                [
+                  -0.04045,
+                  0.13561
+                ],
+                [
+                  -0.02939,
+                  0.12455
+                ],
+                [
+                  -0.01545,
+                  0.11745
+                ],
+                [
+                  0,
+                  0.115
+                ],
+                [
+                  0.01545,
+                  0.11745
+                ],
+                [
+                  0.02939,
+                  0.12455
+                ],
+                [
+                  0.04045,
+                  0.13561
+                ],
+                [
+                  0.04755,
+                  0.14955
+                ]
+              ],
+              "closed": true,
+              "material": "window-glass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29544,
+                  0.05209
+                ],
+                [
+                  0.28191,
+                  0.10261
+                ],
+                [
+                  0.25981,
+                  0.15
+                ],
+                [
+                  0.22981,
+                  0.19284
+                ],
+                [
+                  0.19284,
+                  0.22981
+                ],
+                [
+                  0.15,
+                  0.25981
+                ],
+                [
+                  0.10261,
+                  0.28191
+                ],
+                [
+                  0.05209,
+                  0.29544
+                ],
+                [
+                  0,
+                  0.3
+                ],
+                [
+                  -0.05209,
+                  0.29544
+                ],
+                [
+                  -0.10261,
+                  0.28191
+                ],
+                [
+                  -0.15,
+                  0.25981
+                ],
+                [
+                  -0.19284,
+                  0.22981
+                ],
+                [
+                  -0.22981,
+                  0.19284
+                ],
+                [
+                  -0.25981,
+                  0.15
+                ],
+                [
+                  -0.28191,
+                  0.10261
+                ],
+                [
+                  -0.29544,
+                  0.05209
+                ],
+                [
+                  -0.3,
+                  0
+                ],
+                [
+                  -0.29544,
+                  -0.05209
+                ],
+                [
+                  -0.28191,
+                  -0.10261
+                ],
+                [
+                  -0.25981,
+                  -0.15
+                ],
+                [
+                  -0.22981,
+                  -0.19284
+                ],
+                [
+                  -0.19284,
+                  -0.22981
+                ],
+                [
+                  -0.15,
+                  -0.25981
+                ],
+                [
+                  -0.10261,
+                  -0.28191
+                ],
+                [
+                  -0.05209,
+                  -0.29544
+                ],
+                [
+                  0,
+                  -0.3
+                ],
+                [
+                  0.05209,
+                  -0.29544
+                ],
+                [
+                  0.10261,
+                  -0.28191
+                ],
+                [
+                  0.15,
+                  -0.25981
+                ],
+                [
+                  0.19284,
+                  -0.22981
+                ],
+                [
+                  0.22981,
+                  -0.19284
+                ],
+                [
+                  0.25981,
+                  -0.15
+                ],
+                [
+                  0.28191,
+                  -0.10261
+                ],
+                [
+                  0.29544,
+                  -0.05209
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "stub-0",
+              "bone": "connections",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": -0.02,
+              "w": 0.04,
+              "h": 0.04,
+              "region": "connections"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.29,
+              "y": -0.02,
+              "w": 0.04,
+              "h": 0.04,
+              "region": "connections"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2239,
+                  0
+                ],
+                [
+                  0.22122,
+                  0.01
+                ],
+                [
+                  0.2139,
+                  0.01732
+                ],
+                [
+                  0.2039,
+                  0.02
+                ],
+                [
+                  0.1939,
+                  0.01732
+                ],
+                [
+                  0.18658,
+                  0.01
+                ],
+                [
+                  0.1839,
+                  0
+                ],
+                [
+                  0.18658,
+                  -0.01
+                ],
+                [
+                  0.1939,
+                  -0.01732
+                ],
+                [
+                  0.2039,
+                  -0.02
+                ],
+                [
+                  0.2139,
+                  -0.01732
+                ],
+                [
+                  0.22122,
+                  -0.01
+                ]
+              ],
+              "closed": true,
+              "region": "connections"
+            }
+          ],
+          "front": [
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.06
+            },
+            {
+              "id": "zone-4",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.06,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-4"
+            },
+            {
+              "id": "zone-3",
+              "bone": "zone-3",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.39,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-3"
+            },
+            {
+              "id": "zone-2",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.72,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-2"
+            },
+            {
+              "id": "zone-1",
+              "bone": "zone-1",
+              "role": "body",
+              "z": 3.03,
+              "filled": true,
+              "tone": 0.84,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 1.05,
+              "w": 0.6,
+              "h": 0.33,
+              "region": "zone-1"
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  1.38
+                ],
+                [
+                  0.29544,
+                  1.39736
+                ],
+                [
+                  0.28191,
+                  1.4142
+                ],
+                [
+                  0.25981,
+                  1.43
+                ],
+                [
+                  0.22981,
+                  1.44428
+                ],
+                [
+                  0.19284,
+                  1.4566
+                ],
+                [
+                  0.15,
+                  1.4666
+                ],
+                [
+                  0.10261,
+                  1.47397
+                ],
+                [
+                  0.05209,
+                  1.47848
+                ],
+                [
+                  0,
+                  1.48
+                ],
+                [
+                  -0.05209,
+                  1.47848
+                ],
+                [
+                  -0.10261,
+                  1.47397
+                ],
+                [
+                  -0.15,
+                  1.4666
+                ],
+                [
+                  -0.19284,
+                  1.4566
+                ],
+                [
+                  -0.22981,
+                  1.44428
+                ],
+                [
+                  -0.25981,
+                  1.43
+                ],
+                [
+                  -0.28191,
+                  1.4142
+                ],
+                [
+                  -0.29544,
+                  1.39736
+                ],
+                [
+                  -0.3,
+                  1.38
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "stub-3",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 0.9107,
+              "w": 0.04,
+              "h": 0.024,
+              "region": "connections"
+            },
+            {
+              "id": "stub-4",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 0.4982,
+              "w": 0.04,
+              "h": 0.024,
+              "region": "connections"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 1.43,
+              "w": 0.04,
+              "h": 0.048,
+              "region": "connections"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 7 mm by 15 mm front elevation: a tall cylinder with four stacked shells, a dome, a foot bar, a round dial and short stubs. Front view: the same four shells, dome and foot bar across 0.6 m with the two front stubs and the hot-water stub seen end-on. Top view: the 0.6 m dome disc with a rear and a front stub and the hot-water stub.",
+            "de": "Eine Vorderansicht von 7 mm mal 15 mm: ein hoher Zylinder mit vier übereinanderliegenden Schalen, einer Wölbung, einem Fußbalken, einem runden Thermometer und kurzen Stutzen. Vorderansicht: dieselben vier Schalen, die Wölbung und der Fußbalken über 0,6 m, mit den zwei vorderen Stutzen und dem Warmwasserstutzen in der Stirnansicht. Draufsicht: die 0,6 m große Wölbungsscheibe mit einem hinteren und einem vorderen Stutzen und dem Warmwasserstutzen."
+          },
+          "retained": {
+            "en": "The four shells with their seams, the dome, the foot bar, the dial and the six stubs.",
+            "de": "Die vier Schalen mit ihren Fugen, die Wölbung, der Fußbalken, das Thermometer und die sechs Stutzen."
+          },
+          "merged": {
+            "en": "The two feet and the base ring form one bar of 0.44 m.",
+            "de": "Die zwei Füße und der Bodenring bilden einen Balken von 0,44 m."
+          },
+          "omitted": {
+            "en": "Union nuts, dome seam, ticks, needle, label and zip. Front and top view omit the seams, the dial and the rear stubs; the stubs are thickened to 40 mm as in the side view.",
+            "de": "Überwurfmuttern, Wölbungsfuge, Marken, Nadel, Schild und Naht. Vorder- und Draufsicht lassen Fugen, Thermometer und hintere Stutzen weg; die Stutzen sind wie in der Seitenansicht auf 40 mm verdickt."
+          },
+          "thinElements": {
+            "en": "The stubs are thickened from 30 to 40 mm (0.4 mm on paper).",
+            "de": "Die Stutzen sind von 30 auf 40 mm (0,4 mm auf Papier) verdickt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Shells 0.84 to 0.90, dome 0.78, foot bar 0.35, stubs 0.7, dial 0.95; one body pen of 0.18 mm.",
+            "de": "Schalen 0,84 bis 0,90, Wölbung 0,78, Fußbalken 0,35, Stutzen 0,7, Thermometer 0,95; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The four shells keep their own regions, so the stratification of the tank still shows.",
+            "de": "Die vier Schalen behalten ihre eigenen Regionen, sodass die Schichtung des Speichers sichtbar bleibt."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.06,
+              "material": "powder-steel"
+            },
+            {
+              "id": "lower",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-4",
+                "zone-3"
+              ],
+              "material": "foam-jacket"
+            },
+            {
+              "id": "upper",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-2",
+                "zone-1"
+              ],
+              "material": "foam-jacket"
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29743,
+                  0.01305
+                ],
+                [
+                  0.28978,
+                  0.02588
+                ],
+                [
+                  0.27717,
+                  0.03827
+                ],
+                [
+                  0.25981,
+                  0.05
+                ],
+                [
+                  0.23801,
+                  0.06088
+                ],
+                [
+                  0.21213,
+                  0.07071
+                ],
+                [
+                  0.18263,
+                  0.07934
+                ],
+                [
+                  0.15,
+                  0.0866
+                ],
+                [
+                  0.1148,
+                  0.09239
+                ],
+                [
+                  0.07764,
+                  0.09659
+                ],
+                [
+                  0.03916,
+                  0.09914
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  -0.03916,
+                  0.09914
+                ],
+                [
+                  -0.07764,
+                  0.09659
+                ],
+                [
+                  -0.1148,
+                  0.09239
+                ],
+                [
+                  -0.15,
+                  0.0866
+                ],
+                [
+                  -0.18263,
+                  0.07934
+                ],
+                [
+                  -0.21213,
+                  0.07071
+                ],
+                [
+                  -0.23801,
+                  0.06088
+                ],
+                [
+                  -0.25981,
+                  0.05
+                ],
+                [
+                  -0.27717,
+                  0.03827
+                ],
+                [
+                  -0.28978,
+                  0.02588
+                ],
+                [
+                  -0.29743,
+                  0.01305
+                ],
+                [
+                  -0.3,
+                  0
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.17778,
+              "y": 1.43,
+              "w": 0.05,
+              "h": 0.05,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "side-l",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 1.17375,
+              "w": 0.04,
+              "h": 0.05,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "side-r",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.29,
+              "y": 0.89875,
+              "w": 0.04,
+              "h": 0.05,
+              "region": "connections",
+              "material": "brass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29248,
+                  0.06676
+                ],
+                [
+                  0.27029,
+                  0.13017
+                ],
+                [
+                  0.23455,
+                  0.18705
+                ],
+                [
+                  0.18705,
+                  0.23455
+                ],
+                [
+                  0.13017,
+                  0.27029
+                ],
+                [
+                  0.06676,
+                  0.29248
+                ],
+                [
+                  0,
+                  0.3
+                ],
+                [
+                  -0.06676,
+                  0.29248
+                ],
+                [
+                  -0.13017,
+                  0.27029
+                ],
+                [
+                  -0.18705,
+                  0.23455
+                ],
+                [
+                  -0.23455,
+                  0.18705
+                ],
+                [
+                  -0.27029,
+                  0.13017
+                ],
+                [
+                  -0.29248,
+                  0.06676
+                ],
+                [
+                  -0.3,
+                  0
+                ],
+                [
+                  -0.29248,
+                  -0.06676
+                ],
+                [
+                  -0.27029,
+                  -0.13017
+                ],
+                [
+                  -0.23455,
+                  -0.18705
+                ],
+                [
+                  -0.18705,
+                  -0.23455
+                ],
+                [
+                  -0.13017,
+                  -0.27029
+                ],
+                [
+                  -0.06676,
+                  -0.29248
+                ],
+                [
+                  0,
+                  -0.3
+                ],
+                [
+                  0.06676,
+                  -0.29248
+                ],
+                [
+                  0.13017,
+                  -0.27029
+                ],
+                [
+                  0.18705,
+                  -0.23455
+                ],
+                [
+                  0.23455,
+                  -0.18705
+                ],
+                [
+                  0.27029,
+                  -0.13017
+                ],
+                [
+                  0.29248,
+                  -0.06676
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "side-l",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": -0.025,
+              "w": 0.04,
+              "h": 0.05,
+              "region": "connections"
+            },
+            {
+              "id": "side-r",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.29,
+              "y": -0.025,
+              "w": 0.04,
+              "h": 0.05,
+              "region": "connections"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.1778,
+              "y": -0.025,
+              "w": 0.05,
+              "h": 0.05,
+              "region": "connections"
+            }
+          ],
+          "front": [
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.06
+            },
+            {
+              "id": "lower",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.06,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-4",
+                "zone-3"
+              ]
+            },
+            {
+              "id": "upper",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.72,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-2",
+                "zone-1"
+              ]
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  1.38
+                ],
+                [
+                  0.29248,
+                  1.40225
+                ],
+                [
+                  0.27029,
+                  1.42339
+                ],
+                [
+                  0.23455,
+                  1.44235
+                ],
+                [
+                  0.18705,
+                  1.45818
+                ],
+                [
+                  0.13017,
+                  1.4701
+                ],
+                [
+                  0.06676,
+                  1.47749
+                ],
+                [
+                  0,
+                  1.48
+                ],
+                [
+                  -0.06676,
+                  1.47749
+                ],
+                [
+                  -0.13017,
+                  1.4701
+                ],
+                [
+                  -0.18705,
+                  1.45818
+                ],
+                [
+                  -0.23455,
+                  1.44235
+                ],
+                [
+                  -0.27029,
+                  1.42339
+                ],
+                [
+                  -0.29248,
+                  1.40225
+                ],
+                [
+                  -0.3,
+                  1.38
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 1.43,
+              "w": 0.05,
+              "h": 0.05,
+              "region": "connections"
+            },
+            {
+              "id": "side-r",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 0.8988,
+              "w": 0.05,
+              "h": 0.05,
+              "region": "connections"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 3 mm by 7 mm mark: a tall rounded block of two stacked halves on a foot bar, with a dome and one stub. Front view: two stacked halves and a dome across 0.6 m on the foot bar, with one thickened front stub and the hot-water stub. Top view: the 0.6 m dome disc with two thickened stubs and the hot-water stub.",
+            "de": "Ein Zeichen von 3 mm mal 7 mm: ein hoher Block aus zwei übereinanderliegenden Hälften auf einem Fußbalken, mit Wölbung und einem Stutzen. Vorderansicht: zwei übereinanderliegende Hälften und eine Wölbung über 0,6 m auf dem Fußbalken, mit einem verdickten vorderen Stutzen und dem Warmwasserstutzen. Draufsicht: die 0,6 m große Wölbungsscheibe mit zwei verdickten Stutzen und dem Warmwasserstutzen."
+          },
+          "retained": {
+            "en": "The foot bar, two jacket halves of 0.72 m, the dome and the hot-water stub.",
+            "de": "Der Fußbalken, zwei Mantelhälften von 0,72 m, die Wölbung und der Warmwasserstutzen."
+          },
+          "merged": {
+            "en": "The lower two quarters form the lower half and the upper two the upper half (two regions each); the side stubs are reduced to two thickened stubs of 50 mm height and the hot-water stub is thickened to 50 mm.",
+            "de": "Die unteren zwei Viertel bilden die untere Hälfte und die oberen zwei die obere (je zwei Regionen); die seitlichen Stutzen sind auf zwei verdickte Stutzen von 50 mm Höhe reduziert und der Warmwasserstutzen ist auf 50 mm verdickt."
+          },
+          "omitted": {
+            "en": "Four of the five side stubs, dial, needle, label, seams and the base ring. Front and top view omit the other stubs, the seams, the dial and the base ring as in the side view.",
+            "de": "Vier der fünf seitlichen Stutzen, Thermometer, Nadel, Schild, Fugen und der Bodenring. Vorder- und Draufsicht lassen wie die Seitenansicht die übrigen Stutzen, die Fugen, das Thermometer und den Bodenring weg."
+          },
+          "thinElements": {
+            "en": "None below the feature width; the stub is 0.25 mm on paper.",
+            "de": "Nichts unterhalb der Mindestbreite; der Stutzen ist auf Papier 0,25 mm breit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Lower half 0.90, upper half 0.86, dome 0.78, feet 0.35, stub 0.7; one body pen of 0.13 mm.",
+            "de": "Untere Hälfte 0,90, obere 0,86, Wölbung 0,78, Füße 0,35, Stutzen 0,7; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "The halves list their quarters as merged regions, so a half-charged tank still shows a warm top half and a cold bottom half.",
+            "de": "Die Hälften führen ihre Viertel als zusammengeführte Regionen, sodass ein halbgeladener Speicher eine warme obere und eine kalte untere Hälfte zeigt."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.12,
+              "material": "powder-steel"
+            },
+            {
+              "id": "lower",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-4",
+                "zone-3"
+              ],
+              "material": "foam-jacket"
+            },
+            {
+              "id": "upper",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-2",
+                "zone-1"
+              ],
+              "material": "foam-jacket"
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29743,
+                  0.01305
+                ],
+                [
+                  0.28978,
+                  0.02588
+                ],
+                [
+                  0.27717,
+                  0.03827
+                ],
+                [
+                  0.25981,
+                  0.05
+                ],
+                [
+                  0.23801,
+                  0.06088
+                ],
+                [
+                  0.21213,
+                  0.07071
+                ],
+                [
+                  0.18263,
+                  0.07934
+                ],
+                [
+                  0.15,
+                  0.0866
+                ],
+                [
+                  0.1148,
+                  0.09239
+                ],
+                [
+                  0.07764,
+                  0.09659
+                ],
+                [
+                  0.03916,
+                  0.09914
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  -0.03916,
+                  0.09914
+                ],
+                [
+                  -0.07764,
+                  0.09659
+                ],
+                [
+                  -0.1148,
+                  0.09239
+                ],
+                [
+                  -0.15,
+                  0.0866
+                ],
+                [
+                  -0.18263,
+                  0.07934
+                ],
+                [
+                  -0.21213,
+                  0.07071
+                ],
+                [
+                  -0.23801,
+                  0.06088
+                ],
+                [
+                  -0.25981,
+                  0.05
+                ],
+                [
+                  -0.27717,
+                  0.03827
+                ],
+                [
+                  -0.28978,
+                  0.02588
+                ],
+                [
+                  -0.29743,
+                  0.01305
+                ],
+                [
+                  -0.3,
+                  0
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.14778,
+              "y": 1.3699999999999999,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "side-l",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": 1.14375,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections",
+              "material": "brass"
+            },
+            {
+              "id": "side-r",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.21999999999999997,
+              "y": 0.86875,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections",
+              "material": "brass"
+            }
+          ],
+          "front": [
+            {
+              "id": "feet",
+              "bone": "base",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.12
+            },
+            {
+              "id": "lower",
+              "bone": "zone-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.06,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-4",
+                "zone-3"
+              ]
+            },
+            {
+              "id": "upper",
+              "bone": "zone-2",
+              "role": "body",
+              "z": 3.01,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.72,
+              "w": 0.6,
+              "h": 0.66,
+              "regions": [
+                "zone-2",
+                "zone-1"
+              ]
+            },
+            {
+              "id": "cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  1.38
+                ],
+                [
+                  0.29248,
+                  1.40225
+                ],
+                [
+                  0.27029,
+                  1.42339
+                ],
+                [
+                  0.23455,
+                  1.44235
+                ],
+                [
+                  0.18705,
+                  1.45818
+                ],
+                [
+                  0.13017,
+                  1.4701
+                ],
+                [
+                  0.06676,
+                  1.47749
+                ],
+                [
+                  0,
+                  1.48
+                ],
+                [
+                  -0.06676,
+                  1.47749
+                ],
+                [
+                  -0.13017,
+                  1.4701
+                ],
+                [
+                  -0.18705,
+                  1.45818
+                ],
+                [
+                  -0.23455,
+                  1.44235
+                ],
+                [
+                  -0.27029,
+                  1.42339
+                ],
+                [
+                  -0.29248,
+                  1.40225
+                ],
+                [
+                  -0.3,
+                  1.38
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.055,
+              "y": 1.3699999999999999,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections"
+            },
+            {
+              "id": "side-r",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.8688,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-cap",
+              "bone": "cap",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.29248,
+                  0.06676
+                ],
+                [
+                  0.27029,
+                  0.13017
+                ],
+                [
+                  0.23455,
+                  0.18705
+                ],
+                [
+                  0.18705,
+                  0.23455
+                ],
+                [
+                  0.13017,
+                  0.27029
+                ],
+                [
+                  0.06676,
+                  0.29248
+                ],
+                [
+                  0,
+                  0.3
+                ],
+                [
+                  -0.06676,
+                  0.29248
+                ],
+                [
+                  -0.13017,
+                  0.27029
+                ],
+                [
+                  -0.18705,
+                  0.23455
+                ],
+                [
+                  -0.23455,
+                  0.18705
+                ],
+                [
+                  -0.27029,
+                  0.13017
+                ],
+                [
+                  -0.29248,
+                  0.06676
+                ],
+                [
+                  -0.3,
+                  0
+                ],
+                [
+                  -0.29248,
+                  -0.06676
+                ],
+                [
+                  -0.27029,
+                  -0.13017
+                ],
+                [
+                  -0.23455,
+                  -0.18705
+                ],
+                [
+                  -0.18705,
+                  -0.23455
+                ],
+                [
+                  -0.13017,
+                  -0.27029
+                ],
+                [
+                  -0.06676,
+                  -0.29248
+                ],
+                [
+                  0,
+                  -0.3
+                ],
+                [
+                  0.06676,
+                  -0.29248
+                ],
+                [
+                  0.13017,
+                  -0.27029
+                ],
+                [
+                  0.18705,
+                  -0.23455
+                ],
+                [
+                  0.23455,
+                  -0.18705
+                ],
+                [
+                  0.27029,
+                  -0.13017
+                ],
+                [
+                  0.29248,
+                  -0.06676
+                ]
+              ],
+              "closed": true,
+              "region": "top-cap",
+              "material": "cap-plastic"
+            },
+            {
+              "id": "side-l",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.33,
+              "y": -0.055,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections"
+            },
+            {
+              "id": "side-r",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.21999999999999997,
+              "y": -0.055,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections"
+            },
+            {
+              "id": "hot-out",
+              "bone": "connections",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.14780000000000001,
+              "y": -0.055,
+              "w": 0.11,
+              "h": 0.11,
+              "region": "connections"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.2 mm by 3.0 mm mark: a tall block of two stacked jacket halves on a foot bar with a dome. Front view: the same stack across 0.6 m; top view: the 0.6 m dome disc with the three stubs.",
+            "de": "Ein Zeichen von 1,2 mm mal 3,0 mm: ein hoher Block aus zwei übereinanderliegenden Mantelhälften auf einem Fußbalken mit Wölbung. Vorderansicht: derselbe Stapel über 0,6 m; Draufsicht: die 0,6 m große Wölbungsscheibe mit den drei Stutzen."
+          },
+          "retained": {
+            "en": "The foot bar, the two jacket halves (two stratification regions each), the dome and the three stubs, each bound to its bone.",
+            "de": "Der Fußbalken, die zwei Mantelhälften (je zwei Schichtungsregionen), die Wölbung und die drei Stutzen, je an ihrer Bone."
+          },
+          "merged": {
+            "en": "The four stratification quarters form two halves of 0.66 m; the stubs are enlarged to 0.11 m so that each is 0.22 mm, a conventional enlargement overlapping the jacket and keeping the overall width of 0.66 m.",
+            "de": "Die vier Schichtungsviertel bilden zwei Hälften von 0,66 m; die Stutzen sind auf 0,11 m vergrößert, je 0,22 mm, eine konventionelle Vergrößerung, die den Mantel überlappt und die Gesamtbreite von 0,66 m hält."
+          },
+          "omitted": {
+            "en": "Dial, needle, label, seams, the base ring and the remaining side stubs of 0.03 m (0.06 mm).",
+            "de": "Zifferblatt, Nadel, Beschriftung, Nähte, der Fußring und die übrigen seitlichen Stutzen von 0,03 m (0,06 mm)."
+          },
+          "thinElements": {
+            "en": "The foot bar is enlarged to 0.1 m (0.2 mm); no other element is thinner than 0.2 mm.",
+            "de": "Der Fußbalken ist auf 0,1 m (0,2 mm) vergrößert; kein anderes Element ist dünner als 0,2 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Filled blocks only, tone by region.",
+            "de": "Nur gefüllte Blöcke, Ton nach Region."
+          },
+          "overlays": {
+            "en": "The two halves carry the charge level in thermal views; the quarters are two regions each.",
+            "de": "Die zwei Hälften tragen den Ladezustand in den Thermalansichten; die Viertel sind je zwei Regionen."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "cold",
+        "title": {
+          "en": "Cold",
+          "de": "Kalt"
+        },
+        "description": {
+          "en": "The tank is filled with cold water: all four quarters are at room temperature and the needle stands left.",
+          "de": "Der Speicher ist mit kaltem Wasser gefüllt: alle vier Viertel haben Raumtemperatur und die Nadel steht links."
+        },
+        "bones": {
+          "needle": {
+            "angleDeg": 70
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-left",
+          "foot-right"
+        ],
+        "thermal": {
+          "regions": {
+            "zone-1": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-2": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-3": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-4": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-cap": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "connections": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "top-plume": 0
+          },
+          "operating": {
+            "zone-1": 0,
+            "zone-2": 0,
+            "zone-3": 0,
+            "zone-4": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "half-charged",
+        "title": {
+          "en": "Half charged",
+          "de": "Halb geladen"
+        },
+        "description": {
+          "en": "The upper half is hot and the lower half still cold with a thin transition between them: the upper quarters lose most heat, the needle stands in the middle.",
+          "de": "Die obere Hälfte ist heiß und die untere noch kalt mit einem dünnen Übergang: die oberen Viertel verlieren am meisten Wärme, die Nadel steht in der Mitte."
+        },
+        "bones": {
+          "needle": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-left",
+          "foot-right"
+        ],
+        "thermal": {
+          "regions": {
+            "zone-1": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-2": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-3": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-4": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-cap": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "connections": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "top-plume": 0.6
+          },
+          "operating": {
+            "zone-1": 1,
+            "zone-2": 0.9,
+            "zone-3": 0.15,
+            "zone-4": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "charged",
+        "title": {
+          "en": "Fully charged",
+          "de": "Voll geladen"
+        },
+        "description": {
+          "en": "The whole tank is hot, the top slightly warmer than the bottom: the standby loss is 76 W and the needle stands right.",
+          "de": "Der ganze Speicher ist heiß, oben etwas wärmer als unten: der Bereitschaftsverlust beträgt 76 W und die Nadel steht rechts."
+        },
+        "bones": {
+          "needle": {
+            "angleDeg": -70
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-left",
+          "foot-right"
+        ],
+        "thermal": {
+          "regions": {
+            "zone-1": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-2": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-3": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "zone-4": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-cap": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "connections": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "top-plume": 1
+          },
+          "operating": {
+            "zone-1": 1,
+            "zone-2": 1,
+            "zone-3": 1,
+            "zone-4": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "charge-up",
+        "title": {
+          "en": "Charging from cold",
+          "de": "Aufladen aus dem kalten Zustand"
+        },
+        "description": {
+          "en": "The coil heats the tank from the top: the upper quarter is hot after two minutes, the tank is half charged after five minutes and fully charged after fifteen minutes.",
+          "de": "Die Rohrwendel heizt den Speicher von oben: das obere Viertel ist nach zwei Minuten heiß, der Speicher nach fünf Minuten halb und nach fünfzehn Minuten voll geladen."
+        },
+        "durationS": 900,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "cold",
+            "ease": "smooth"
+          },
+          {
+            "t": 300,
+            "pose": "half-charged",
+            "ease": "smooth"
+          },
+          {
+            "t": 900,
+            "pose": "charged",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-left",
+            "fromS": 0,
+            "toS": 900
+          },
+          {
+            "anchor": "foot-right",
+            "fromS": 0,
+            "toS": 900
+          }
+        ],
+        "phases": [
+          {
+            "id": "top-hot",
+            "fromS": 0,
+            "toS": 300,
+            "title": {
+              "en": "Top fills with heat",
+              "de": "Kopf füllt sich mit Wärme"
+            }
+          },
+          {
+            "id": "bottom-hot",
+            "fromS": 300,
+            "toS": 900,
+            "title": {
+              "en": "Bottom follows",
+              "de": "Boden folgt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "operating",
+            "title": {
+              "en": "Charging starts",
+              "de": "Aufladen beginnt"
+            },
+            "target": "zone-1"
+          },
+          {
+            "t": 900,
+            "kind": "shutdown",
+            "title": {
+              "en": "Fully charged",
+              "de": "Voll geladen"
+            },
+            "target": "zone-4"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:zone-1",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 100,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:zone-2",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 200,
+                "v": 0.9
+              },
+              {
+                "t": 500,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:zone-3",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 300,
+                "v": 0.15
+              },
+              {
+                "t": 700,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:zone-4",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 500,
+                "v": 0.02
+              },
+              {
+                "t": 900,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:top-plume",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 100,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "draw-off",
+        "title": {
+          "en": "Drawing off hot water",
+          "de": "Warmwasser entnehmen"
+        },
+        "description": {
+          "en": "Hot water is drawn off at the top while cold water enters at the bottom: within ten minutes the cold layer rises from the bottom to the middle and the tank is half charged.",
+          "de": "Oben wird Warmwasser entnommen und unten fließt Kaltwasser nach: binnen zehn Minuten steigt die kalte Schicht vom Boden bis zur Mitte und der Speicher ist halb geladen."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "charged",
+            "ease": "smooth"
+          },
+          {
+            "t": 600,
+            "pose": "half-charged",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "foot-right",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold-rises",
+            "fromS": 0,
+            "toS": 600,
+            "title": {
+              "en": "Cold layer rises",
+              "de": "Kalte Schicht steigt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "load-on",
+            "title": {
+              "en": "Draw-off starts",
+              "de": "Entnahme beginnt"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:zone-1",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:zone-2",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 500,
+                "v": 0.9
+              }
+            ]
+          },
+          {
+            "target": "operating:zone-3",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 400,
+                "v": 0.15
+              }
+            ]
+          },
+          {
+            "target": "operating:zone-4",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 300,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:top-plume",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "zone-1",
+          "title": {
+            "en": "Stored heat in quarter 1 from the top",
+            "de": "Gespeicherte Wärme im 1. Viertel von oben"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Cold (room temperature)",
+                "de": "Kalt (Raumtemperatur)"
+              }
+            },
+            {
+              "v": 0.02,
+              "title": {
+                "en": "Cold with a trace of heat",
+                "de": "Kalt mit einem Hauch Wärme"
+              }
+            },
+            {
+              "v": 0.15,
+              "title": {
+                "en": "Thermocline, mostly cold",
+                "de": "Sprungschicht, überwiegend kalt"
+              }
+            },
+            {
+              "v": 0.9,
+              "title": {
+                "en": "Thermocline, mostly hot",
+                "de": "Sprungschicht, überwiegend heiß"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot (60 degrees C)",
+                "de": "Heiß (60 Grad C)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "zone-2",
+          "title": {
+            "en": "Stored heat in quarter 2 from the top",
+            "de": "Gespeicherte Wärme im 2. Viertel von oben"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Cold (room temperature)",
+                "de": "Kalt (Raumtemperatur)"
+              }
+            },
+            {
+              "v": 0.02,
+              "title": {
+                "en": "Cold with a trace of heat",
+                "de": "Kalt mit einem Hauch Wärme"
+              }
+            },
+            {
+              "v": 0.15,
+              "title": {
+                "en": "Thermocline, mostly cold",
+                "de": "Sprungschicht, überwiegend kalt"
+              }
+            },
+            {
+              "v": 0.9,
+              "title": {
+                "en": "Thermocline, mostly hot",
+                "de": "Sprungschicht, überwiegend heiß"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot (60 degrees C)",
+                "de": "Heiß (60 Grad C)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "zone-3",
+          "title": {
+            "en": "Stored heat in quarter 3 from the top",
+            "de": "Gespeicherte Wärme im 3. Viertel von oben"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Cold (room temperature)",
+                "de": "Kalt (Raumtemperatur)"
+              }
+            },
+            {
+              "v": 0.02,
+              "title": {
+                "en": "Cold with a trace of heat",
+                "de": "Kalt mit einem Hauch Wärme"
+              }
+            },
+            {
+              "v": 0.15,
+              "title": {
+                "en": "Thermocline, mostly cold",
+                "de": "Sprungschicht, überwiegend kalt"
+              }
+            },
+            {
+              "v": 0.9,
+              "title": {
+                "en": "Thermocline, mostly hot",
+                "de": "Sprungschicht, überwiegend heiß"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot (60 degrees C)",
+                "de": "Heiß (60 Grad C)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "zone-4",
+          "title": {
+            "en": "Stored heat in quarter 4 from the top",
+            "de": "Gespeicherte Wärme im 4. Viertel von oben"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Cold (room temperature)",
+                "de": "Kalt (Raumtemperatur)"
+              }
+            },
+            {
+              "v": 0.02,
+              "title": {
+                "en": "Cold with a trace of heat",
+                "de": "Kalt mit einem Hauch Wärme"
+              }
+            },
+            {
+              "v": 0.15,
+              "title": {
+                "en": "Thermocline, mostly cold",
+                "de": "Sprungschicht, überwiegend kalt"
+              }
+            },
+            {
+              "v": 0.9,
+              "title": {
+                "en": "Thermocline, mostly hot",
+                "de": "Sprungschicht, überwiegend heiß"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot (60 degrees C)",
+                "de": "Heiß (60 Grad C)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "zone-1",
+          "title": {
+            "en": "Upper quarter of the jacket",
+            "de": "Oberes Mantelviertel"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "foam-jacket",
+          "areaM2": 0.62,
+          "characteristicLengthM": 0.33,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "jacket",
+              "title": {
+                "en": "Polyurethane foam jacket 60 mm with sheet skin",
+                "de": "Polyurethan-Schaummantel 60 mm mit Blechhaut"
+              },
+              "kind": "insulation",
+              "material": "foam-jacket",
+              "thicknessM": 0.06,
+              "resistanceM2KW": 1.7,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "zone-1",
+            "heatW": 20
+          },
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "zone-2",
+          "title": {
+            "en": "Second quarter from above",
+            "de": "Zweites Mantelviertel von oben"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "foam-jacket",
+          "areaM2": 0.62,
+          "characteristicLengthM": 0.33,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "jacket",
+              "title": {
+                "en": "Polyurethane foam jacket 60 mm with sheet skin",
+                "de": "Polyurethan-Schaummantel 60 mm mit Blechhaut"
+              },
+              "kind": "insulation",
+              "material": "foam-jacket",
+              "thicknessM": 0.06,
+              "resistanceM2KW": 1.7,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "zone-2",
+            "heatW": 17
+          },
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "zone-3",
+          "title": {
+            "en": "Second quarter from below",
+            "de": "Zweites Mantelviertel von unten"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "foam-jacket",
+          "areaM2": 0.62,
+          "characteristicLengthM": 0.33,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "jacket",
+              "title": {
+                "en": "Polyurethane foam jacket 60 mm with sheet skin",
+                "de": "Polyurethan-Schaummantel 60 mm mit Blechhaut"
+              },
+              "kind": "insulation",
+              "material": "foam-jacket",
+              "thicknessM": 0.06,
+              "resistanceM2KW": 1.7,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "zone-3",
+            "heatW": 14
+          },
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "zone-4",
+          "title": {
+            "en": "Lower quarter of the jacket",
+            "de": "Unteres Mantelviertel"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "foam-jacket",
+          "areaM2": 0.62,
+          "characteristicLengthM": 0.33,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "jacket",
+              "title": {
+                "en": "Polyurethane foam jacket 60 mm with sheet skin",
+                "de": "Polyurethan-Schaummantel 60 mm mit Blechhaut"
+              },
+              "kind": "insulation",
+              "material": "foam-jacket",
+              "thicknessM": 0.06,
+              "resistanceM2KW": 1.7,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "zone-4",
+            "heatW": 10
+          },
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "top-cap",
+          "title": {
+            "en": "Domed top cover",
+            "de": "Gewölbte Abdeckung oben"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "cap-plastic",
+          "areaM2": 0.31,
+          "characteristicLengthM": 0.5,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "ABS cover 3 mm over foam",
+                "de": "ABS-Abdeckung 3 mm über Schaum"
+              },
+              "kind": "polymer",
+              "material": "cap-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.02,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "operating": {
+            "key": "zone-1",
+            "heatW": 6
+          },
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "connections",
+          "title": {
+            "en": "Connection stubs",
+            "de": "Anschlussstutzen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "brass",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.04,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Brass tube 2 mm",
+                "de": "Messingrohr 2 mm"
+              },
+              "kind": "metal",
+              "material": "brass",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 1700,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1700,
+          "operating": {
+            "key": "zone-1",
+            "heatW": 9
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "top-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Warm air rising over the dome",
+            "de": "Warme Luft über der Wölbung"
+          },
+          "anchor": "top",
+          "directionDeg": 90,
+          "diameterM": 0.4,
+          "region": "top-cap",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The heat loss of each quarter is proportional to the heat stored in it: the levels 0 to 1 scale the heat release of the quarter from none (cold) to its charged value (hot 60 degrees C).",
+          "de": "Der Wärmeverlust jedes Viertels ist proportional zu der in ihm gespeicherten Wärme: die Stufen 0 bis 1 skalieren die Wärmeabgabe des Viertels von keiner (kalt) bis zu seinem Wert bei Ladung (heiß 60 Grad C)."
+        },
+        {
+          "en": "The plume of the warm dome and the connections follow the upper quarter: they are cold when that quarter is cold.",
+          "de": "Die Fahne der warmen Wölbung und die Anschlüsse folgen dem oberen Viertel: sie sind kalt, wenn dieses Viertel kalt ist."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-left",
+        "foot-right"
+      ],
+      "assumptions": [
+        {
+          "en": "The empty 80 kg cylinder stands on two feet in the plane of the view (a third foot lies behind them); filled with 200 kg of water (280 kg, 2.7 kN) the floor carries it.",
+          "de": "Der leere Speicher von 80 kg steht auf zwei Füßen in der Bildebene (ein dritter liegt dahinter); mit 200 kg Wasser gefüllt (280 kg, 2,7 kN) trägt ihn der Boden."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "half-charged",
+      "defaultClip": "charge-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

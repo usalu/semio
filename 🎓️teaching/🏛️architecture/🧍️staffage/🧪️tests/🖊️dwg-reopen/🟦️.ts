@@ -13,7 +13,8 @@ describe("🖊️ writeDwg", () => {
     await expect(writeDwg(modelScene())).rejects.toBeInstanceOf(DwgUnavailableError);
   });
 
-  it.runIf(existsSync(new URL(DWG_WASM_URL)))("encodes through the wasm module into AC1024", async () => {
+  it("encodes through the wasm module into AC1024", async () => {
+    expect(existsSync(new URL(DWG_WASM_URL)), `staffage_dwg.wasm is missing: build it from 🖊️dwg/📦️packages/🦀️rust with the repo build (this test never skips silently)`).toBe(true);
     configureDwg({ wasm: readFileSync(DWG_WASM_URL) });
     const bytes = await writeDwg(modelScene());
     expect(new TextDecoder().decode(bytes.subarray(0, 6))).toBe("AC1024");

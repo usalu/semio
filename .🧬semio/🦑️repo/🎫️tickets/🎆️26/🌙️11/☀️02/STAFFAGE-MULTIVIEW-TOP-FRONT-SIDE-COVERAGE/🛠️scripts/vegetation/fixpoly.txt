@@ -1,0 +1,1 @@
+for (const den of ["50", "100", "200", "500"]) for (const s of a.representations[den]?.geometry?.elevation ?? []) if (s.kind === "poly" && s.id === "leaf-R1-b" && den === "100") s.points = s.points.slice(0, -1);

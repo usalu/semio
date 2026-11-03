@@ -229,36 +229,72 @@
     },
     "anchors": [
       {
-        "id": "contact-rear",
+        "id": "contact-rear-left",
         "bone": "leg-rear",
         "x": 0,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Rear feet",
-          "de": "Hintere Füße"
+          "en": "Rear left leg",
+          "de": "Hinteres linkes Bein"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
-        "frictionCoefficient": 0.5
+        "frictionCoefficient": 0.5,
+        "z": 0.23
       },
       {
-        "id": "contact-front",
+        "id": "contact-rear-right",
+        "bone": "leg-rear",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Rear right leg",
+          "de": "Hinteres rechtes Bein"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": -0.23
+      },
+      {
+        "id": "contact-front-left",
         "bone": "leg-front",
         "x": 0,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Front feet",
-          "de": "Vordere Füße"
+          "en": "Front left leg",
+          "de": "Vorderes linkes Bein"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
-        "frictionCoefficient": 0.5
+        "frictionCoefficient": 0.5,
+        "z": 0.245
+      },
+      {
+        "id": "contact-front-right",
+        "bone": "leg-front",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front right leg",
+          "de": "Vorderes rechtes Bein"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": -0.245
       }
     ],
     "representations": {
@@ -360,12 +396,281 @@
               "region": "back-beech",
               "material": "beech-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.6,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0.36,
+              "w": 0.42,
+              "h": 0.1
+            },
+            {
+              "id": "leg-front-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.25,
+                  0
+                ],
+                [
+                  0.19,
+                  0.42
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-post-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.19,
+                  0.46
+                ],
+                [
+                  0.19,
+                  0.878
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0
+                ],
+                [
+                  -0.19,
+                  0.42
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.23,
+                  0
+                ],
+                [
+                  0.18,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.23,
+                  0
+                ],
+                [
+                  -0.18,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-post-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.46
+                ],
+                [
+                  -0.19,
+                  0.878
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.6,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.1,
+              "w": 0.428,
+              "h": 0.1,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.21,
+                "z1": 0.21
+              }
+            },
+            {
+              "id": "leg-front-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": 0.236,
+              "x1": 0.404,
+              "y1": 0.19,
+              "r0": 0.016,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": 0.23,
+              "x1": 0.065,
+              "y1": 0.18,
+              "r0": 0.016,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": -0.236,
+              "x1": 0.404,
+              "y1": -0.19,
+              "r0": 0.016,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": -0.23,
+              "x1": 0.065,
+              "y1": -0.18,
+              "r0": 0.016,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": -0.006,
+              "x1": 0.385,
+              "y1": -0.006,
+              "r0": 0.016,
+              "r1": 0.016,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.19,
+                "z1": 0.19
+              }
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Composed chair sign 0.9 x 1.8 mm: a seat bar, two leg strokes and one leaning back stroke; it reads as a chair only next to its table.",
-            "de": "Zusammengesetztes Stuhlzeichen 0,9 x 1,8 mm: ein Sitzbalken, zwei Beinstriche und ein geneigter Rückenstrich; es liest sich als Stuhl nur neben seinem Tisch."
+            "en": "Composed chair sign 0.9 x 1.8 mm: a seat bar, two leg strokes and one leaning back stroke; it reads as a chair only next to its table. Front view: the seat band, the two splayed front legs and the two back posts as lines. Plan: the seat as one rounded plate, the back as a line across the rear edge and the four feet as short strokes that stick out past the seat.",
+            "de": "Zusammengesetztes Stuhlzeichen 0,9 x 1,8 mm: ein Sitzbalken, zwei Beinstriche und ein geneigter Rückenstrich; es liest sich als Stuhl nur neben seinem Tisch. Vorderansicht: das Sitzband, die zwei gespreizten Vorderbeine und die zwei Lehnenpfosten als Linien. Grundriss: der Sitz als eine gerundete Platte, die Lehne als Linie am hinteren Rand und die vier Füße als kurze Striche, die über den Sitz hinausragen."
           },
           "retained": {
             "en": "Overall height and depth, seat height, the splayed legs, the leaning back.",
@@ -534,12 +839,344 @@
               "region": "back-beech",
               "material": "beech-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.6,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0.4,
+              "w": 0.42,
+              "h": 0.06
+            },
+            {
+              "id": "leg-front-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.25,
+                  0
+                ],
+                [
+                  0.19,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.23,
+                  0
+                ],
+                [
+                  0.18,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-post-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.19,
+                  0.46
+                ],
+                [
+                  0.19,
+                  0.878
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0
+                ],
+                [
+                  -0.19,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.23,
+                  0
+                ],
+                [
+                  -0.18,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-post-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.46
+                ],
+                [
+                  -0.19,
+                  0.878
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.52,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.185,
+              "y": 0.66,
+              "w": 0.37,
+              "h": 0.185,
+              "r": 0.016,
+              "followTip": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.6,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.06,
+              "w": 0.428,
+              "h": 0.06,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.21,
+                "z1": 0.21
+              }
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.52,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.2,
+              "y0": -0.006,
+              "x1": 0.385,
+              "y1": -0.006,
+              "r0": 0.016,
+              "r1": 0.016,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.185,
+                "z1": 0.185
+              }
+            },
+            {
+              "id": "leg-front-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": 0.237,
+              "x1": 0.404,
+              "y1": 0.19,
+              "r0": 0.015,
+              "r1": 0.015,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": 0.23,
+              "x1": 0.065,
+              "y1": 0.18,
+              "r0": 0.015,
+              "r1": 0.015,
+              "followTip": true
+            },
+            {
+              "id": "stretcher-0",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.054,
+                  0.225
+                ],
+                [
+                  0.416,
+                  0.225
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-front-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": -0.237,
+              "x1": 0.404,
+              "y1": -0.19,
+              "r0": 0.015,
+              "r1": 0.015,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": -0.23,
+              "x1": 0.065,
+              "y1": -0.18,
+              "r0": 0.015,
+              "r1": 0.015,
+              "followTip": true
+            },
+            {
+              "id": "stretcher-1",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.054,
+                  -0.225
+                ],
+                [
+                  0.416,
+                  -0.225
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 2.2 x 4.4 mm: seat band, two leg strokes, a stretcher hairline, a leaning post ending in a panel.",
-            "de": "Seitenansicht 2,2 x 4,4 mm: Sitzband, zwei Beinstriche, eine Querstrebe als Haarlinie, geneigter Pfosten mit Brett am Ende."
+            "en": "Side elevation 2.2 x 4.4 mm: seat band, two leg strokes, a stretcher hairline, a leaning post ending in a panel. Front view: seat band, back panel between the two posts, the splayed front legs in front and the rear legs behind them. Plan: the rounded seat plate, the back panel as a thin bar along the rear edge and, outside the seat, the two side stretchers and the leg feet.",
+            "de": "Seitenansicht 2,2 x 4,4 mm: Sitzband, zwei Beinstriche, eine Querstrebe als Haarlinie, geneigter Pfosten mit Brett am Ende. Vorderansicht: Sitzband, Lehnenfüllung zwischen den beiden Pfosten, vorn die gespreizten Vorderbeine und dahinter die Hinterbeine. Grundriss: die gerundete Sitzplatte, die Lehnenfüllung als dünner Balken am hinteren Rand und außerhalb des Sitzes die beiden Seitenstreben und die Beinfüße."
           },
           "retained": {
             "en": "Seat band, both legs, stretcher, back post and the back panel as a filled bar at the top.",
@@ -748,12 +1385,473 @@
               "region": "back-beech",
               "material": "beech-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.6,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0.398,
+              "w": 0.42,
+              "h": 0.062,
+              "r": 0.012
+            },
+            {
+              "id": "seat-edge",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.432
+                ],
+                [
+                  0.2,
+                  0.432
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-front-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.25,
+                  0
+                ],
+                [
+                  0.19,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.23,
+                  0
+                ],
+                [
+                  0.18,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-post-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.19,
+                  0.46
+                ],
+                [
+                  0.19,
+                  0.878
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0
+                ],
+                [
+                  -0.19,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.23,
+                  0
+                ],
+                [
+                  -0.18,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-post-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.46
+                ],
+                [
+                  -0.19,
+                  0.878
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.52,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.185,
+              "y": 0.66,
+              "w": 0.37,
+              "h": 0.185,
+              "r": 0.014,
+              "followTip": true
+            },
+            {
+              "id": "back-rail",
+              "bone": "back",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.185,
+              "y": 0.56,
+              "w": 0.37,
+              "h": 0.07,
+              "r": 0.01,
+              "followTip": true
+            },
+            {
+              "id": "stretcher",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.225,
+                  0.12
+                ],
+                [
+                  0.225,
+                  0.12
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.6,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.062,
+              "w": 0.428,
+              "h": 0.062,
+              "r": 0.012,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.21,
+                "z1": 0.21
+              }
+            },
+            {
+              "id": "seat-edge",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.19
+                ],
+                [
+                  0.44,
+                  -0.19
+                ],
+                [
+                  0.44,
+                  0.19
+                ],
+                [
+                  0.05,
+                  0.19
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.52,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": -0.006,
+              "x1": 0.385,
+              "y1": -0.006,
+              "r0": 0.014,
+              "r1": 0.014,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.185,
+                "z1": 0.185
+              }
+            },
+            {
+              "id": "back-post-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.066,
+              "y0": 0.19,
+              "x1": 0.03,
+              "y1": 0.19,
+              "r0": 0.0125,
+              "r1": 0.0125,
+              "followTip": true
+            },
+            {
+              "id": "back-post-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.066,
+              "y0": -0.19,
+              "x1": 0.03,
+              "y1": -0.19,
+              "r0": 0.0125,
+              "r1": 0.0125,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": 0.238,
+              "x1": 0.404,
+              "y1": 0.19,
+              "r0": 0.014,
+              "r1": 0.014,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": 0.23,
+              "x1": 0.065,
+              "y1": 0.18,
+              "r0": 0.014,
+              "r1": 0.014,
+              "followTip": true
+            },
+            {
+              "id": "stretcher-0",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.054,
+                  0.225
+                ],
+                [
+                  0.416,
+                  0.225
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-front-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": -0.238,
+              "x1": 0.404,
+              "y1": -0.19,
+              "r0": 0.014,
+              "r1": 0.014,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": -0.23,
+              "x1": 0.065,
+              "y1": -0.18,
+              "r0": 0.014,
+              "r1": 0.014,
+              "followTip": true
+            },
+            {
+              "id": "stretcher-1",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.054,
+                  -0.225
+                ],
+                [
+                  0.416,
+                  -0.225
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 4.4 x 8.8 mm: a seat band, two leg strokes, a stretcher, a leaning back post with panel and lower rail.",
-            "de": "Seitenansicht 4,4 x 8,8 mm: Sitzband, zwei Beinstriche, Querstrebe, geneigter Rückenpfosten mit Brett und unterer Leiste."
+            "en": "Side elevation 4.4 x 8.8 mm: a seat band, two leg strokes, a stretcher, a leaning back post with panel and lower rail. Front view: seat band with its edge line, the back panel and lower rail between the posts, front legs and the rear legs behind them and the side stretchers as one line between the legs. Plan: the seat plate with the inset edge, the back panel and posts at the rear, four leg feet and the two side stretchers outside the seat.",
+            "de": "Seitenansicht 4,4 x 8,8 mm: Sitzband, zwei Beinstriche, Querstrebe, geneigter Rückenpfosten mit Brett und unterer Leiste. Vorderansicht: Sitzband mit Kantenlinie, Lehnenfüllung und untere Querstrebe zwischen den Pfosten, Vorderbeine mit den Hinterbeinen dahinter und die Seitenstreben als eine Linie zwischen den Beinen. Grundriss: die Sitzplatte mit der eingerückten Kante, Lehnenfüllung und Pfosten hinten, vier Beinfüße und die zwei Seitenstreben außerhalb des Sitzes."
           },
           "retained": {
             "en": "Seat (pad and apron as one band with the pad edge as a line), both tube legs, stretcher, back post, back panel, lower rail.",
@@ -1022,10 +2120,9 @@
               "h": 0.023,
               "r": 0.003,
               "region": "steel-tube",
-              "material": "steel-tube"
-            ,
+              "material": "steel-tube",
               "penMm": 0.291
-             },
+            },
             {
               "id": "leg-rear-ferrule",
               "bone": "leg-rear",
@@ -1046,10 +2143,9 @@
               ],
               "closed": false,
               "region": "steel-tube",
-              "material": "steel-tube"
-            ,
+              "material": "steel-tube",
               "penMm": 0.29
-             },
+            },
             {
               "id": "leg-front-tube",
               "bone": "leg-front",
@@ -1082,10 +2178,9 @@
               "h": 0.023,
               "r": 0.003,
               "region": "steel-tube",
-              "material": "steel-tube"
-            ,
+              "material": "steel-tube",
               "penMm": 0.291
-             },
+            },
             {
               "id": "leg-front-ferrule",
               "bone": "leg-front",
@@ -1106,10 +2201,9 @@
               ],
               "closed": false,
               "region": "steel-tube",
-              "material": "steel-tube"
-            ,
+              "material": "steel-tube",
               "penMm": 0.29
-             },
+            },
             {
               "id": "leg-rear-knuckle",
               "bone": "leg-rear",
@@ -1173,12 +2267,787 @@
               "region": "steel-tube",
               "material": "steel-tube"
             }
+          ],
+          "front": [
+            {
+              "id": "seat-pad",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "path",
+              "d": "M -0.2 0.46 L 0.2 0.46 C 0.213 0.46 0.215 0.454 0.215 0.446 C 0.215 0.438 0.213 0.432 0.2 0.432 L -0.2 0.432 C -0.213 0.432 -0.215 0.438 -0.215 0.446 C -0.215 0.454 -0.213 0.46 -0.2 0.46 Z",
+              "penMm": 0.35
+            },
+            {
+              "id": "seat-apron",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.45,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.18,
+              "y": 0.398,
+              "w": 0.36,
+              "h": 0.036,
+              "r": 0.004,
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-edge",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.21,
+                  0.4455
+                ],
+                [
+                  0.21,
+                  0.4455
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-rear-tube-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2195,
+                  0
+                ],
+                [
+                  0.2405,
+                  0
+                ],
+                [
+                  0.1895,
+                  0.42
+                ],
+                [
+                  0.1705,
+                  0.42
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-tube-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2375,
+                  0
+                ],
+                [
+                  0.252,
+                  0
+                ],
+                [
+                  0.1995,
+                  0.42
+                ],
+                [
+                  0.1805,
+                  0.42
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-foot-front-0",
+              "bone": "leg-front",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "rect",
+              "x": 0.2385,
+              "y": 0,
+              "w": 0.0135,
+              "h": 0.016,
+              "r": 0.003,
+              "penMm": 0.291,
+              "followTip": true
+            },
+            {
+              "id": "leg-foot-rear-0",
+              "bone": "leg-rear",
+              "role": "detail",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "rect",
+              "x": 0.2185,
+              "y": 0,
+              "w": 0.023,
+              "h": 0.016,
+              "r": 0.003,
+              "penMm": 0.291,
+              "followTip": true
+            },
+            {
+              "id": "stretcher-joint-0",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.225,
+              "cy": 0.12,
+              "rx": 0.0085,
+              "ry": 0.0095
+            },
+            {
+              "id": "back-post-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": 0.179,
+              "y": 0.46,
+              "w": 0.022,
+              "h": 0.405,
+              "r": 0.008,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "back-finial-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.38,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 0.19,
+              "cy": 0.87,
+              "rx": 0.012,
+              "ry": 0.011,
+              "penMm": 0.3
+            },
+            {
+              "id": "leg-rear-tube-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2195,
+                  0
+                ],
+                [
+                  -0.2405,
+                  0
+                ],
+                [
+                  -0.1895,
+                  0.42
+                ],
+                [
+                  -0.1705,
+                  0.42
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-front-tube-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2375,
+                  0
+                ],
+                [
+                  -0.252,
+                  0
+                ],
+                [
+                  -0.1995,
+                  0.42
+                ],
+                [
+                  -0.1805,
+                  0.42
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-foot-front-1",
+              "bone": "leg-front",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "rect",
+              "x": -0.252,
+              "y": 0,
+              "w": 0.0135,
+              "h": 0.016,
+              "r": 0.003,
+              "penMm": 0.291,
+              "followTip": true
+            },
+            {
+              "id": "leg-foot-rear-1",
+              "bone": "leg-rear",
+              "role": "detail",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "rect",
+              "x": -0.2415,
+              "y": 0,
+              "w": 0.023,
+              "h": 0.016,
+              "r": 0.003,
+              "penMm": 0.291,
+              "followTip": true
+            },
+            {
+              "id": "stretcher-joint-1",
+              "bone": "stretcher",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": -0.225,
+              "cy": 0.12,
+              "rx": 0.0085,
+              "ry": 0.0095
+            },
+            {
+              "id": "back-post-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.201,
+              "y": 0.46,
+              "w": 0.022,
+              "h": 0.405,
+              "r": 0.008,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "back-finial-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.38,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": -0.19,
+              "cy": 0.87,
+              "rx": 0.012,
+              "ry": 0.011,
+              "penMm": 0.3
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.52,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.185,
+              "y": 0.674,
+              "w": 0.37,
+              "h": 0.168,
+              "r": 0.009,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "back-lower-rail",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.185,
+              "y": 0.57,
+              "w": 0.37,
+              "h": 0.06,
+              "r": 0.006,
+              "penMm": 0.25,
+              "followTip": true
+            },
+            {
+              "id": "back-panel-line",
+              "bone": "back",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.762
+                ],
+                [
+                  0.17,
+                  0.762
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "seat-grain",
+              "bone": "seat",
+              "role": "texture",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "path",
+              "d": "M -0.14 0.452 C -0.07 0.455 0.0 0.449 0.08 0.453 M 0.02 0.44 C 0.08 0.443 0.12 0.437 0.17 0.441"
+            }
+          ],
+          "plan": [
+            {
+              "id": "seat-pad",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "path",
+              "d": "M 0.012 0 L 0.40 0 C 0.416 0 0.426 -0.004 0.428 -0.014 C 0.43 -0.022 0.424 -0.028 0.414 -0.028 L 0.012 -0.028 C 0.004 -0.028 0 -0.022 0 -0.014 C 0 -0.006 0.004 0 0.012 0 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.215,
+                "z1": 0.215
+              },
+              "penMm": 0.35
+            },
+            {
+              "id": "seat-edge",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.06,
+                  -0.195
+                ],
+                [
+                  0.44,
+                  -0.195
+                ],
+                [
+                  0.44,
+                  0.195
+                ],
+                [
+                  0.06,
+                  0.195
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-grain",
+              "bone": "seat",
+              "role": "texture",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-beech",
+              "material": "beech-timber",
+              "kind": "path",
+              "d": "M 0.12 -0.15 C 0.17 -0.14 0.24 -0.16 0.3 -0.15 M 0.15 0.05 C 0.22 0.06 0.3 0.04 0.38 0.05"
+            },
+            {
+              "id": "back-panel",
+              "bone": "back",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.52,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": 0.215,
+              "y": -0.02,
+              "w": 0.17,
+              "h": 0.028,
+              "r": 0.009,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.185,
+                "z1": 0.185
+              },
+              "penMm": 0.35
+            },
+            {
+              "id": "back-panel-line",
+              "bone": "back",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.041,
+                  -0.17
+                ],
+                [
+                  0.041,
+                  0.17
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-post-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.066,
+              "y0": 0.19,
+              "x1": 0.031,
+              "y1": 0.19,
+              "r0": 0.013,
+              "r1": 0.009,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "back-finial-0",
+              "bone": "back",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.38,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 0.03,
+              "cy": 0.19,
+              "rx": 0.012,
+              "ry": 0.012,
+              "penMm": 0.3
+            },
+            {
+              "id": "leg-front-tube-0",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": 0.2395,
+              "x1": 0.404,
+              "y1": 0.19,
+              "r0": 0.0125,
+              "r1": 0.0095,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-tube-0",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": 0.23,
+              "x1": 0.0647,
+              "y1": 0.18,
+              "r0": 0.0125,
+              "r1": 0.0095,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-foot-front-0",
+              "bone": "leg-front",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.42,
+              "cy": 0.2405,
+              "rx": 0.0115,
+              "ry": 0.0115,
+              "penMm": 0.291
+            },
+            {
+              "id": "leg-foot-rear-0",
+              "bone": "leg-rear",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.05,
+              "cy": 0.23,
+              "rx": 0.0115,
+              "ry": 0.0115,
+              "penMm": 0.291
+            },
+            {
+              "id": "stretcher-tube-0",
+              "bone": "stretcher",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.054,
+              "y0": 0.225,
+              "x1": 0.416,
+              "y1": 0.225,
+              "r0": 0.007,
+              "r1": 0.007,
+              "penMm": 0.25
+            },
+            {
+              "id": "back-post-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.42,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.066,
+              "y0": -0.19,
+              "x1": 0.031,
+              "y1": -0.19,
+              "r0": 0.013,
+              "r1": 0.009,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "back-finial-1",
+              "bone": "back",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.38,
+              "region": "back-beech",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 0.03,
+              "cy": -0.19,
+              "rx": 0.012,
+              "ry": 0.012,
+              "penMm": 0.3
+            },
+            {
+              "id": "leg-front-tube-1",
+              "bone": "leg-front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.42,
+              "y0": -0.2395,
+              "x1": 0.404,
+              "y1": -0.19,
+              "r0": 0.0125,
+              "r1": 0.0095,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-rear-tube-1",
+              "bone": "leg-rear",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.05,
+              "y0": -0.23,
+              "x1": 0.0647,
+              "y1": -0.18,
+              "r0": 0.0125,
+              "r1": 0.0095,
+              "penMm": 0.3,
+              "followTip": true
+            },
+            {
+              "id": "leg-foot-front-1",
+              "bone": "leg-front",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.42,
+              "cy": -0.2405,
+              "rx": 0.0115,
+              "ry": 0.0115,
+              "penMm": 0.291
+            },
+            {
+              "id": "leg-foot-rear-1",
+              "bone": "leg-rear",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "ellipse",
+              "cx": 0.05,
+              "cy": -0.23,
+              "rx": 0.0115,
+              "ry": 0.0115,
+              "penMm": 0.291
+            },
+            {
+              "id": "stretcher-tube-1",
+              "bone": "stretcher",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-tube",
+              "material": "steel-tube",
+              "kind": "capsule",
+              "x0": 0.054,
+              "y0": -0.225,
+              "x1": 0.416,
+              "y1": -0.225,
+              "r0": 0.007,
+              "r1": 0.007,
+              "penMm": 0.25
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 17.6 x 22.0 mm: padded beech seat on an apron, two splayed tubular legs (near and far legs coincide), a stretcher and a back post leaning 5 degrees with panel and lower rail.",
-            "de": "Seitenansicht 17,6 x 22,0 mm: gepolsterter Buchensitz auf Zarge, zwei gespreizte Rohrbeine (nahe und ferne Beine fallen zusammen), Querstrebe und ein um 5 Grad geneigter Rückenpfosten mit Rückenbrett und unterer Leiste."
+            "en": "Side elevation 17.6 x 22.0 mm: padded beech seat on an apron, two splayed tubular legs (near and far legs coincide), a stretcher and a back post leaning 5 degrees with panel and lower rail. Front view: the seat pad over its apron, the front legs splayed outward to their feet with the rear legs just behind them, the stretcher joints, the two back posts with finials and the back panel and lower rail between them. Plan: the seat pad with edge line and grain, the back panel and posts across the rear edge and, outside the seat, the stretcher tubes and the four round feet.",
+            "de": "Seitenansicht 17,6 x 22,0 mm: gepolsterter Buchensitz auf Zarge, zwei gespreizte Rohrbeine (nahe und ferne Beine fallen zusammen), Querstrebe und ein um 5 Grad geneigter Rückenpfosten mit Rückenbrett und unterer Leiste. Vorderansicht: das Sitzpolster über der Zarge, die nach außen gespreizten Vorderbeine bis zu den Füßen mit den Hinterbeinen knapp dahinter, die Strebenverbindungen, die beiden Lehnenpfosten mit Endknöpfen und dazwischen Lehnenfüllung und untere Querstrebe. Grundriss: das Sitzpolster mit Kantenlinie und Maserung, Lehnenfüllung und Pfosten am hinteren Rand und außerhalb des Sitzes die Strebenrohre und die vier runden Füße."
           },
           "retained": {
             "en": "Seat pad with rounded edge, apron with line, back post with finial, back panel and rail, tube legs with ferrules and foot pads, rear knuckle, stretcher with joints.",
@@ -1226,22 +3095,24 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "contact-rear",
-          "contact-front"
+          "contact-rear-left",
+          "contact-rear-right",
+          "contact-front-left",
+          "contact-front-right"
         ],
         "thermal": {
           "regions": {
             "seat-beech": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "back-beech": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "steel-tube": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1266,22 +3137,24 @@
         },
         "ground": "auto",
         "contacts": [
-          "contact-rear",
-          "contact-front"
+          "contact-rear-left",
+          "contact-rear-right",
+          "contact-front-left",
+          "contact-front-right"
         ],
         "thermal": {
           "regions": {
             "seat-beech": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "back-beech": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "steel-tube": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1306,21 +3179,22 @@
         },
         "ground": "auto",
         "contacts": [
-          "contact-rear"
+          "contact-rear-left",
+          "contact-rear-right"
         ],
         "thermal": {
           "regions": {
             "seat-beech": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "back-beech": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "steel-tube": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1346,8 +3220,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "contact-rear",
-          "contact-front"
+          "contact-rear-left",
+          "contact-rear-right",
+          "contact-front-left",
+          "contact-front-right"
         ],
         "thermal": {
           "regions": {
@@ -1368,7 +3244,7 @@
               }
             },
             "steel-tube": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.85
             }
           },
@@ -1418,8 +3294,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "contact-rear",
-          "contact-front"
+          "contact-rear-left",
+          "contact-rear-right",
+          "contact-front-left",
+          "contact-front-right"
         ],
         "thermal": {
           "regions": {
@@ -1440,7 +3318,7 @@
               }
             },
             "steel-tube": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.85
             }
           },
@@ -1522,12 +3400,22 @@
         ],
         "contacts": [
           {
-            "anchor": "contact-rear",
+            "anchor": "contact-rear-left",
             "fromS": 0,
             "toS": 2.8
           },
           {
-            "anchor": "contact-front",
+            "anchor": "contact-rear-right",
+            "fromS": 0,
+            "toS": 2.8
+          },
+          {
+            "anchor": "contact-front-left",
+            "fromS": 0,
+            "toS": 2.8
+          },
+          {
+            "anchor": "contact-front-right",
             "fromS": 0,
             "toS": 2.8
           }
@@ -1707,7 +3595,7 @@
           "en": "The chair tips back onto its rear feet and returns; the front feet lift and touch down again.",
           "de": "Der Stuhl kippt auf die hinteren Füße und kehrt zurück; die vorderen Füße heben ab und setzen wieder auf."
         },
-        "durationS": 3.0,
+        "durationS": 3,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1728,26 +3616,41 @@
             "ease": "smooth"
           },
           {
-            "t": 3.0,
+            "t": 3,
             "pose": "upright-empty",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "contact-rear",
+            "anchor": "contact-rear-left",
             "fromS": 0,
-            "toS": 3.0
+            "toS": 3
           },
           {
-            "anchor": "contact-front",
+            "anchor": "contact-rear-right",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-front-left",
             "fromS": 0,
             "toS": 0.6
           },
           {
-            "anchor": "contact-front",
+            "anchor": "contact-front-right",
+            "fromS": 0,
+            "toS": 0.6
+          },
+          {
+            "anchor": "contact-front-left",
             "fromS": 2.2,
-            "toS": 3.0
+            "toS": 3
+          },
+          {
+            "anchor": "contact-front-right",
+            "fromS": 2.2,
+            "toS": 3
           }
         ],
         "phases": [
@@ -1772,7 +3675,7 @@
           {
             "id": "return",
             "fromS": 2.2,
-            "toS": 3.0,
+            "toS": 3,
             "title": {
               "en": "Returning",
               "de": "Zurückkehren"
@@ -1784,19 +3687,37 @@
             "t": 0.6,
             "kind": "contact-off",
             "title": {
-              "en": "Front feet lift",
-              "de": "Vordere Füße heben ab"
+              "en": "Front feet lift (left)",
+              "de": "Vordere Füße heben ab (links)"
             },
-            "target": "contact-front"
+            "target": "contact-front-left"
+          },
+          {
+            "t": 0.6,
+            "kind": "contact-off",
+            "title": {
+              "en": "Front feet lift (right)",
+              "de": "Vordere Füße heben ab (rechts)"
+            },
+            "target": "contact-front-right"
           },
           {
             "t": 2.2,
             "kind": "contact-on",
             "title": {
-              "en": "Front feet touch down",
-              "de": "Vordere Füße setzen auf"
+              "en": "Front feet touch down (left)",
+              "de": "Vordere Füße setzen auf (links)"
             },
-            "target": "contact-front"
+            "target": "contact-front-left"
+          },
+          {
+            "t": 2.2,
+            "kind": "contact-on",
+            "title": {
+              "en": "Front feet touch down (right)",
+              "de": "Vordere Füße setzen auf (rechts)"
+            },
+            "target": "contact-front-right"
           }
         ],
         "tracks": []
@@ -1904,7 +3825,7 @@
               "kind": "metal",
               "material": "steel-tube",
               "thicknessM": 0.002,
-              "resistanceM2KW": 4e-05,
+              "resistanceM2KW": 0.00004,
               "source": "literature",
               "heatCapacityJM2K": 7020,
               "reference": "iso-10456-2007"
@@ -1942,8 +3863,8 @@
       "supports": [],
       "assumptions": [
         {
-          "en": "Contacts come from the pose or clip; tipping is a rigid rotation about the rear feet.",
-          "de": "Kontakte kommen aus Pose oder Clip; Kippen ist eine starre Drehung um die hinteren Füße."
+          "en": "Contacts come from the pose or clip, one per leg (rear feet at z = +-0.23 m, front feet at z = +-0.245 m); tipping is a rigid rotation about the two rear feet.",
+          "de": "Kontakte kommen aus Pose oder Clip, einer je Bein (hintere Füße bei z = +-0,23 m, vordere Füße bei z = +-0,245 m); Kippen ist eine starre Drehung um die beiden hinteren Füße."
         },
         {
           "en": "Near and far legs coincide in elevation and are drawn once; the occupant is a 75 kg point load on the seat plus a 60 N lean on the backrest (authored estimates).",
@@ -1955,9 +3876,6 @@
     "presentation": {
       "defaultPose": "upright-empty",
       "defaultClip": "tip-back",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

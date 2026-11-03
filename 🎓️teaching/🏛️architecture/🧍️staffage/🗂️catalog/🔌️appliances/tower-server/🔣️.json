@@ -1,0 +1,1890 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "tower-server",
+    "category": "appliances",
+    "title": {
+      "en": "Office Tower Server",
+      "de": "Büro-Tower-Server"
+    },
+    "summary": {
+      "en": "A single office tower server, 0.45 m high and 0.45 m deep: about 90 W at typical load and 200 W rated, a quarter of it through the case surfaces and the rest with the exhaust air of its rear fan, 6 W in standby.",
+      "de": "Ein einzelner Büro-Tower-Server, 0,45 m hoch und 0,45 m tief: etwa 90 W bei typischer Last und 200 W Nennlast, ein Viertel davon über die Gehäuseflächen, der Rest mit der Abluft des Rücklüfters, 6 W im Bereitschaftsbetrieb."
+    },
+    "tags": [
+      "server",
+      "computer",
+      "office-equipment",
+      "internal-gain",
+      "electrical",
+      "heat-source"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (pp)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "wilkins-hosni-2011",
+          "citation": "Wilkins, C. K., Hosni, M. H. (2011). Plug load design factors. ASHRAE Journal 53(5), 30-34 (measured heat gains of laptops, displays and other office equipment in active, idle and sleep states)."
+        },
+        {
+          "id": "hosni-1999",
+          "citation": "Hosni, M. H., Jones, B. W., Xu, H. (1999). Experimental results for heat gain and radiant/convective split from equipment in buildings. ASHRAE Transactions 105(2), 527-539."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        },
+        {
+          "id": "energy-star-servers-v4",
+          "citation": "ENERGY STAR Program Requirements for Computer Servers, Version 4.0 (2019) (idle state power of one-socket servers)."
+        },
+        {
+          "id": "ashrae-tc99-2021",
+          "citation": "ASHRAE TC 9.9 (2021). Thermal Guidelines for Data Processing Environments, 5th ed. (air flow and temperature rise of IT equipment)."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of a single office tower server (pedestal class, for example one processor socket and two disks), 0.45 m high, 0.20 m wide and 0.45 m deep, 11 kg: a powder-coated steel case on four rubber feet, a perforated front bezel for the intake air, a perforated side panel over the processor heat sink, the power supply with its grille at the rear top and one rear fan. The sizes are rounded from this product class (authored estimate, no single product). The 200 W at level 1 are the rated load, the typical office load of 90 W is level 0.45 (an authored estimate in the 60 to 150 W class of measured small servers, Wilkins and Hosni 2011), standby 6 W follows the idle state of a powered-off but connected machine. All electrical power ends as heat in the room: about 51 W at the rated load leave through the case surfaces, the other 149 W leave with the exhaust air of the rear fan (0.016 m3/s, 7.8 K).",
+        "de": "Seitenansicht eines einzelnen Büro-Tower-Servers (Pedestal-Klasse, zum Beispiel ein Prozessorsockel und zwei Festplatten), 0,45 m hoch, 0,20 m breit und 0,45 m tief, 11 kg: ein pulverbeschichtetes Stahlgehäuse auf vier Gummifüßen, eine gelochte Frontblende für die Zuluft, eine gelochte Seitenwand über dem Prozessorkühler, das Netzteil mit seinem Gitter hinten oben und ein Lüfter an der Rückwand. Die Maße sind aus dieser Produktklasse gerundet (Schätzwert, kein einzelnes Produkt). Die 200 W auf Stufe 1 sind die Nennlast, die typische Bürolast von 90 W entspricht Stufe 0,45 (Schätzwert in der Klasse von 60 bis 150 W gemessener Kleinserver, Wilkins und Hosni 2011), der Bereitschaftsbetrieb mit 6 W folgt dem Zustand einer ausgeschalteten, aber vernetzten Maschine. Alle elektrische Leistung endet als Wärme im Raum: bei Nennlast verlassen etwa 51 W das Gehäuse über die Oberflächen, die übrigen 149 W gehen mit der Abluft des Rücklüfters (0,016 m3/s, 7,8 K) ab."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.45,
+      "widthM": 0.45,
+      "depthM": 0.2,
+      "massKg": 11.0
+    },
+    "materials": [
+      {
+        "id": "chassis-steel",
+        "title": {
+          "en": "Powder-coated steel",
+          "de": "Pulverbeschichteter Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 470,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "bezel-abs",
+        "title": {
+          "en": "Black ABS front bezel",
+          "de": "Schwarze ABS-Frontblende"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "rubber-foot",
+        "title": {
+          "en": "Rubber foot",
+          "de": "Gummifuß"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.15,
+        "specificHeatJKgK": 1800,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "case",
+      "bones": [
+        {
+          "id": "case",
+          "parent": null,
+          "title": {
+            "en": "Case with feet and components",
+            "de": "Gehäuse mit Füßen und Komponenten"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.45,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 11.0,
+            "comX": -0.02,
+            "comY": 0.2,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "feet-contact",
+        "bone": "case",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Feet on the floor",
+          "de": "Füße auf dem Boden"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.4,
+        "footprintWidthM": 0.17,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "rear-outlet",
+        "bone": "case",
+        "x": -0.225,
+        "y": 0.3,
+        "kind": "emitter",
+        "title": {
+          "en": "Rear fan exhaust",
+          "de": "Abluft des Rücklüfters"
+        }
+      },
+      {
+        "id": "case-top",
+        "bone": "case",
+        "x": -0.1,
+        "y": 0.45,
+        "kind": "emitter",
+        "title": {
+          "en": "Warm air above the case",
+          "de": "Warme Luft über dem Gehäuse"
+        }
+      }
+    ],
+    "symbols": [],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-front",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.16,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "case-side",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.225 0.012 L 0.225 0.012 L 0.225 0.443 C 0.225 0.448 0.222 0.45 0.217 0.45 L -0.217 0.45 C -0.222 0.45 -0.225 0.448 -0.225 0.443 Z",
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "front-bezel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": 0.2,
+              "y": 0.024,
+              "w": 0.025,
+              "h": 0.414,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "rear-panel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.225,
+              "y": 0.012,
+              "w": 0.012,
+              "h": 0.438,
+              "region": "rear-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "psu-vent",
+              "bone": "case",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.225,
+              "y": 0.33,
+              "w": 0.026,
+              "h": 0.108,
+              "region": "psu-vent",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "cpu-grille",
+              "bone": "case",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.202,
+              "w": 0.17,
+              "h": 0.13,
+              "region": "cpu-grille",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "grille-slits",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "kind": "path",
+              "d": "M -0.0400 0.2120 L -0.0400 0.3220 M -0.0100 0.2120 L -0.0100 0.3220 M 0.0200 0.2120 L 0.0200 0.3220 M 0.0500 0.2120 L 0.0500 0.3220 M 0.0800 0.2120 L 0.0800 0.3220",
+              "region": "cpu-grille"
+            },
+            {
+              "id": "psu-slits",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "kind": "path",
+              "d": "M -0.2250 0.3420 L -0.1990 0.3420 M -0.2250 0.3510 L -0.1990 0.3510 M -0.2250 0.3600 L -0.1990 0.3600 M -0.2250 0.3690 L -0.1990 0.3690 M -0.2250 0.3780 L -0.1990 0.3780 M -0.2250 0.3870 L -0.1990 0.3870 M -0.2250 0.3960 L -0.1990 0.3960 M -0.2250 0.4050 L -0.1990 0.4050 M -0.2250 0.4140 L -0.1990 0.4140 M -0.2250 0.4230 L -0.1990 0.4230 M -0.2250 0.4320 L -0.1990 0.4320",
+              "region": "psu-vent"
+            },
+            {
+              "id": "intake-slits",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "kind": "path",
+              "d": "M 0.2000 0.0620 L 0.2250 0.0620 M 0.2000 0.0920 L 0.2250 0.0920 M 0.2000 0.1220 L 0.2250 0.1220 M 0.2000 0.1520 L 0.2250 0.1520 M 0.2000 0.1820 L 0.2250 0.1820 M 0.2000 0.2120 L 0.2250 0.2120 M 0.2000 0.2420 L 0.2250 0.2420 M 0.2000 0.2720 L 0.2250 0.2720 M 0.2000 0.3020 L 0.2250 0.3020 M 0.2000 0.3320 L 0.2250 0.3320 M 0.2000 0.3620 L 0.2250 0.3620 M 0.2000 0.3920 L 0.2250 0.3920",
+              "region": "front-bezel"
+            },
+            {
+              "id": "fan-ring",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "kind": "ellipse",
+              "cx": -0.222,
+              "cy": 0.2,
+              "rx": 0.003,
+              "ry": 0.05,
+              "region": "rear-panel"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.06,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "front-bezel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.012,
+              "w": 0.2,
+              "h": 0.438,
+              "r": 0.005,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "wall-left",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.092,
+              "y": 0.012,
+              "w": 0.008,
+              "h": 0.438,
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "wall-right",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.012,
+              "w": 0.008,
+              "h": 0.438,
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "intake-mesh",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.05,
+              "w": 0.17,
+              "h": 0.34,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "intake-ribs",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "kind": "path",
+              "d": "M -0.0850 0.0620 L 0.0850 0.0620 M -0.0850 0.0920 L 0.0850 0.0920 M -0.0850 0.1220 L 0.0850 0.1220 M -0.0850 0.1520 L 0.0850 0.1520 M -0.0850 0.1820 L 0.0850 0.1820 M -0.0850 0.2120 L 0.0850 0.2120 M -0.0850 0.2420 L 0.0850 0.2420 M -0.0850 0.2720 L 0.0850 0.2720 M -0.0850 0.3020 L 0.0850 0.3020 M -0.0850 0.3320 L 0.0850 0.3320 M -0.0850 0.3620 L 0.0850 0.3620 M -0.0850 0.3920 L 0.0850 0.3920",
+              "region": "front-bezel"
+            },
+            {
+              "id": "drive-bay",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.395,
+              "w": 0.14,
+              "h": 0.03,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "power-button",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.03,
+              "w": 0.012,
+              "h": 0.012,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-sheet",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.225,
+              "y": -0.1,
+              "w": 0.45,
+              "h": 0.2,
+              "r": 0.004,
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "front-bezel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": 0.2,
+              "y": -0.1,
+              "w": 0.025,
+              "h": 0.2,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "rear-panel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.225,
+              "y": -0.1,
+              "w": 0.012,
+              "h": 0.2,
+              "region": "rear-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "psu-vent",
+              "bone": "case",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.085,
+              "w": 0.09,
+              "h": 0.17,
+              "region": "psu-vent",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "psu-top-slits",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "kind": "path",
+              "d": "M -0.1950 -0.0750 L -0.1950 0.0750 M -0.1800 -0.0750 L -0.1800 0.0750 M -0.1650 -0.0750 L -0.1650 0.0750 M -0.1500 -0.0750 L -0.1500 0.0750 M -0.1350 -0.0750 L -0.1350 0.0750 M -0.1200 -0.0750 L -0.1200 0.0750",
+              "region": "psu-vent"
+            },
+            {
+              "id": "cpu-edge",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.092,
+              "w": 0.17,
+              "h": 0.008,
+              "region": "cpu-grille",
+              "material": "chassis-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.45 m side view, 9 mm tall on paper: a square-ish steel case on two visible rubber feet, a dark front bezel on the right and a rear panel with the power supply on the left.",
+            "de": "Eine Seitenansicht von 0,45 m, auf Papier 9 mm hoch: ein fast quadratisches Stahlgehäuse auf zwei sichtbaren Gummifüßen, rechts eine dunkle Frontblende, links eine Rückwand mit dem Netzteil."
+          },
+          "retained": {
+            "en": "Overall height 0.45 m, depth 0.45 m, the 12 mm feet, the 25 mm front bezel, the processor grille and the power supply grille at their true places.",
+            "de": "Gesamthöhe 0,45 m, Tiefe 0,45 m, die 12 mm hohen Füße, die 25 mm dicke Frontblende, das Prozessorgitter und das Netzteilgitter an ihren wahren Stellen."
+          },
+          "merged": {
+            "en": "The two feet at each end are one side-view foot each; the case side is one sheet.",
+            "de": "Die je zwei Füße an einem Ende sind in der Seitenansicht ein Fuß; die Gehäuseseite ist ein Blech."
+          },
+          "omitted": {
+            "en": "Ports, drive bays, the power button and the cable, which lie outside the silhouette or behind the side sheet.",
+            "de": "Anschlüsse, Laufwerksschächte, Einschalter und Kabel, die außerhalb der Silhouette oder hinter dem Seitenblech liegen."
+          },
+          "thinElements": {
+            "en": "The intake slits are 25 mm long detail strokes of 0.13 mm; the grille slits are 0.11 m long.",
+            "de": "Die Einlassschlitze sind 25 mm lange Detailstriche von 0,13 mm; die Gitterschlitze sind 0,11 m lang."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Case 0.55, bezel 0.18, grilles 0.38; one body pen of 0.18 mm and one detail pen of 0.13 mm.",
+            "de": "Gehäuse 0,55, Blende 0,18, Gitter 0,38; ein Körperstift von 0,18 mm und ein Detailstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "Every thermal region has its own shape: side panels, bezel, rear panel, power supply grille, processor grille and the feet.",
+            "de": "Jede thermische Region hat eine eigene Form: Seitenwände, Blende, Rückwand, Netzteilgitter, Prozessorgitter und die Füße."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-front",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.15,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "case-side",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.225 0.012 L 0.225 0.012 L 0.225 0.443 C 0.225 0.448 0.222 0.45 0.217 0.45 L -0.217 0.45 C -0.222 0.45 -0.225 0.448 -0.225 0.443 Z",
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "front-bezel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": 0.195,
+              "y": 0.024,
+              "w": 0.03,
+              "h": 0.414,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "rear-panel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.225,
+              "y": 0.012,
+              "w": 0.014,
+              "h": 0.438,
+              "region": "rear-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "psu-vent",
+              "bone": "case",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.225,
+              "y": 0.33,
+              "w": 0.03,
+              "h": 0.108,
+              "region": "psu-vent",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "cpu-grille",
+              "bone": "case",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.202,
+              "w": 0.17,
+              "h": 0.13,
+              "region": "cpu-grille",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "grille-slits",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "kind": "path",
+              "d": "M -0.0400 0.2120 L -0.0400 0.3220 M 0.0000 0.2120 L 0.0000 0.3220 M 0.0400 0.2120 L 0.0400 0.3220 M 0.0800 0.2120 L 0.0800 0.3220",
+              "region": "cpu-grille"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.012,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "front-bezel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.012,
+              "w": 0.2,
+              "h": 0.438,
+              "r": 0.006,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "wall-left",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.088,
+              "y": 0.012,
+              "w": 0.012,
+              "h": 0.438,
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "wall-right",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.012,
+              "w": 0.012,
+              "h": 0.438,
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "intake-mesh",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.08,
+              "y": 0.05,
+              "w": 0.16,
+              "h": 0.34,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-sheet",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.225,
+              "y": -0.1,
+              "w": 0.45,
+              "h": 0.2,
+              "r": 0.005,
+              "region": "side-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "front-bezel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": 0.195,
+              "y": -0.1,
+              "w": 0.03,
+              "h": 0.2,
+              "region": "front-bezel",
+              "material": "bezel-abs"
+            },
+            {
+              "id": "rear-panel",
+              "bone": "case",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.225,
+              "y": -0.1,
+              "w": 0.014,
+              "h": 0.2,
+              "region": "rear-panel",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "psu-vent",
+              "bone": "case",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.085,
+              "w": 0.09,
+              "h": 0.17,
+              "region": "psu-vent",
+              "material": "chassis-steel"
+            },
+            {
+              "id": "cpu-edge",
+              "bone": "case",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.088,
+              "w": 0.17,
+              "h": 0.012,
+              "region": "cpu-grille",
+              "material": "chassis-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.45 m side view, 4.5 mm tall on paper: a case with a dark front bezel, a rear panel, a power supply block and a grille patch.",
+            "de": "Eine Seitenansicht von 0,45 m, auf Papier 4,5 mm hoch: ein Gehäuse mit dunkler Frontblende, Rückwand, Netzteilblock und Gitterfeld."
+          },
+          "retained": {
+            "en": "Depth, height, feet, the bezel, the rear panel, the power supply and the processor grille.",
+            "de": "Tiefe, Höhe, Füße, Blende, Rückwand, Netzteil und Prozessorgitter."
+          },
+          "merged": {
+            "en": "Both feet at each end are one block each.",
+            "de": "Je zwei Füße an einem Ende sind ein Block."
+          },
+          "omitted": {
+            "en": "Intake slits, power supply slits and the fan ring.",
+            "de": "Einlassschlitze, Netzteilschlitze und der Lüfterring."
+          },
+          "thinElements": {
+            "en": "Bezel and rear panel are widened to 2.5 mm and 1.4 mm so that they reach the feature width.",
+            "de": "Blende und Rückwand sind auf 2,5 mm und 1,4 mm verbreitert, damit sie die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Case 0.55, bezel 0.18, grilles 0.38; four slit strokes of 0.13 mm in the grille patch.",
+            "de": "Gehäuse 0,55, Blende 0,18, Gitter 0,38; vier Schlitzstriche von 0,13 mm im Gitterfeld."
+          },
+          "overlays": {
+            "en": "As at 1:50: one shape per thermal region.",
+            "de": "Wie bei 1:50: eine Form je thermischer Region."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plinth",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.024 L -0.2 0.024 Z",
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "case",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.225 0.012 L 0.225 0.012 L 0.225 0.443 C 0.225 0.448 0.222 0.45 0.217 0.45 L -0.217 0.45 C -0.222 0.45 -0.225 0.448 -0.225 0.443 Z",
+              "regions": [
+                "side-panel",
+                "rear-panel",
+                "front-bezel",
+                "psu-vent",
+                "cpu-grille"
+              ],
+              "material": "chassis-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "plinth",
+              "bone": "case",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.08 0 L 0.08 0 L 0.08 0.024 L -0.08 0.024 Z",
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "case",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.012,
+              "w": 0.2,
+              "h": 0.438,
+              "material": "chassis-steel",
+              "regions": [
+                "front-bezel",
+                "side-panel"
+              ]
+            }
+          ],
+          "plan": [
+            {
+              "id": "top",
+              "bone": "case",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.225,
+              "y": -0.1,
+              "w": 0.45,
+              "h": 0.2,
+              "material": "chassis-steel",
+              "regions": [
+                "side-panel",
+                "rear-panel",
+                "front-bezel",
+                "psu-vent",
+                "cpu-grille"
+              ]
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A block 2.25 mm wide and 2.25 mm high on paper: a case on a low plinth.",
+            "de": "Ein Block von 2,25 mm Breite und 2,25 mm Höhe auf Papier: ein Gehäuse auf einem niedrigen Sockel."
+          },
+          "retained": {
+            "en": "Height 0.45 m, depth 0.45 m.",
+            "de": "Höhe 0,45 m, Tiefe 0,45 m."
+          },
+          "merged": {
+            "en": "Case sheet, bezel, rear panel, power supply and processor grille are one case shape listing all five regions; the four feet are one plinth.",
+            "de": "Gehäuseblech, Blende, Rückwand, Netzteil und Prozessorgitter sind eine Gehäuseform mit allen fünf Regionen; die vier Füße sind ein Sockel."
+          },
+          "omitted": {
+            "en": "Slits, fan ring, grilles as separate shapes.",
+            "de": "Schlitze, Lüfterring und Gitter als eigene Formen."
+          },
+          "thinElements": {
+            "en": "The feet are drawn as a 24 mm plinth so that they reach the feature width.",
+            "de": "Die Füße sind als 24 mm hoher Sockel gezeichnet, damit sie die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Case 0.5, plinth 0.3; one body pen of 0.18 mm.",
+            "de": "Gehäuse 0,5, Sockel 0,3; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The case shape lists the five case regions as merged regions; the feet are their own region.",
+            "de": "Die Gehäuseform führt die fünf Gehäuseregionen zusammengeführt; die Füße sind eine eigene Region."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the server is a 0.9 mm square with no printable feature; its thermal regions cannot be told apart.",
+          "de": "Bei 1:500 ist der Server ein Quadrat von 0,9 mm ohne druckbares Merkmal; seine thermischen Regionen sind nicht zu unterscheiden."
+        },
+        "limitingFeature": {
+          "en": "Front bezel depth of 25 mm",
+          "de": "Tiefe der Frontblende von 25 mm"
+        },
+        "limitingSizeM": 0.025,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "poses": [
+      {
+        "id": "typical",
+        "title": {
+          "en": "Typical office load",
+          "de": "Typische Büroauslastung"
+        },
+        "description": {
+          "en": "90 W: the fan blows air 3.5 K warmer out of the rear, the power supply grille and the processor grille are the warm spots, the case sides are a few kelvin above the room.",
+          "de": "90 W: der Lüfter bläst um 3,5 K wärmere Luft nach hinten aus, Netzteilgitter und Prozessorgitter sind die warmen Stellen, die Gehäuseseiten liegen einige Kelvin über der Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "side-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cpu-grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "front-bezel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "psu-vent": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rear-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-exhaust": 1,
+            "case-plume": 1
+          },
+          "operating": {
+            "power": 0.45
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "rated",
+        "title": {
+          "en": "Rated load",
+          "de": "Nennlast"
+        },
+        "description": {
+          "en": "200 W: every surface runs warmer, the exhaust air is 7.8 K above the room.",
+          "de": "200 W: alle Flächen werden wärmer, die Abluft liegt 7,8 K über der Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "side-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cpu-grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "front-bezel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "psu-vent": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rear-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-exhaust": 1,
+            "case-plume": 1
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "standby",
+        "title": {
+          "en": "Standby",
+          "de": "Bereitschaft"
+        },
+        "description": {
+          "en": "6 W: the case is within a kelvin of the room, the fan stands still.",
+          "de": "6 W: das Gehäuse liegt innerhalb eines Kelvin der Raumtemperatur, der Lüfter steht."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "side-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cpu-grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "front-bezel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "psu-vent": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rear-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-exhaust": 0,
+            "case-plume": 0
+          },
+          "operating": {
+            "power": 0.03
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "off",
+        "title": {
+          "en": "Switched off",
+          "de": "Ausgeschaltet"
+        },
+        "description": {
+          "en": "Unplugged, room temperature.",
+          "de": "Vom Netz getrennt, Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "side-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cpu-grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "front-bezel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "psu-vent": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rear-panel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-exhaust": 0,
+            "case-plume": 0
+          },
+          "operating": {
+            "power": 0
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "power-up",
+        "title": {
+          "en": "Power up and warm up",
+          "de": "Einschalten und aufwärmen"
+        },
+        "description": {
+          "en": "Cold start: the server is switched on after five seconds, loads to the typical 90 W and the case warms up over five minutes.",
+          "de": "Kaltstart: der Server wird nach fünf Sekunden eingeschaltet, läuft mit typischen 90 W und das Gehäuse wärmt sich über fünf Minuten auf."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "typical",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "typical",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "feet-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "On, warming up",
+              "de": "An, wärmt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Switched on",
+              "de": "Eingeschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.45
+              }
+            ]
+          },
+          {
+            "target": "emitter:rear-exhaust",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:case-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "load-surge",
+        "title": {
+          "en": "Load surge to rated",
+          "de": "Lastspitze bis Nennlast"
+        },
+        "description": {
+          "en": "The server runs at the typical 90 W, takes a batch job after two seconds and rises to 200 W for four seconds before it settles back; the fan keeps its speed, a looping clip for the exhaust air.",
+          "de": "Der Server läuft mit typischen 90 W, übernimmt nach zwei Sekunden einen Stapelauftrag und steigt für vier Sekunden auf 200 W, bevor er sich wieder beruhigt; der Lüfter behält seine Drehzahl, ein Schleifenclip für die Abluft."
+        },
+        "durationS": 8,
+        "fps": 1,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "typical",
+            "ease": "step"
+          },
+          {
+            "t": 2,
+            "pose": "rated",
+            "ease": "step"
+          },
+          {
+            "t": 6,
+            "pose": "typical",
+            "ease": "step"
+          },
+          {
+            "t": 8,
+            "pose": "typical",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "feet-contact",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "typical",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Typical load",
+              "de": "Typische Last"
+            }
+          },
+          {
+            "id": "surge",
+            "fromS": 2,
+            "toS": 6,
+            "title": {
+              "en": "Rated load",
+              "de": "Nennlast"
+            }
+          },
+          {
+            "id": "settle",
+            "fromS": 6,
+            "toS": 8,
+            "title": {
+              "en": "Back to typical",
+              "de": "Zurück zu typisch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "operating",
+            "title": {
+              "en": "Batch job starts",
+              "de": "Stapelauftrag startet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.45
+              },
+              {
+                "t": 2,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 0.45
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "power",
+          "title": {
+            "en": "Electrical power",
+            "de": "Elektrische Leistung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.03,
+              "title": {
+                "en": "Standby (6 W)",
+                "de": "Bereitschaft (6 W)"
+              }
+            },
+            {
+              "v": 0.45,
+              "title": {
+                "en": "Typical office load (90 W)",
+                "de": "Typische Büroauslastung (90 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Rated load (200 W)",
+                "de": "Nennlast (200 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "side-panel",
+          "title": {
+            "en": "Side panels, powder-coated sheet steel",
+            "de": "Seitenwände, pulverbeschichtetes Stahlblech"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chassis-steel",
+          "areaM2": 0.38,
+          "characteristicLengthM": 0.45,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Powder-coated steel sheet 0.8 mm",
+                "de": "Pulverbeschichtetes Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "chassis-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000016,
+              "heatCapacityJM2K": 3800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3800,
+          "operating": {
+            "key": "power",
+            "heatW": 22
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "cpu-grille",
+          "title": {
+            "en": "Perforated side grille over the processor heat sink",
+            "de": "Gelochtes Seitengitter über dem Prozessorkühler"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chassis-steel",
+          "areaM2": 0.02,
+          "characteristicLengthM": 0.12,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "grille",
+              "title": {
+                "en": "Perforated steel 0.8 mm",
+                "de": "Lochblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "chassis-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000016,
+              "heatCapacityJM2K": 1900,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 1900,
+          "operating": {
+            "key": "power",
+            "heatW": 4
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "front-bezel",
+          "title": {
+            "en": "Front bezel with the air intake",
+            "de": "Frontblende mit Lufteinlass"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "bezel-abs",
+          "areaM2": 0.09,
+          "characteristicLengthM": 0.4,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "bezel",
+              "title": {
+                "en": "ABS bezel 2.5 mm over a mesh",
+                "de": "ABS-Blende 2,5 mm über einem Gitter"
+              },
+              "kind": "polymer",
+              "material": "bezel-abs",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.014706,
+              "heatCapacityJM2K": 3300,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3300,
+          "operating": {
+            "key": "power",
+            "heatW": 5
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "psu-vent",
+          "title": {
+            "en": "Power supply with its exhaust grille",
+            "de": "Netzteil mit Abluftgitter"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chassis-steel",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.16,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "psu-shell",
+              "title": {
+                "en": "Power supply sheet 0.8 mm",
+                "de": "Netzteilblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "chassis-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000016,
+              "heatCapacityJM2K": 3800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3800,
+          "operating": {
+            "key": "power",
+            "heatW": 8
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "rear-panel",
+          "title": {
+            "en": "Rear panel with the fan exhaust and the ports",
+            "de": "Rückwand mit Lüfterausblas und Anschlüssen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chassis-steel",
+          "areaM2": 0.07,
+          "characteristicLengthM": 0.4,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "rear-sheet",
+              "title": {
+                "en": "Steel sheet 0.8 mm",
+                "de": "Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "chassis-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000016,
+              "heatCapacityJM2K": 3800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3800,
+          "operating": {
+            "key": "power",
+            "heatW": 10
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "feet",
+          "title": {
+            "en": "Four rubber feet",
+            "de": "Vier Gummifüße"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "rubber-foot",
+          "areaM2": 0.002,
+          "characteristicLengthM": 0.04,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.1,
+          "layers": [
+            {
+              "id": "foot",
+              "title": {
+                "en": "Rubber 12 mm",
+                "de": "Gummi 12 mm"
+              },
+              "kind": "polymer",
+              "material": "rubber-foot",
+              "thicknessM": 0.012,
+              "resistanceM2KW": 0.08,
+              "heatCapacityJM2K": 21600,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 21600,
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "rear-exhaust",
+          "kind": "fan",
+          "title": {
+            "en": "Exhaust air of the rear fan",
+            "de": "Abluft des Rücklüfters"
+          },
+          "anchor": "rear-outlet",
+          "directionDeg": 180,
+          "diameterM": 0.12,
+          "operatingKey": "power",
+          "volumeFlowM3S": 0.016,
+          "temperatureRiseK": 7.8,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "ashrae-tc99-2021"
+        },
+        {
+          "id": "case-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Free convection above the warm case",
+            "de": "Freie Konvektion über dem warmen Gehäuse"
+          },
+          "anchor": "case-top",
+          "directionDeg": 90,
+          "diameterM": 0.3,
+          "region": "psu-vent",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Every watt ends as heat in the room: at level 1 the case surfaces release 22 W (side panels), 4 W (processor grille), 5 W (front bezel), 8 W (power supply), 10 W (rear panel), together 49 W; the rear fan carries the other 151 W as 0.016 m3/s of air 7.8 K warmer than the room (0.016 m3/s x 1.2 kg/m3 x 1005 J/(kg K) x 7.8 K). The typical load of 90 W is level 0.45.",
+          "de": "Jedes Watt endet als Wärme im Raum: bei Stufe 1 geben die Gehäuseflächen 22 W (Seitenwände), 4 W (Prozessorgitter), 5 W (Frontblende), 8 W (Netzteil) und 10 W (Rückwand) ab, zusammen 49 W; der Rücklüfter führt die übrigen 151 W als 0,016 m3/s um 7,8 K wärmere Luft ab (0,016 m3/s x 1,2 kg/m3 x 1005 J/(kg K) x 7,8 K). Die typische Last von 90 W ist Stufe 0,45."
+        },
+        {
+          "en": "The air crosses the case from the front intake to the rear fan, perpendicular to the side elevation; the exhaust emitter sits at the rear wall and points backwards.",
+          "de": "Die Luft durchströmt das Gehäuse vom Einlass vorn zum Lüfter hinten, senkrecht zur Seitenansicht; der Abluft-Emitter sitzt an der Rückwand und zeigt nach hinten."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "feet-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid 11 kg body on four rubber feet; its centre of mass lies 0.02 m behind the case centre, inside the 0.4 m by 0.17 m footprint.",
+          "de": "Ein starrer Körper von 11 kg auf vier Gummifüßen; sein Schwerpunkt liegt 0,02 m hinter der Gehäusemitte, innerhalb der Standfläche von 0,4 m mal 0,17 m."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "typical",
+      "defaultClip": "power-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -61,3 +61,36 @@ test("verified archive batches retain bounded concurrency and drain accepted wor
 test("unpublished Rustup home roots refuse actual foreign containers before materialization",()=>repository.invoke(async original=>{
  const fs=await import("node:fs/promises"),implementation=await import("../📥️installation/🟦️.ts"),database=new Database(":memory:"),control=createIssuedResourceControlV1(original,"rustup:unpublished-homes",10000),temporary=await fs.mkdtemp(join(repository.root,"rh-"));try{for(const row of corpus.homeMaterialCases){expect(new Ajv({strict:true}).validate(schema.definitions.HomeMaterialCase,row)).toBe(true);const directory=join(temporary,String(corpus.homeMaterialCases.indexOf(row))),home=join(directory,"u"),cargo=join(directory,"c");await fs.mkdir(directory);if(row.rustup)await fs.mkdir(home);if(row.cargo)await fs.mkdir(cargo);const oracle=database.query<{accepted:number},[number,number]>("select not (?1 or ?2) accepted").get(Number(row.rustup),Number(row.cargo))!;expect(Boolean(oracle.accepted),row.name).toBe(row.accepted);if(row.accepted)await implementation.refuseUnpublishedRustupHomesV1(home,cargo,control);else await expect(implementation.refuseUnpublishedRustupHomesV1(home,cargo,control)).rejects.toThrow("Foreign Rustup material cannot be adopted");expect((await fs.readdir(directory)).sort()).toEqual([...(row.cargo?["c"]:[]),...(row.rustup?["u"]:[])]);}}finally{database.close();await fs.rm(temporary,{recursive:true,force:true});}
 }),10000);
+
+/** 💾 A Windows directory handle refuses fsync; publication still leaves the caller's file readable. */
+test("Rustup directory publication survives a refused directory fsync",async()=>{
+ const fs=await import("node:fs/promises"),os=await import("node:os"),path=await import("node:path"),{synchronizeRustupDirectoryV1}=await import("../📥️bootstrap/🟦️.ts");
+ const directory=await fs.mkdtemp(path.join(os.tmpdir(),"rustup-dir-")),file=path.join(directory,"receipt");
+ try{
+  await fs.writeFile(file,"pinned\n");
+  const handle=await fs.open(directory,"r");let refused=false;try{await handle.sync();}catch(error){const code=(error as NodeJS.ErrnoException).code;refused=code==="EPERM"||code==="EINVAL"||code==="ENOTSUP";}finally{await handle.close();}
+  if(process.platform==="win32")expect(refused).toBe(true);
+  await synchronizeRustupDirectoryV1(directory);
+  expect(await fs.readFile(file,"utf8")).toBe("pinned\n");
+ }finally{await fs.rm(directory,{recursive:true,force:true});}
+});
+
+/** 📜 A Windows tar census ends each name with a carriage return; the name admitted afterward is the portable path. */
+test("Rustup archive census drops a Windows carriage return before path admission",async()=>{
+ const implementation=await import("../📥️installation/🟦️.ts"),accepted=corpus.archivePaths.find(row=>row.accepted)!;
+ const census=accepted.path+"\r\n"+accepted.path+"\r\n",names=implementation.rustupArchiveNamesV1(census),oracle=census.trimEnd().replaceAll("\r\n","\n").split("\n");
+ expect([...names]).toEqual(oracle);
+ expect(names.every(name=>!name.includes("\r"))).toBe(true);
+ expect(implementation.rustupArchivePathV1(accepted.home,names[0]!,accepted.toolchain)).toBe(accepted.path);
+ expect(()=>implementation.rustupArchivePathV1(accepted.home,accepted.path+"\r",accepted.toolchain)).toThrow();
+});
+
+/** 🗃️ A compiler path that replaced the machine path still lists archives with the system tar. */
+test("Rustup archive listing keeps the system tar directory on a compiler path",async()=>{
+ const path=await import("node:path"),implementation=await import("../📥️installation/🟦️.ts");
+ const system=process.platform==="win32"?path.win32.join(process.env.SystemRoot??"C:\\Windows","System32"):"/usr/bin",compiler=process.platform==="win32"?"C:\\tools":"/tools";
+ const listed=implementation.rustupArchiveListEnvironmentV1({PATH:compiler}),oracle=[compiler,system].join(path.delimiter);
+ expect(listed.PATH).toBe(oracle);
+ const mixed=implementation.rustupArchiveListEnvironmentV1({Path:system,PATH:compiler});expect(mixed.Path).toBeUndefined();expect(mixed.PATH).toBe([system,compiler].join(path.delimiter));
+ expect(implementation.rustupArchiveListEnvironmentV1({PATH:system}).PATH).toBe(system);
+});

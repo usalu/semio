@@ -1,4 +1,4 @@
-/** 🎨️ Thermal view: every quantity paints region values computed before colour, merged regions are area-weighted, legends carry quantity, unit, range, sign convention, conditions and assumptions,
+/** 🎨️ Thermal view: every quantity paints region values computed before colour, merged regions are weighted by area × exposed fraction, legends carry quantity, unit, range, sign convention, conditions and assumptions,
  * shared ranges are identical across assets, `auto` is labelled normalised, colours are monotone warm-above-centre. */
 import { describe, expect, it } from "vitest";
 import environments from "../../🗂️catalog/🌤️environments/🔣️.json" with { type: "json" };
@@ -36,7 +36,7 @@ describe("🎨️ thermal view", () => {
     expect(legend.assumptions!.length).toBeGreaterThanOrEqual(2);
     expect(legend.convention.en).toContain("Shared comparison range");
     expect(legend.convention.de).toContain("Gemeinsamer Vergleichsbereich");
-    expect(legend.interpretation.en).toContain("area-weighted");
+    expect(legend.interpretation.en).toContain("weighted by area × exposed fraction");
   });
 
   it("paints values computed before colour: every region-bound fill carries the solver value of its region", () => {
@@ -61,14 +61,15 @@ describe("🎨️ thermal view", () => {
     expect((skin[0] as { value: { value: number } }).value.value - (surface[0] as { value: { value: number } }).value.value).toBeGreaterThan(8);
   });
 
-  it("area-weights the merged regions of the 1:500 silhouette and says so", () => {
+  it("weights the merged regions by area × exposed fraction in the of the 1:500 silhouette and says so", () => {
     const { scene: s, field, state } = scene(human, 500, "surface-temperature");
     const merged = items(s).find((i) => i.kind === "path" && i.id === "shape:sil-torso" && i.value);
     expect(merged).toBeDefined();
     const ids = ["coat", "face-skin", "hair", "scarf", "hand-skin"];
     const regions = state.asset.thermal.regions;
-    const weight = ids.reduce((sum, id) => sum + regions.find((r) => r.id === id)!.areaM2, 0);
-    const expected = ids.reduce((sum, id) => sum + regions.find((r) => r.id === id)!.areaM2 * field.regions[id]!.surfaceTempC, 0) / weight;
+    const w = (id: string) => regions.find((r) => r.id === id)!.areaM2 * Math.max(field.regions[id]!.exposedFraction, 1e-9);
+    const weight = ids.reduce((sum, id) => sum + w(id), 0);
+    const expected = ids.reduce((sum, id) => sum + w(id) * field.regions[id]!.surfaceTempC, 0) / weight;
     const value = (merged as { value: { value: number; label: { en: string } } }).value;
     expect(value.value).toBeCloseTo(expected, 9);
     expect(value.label.en).toContain("area-weighted");
@@ -78,6 +79,21 @@ describe("🎨️ thermal view", () => {
     const { scene: s } = scene(human, 100, "net-radiative-flux");
     const label = items(s).find((i) => i.kind === "path" && i.region === "coat" && i.value)!;
     expect((label as { value: { label: { en: string } } }).value.label.en).toMatch(/sky .*ground .*surroundings/);
+  });
+
+  it("labels absolute ranges (shared, fixed) as absolute values and normalised or span ranges as comparative illustrations, in both languages", () => {
+    const shared = scene(human, 100, "surface-temperature").scene.legends[0]!;
+    const fixed = scene(human, 100, "surface-temperature", { mode: "fixed", min: 0, max: 40 }).scene.legends[0]!;
+    const auto = scene(human, 100, "surface-temperature", { mode: "auto" }).scene.legends[0]!;
+    const span = scene(human, 100, "surface-temperature", { mode: "span", spanK: 10 }).scene.legends[0]!;
+    for (const l of [shared, fixed]) {
+      expect(l.convention.en).toContain("Absolute values");
+      expect(l.convention.de).toContain("Absolute Werte");
+    }
+    for (const l of [auto, span]) {
+      expect(l.convention.en).toContain("Comparative illustration");
+      expect(l.convention.de).toContain("Vergleichende Illustration");
+    }
   });
 
   it("uses the same shared range for different assets and labels the auto range as normalised", () => {

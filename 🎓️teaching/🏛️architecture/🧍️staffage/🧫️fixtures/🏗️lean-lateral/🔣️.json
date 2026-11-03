@@ -1,0 +1,112 @@
+{
+ "case": "🏗️lean-lateral",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "anatomical",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 90
+ },
+ "bones": [
+  {
+   "id": "legs",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 0.9,
+   "mass": {
+    "kg": 25.0,
+    "comX": 0.45,
+    "comY": 0.0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "torso",
+   "parent": "legs",
+   "x": 0.9,
+   "y": 0,
+   "angleDeg": 0,
+   "abductionDeg": 20.0,
+   "lengthM": 0.6,
+   "mass": {
+    "kg": 30.0,
+    "comX": 0.3,
+    "comY": 0.0,
+    "distribution": "uniform"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "foot-left",
+   "bone": "legs",
+   "x": 0,
+   "y": 0,
+   "z": 0.1,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.26,
+   "footprintWidthM": 0.1
+  },
+  {
+   "id": "foot-right",
+   "bone": "legs",
+   "x": 0,
+   "y": 0,
+   "z": -0.1,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.26,
+   "footprintWidthM": 0.1
+  }
+ ],
+ "contacts": [
+  "foot-left",
+  "foot-right"
+ ],
+ "supports": [],
+ "loads": [],
+ "scenarios": [
+  {
+   "id": "upright",
+   "bones": {
+    "torso": {
+     "abductionDeg": 0
+    }
+   }
+  }
+ ],
+ "oracle": {
+  "tool": "numpy",
+  "version": "2.5.4",
+  "values": {
+   "lean": {
+    "leftNormalN": 420.7597922711166,
+    "rightNormalN": 118.7902077288836,
+    "torsoJointMxNm": 30.196958454223292,
+    "torsoJointMyNm": -0.0,
+    "torsoJointMzNm": 0.0,
+    "torsoComZ": 0.10260604299770061
+   },
+   "upright": {
+    "leftNormalN": 269.77500000000015,
+    "rightNormalN": 269.775,
+    "torsoJointMxNm": -0.0,
+    "torsoJointMyNm": -0.0,
+    "torsoJointMzNm": 0.0,
+    "torsoComZ": 0.0
+   }
+  }
+ }
+}

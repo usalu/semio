@@ -120,6 +120,15 @@ export default defineOwnedBuildConfigFactory(({ mode }) => ({
   publicDir: false,
   cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
   plugins: [
+    {
+      name: "staffage-browser-cast",
+      enforce: "pre" as const,
+      resolveId(source: string) {
+        const normalized = source.replaceAll("\\", "/");
+        if (normalized.endsWith("/📤️export/🎭️cast/🟦️.ts") || normalized.endsWith("📤️export/🎭️cast/🟦️.ts")) return resolve(siteRoot, "🏗️builder/🌐️vite/🌐️cast-stub.ts");
+        return null;
+      },
+    },
     semioServeCloseVitePlugin(),
     semioServeUpgradeVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, staffageHostDocument),

@@ -1,0 +1,3420 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "server-rack",
+    "category": "appliances",
+    "title": {
+      "en": "Server Rack, 42U",
+      "de": "Serverschrank, 42 HE"
+    },
+    "summary": {
+      "en": "A 42U 19-inch server rack, 2.0 m high, 0.6 m wide and 1.0 m deep, with a perforated front door, six servers, a storage array and a switch: about 1.5 kW of heat at idle, 5 kW at full load, almost all of it in the air that the fans blow from the front to the rear.",
+      "de": "Ein 19-Zoll-Serverschrank mit 42 HE, 2,0 m hoch, 0,6 m breit und 1,0 m tief, mit gelochter Fronttür, sechs Servern, einem Speicher und einem Switch: im Leerlauf etwa 1,5 kW Wärme, bei Volllast 5 kW, fast alles in der Luft, die die Lüfter von vorn nach hinten blasen."
+    },
+    "tags": [
+      "server-rack",
+      "data-centre",
+      "it-equipment",
+      "internal-gain",
+      "electrical",
+      "heat-source",
+      "ventilation"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A7)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-60297-3-100-2008",
+          "citation": "IEC 60297-3-100:2008 Mechanical structures for electronic equipment - Dimensions of mechanical structures of the 482,6 mm (19 in) series - Part 3-100: Basic dimensions of front panels, subracks, chassis, racks and cabinets (equipment width 482.6 mm, height unit 44.45 mm)."
+        },
+        {
+          "id": "ashrae-tc99-2021",
+          "citation": "ASHRAE TC 9.9 (2021). Thermal Guidelines for Data Processing Environments, 5th ed., ASHRAE (front-to-back airflow, air temperature rise of 10 to 20 K across servers, rack power densities)."
+        },
+        {
+          "id": "ashrae-datacom-2012",
+          "citation": "ASHRAE TC 9.9 (2012). Datacom Equipment Power Trends and Cooling Applications, 2nd ed., ASHRAE (heat loads of racks of servers, idle to full load)."
+        },
+        {
+          "id": "wilkins-hosni-2011",
+          "citation": "Wilkins, C. K., Hosni, M. H. (2011). Plug load design factors. ASHRAE Journal 53(5), 30-34 (measured heat gains of laptops, displays and other office equipment in active, idle and sleep states)."
+        },
+        {
+          "id": "hosni-1999",
+          "citation": "Hosni, M. H., Jones, B. W., Xu, H. (1999). Experimental results for heat gain and radiant/convective split from equipment in buildings. ASHRAE Transactions 105(2), 527-539."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Front elevation of a typical freestanding 42U cabinet (no single product): 0.6 m x 1.0 m footprint, 2.0 m high on casters, 42 height units of 44.45 mm and the 482.6 mm equipment width follow IEC 60297-3-100; the mass of 234 kg is cabinet 95 kg, door 12 kg, casters 7 kg and equipment 120 kg (authored estimate). The stack is a 4U storage array, six 2U servers at the bottom, a 1U switch, a 1U patch panel and a 1U cable brush at the top; the units between stay open. Rated load 5 kW (about 0.8 kW per 2U server) and idle at 30 percent are an authored estimate within the 3 to 10 kW rack class of the ASHRAE datacom trends. All electrical power ends as heat: 4703 W leave as a warm air stream (0.26 m3/s at 15 K rise, the front-to-back flow of the fans, rising over the roof; the airflow itself runs perpendicular to the drawing plane), 120 W in the server fronts, 20 W in the switch front and 160 W in the cabinet sheets (hot-aisle air warming the steel). Because the emitter model scales flow and temperature rise together, the air stream carries heat with the square of the airflow level; the airflow level 0.55 therefore gives 30 percent of the rated air heat at idle, and the sum at idle is 1.51 kW.",
+        "de": "Vorderansicht eines typischen freistehenden 42-HE-Schranks (kein einzelnes Produkt): Grundfläche 0,6 m x 1,0 m, 2,0 m hoch auf Rollen, 42 Höheneinheiten zu 44,45 mm und die Gerätebreite von 482,6 mm folgen IEC 60297-3-100; die Masse von 234 kg setzt sich aus Schrank 95 kg, Tür 12 kg, Rollen 7 kg und Geräten 120 kg zusammen (Schätzwert). Der Turm besteht aus einem 4-HE-Speicher, sechs 2-HE-Servern unten, einem 1-HE-Switch, einem 1-HE-Patchfeld und einer 1-HE-Kabelbürste oben; die Einheiten dazwischen bleiben offen. Die Nennlast von 5 kW (etwa 0,8 kW je 2-HE-Server) und der Leerlauf bei 30 Prozent sind ein Schätzwert innerhalb der Rackklasse von 3 bis 10 kW der ASHRAE-Datacom-Trends. Alle elektrische Leistung endet als Wärme: 4703 W verlassen das Rack als warmer Luftstrom (0,26 m3/s bei 15 K Anstieg, der Strom der Lüfter von vorn nach hinten, über das Dach aufsteigend; die Luftströmung selbst verläuft senkrecht zur Zeichenebene), 120 W in den Serverfronten, 20 W in der Switch-Front und 160 W in den Schrankblechen (Warmgangluft erwärmt den Stahl). Weil das Emittermodell Volumenstrom und Temperaturanstieg gemeinsam skaliert, trägt der Luftstrom Wärme mit dem Quadrat der Luftstufe; die Luftstufe 0,55 liefert daher im Leerlauf 30 Prozent der Nennluftwärme, und die Summe im Leerlauf beträgt 1,51 kW."
+      }
+    },
+    "dimensions": {
+      "heightM": 2,
+      "widthM": 0.6,
+      "depthM": 1,
+      "massKg": 234
+    },
+    "materials": [
+      {
+        "id": "rack-steel",
+        "title": {
+          "en": "Powder-coated steel sheet",
+          "de": "Pulverbeschichtetes Stahlblech"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "mesh-steel",
+        "title": {
+          "en": "Perforated steel sheet",
+          "de": "Lochblech aus Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 2400,
+        "conductivityWmK": 15,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "chassis",
+        "title": {
+          "en": "Server chassis with plastic bezel",
+          "de": "Servergehäuse mit Kunststoffblende"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 3000,
+        "conductivityWmK": 20,
+        "specificHeatJKgK": 700,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "blank-steel",
+        "title": {
+          "en": "Black steel blank panel",
+          "de": "Schwarze Stahlblindplatte"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "caster-rubber",
+        "title": {
+          "en": "Nylon caster wheel",
+          "de": "Rolle aus Nylon"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1140,
+        "conductivityWmK": 0.25,
+        "specificHeatJKgK": 1700,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "frame",
+      "bones": [
+        {
+          "id": "frame",
+          "parent": null,
+          "title": {
+            "en": "Cabinet frame",
+            "de": "Schrankrahmen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 2,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 95,
+            "comX": 0,
+            "comY": 1,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "feet",
+          "parent": "frame",
+          "title": {
+            "en": "Casters",
+            "de": "Rollen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.07,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 7,
+            "comX": 0,
+            "comY": 0.03,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "equipment",
+          "parent": "frame",
+          "title": {
+            "en": "Equipment stack",
+            "de": "Geräteturm"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 1.87,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 120,
+            "comX": 0,
+            "comY": 0.8,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "door",
+          "parent": "frame",
+          "title": {
+            "en": "Perforated door",
+            "de": "Gelochte Tür"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 1.87,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 12,
+            "comX": 0,
+            "comY": 1.03,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "feet",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Casters on the floor",
+          "de": "Rollen auf dem Boden"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.5,
+        "footprintWidthM": 0.9,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "exhaust-top",
+        "bone": "frame",
+        "x": 0,
+        "y": 2,
+        "kind": "emitter",
+        "title": {
+          "en": "Warm exhaust air over the roof",
+          "de": "Warme Abluft über dem Dach"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "post-left",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.07,
+              "w": 0.03,
+              "h": 1.93,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "post-right",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.27,
+              "y": 0.07,
+              "w": 0.03,
+              "h": 1.93,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 1.967,
+              "w": 0.6,
+              "h": 0.033,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "base-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.07,
+              "w": 0.54,
+              "h": 0.03,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "caster-left",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.265,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "caster-right",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.235,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "storage-1",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.1005,
+              "w": 0.4826,
+              "h": 0.1768,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "storage-1-bay-0-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.19,
+              "y": 0.1325,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-0-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.1255,
+              "y": 0.1325,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-0-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.061,
+              "y": 0.1325,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-0-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0035,
+              "y": 0.1325,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-0-4",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.068,
+              "y": 0.1325,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-0-5",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1325,
+              "y": 0.1325,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-1-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.19,
+              "y": 0.188,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-1-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.1255,
+              "y": 0.188,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-1-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.061,
+              "y": 0.188,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-1-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0035,
+              "y": 0.188,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-1-4",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.068,
+              "y": 0.188,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-bay-1-5",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1325,
+              "y": 0.188,
+              "w": 0.052,
+              "h": 0.045
+            },
+            {
+              "id": "storage-1-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.215,
+              "cy": 0.189,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-5",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.2783,
+              "w": 0.4826,
+              "h": 0.0879,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-5-bay-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.2938,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-5-bay-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0755,
+              "y": 0.2938,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-5-bay-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.131,
+              "y": 0.2938,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-5-bay-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1865,
+              "y": 0.2938,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-5-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.216,
+              "cy": 0.32225,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-5-vent",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.205 0.2938 h 0.022 v 0.0255 h -0.022 Z M -0.205 0.3268 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.2938 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.3268 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.2938 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.3268 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.2938 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.3268 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.2938 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.3268 h 0.022 v 0.0255 h -0.022 Z"
+            },
+            {
+              "id": "server-7",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.3672,
+              "w": 0.4826,
+              "h": 0.0879,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-7-bay-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.3827,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-7-bay-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0755,
+              "y": 0.3827,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-7-bay-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.131,
+              "y": 0.3827,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-7-bay-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1865,
+              "y": 0.3827,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-7-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.216,
+              "cy": 0.41115,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-7-vent",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.205 0.3827 h 0.022 v 0.0255 h -0.022 Z M -0.205 0.4157 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.3827 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.4157 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.3827 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.4157 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.3827 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.4157 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.3827 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.4157 h 0.022 v 0.0255 h -0.022 Z"
+            },
+            {
+              "id": "server-9",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.4561,
+              "w": 0.4826,
+              "h": 0.0879,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-9-bay-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.4716,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-9-bay-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0755,
+              "y": 0.4716,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-9-bay-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.131,
+              "y": 0.4716,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-9-bay-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1865,
+              "y": 0.4716,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-9-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.216,
+              "cy": 0.50005,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-9-vent",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.205 0.4716 h 0.022 v 0.0255 h -0.022 Z M -0.205 0.5046 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.4716 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.5046 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.4716 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.5046 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.4716 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.5046 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.4716 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.5046 h 0.022 v 0.0255 h -0.022 Z"
+            },
+            {
+              "id": "server-11",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.545,
+              "w": 0.4826,
+              "h": 0.0879,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-11-bay-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.5605,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-11-bay-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0755,
+              "y": 0.5605,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-11-bay-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.131,
+              "y": 0.5605,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-11-bay-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1865,
+              "y": 0.5605,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-11-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.216,
+              "cy": 0.58895,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-11-vent",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.205 0.5605 h 0.022 v 0.0255 h -0.022 Z M -0.205 0.5935 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.5605 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.5935 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.5605 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.5935 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.5605 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.5935 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.5605 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.5935 h 0.022 v 0.0255 h -0.022 Z"
+            },
+            {
+              "id": "server-13",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.6339,
+              "w": 0.4826,
+              "h": 0.0879,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-13-bay-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.6494,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-13-bay-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0755,
+              "y": 0.6494,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-13-bay-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.131,
+              "y": 0.6494,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-13-bay-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1865,
+              "y": 0.6494,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-13-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.216,
+              "cy": 0.67785,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-13-vent",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.205 0.6494 h 0.022 v 0.0255 h -0.022 Z M -0.205 0.6824 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.6494 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.6824 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.6494 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.6824 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.6494 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.6824 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.6494 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.6824 h 0.022 v 0.0255 h -0.022 Z"
+            },
+            {
+              "id": "server-15",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.7228,
+              "w": 0.4826,
+              "h": 0.0879,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-15-bay-0",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.7383,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-15-bay-1",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0755,
+              "y": 0.7383,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-15-bay-2",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.131,
+              "y": 0.7383,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-15-bay-3",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1865,
+              "y": 0.7383,
+              "w": 0.043,
+              "h": 0.06
+            },
+            {
+              "id": "server-15-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.216,
+              "cy": 0.76675,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "servers"
+            },
+            {
+              "id": "server-15-vent",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.205 0.7383 h 0.022 v 0.0255 h -0.022 Z M -0.205 0.7713 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.7383 h 0.022 v 0.0255 h -0.022 Z M -0.17 0.7713 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.7383 h 0.022 v 0.0255 h -0.022 Z M -0.135 0.7713 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.7383 h 0.022 v 0.0255 h -0.022 Z M -0.1 0.7713 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.7383 h 0.022 v 0.0255 h -0.022 Z M -0.065 0.7713 h 0.022 v 0.0255 h -0.022 Z"
+            },
+            {
+              "id": "patch-40",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 1.83405,
+              "w": 0.4826,
+              "h": 0.04345,
+              "region": "blanks",
+              "material": "blank-steel"
+            },
+            {
+              "id": "patch-40-slot",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.2 1.8558 h 0.4"
+            },
+            {
+              "id": "brush-41",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 1.8785,
+              "w": 0.4826,
+              "h": 0.04345,
+              "region": "blanks",
+              "material": "blank-steel"
+            },
+            {
+              "id": "brush-41-slot",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.19 1.9002 h 0.38"
+            },
+            {
+              "id": "switch-42",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 1.92295,
+              "w": 0.4826,
+              "h": 0.04345,
+              "region": "switch",
+              "material": "chassis"
+            },
+            {
+              "id": "switch-42-ports",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.19 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.19 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.1655 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.1655 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.141 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.141 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.1165 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.1165 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.092 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.092 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.0675 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.0675 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.043 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.043 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M -0.0185 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M -0.0185 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M 0.006 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M 0.006 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M 0.0305 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M 0.0305 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M 0.055 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M 0.055 1.9465 h 0.0155 v 0.0105 h -0.0155 Z M 0.0795 1.9325 h 0.0155 v 0.0105 h -0.0155 Z M 0.0795 1.9465 h 0.0155 v 0.0105 h -0.0155 Z"
+            },
+            {
+              "id": "switch-42-led",
+              "bone": "equipment",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.215,
+              "cy": 1.94468,
+              "rx": 0.0065,
+              "ry": 0.0065,
+              "region": "switch"
+            },
+            {
+              "id": "door-field",
+              "bone": "door",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.1,
+              "w": 0.54,
+              "h": 1.867,
+              "region": "door",
+              "material": "mesh-steel"
+            },
+            {
+              "id": "door-perforation",
+              "bone": "door",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.255 0.1222 h 0.012 M -0.219 0.1222 h 0.012 M -0.183 0.1222 h 0.012 M -0.147 0.1222 h 0.012 M -0.111 0.1222 h 0.012 M -0.075 0.1222 h 0.012 M -0.039 0.1222 h 0.012 M -0.003 0.1222 h 0.012 M 0.033 0.1222 h 0.012 M 0.069 0.1222 h 0.012 M 0.105 0.1222 h 0.012 M 0.141 0.1222 h 0.012 M 0.177 0.1222 h 0.012 M 0.213 0.1222 h 0.012 M -0.237 0.1667 h 0.012 M -0.201 0.1667 h 0.012 M -0.165 0.1667 h 0.012 M -0.129 0.1667 h 0.012 M -0.093 0.1667 h 0.012 M -0.057 0.1667 h 0.012 M -0.021 0.1667 h 0.012 M 0.015 0.1667 h 0.012 M 0.051 0.1667 h 0.012 M 0.087 0.1667 h 0.012 M 0.123 0.1667 h 0.012 M 0.159 0.1667 h 0.012 M 0.195 0.1667 h 0.012 M 0.231 0.1667 h 0.012 M -0.255 0.2111 h 0.012 M -0.219 0.2111 h 0.012 M -0.183 0.2111 h 0.012 M -0.147 0.2111 h 0.012 M -0.111 0.2111 h 0.012 M -0.075 0.2111 h 0.012 M -0.039 0.2111 h 0.012 M -0.003 0.2111 h 0.012 M 0.033 0.2111 h 0.012 M 0.069 0.2111 h 0.012 M 0.105 0.2111 h 0.012 M 0.141 0.2111 h 0.012 M 0.177 0.2111 h 0.012 M 0.213 0.2111 h 0.012 M -0.237 0.2556 h 0.012 M -0.201 0.2556 h 0.012 M -0.165 0.2556 h 0.012 M -0.129 0.2556 h 0.012 M -0.093 0.2556 h 0.012 M -0.057 0.2556 h 0.012 M -0.021 0.2556 h 0.012 M 0.015 0.2556 h 0.012 M 0.051 0.2556 h 0.012 M 0.087 0.2556 h 0.012 M 0.123 0.2556 h 0.012 M 0.159 0.2556 h 0.012 M 0.195 0.2556 h 0.012 M 0.231 0.2556 h 0.012 M -0.255 0.3 h 0.012 M -0.219 0.3 h 0.012 M -0.183 0.3 h 0.012 M -0.147 0.3 h 0.012 M -0.111 0.3 h 0.012 M -0.075 0.3 h 0.012 M -0.039 0.3 h 0.012 M -0.003 0.3 h 0.012 M 0.033 0.3 h 0.012 M 0.069 0.3 h 0.012 M 0.105 0.3 h 0.012 M 0.141 0.3 h 0.012 M 0.177 0.3 h 0.012 M 0.213 0.3 h 0.012 M -0.237 0.3445 h 0.012 M -0.201 0.3445 h 0.012 M -0.165 0.3445 h 0.012 M -0.129 0.3445 h 0.012 M -0.093 0.3445 h 0.012 M -0.057 0.3445 h 0.012 M -0.021 0.3445 h 0.012 M 0.015 0.3445 h 0.012 M 0.051 0.3445 h 0.012 M 0.087 0.3445 h 0.012 M 0.123 0.3445 h 0.012 M 0.159 0.3445 h 0.012 M 0.195 0.3445 h 0.012 M 0.231 0.3445 h 0.012 M -0.255 0.3889 h 0.012 M -0.219 0.3889 h 0.012 M -0.183 0.3889 h 0.012 M -0.147 0.3889 h 0.012 M -0.111 0.3889 h 0.012 M -0.075 0.3889 h 0.012 M -0.039 0.3889 h 0.012 M -0.003 0.3889 h 0.012 M 0.033 0.3889 h 0.012 M 0.069 0.3889 h 0.012 M 0.105 0.3889 h 0.012 M 0.141 0.3889 h 0.012 M 0.177 0.3889 h 0.012 M 0.213 0.3889 h 0.012 M -0.237 0.4334 h 0.012 M -0.201 0.4334 h 0.012 M -0.165 0.4334 h 0.012 M -0.129 0.4334 h 0.012 M -0.093 0.4334 h 0.012 M -0.057 0.4334 h 0.012 M -0.021 0.4334 h 0.012 M 0.015 0.4334 h 0.012 M 0.051 0.4334 h 0.012 M 0.087 0.4334 h 0.012 M 0.123 0.4334 h 0.012 M 0.159 0.4334 h 0.012 M 0.195 0.4334 h 0.012 M 0.231 0.4334 h 0.012 M -0.255 0.4778 h 0.012 M -0.219 0.4778 h 0.012 M -0.183 0.4778 h 0.012 M -0.147 0.4778 h 0.012 M -0.111 0.4778 h 0.012 M -0.075 0.4778 h 0.012 M -0.039 0.4778 h 0.012 M -0.003 0.4778 h 0.012 M 0.033 0.4778 h 0.012 M 0.069 0.4778 h 0.012 M 0.105 0.4778 h 0.012 M 0.141 0.4778 h 0.012 M 0.177 0.4778 h 0.012 M 0.213 0.4778 h 0.012 M -0.237 0.5223 h 0.012 M -0.201 0.5223 h 0.012 M -0.165 0.5223 h 0.012 M -0.129 0.5223 h 0.012 M -0.093 0.5223 h 0.012 M -0.057 0.5223 h 0.012 M -0.021 0.5223 h 0.012 M 0.015 0.5223 h 0.012 M 0.051 0.5223 h 0.012 M 0.087 0.5223 h 0.012 M 0.123 0.5223 h 0.012 M 0.159 0.5223 h 0.012 M 0.195 0.5223 h 0.012 M 0.231 0.5223 h 0.012 M -0.255 0.5667 h 0.012 M -0.219 0.5667 h 0.012 M -0.183 0.5667 h 0.012 M -0.147 0.5667 h 0.012 M -0.111 0.5667 h 0.012 M -0.075 0.5667 h 0.012 M -0.039 0.5667 h 0.012 M -0.003 0.5667 h 0.012 M 0.033 0.5667 h 0.012 M 0.069 0.5667 h 0.012 M 0.105 0.5667 h 0.012 M 0.141 0.5667 h 0.012 M 0.177 0.5667 h 0.012 M 0.213 0.5667 h 0.012 M -0.237 0.6112 h 0.012 M -0.201 0.6112 h 0.012 M -0.165 0.6112 h 0.012 M -0.129 0.6112 h 0.012 M -0.093 0.6112 h 0.012 M -0.057 0.6112 h 0.012 M -0.021 0.6112 h 0.012 M 0.015 0.6112 h 0.012 M 0.051 0.6112 h 0.012 M 0.087 0.6112 h 0.012 M 0.123 0.6112 h 0.012 M 0.159 0.6112 h 0.012 M 0.195 0.6112 h 0.012 M 0.231 0.6112 h 0.012 M -0.255 0.6556 h 0.012 M -0.219 0.6556 h 0.012 M -0.183 0.6556 h 0.012 M -0.147 0.6556 h 0.012 M -0.111 0.6556 h 0.012 M -0.075 0.6556 h 0.012 M -0.039 0.6556 h 0.012 M -0.003 0.6556 h 0.012 M 0.033 0.6556 h 0.012 M 0.069 0.6556 h 0.012 M 0.105 0.6556 h 0.012 M 0.141 0.6556 h 0.012 M 0.177 0.6556 h 0.012 M 0.213 0.6556 h 0.012 M -0.237 0.7001 h 0.012 M -0.201 0.7001 h 0.012 M -0.165 0.7001 h 0.012 M -0.129 0.7001 h 0.012 M -0.093 0.7001 h 0.012 M -0.057 0.7001 h 0.012 M -0.021 0.7001 h 0.012 M 0.015 0.7001 h 0.012 M 0.051 0.7001 h 0.012 M 0.087 0.7001 h 0.012 M 0.123 0.7001 h 0.012 M 0.159 0.7001 h 0.012 M 0.195 0.7001 h 0.012 M 0.231 0.7001 h 0.012 M -0.255 0.7445 h 0.012 M -0.219 0.7445 h 0.012 M -0.183 0.7445 h 0.012 M -0.147 0.7445 h 0.012 M -0.111 0.7445 h 0.012 M -0.075 0.7445 h 0.012 M -0.039 0.7445 h 0.012 M -0.003 0.7445 h 0.012 M 0.033 0.7445 h 0.012 M 0.069 0.7445 h 0.012 M 0.105 0.7445 h 0.012 M 0.141 0.7445 h 0.012 M 0.177 0.7445 h 0.012 M 0.213 0.7445 h 0.012 M -0.237 0.789 h 0.012 M -0.201 0.789 h 0.012 M -0.165 0.789 h 0.012 M -0.129 0.789 h 0.012 M -0.093 0.789 h 0.012 M -0.057 0.789 h 0.012 M -0.021 0.789 h 0.012 M 0.015 0.789 h 0.012 M 0.051 0.789 h 0.012 M 0.087 0.789 h 0.012 M 0.123 0.789 h 0.012 M 0.159 0.789 h 0.012 M 0.195 0.789 h 0.012 M 0.231 0.789 h 0.012 M -0.255 0.8334 h 0.012 M -0.219 0.8334 h 0.012 M -0.183 0.8334 h 0.012 M -0.147 0.8334 h 0.012 M -0.111 0.8334 h 0.012 M -0.075 0.8334 h 0.012 M -0.039 0.8334 h 0.012 M -0.003 0.8334 h 0.012 M 0.033 0.8334 h 0.012 M 0.069 0.8334 h 0.012 M 0.105 0.8334 h 0.012 M 0.141 0.8334 h 0.012 M 0.177 0.8334 h 0.012 M 0.213 0.8334 h 0.012 M -0.237 0.8779 h 0.012 M -0.201 0.8779 h 0.012 M -0.165 0.8779 h 0.012 M -0.129 0.8779 h 0.012 M -0.093 0.8779 h 0.012 M -0.057 0.8779 h 0.012 M -0.021 0.8779 h 0.012 M 0.015 0.8779 h 0.012 M 0.051 0.8779 h 0.012 M 0.087 0.8779 h 0.012 M 0.123 0.8779 h 0.012 M 0.159 0.8779 h 0.012 M 0.195 0.8779 h 0.012 M 0.231 0.8779 h 0.012 M -0.255 0.9223 h 0.012 M -0.219 0.9223 h 0.012 M -0.183 0.9223 h 0.012 M -0.147 0.9223 h 0.012 M -0.111 0.9223 h 0.012 M -0.075 0.9223 h 0.012 M -0.039 0.9223 h 0.012 M -0.003 0.9223 h 0.012 M 0.033 0.9223 h 0.012 M 0.069 0.9223 h 0.012 M 0.105 0.9223 h 0.012 M 0.141 0.9223 h 0.012 M 0.177 0.9223 h 0.012 M 0.213 0.9223 h 0.012 M -0.237 0.9668 h 0.012 M -0.201 0.9668 h 0.012 M -0.165 0.9668 h 0.012 M -0.129 0.9668 h 0.012 M -0.093 0.9668 h 0.012 M -0.057 0.9668 h 0.012 M -0.021 0.9668 h 0.012 M 0.015 0.9668 h 0.012 M 0.051 0.9668 h 0.012 M 0.087 0.9668 h 0.012 M 0.123 0.9668 h 0.012 M 0.159 0.9668 h 0.012 M 0.195 0.9668 h 0.012 M 0.231 0.9668 h 0.012 M -0.255 1.0112 h 0.012 M -0.219 1.0112 h 0.012 M -0.183 1.0112 h 0.012 M -0.147 1.0112 h 0.012 M -0.111 1.0112 h 0.012 M -0.075 1.0112 h 0.012 M -0.039 1.0112 h 0.012 M -0.003 1.0112 h 0.012 M 0.033 1.0112 h 0.012 M 0.069 1.0112 h 0.012 M 0.105 1.0112 h 0.012 M 0.141 1.0112 h 0.012 M 0.177 1.0112 h 0.012 M 0.213 1.0112 h 0.012 M -0.237 1.0557 h 0.012 M -0.201 1.0557 h 0.012 M -0.165 1.0557 h 0.012 M -0.129 1.0557 h 0.012 M -0.093 1.0557 h 0.012 M -0.057 1.0557 h 0.012 M -0.021 1.0557 h 0.012 M 0.015 1.0557 h 0.012 M 0.051 1.0557 h 0.012 M 0.087 1.0557 h 0.012 M 0.123 1.0557 h 0.012 M 0.159 1.0557 h 0.012 M 0.195 1.0557 h 0.012 M 0.231 1.0557 h 0.012 M -0.255 1.1001 h 0.012 M -0.219 1.1001 h 0.012 M -0.183 1.1001 h 0.012 M -0.147 1.1001 h 0.012 M -0.111 1.1001 h 0.012 M -0.075 1.1001 h 0.012 M -0.039 1.1001 h 0.012 M -0.003 1.1001 h 0.012 M 0.033 1.1001 h 0.012 M 0.069 1.1001 h 0.012 M 0.105 1.1001 h 0.012 M 0.141 1.1001 h 0.012 M 0.177 1.1001 h 0.012 M 0.213 1.1001 h 0.012 M -0.237 1.1446 h 0.012 M -0.201 1.1446 h 0.012 M -0.165 1.1446 h 0.012 M -0.129 1.1446 h 0.012 M -0.093 1.1446 h 0.012 M -0.057 1.1446 h 0.012 M -0.021 1.1446 h 0.012 M 0.015 1.1446 h 0.012 M 0.051 1.1446 h 0.012 M 0.087 1.1446 h 0.012 M 0.123 1.1446 h 0.012 M 0.159 1.1446 h 0.012 M 0.195 1.1446 h 0.012 M 0.231 1.1446 h 0.012 M -0.255 1.189 h 0.012 M -0.219 1.189 h 0.012 M -0.183 1.189 h 0.012 M -0.147 1.189 h 0.012 M -0.111 1.189 h 0.012 M -0.075 1.189 h 0.012 M -0.039 1.189 h 0.012 M -0.003 1.189 h 0.012 M 0.033 1.189 h 0.012 M 0.069 1.189 h 0.012 M 0.105 1.189 h 0.012 M 0.141 1.189 h 0.012 M 0.177 1.189 h 0.012 M 0.213 1.189 h 0.012 M -0.237 1.2335 h 0.012 M -0.201 1.2335 h 0.012 M -0.165 1.2335 h 0.012 M -0.129 1.2335 h 0.012 M -0.093 1.2335 h 0.012 M -0.057 1.2335 h 0.012 M -0.021 1.2335 h 0.012 M 0.015 1.2335 h 0.012 M 0.051 1.2335 h 0.012 M 0.087 1.2335 h 0.012 M 0.123 1.2335 h 0.012 M 0.159 1.2335 h 0.012 M 0.195 1.2335 h 0.012 M 0.231 1.2335 h 0.012 M -0.255 1.2779 h 0.012 M -0.219 1.2779 h 0.012 M -0.183 1.2779 h 0.012 M -0.147 1.2779 h 0.012 M -0.111 1.2779 h 0.012 M -0.075 1.2779 h 0.012 M -0.039 1.2779 h 0.012 M -0.003 1.2779 h 0.012 M 0.033 1.2779 h 0.012 M 0.069 1.2779 h 0.012 M 0.105 1.2779 h 0.012 M 0.141 1.2779 h 0.012 M 0.177 1.2779 h 0.012 M 0.213 1.2779 h 0.012 M -0.237 1.3224 h 0.012 M -0.201 1.3224 h 0.012 M -0.165 1.3224 h 0.012 M -0.129 1.3224 h 0.012 M -0.093 1.3224 h 0.012 M -0.057 1.3224 h 0.012 M -0.021 1.3224 h 0.012 M 0.015 1.3224 h 0.012 M 0.051 1.3224 h 0.012 M 0.087 1.3224 h 0.012 M 0.123 1.3224 h 0.012 M 0.159 1.3224 h 0.012 M 0.195 1.3224 h 0.012 M 0.231 1.3224 h 0.012 M -0.255 1.3668 h 0.012 M -0.219 1.3668 h 0.012 M -0.183 1.3668 h 0.012 M -0.147 1.3668 h 0.012 M -0.111 1.3668 h 0.012 M -0.075 1.3668 h 0.012 M -0.039 1.3668 h 0.012 M -0.003 1.3668 h 0.012 M 0.033 1.3668 h 0.012 M 0.069 1.3668 h 0.012 M 0.105 1.3668 h 0.012 M 0.141 1.3668 h 0.012 M 0.177 1.3668 h 0.012 M 0.213 1.3668 h 0.012 M -0.237 1.4113 h 0.012 M -0.201 1.4113 h 0.012 M -0.165 1.4113 h 0.012 M -0.129 1.4113 h 0.012 M -0.093 1.4113 h 0.012 M -0.057 1.4113 h 0.012 M -0.021 1.4113 h 0.012 M 0.015 1.4113 h 0.012 M 0.051 1.4113 h 0.012 M 0.087 1.4113 h 0.012 M 0.123 1.4113 h 0.012 M 0.159 1.4113 h 0.012 M 0.195 1.4113 h 0.012 M 0.231 1.4113 h 0.012 M -0.255 1.4557 h 0.012 M -0.219 1.4557 h 0.012 M -0.183 1.4557 h 0.012 M -0.147 1.4557 h 0.012 M -0.111 1.4557 h 0.012 M -0.075 1.4557 h 0.012 M -0.039 1.4557 h 0.012 M -0.003 1.4557 h 0.012 M 0.033 1.4557 h 0.012 M 0.069 1.4557 h 0.012 M 0.105 1.4557 h 0.012 M 0.141 1.4557 h 0.012 M 0.177 1.4557 h 0.012 M 0.213 1.4557 h 0.012 M -0.237 1.5002 h 0.012 M -0.201 1.5002 h 0.012 M -0.165 1.5002 h 0.012 M -0.129 1.5002 h 0.012 M -0.093 1.5002 h 0.012 M -0.057 1.5002 h 0.012 M -0.021 1.5002 h 0.012 M 0.015 1.5002 h 0.012 M 0.051 1.5002 h 0.012 M 0.087 1.5002 h 0.012 M 0.123 1.5002 h 0.012 M 0.159 1.5002 h 0.012 M 0.195 1.5002 h 0.012 M 0.231 1.5002 h 0.012 M -0.255 1.5446 h 0.012 M -0.219 1.5446 h 0.012 M -0.183 1.5446 h 0.012 M -0.147 1.5446 h 0.012 M -0.111 1.5446 h 0.012 M -0.075 1.5446 h 0.012 M -0.039 1.5446 h 0.012 M -0.003 1.5446 h 0.012 M 0.033 1.5446 h 0.012 M 0.069 1.5446 h 0.012 M 0.105 1.5446 h 0.012 M 0.141 1.5446 h 0.012 M 0.177 1.5446 h 0.012 M 0.213 1.5446 h 0.012 M -0.237 1.5891 h 0.012 M -0.201 1.5891 h 0.012 M -0.165 1.5891 h 0.012 M -0.129 1.5891 h 0.012 M -0.093 1.5891 h 0.012 M -0.057 1.5891 h 0.012 M -0.021 1.5891 h 0.012 M 0.015 1.5891 h 0.012 M 0.051 1.5891 h 0.012 M 0.087 1.5891 h 0.012 M 0.123 1.5891 h 0.012 M 0.159 1.5891 h 0.012 M 0.195 1.5891 h 0.012 M 0.231 1.5891 h 0.012 M -0.255 1.6335 h 0.012 M -0.219 1.6335 h 0.012 M -0.183 1.6335 h 0.012 M -0.147 1.6335 h 0.012 M -0.111 1.6335 h 0.012 M -0.075 1.6335 h 0.012 M -0.039 1.6335 h 0.012 M -0.003 1.6335 h 0.012 M 0.033 1.6335 h 0.012 M 0.069 1.6335 h 0.012 M 0.105 1.6335 h 0.012 M 0.141 1.6335 h 0.012 M 0.177 1.6335 h 0.012 M 0.213 1.6335 h 0.012 M -0.237 1.678 h 0.012 M -0.201 1.678 h 0.012 M -0.165 1.678 h 0.012 M -0.129 1.678 h 0.012 M -0.093 1.678 h 0.012 M -0.057 1.678 h 0.012 M -0.021 1.678 h 0.012 M 0.015 1.678 h 0.012 M 0.051 1.678 h 0.012 M 0.087 1.678 h 0.012 M 0.123 1.678 h 0.012 M 0.159 1.678 h 0.012 M 0.195 1.678 h 0.012 M 0.231 1.678 h 0.012 M -0.255 1.7224 h 0.012 M -0.219 1.7224 h 0.012 M -0.183 1.7224 h 0.012 M -0.147 1.7224 h 0.012 M -0.111 1.7224 h 0.012 M -0.075 1.7224 h 0.012 M -0.039 1.7224 h 0.012 M -0.003 1.7224 h 0.012 M 0.033 1.7224 h 0.012 M 0.069 1.7224 h 0.012 M 0.105 1.7224 h 0.012 M 0.141 1.7224 h 0.012 M 0.177 1.7224 h 0.012 M 0.213 1.7224 h 0.012 M -0.237 1.7669 h 0.012 M -0.201 1.7669 h 0.012 M -0.165 1.7669 h 0.012 M -0.129 1.7669 h 0.012 M -0.093 1.7669 h 0.012 M -0.057 1.7669 h 0.012 M -0.021 1.7669 h 0.012 M 0.015 1.7669 h 0.012 M 0.051 1.7669 h 0.012 M 0.087 1.7669 h 0.012 M 0.123 1.7669 h 0.012 M 0.159 1.7669 h 0.012 M 0.195 1.7669 h 0.012 M 0.231 1.7669 h 0.012 M -0.255 1.8113 h 0.012 M -0.219 1.8113 h 0.012 M -0.183 1.8113 h 0.012 M -0.147 1.8113 h 0.012 M -0.111 1.8113 h 0.012 M -0.075 1.8113 h 0.012 M -0.039 1.8113 h 0.012 M -0.003 1.8113 h 0.012 M 0.033 1.8113 h 0.012 M 0.069 1.8113 h 0.012 M 0.105 1.8113 h 0.012 M 0.141 1.8113 h 0.012 M 0.177 1.8113 h 0.012 M 0.213 1.8113 h 0.012 M -0.237 1.8558 h 0.012 M -0.201 1.8558 h 0.012 M -0.165 1.8558 h 0.012 M -0.129 1.8558 h 0.012 M -0.093 1.8558 h 0.012 M -0.057 1.8558 h 0.012 M -0.021 1.8558 h 0.012 M 0.015 1.8558 h 0.012 M 0.051 1.8558 h 0.012 M 0.087 1.8558 h 0.012 M 0.123 1.8558 h 0.012 M 0.159 1.8558 h 0.012 M 0.195 1.8558 h 0.012 M 0.231 1.8558 h 0.012 M -0.255 1.9002 h 0.012 M -0.219 1.9002 h 0.012 M -0.183 1.9002 h 0.012 M -0.147 1.9002 h 0.012 M -0.111 1.9002 h 0.012 M -0.075 1.9002 h 0.012 M -0.039 1.9002 h 0.012 M -0.003 1.9002 h 0.012 M 0.033 1.9002 h 0.012 M 0.069 1.9002 h 0.012 M 0.105 1.9002 h 0.012 M 0.141 1.9002 h 0.012 M 0.177 1.9002 h 0.012 M 0.213 1.9002 h 0.012 M -0.237 1.9447 h 0.012 M -0.201 1.9447 h 0.012 M -0.165 1.9447 h 0.012 M -0.129 1.9447 h 0.012 M -0.093 1.9447 h 0.012 M -0.057 1.9447 h 0.012 M -0.021 1.9447 h 0.012 M 0.015 1.9447 h 0.012 M 0.051 1.9447 h 0.012 M 0.087 1.9447 h 0.012 M 0.123 1.9447 h 0.012 M 0.159 1.9447 h 0.012 M 0.195 1.9447 h 0.012 M 0.231 1.9447 h 0.012"
+            },
+            {
+              "id": "door-handle",
+              "bone": "door",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.232,
+              "y": 0.95,
+              "w": 0.022,
+              "h": 0.13,
+              "r": 0.004,
+              "region": "door",
+              "material": "mesh-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.475,
+              "w": 0.6,
+              "h": 0.975,
+              "r": 0.01,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof-seam",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.27,
+              "y": -0.445,
+              "w": 0.54,
+              "h": 0.915,
+              "r": 0.01
+            },
+            {
+              "id": "fan-opening-1",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  0.08,
+                  0.1
+                ],
+                [
+                  0.07799,
+                  0.1178
+                ],
+                [
+                  0.07208,
+                  0.13471
+                ],
+                [
+                  0.06255,
+                  0.14988
+                ],
+                [
+                  0.04988,
+                  0.16255
+                ],
+                [
+                  0.03471,
+                  0.17208
+                ],
+                [
+                  0.0178,
+                  0.17799
+                ],
+                [
+                  0.0,
+                  0.18
+                ],
+                [
+                  -0.0178,
+                  0.17799
+                ],
+                [
+                  -0.03471,
+                  0.17208
+                ],
+                [
+                  -0.04988,
+                  0.16255
+                ],
+                [
+                  -0.06255,
+                  0.14988
+                ],
+                [
+                  -0.07208,
+                  0.13471
+                ],
+                [
+                  -0.07799,
+                  0.1178
+                ],
+                [
+                  -0.08,
+                  0.1
+                ],
+                [
+                  -0.07799,
+                  0.0822
+                ],
+                [
+                  -0.07208,
+                  0.06529
+                ],
+                [
+                  -0.06255,
+                  0.05012
+                ],
+                [
+                  -0.04988,
+                  0.03745
+                ],
+                [
+                  -0.03471,
+                  0.02792
+                ],
+                [
+                  -0.0178,
+                  0.02201
+                ],
+                [
+                  0.0,
+                  0.02
+                ],
+                [
+                  0.0178,
+                  0.02201
+                ],
+                [
+                  0.03471,
+                  0.02792
+                ],
+                [
+                  0.04988,
+                  0.03745
+                ],
+                [
+                  0.06255,
+                  0.05012
+                ],
+                [
+                  0.07208,
+                  0.06529
+                ],
+                [
+                  0.07799,
+                  0.0822
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "fan-opening-2",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  0.08,
+                  0.32
+                ],
+                [
+                  0.07799,
+                  0.3378
+                ],
+                [
+                  0.07208,
+                  0.35471
+                ],
+                [
+                  0.06255,
+                  0.36988
+                ],
+                [
+                  0.04988,
+                  0.38255
+                ],
+                [
+                  0.03471,
+                  0.39208
+                ],
+                [
+                  0.0178,
+                  0.39799
+                ],
+                [
+                  0.0,
+                  0.4
+                ],
+                [
+                  -0.0178,
+                  0.39799
+                ],
+                [
+                  -0.03471,
+                  0.39208
+                ],
+                [
+                  -0.04988,
+                  0.38255
+                ],
+                [
+                  -0.06255,
+                  0.36988
+                ],
+                [
+                  -0.07208,
+                  0.35471
+                ],
+                [
+                  -0.07799,
+                  0.3378
+                ],
+                [
+                  -0.08,
+                  0.32
+                ],
+                [
+                  -0.07799,
+                  0.3022
+                ],
+                [
+                  -0.07208,
+                  0.28529
+                ],
+                [
+                  -0.06255,
+                  0.27012
+                ],
+                [
+                  -0.04988,
+                  0.25745
+                ],
+                [
+                  -0.03471,
+                  0.24792
+                ],
+                [
+                  -0.0178,
+                  0.24201
+                ],
+                [
+                  0.0,
+                  0.24
+                ],
+                [
+                  0.0178,
+                  0.24201
+                ],
+                [
+                  0.03471,
+                  0.24792
+                ],
+                [
+                  0.04988,
+                  0.25745
+                ],
+                [
+                  0.06255,
+                  0.27012
+                ],
+                [
+                  0.07208,
+                  0.28529
+                ],
+                [
+                  0.07799,
+                  0.3022
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cable-slot",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.435,
+              "w": 0.3,
+              "h": 0.03,
+              "r": 0.01
+            },
+            {
+              "id": "door-field",
+              "bone": "door",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.27,
+              "y": -0.5,
+              "w": 0.54,
+              "h": 0.025,
+              "region": "door",
+              "material": "mesh-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "side-panel",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.1,
+              "w": 1.0,
+              "h": 1.867,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 1.967,
+              "w": 1.0,
+              "h": 0.033,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "base-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.07,
+              "w": 1.0,
+              "h": 0.03,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "panel-border",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.46,
+              "y": 0.14,
+              "w": 0.92,
+              "h": 1.79,
+              "r": 0.01
+            },
+            {
+              "id": "panel-seam",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.14
+                ],
+                [
+                  0.0,
+                  1.93
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "vents",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.22 1.62 L 0.42 1.62 L 0.42 1.6320000000000001 L 0.22 1.6320000000000001 Z M 0.22 1.6700000000000002 L 0.42 1.6700000000000002 L 0.42 1.6820000000000002 L 0.22 1.6820000000000002 Z M 0.22 1.7200000000000002 L 0.42 1.7200000000000002 L 0.42 1.7320000000000002 L 0.22 1.7320000000000002 Z M 0.22 1.77 L 0.42 1.77 L 0.42 1.782 L 0.22 1.782 Z M 0.22 1.82 L 0.42 1.82 L 0.42 1.832 L 0.22 1.832 Z M 0.22 1.87 L 0.42 1.87 L 0.42 1.8820000000000001 L 0.22 1.8820000000000001 Z M 0.22 1.9200000000000002 L 0.42 1.9200000000000002 L 0.42 1.9320000000000002 L 0.22 1.9320000000000002 Z"
+            },
+            {
+              "id": "door-edge",
+              "bone": "door",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.1,
+              "w": 0.025,
+              "h": 1.867,
+              "region": "door",
+              "material": "mesh-steel"
+            },
+            {
+              "id": "caster-left",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.385,
+              "y": 0.0,
+              "w": 0.03,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "caster-right",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.415,
+              "y": 0.0,
+              "w": 0.03,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A front view 12 mm wide and 40 mm tall on paper: two corner posts, a roof, a base rail and two casters frame a perforated door field, in front of which the 19-inch equipment stack stands. Front view: the right-hand side panel across the 1 m depth, framed by roof and base rail, with a centre seam, a rear vent group, the 25 mm door edge on the right and the two front casters. Top view: the 0.6 m by 1 m roof with two fan openings, a cable slot and the door edge as a strip along the right-hand side.",
+            "de": "Eine Vorderansicht von 12 mm Breite und 40 mm Höhe auf Papier: zwei Eckpfosten, ein Dach, eine Fußschiene und zwei Rollen rahmen ein gelochtes Türfeld, vor dem der 19-Zoll-Geräteturm steht. Vorderansicht: die rechte Seitenwand über die Tiefe von 1 m, von Dach und Sockelschiene gerahmt, mit Mittelfuge, einer hinteren Lüftungsgruppe, der 25 mm starken Türkante rechts und den zwei vorderen Rollen. Draufsicht: das Dach von 0,6 m mal 1 m mit zwei Lüfteröffnungen, einem Kabelschlitz und der Türkante als Streifen an der rechten Seite."
+          },
+          "retained": {
+            "en": "Height 2.0 m, width 0.6 m, the 42 height units of 44.45 mm, the 482.6 mm equipment width, the storage array and six 2U servers at the bottom, patch panel, cable brush and switch at the top, the open units between them, the door handle.",
+            "de": "Höhe 2,0 m, Breite 0,6 m, die 42 Höheneinheiten zu 44,45 mm, die Gerätebreite von 482,6 mm, der Speicher und sechs 2-HE-Server unten, Patchfeld, Kabelbürste und Switch oben, die offenen Einheiten dazwischen, der Türgriff."
+          },
+          "merged": {
+            "en": "Hinges, lock and the door frame merge into the door field; rails and cable entries merge into the posts and the roof.",
+            "de": "Scharniere, Schloss und der Türrahmen gehen im Türfeld auf; Schienen und Kabeleinführungen gehen in den Pfosten und das Dach auf."
+          },
+          "omitted": {
+            "en": "The mounting rails, the rear door, the levelling feet, the PDU strips and all cabling; the door is drawn behind the equipment fronts so that the units are seen through its 70 percent open perforation. Front and top view omit the servers, switch and blanking panels, which sit behind the side panel and the roof, and the rear casters.",
+            "de": "Die Montageschienen, die Rücktür, die Nivellierfüße, die Steckdosenleisten und alle Kabel; die Tür ist hinter den Gerätefronten gezeichnet, damit die Geräte durch ihre zu 70 Prozent offene Lochung zu sehen sind. Vorder- und Draufsicht lassen Server, Switch und Blenden weg, die hinter Seitenwand und Dach sitzen, außerdem die hinteren Rollen."
+          },
+          "thinElements": {
+            "en": "The perforation is one detail path of 12 mm dashes in staggered rows of 44 mm pitch over the door field; drive bays, vent slits, ports and slots are 0.13 mm lines, LEDs are 13 mm discs.",
+            "de": "Die Lochung ist ein Detailzug aus 12-mm-Strichen in versetzten Reihen im Abstand von 44 mm über dem Türfeld; Laufwerksschächte, Lüftungsschlitze, Anschlüsse und Schlitze sind 0,13-mm-Linien, LEDs sind Scheiben von 13 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Posts and roof 0.5 and 0.45, servers 0.45, storage 0.4, switch 0.3, door field 0.18, casters 0.2; body pen 0.18 mm, detail pen 0.13 mm.",
+            "de": "Pfosten und Dach 0,5 und 0,45, Server 0,45, Speicher 0,4, Switch 0,3, Türfeld 0,18, Rollen 0,2; Körperstift 0,18 mm, Detailstift 0,13 mm."
+          },
+          "overlays": {
+            "en": "Cabinet, servers, switch, patch block, door and casters are separate regions: in the thermal view the warm server fronts stand out from the cool door field and the warm cabinet sheets.",
+            "de": "Schrank, Server, Switch, Patchblock, Tür und Rollen sind getrennte Regionen: In der Thermalansicht heben sich die warmen Serverfronten vom kühlen Türfeld und den warmen Schrankblechen ab."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "post-left",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.07,
+              "w": 0.034,
+              "h": 1.93,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "post-right",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.266,
+              "y": 0.07,
+              "w": 0.034,
+              "h": 1.93,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 1.96,
+              "w": 0.6,
+              "h": 0.04,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "base-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.07,
+              "w": 0.54,
+              "h": 0.034,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "caster-left",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.265,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "caster-right",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.225,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "storage",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.1,
+              "w": 0.4826,
+              "h": 0.1778,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-5",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.2778,
+              "w": 0.4826,
+              "h": 0.0859,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-7",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.3667,
+              "w": 0.4826,
+              "h": 0.0859,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-9",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.4556,
+              "w": 0.4826,
+              "h": 0.0859,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-11",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.5445,
+              "w": 0.4826,
+              "h": 0.0859,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-13",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.6334,
+              "w": 0.4826,
+              "h": 0.0859,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "server-15",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.7223,
+              "w": 0.4826,
+              "h": 0.0859,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "door-field",
+              "bone": "door",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.266,
+              "y": 0.104,
+              "w": 0.532,
+              "h": 1.856,
+              "region": "door",
+              "material": "mesh-steel"
+            },
+            {
+              "id": "door-perforation",
+              "bone": "door",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.25 0.1445 h 0.02 M -0.2 0.1445 h 0.02 M -0.15 0.1445 h 0.02 M -0.1 0.1445 h 0.02 M -0.05 0.1445 h 0.02 M 0 0.1445 h 0.02 M 0.05 0.1445 h 0.02 M 0.1 0.1445 h 0.02 M 0.15 0.1445 h 0.02 M 0.2 0.1445 h 0.02 M -0.225 0.2334 h 0.02 M -0.175 0.2334 h 0.02 M -0.125 0.2334 h 0.02 M -0.075 0.2334 h 0.02 M -0.025 0.2334 h 0.02 M 0.025 0.2334 h 0.02 M 0.075 0.2334 h 0.02 M 0.125 0.2334 h 0.02 M 0.175 0.2334 h 0.02 M 0.225 0.2334 h 0.02 M -0.25 0.3223 h 0.02 M -0.2 0.3223 h 0.02 M -0.15 0.3223 h 0.02 M -0.1 0.3223 h 0.02 M -0.05 0.3223 h 0.02 M 0 0.3223 h 0.02 M 0.05 0.3223 h 0.02 M 0.1 0.3223 h 0.02 M 0.15 0.3223 h 0.02 M 0.2 0.3223 h 0.02 M -0.225 0.4112 h 0.02 M -0.175 0.4112 h 0.02 M -0.125 0.4112 h 0.02 M -0.075 0.4112 h 0.02 M -0.025 0.4112 h 0.02 M 0.025 0.4112 h 0.02 M 0.075 0.4112 h 0.02 M 0.125 0.4112 h 0.02 M 0.175 0.4112 h 0.02 M 0.225 0.4112 h 0.02 M -0.25 0.5001 h 0.02 M -0.2 0.5001 h 0.02 M -0.15 0.5001 h 0.02 M -0.1 0.5001 h 0.02 M -0.05 0.5001 h 0.02 M 0 0.5001 h 0.02 M 0.05 0.5001 h 0.02 M 0.1 0.5001 h 0.02 M 0.15 0.5001 h 0.02 M 0.2 0.5001 h 0.02 M -0.225 0.589 h 0.02 M -0.175 0.589 h 0.02 M -0.125 0.589 h 0.02 M -0.075 0.589 h 0.02 M -0.025 0.589 h 0.02 M 0.025 0.589 h 0.02 M 0.075 0.589 h 0.02 M 0.125 0.589 h 0.02 M 0.175 0.589 h 0.02 M 0.225 0.589 h 0.02 M -0.25 0.6778 h 0.02 M -0.2 0.6778 h 0.02 M -0.15 0.6778 h 0.02 M -0.1 0.6778 h 0.02 M -0.05 0.6778 h 0.02 M 0 0.6778 h 0.02 M 0.05 0.6778 h 0.02 M 0.1 0.6778 h 0.02 M 0.15 0.6778 h 0.02 M 0.2 0.6778 h 0.02 M -0.225 0.7667 h 0.02 M -0.175 0.7667 h 0.02 M -0.125 0.7667 h 0.02 M -0.075 0.7667 h 0.02 M -0.025 0.7667 h 0.02 M 0.025 0.7667 h 0.02 M 0.075 0.7667 h 0.02 M 0.125 0.7667 h 0.02 M 0.175 0.7667 h 0.02 M 0.225 0.7667 h 0.02 M -0.25 0.8557 h 0.02 M -0.2 0.8557 h 0.02 M -0.15 0.8557 h 0.02 M -0.1 0.8557 h 0.02 M -0.05 0.8557 h 0.02 M 0 0.8557 h 0.02 M 0.05 0.8557 h 0.02 M 0.1 0.8557 h 0.02 M 0.15 0.8557 h 0.02 M 0.2 0.8557 h 0.02 M -0.225 0.9445 h 0.02 M -0.175 0.9445 h 0.02 M -0.125 0.9445 h 0.02 M -0.075 0.9445 h 0.02 M -0.025 0.9445 h 0.02 M 0.025 0.9445 h 0.02 M 0.075 0.9445 h 0.02 M 0.125 0.9445 h 0.02 M 0.175 0.9445 h 0.02 M 0.225 0.9445 h 0.02 M -0.25 1.0335 h 0.02 M -0.2 1.0335 h 0.02 M -0.15 1.0335 h 0.02 M -0.1 1.0335 h 0.02 M -0.05 1.0335 h 0.02 M 0 1.0335 h 0.02 M 0.05 1.0335 h 0.02 M 0.1 1.0335 h 0.02 M 0.15 1.0335 h 0.02 M 0.2 1.0335 h 0.02 M -0.225 1.1224 h 0.02 M -0.175 1.1224 h 0.02 M -0.125 1.1224 h 0.02 M -0.075 1.1224 h 0.02 M -0.025 1.1224 h 0.02 M 0.025 1.1224 h 0.02 M 0.075 1.1224 h 0.02 M 0.125 1.1224 h 0.02 M 0.175 1.1224 h 0.02 M 0.225 1.1224 h 0.02 M -0.25 1.2113 h 0.02 M -0.2 1.2113 h 0.02 M -0.15 1.2113 h 0.02 M -0.1 1.2113 h 0.02 M -0.05 1.2113 h 0.02 M 0 1.2113 h 0.02 M 0.05 1.2113 h 0.02 M 0.1 1.2113 h 0.02 M 0.15 1.2113 h 0.02 M 0.2 1.2113 h 0.02 M -0.225 1.3002 h 0.02 M -0.175 1.3002 h 0.02 M -0.125 1.3002 h 0.02 M -0.075 1.3002 h 0.02 M -0.025 1.3002 h 0.02 M 0.025 1.3002 h 0.02 M 0.075 1.3002 h 0.02 M 0.125 1.3002 h 0.02 M 0.175 1.3002 h 0.02 M 0.225 1.3002 h 0.02 M -0.25 1.389 h 0.02 M -0.2 1.389 h 0.02 M -0.15 1.389 h 0.02 M -0.1 1.389 h 0.02 M -0.05 1.389 h 0.02 M 0 1.389 h 0.02 M 0.05 1.389 h 0.02 M 0.1 1.389 h 0.02 M 0.15 1.389 h 0.02 M 0.2 1.389 h 0.02 M -0.225 1.4779 h 0.02 M -0.175 1.4779 h 0.02 M -0.125 1.4779 h 0.02 M -0.075 1.4779 h 0.02 M -0.025 1.4779 h 0.02 M 0.025 1.4779 h 0.02 M 0.075 1.4779 h 0.02 M 0.125 1.4779 h 0.02 M 0.175 1.4779 h 0.02 M 0.225 1.4779 h 0.02 M -0.25 1.5668 h 0.02 M -0.2 1.5668 h 0.02 M -0.15 1.5668 h 0.02 M -0.1 1.5668 h 0.02 M -0.05 1.5668 h 0.02 M 0 1.5668 h 0.02 M 0.05 1.5668 h 0.02 M 0.1 1.5668 h 0.02 M 0.15 1.5668 h 0.02 M 0.2 1.5668 h 0.02 M -0.225 1.6558 h 0.02 M -0.175 1.6558 h 0.02 M -0.125 1.6558 h 0.02 M -0.075 1.6558 h 0.02 M -0.025 1.6558 h 0.02 M 0.025 1.6558 h 0.02 M 0.075 1.6558 h 0.02 M 0.125 1.6558 h 0.02 M 0.175 1.6558 h 0.02 M 0.225 1.6558 h 0.02 M -0.25 1.7446 h 0.02 M -0.2 1.7446 h 0.02 M -0.15 1.7446 h 0.02 M -0.1 1.7446 h 0.02 M -0.05 1.7446 h 0.02 M 0 1.7446 h 0.02 M 0.05 1.7446 h 0.02 M 0.1 1.7446 h 0.02 M 0.15 1.7446 h 0.02 M 0.2 1.7446 h 0.02 M -0.225 1.8335 h 0.02 M -0.175 1.8335 h 0.02 M -0.125 1.8335 h 0.02 M -0.075 1.8335 h 0.02 M -0.025 1.8335 h 0.02 M 0.025 1.8335 h 0.02 M 0.075 1.8335 h 0.02 M 0.125 1.8335 h 0.02 M 0.175 1.8335 h 0.02 M 0.225 1.8335 h 0.02 M -0.25 1.9224 h 0.02 M -0.2 1.9224 h 0.02 M -0.15 1.9224 h 0.02 M -0.1 1.9224 h 0.02 M -0.05 1.9224 h 0.02 M 0 1.9224 h 0.02 M 0.05 1.9224 h 0.02 M 0.1 1.9224 h 0.02 M 0.15 1.9224 h 0.02 M 0.2 1.9224 h 0.02"
+            },
+            {
+              "id": "patch-brush",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.44,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 1.83355,
+              "w": 0.4826,
+              "h": 0.0889,
+              "region": "blanks",
+              "material": "blank-steel"
+            },
+            {
+              "id": "switch",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 1.92245,
+              "w": 0.4826,
+              "h": 0.04445,
+              "region": "switch",
+              "material": "chassis"
+            },
+            {
+              "id": "door-handle",
+              "bone": "door",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.228,
+              "y": 0.93,
+              "w": 0.026,
+              "h": 0.16,
+              "r": 0.006,
+              "region": "door",
+              "material": "mesh-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.47,
+              "w": 0.6,
+              "h": 0.97,
+              "r": 0.01,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "cable-slot",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.43,
+              "w": 0.3,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "door-field",
+              "bone": "door",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.266,
+              "y": -0.5,
+              "w": 0.532,
+              "h": 0.03,
+              "region": "door",
+              "material": "mesh-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "side-panel",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.104,
+              "w": 1.0,
+              "h": 1.856,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 1.96,
+              "w": 1.0,
+              "h": 0.04,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "base-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.07,
+              "w": 1.0,
+              "h": 0.034,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "panel-seam",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  1.9
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "door-edge",
+              "bone": "door",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.104,
+              "w": 0.03,
+              "h": 1.856,
+              "region": "door",
+              "material": "mesh-steel"
+            },
+            {
+              "id": "caster-left",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.38,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "caster-right",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.42,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.07,
+              "r": 0.012,
+              "region": "feet",
+              "material": "caster-rubber"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A front view 6 mm wide and 20 mm tall on paper: the corner posts, roof and base frame a dotted door field with the lower server stack and the upper switch group in front. Front view: the side panel with roof, base rail, seam, the 30 mm door edge and two casters. Top view: the roof with a cable slot and the door strip on the right.",
+            "de": "Eine Vorderansicht von 6 mm Breite und 20 mm Höhe auf Papier: Eckpfosten, Dach und Fußrahmen fassen ein gepunktetes Türfeld ein, davor der untere Serverturm und die obere Switchgruppe. Vorderansicht: die Seitenwand mit Dach, Sockelschiene, Fuge, der 30 mm starken Türkante und zwei Rollen. Draufsicht: das Dach mit einem Kabelschlitz und der Türleiste rechts."
+          },
+          "retained": {
+            "en": "Height 2.0 m, width 0.6 m, the storage array, each of the six servers, the patch and brush block, the switch, the casters and the door handle.",
+            "de": "Höhe 2,0 m, Breite 0,6 m, der Speicher, jeder der sechs Server, der Patch- und Bürstenblock, der Switch, die Rollen und der Türgriff."
+          },
+          "merged": {
+            "en": "Patch panel and cable brush are one 2U block.",
+            "de": "Patchfeld und Kabelbürste sind ein 2-HE-Block."
+          },
+          "omitted": {
+            "en": "Drive bays, vent slits, ports and LEDs of the units and the rails. Front and top view omit panel border, vents and fan openings; the equipment is hidden behind the panel.",
+            "de": "Laufwerksschächte, Lüftungsschlitze, Anschlüsse und LEDs der Geräte sowie die Schienen. Vorder- und Draufsicht lassen Wandrahmen, Lüftung und Lüfteröffnungen weg; die Geräte sind hinter der Wand verdeckt."
+          },
+          "thinElements": {
+            "en": "Posts are widened from 30 to 34 mm and the roof to 40 mm so that fill and pen reach 0.34 mm; the 2U servers keep a 3 mm joint to the neighbours.",
+            "de": "Pfosten sind von 30 auf 34 mm und das Dach auf 40 mm verbreitert, damit Füllung und Stift 0,34 mm erreichen; die 2-HE-Server behalten eine Fuge von 3 mm zu den Nachbarn."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Posts 0.5, servers 0.45, storage 0.4, switch 0.3, door field 0.18; body pen 0.18 mm.",
+            "de": "Pfosten 0,5, Server 0,45, Speicher 0,4, Switch 0,3, Türfeld 0,18; Körperstift 0,18 mm."
+          },
+          "overlays": {
+            "en": "The same six regions as at 1:50; the patch block is drawn with the blanks region, the switch with its own.",
+            "de": "Dieselben sechs Regionen wie bei 1:50; der Patchblock gehört zur Region Patchfeld, der Switch zu seiner eigenen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "post-left",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.07,
+              "w": 0.05,
+              "h": 1.93,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "post-right",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.07,
+              "w": 0.05,
+              "h": 1.93,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 1.94,
+              "w": 0.6,
+              "h": 0.06,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "base-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0.07,
+              "w": 0.5,
+              "h": 0.05,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "caster-left",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.07,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "caster-right",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.22,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.07,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "server-block",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 0.1,
+              "w": 0.4826,
+              "h": 0.7112,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "door-field",
+              "bone": "door",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0.12,
+              "w": 0.5,
+              "h": 1.82,
+              "region": "door",
+              "material": "mesh-steel"
+            },
+            {
+              "id": "door-perforation",
+              "bone": "door",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2 0.2 h 0.06 M -0.02 0.2 h 0.06 M -0.11 0.38 h 0.06 M 0.07 0.38 h 0.06 M -0.2 0.56 h 0.06 M -0.02 0.56 h 0.06 M -0.11 0.74 h 0.06 M 0.07 0.74 h 0.06 M -0.2 0.92 h 0.06 M -0.02 0.92 h 0.06 M -0.11 1.1 h 0.06 M 0.07 1.1 h 0.06 M -0.2 1.28 h 0.06 M -0.02 1.28 h 0.06 M -0.11 1.46 h 0.06 M 0.07 1.46 h 0.06 M -0.2 1.64 h 0.06 M -0.02 1.64 h 0.06 M -0.11 1.82 h 0.06 M 0.07 1.82 h 0.06"
+            },
+            {
+              "id": "top-group",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.2413,
+              "y": 1.83355,
+              "w": 0.4826,
+              "h": 0.13335,
+              "regions": [
+                "switch",
+                "blanks"
+              ],
+              "material": "chassis"
+            }
+          ],
+          "plan": [
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.45,
+              "w": 0.6,
+              "h": 0.95,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "door-field",
+              "bone": "door",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.5,
+              "w": 0.5,
+              "h": 0.05,
+              "region": "door",
+              "material": "mesh-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "side-panel",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.07,
+              "w": 1.0,
+              "h": 1.87,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 1.94,
+              "w": 1.0,
+              "h": 0.06,
+              "region": "cabinet",
+              "material": "rack-steel"
+            },
+            {
+              "id": "door-edge",
+              "bone": "door",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.12,
+              "w": 0.05,
+              "h": 1.82,
+              "region": "door",
+              "material": "mesh-steel"
+            },
+            {
+              "id": "caster-left",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.375,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.07,
+              "region": "feet",
+              "material": "caster-rubber"
+            },
+            {
+              "id": "caster-right",
+              "bone": "feet",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.425,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.07,
+              "region": "feet",
+              "material": "caster-rubber"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A front view 3 mm wide and 10 mm tall on paper: a framed tower with one dark server block at the bottom, a top group and a dotted door field between. Front view: the side panel block with roof band, a 50 mm door edge and two casters. Top view: the roof with the door strip on the right.",
+            "de": "Eine Vorderansicht von 3 mm Breite und 10 mm Höhe auf Papier: ein gerahmter Turm mit einem dunklen Serverblock unten, einer oberen Gruppe und einem gepunkteten Türfeld dazwischen. Vorderansicht: der Seitenwandblock mit Dachband, einer 50 mm starken Türkante und zwei Rollen. Draufsicht: das Dach mit der Türleiste rechts."
+          },
+          "retained": {
+            "en": "Height 2.0 m, width 0.6 m, the frame, the 16U block of storage and six servers, the top group of switch, patch panel and brush, the door field.",
+            "de": "Höhe 2,0 m, Breite 0,6 m, der Rahmen, der 16-HE-Block aus Speicher und sechs Servern, die obere Gruppe aus Switch, Patchfeld und Bürste, das Türfeld."
+          },
+          "merged": {
+            "en": "Storage and six servers are one block; switch, patch panel and brush are one top group (regions switch and blanks).",
+            "de": "Speicher und sechs Server sind ein Block; Switch, Patchfeld und Bürste sind eine obere Gruppe (Regionen Switch und Patchfeld)."
+          },
+          "omitted": {
+            "en": "All unit details, the casters' wheels, the handle and the door edge. Front and top view omit all fine detail; the equipment is hidden.",
+            "de": "Alle Gerätedetails, die Räder der Rollen, der Griff und die Türkante. Vorder- und Draufsicht lassen alle Feinheiten weg; die Geräte sind verdeckt."
+          },
+          "thinElements": {
+            "en": "Posts are widened from 30 to 50 mm (0.25 mm) and the roof to 60 mm; the pen is 0.13 mm.",
+            "de": "Pfosten sind von 30 auf 50 mm (0,25 mm) und das Dach auf 60 mm verbreitert; der Stift ist 0,13 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Posts 0.5, server block 0.42, top group 0.4, door field 0.18; one body pen of 0.13 mm.",
+            "de": "Pfosten 0,5, Serverblock 0,42, obere Gruppe 0,4, Türfeld 0,18; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "Merged shapes carry area-weighted colour; the door field is the cool region behind the equipment.",
+            "de": "Zusammengeführte Formen tragen flächengewichtete Farbe; das Türfeld ist die kühle Region hinter den Geräten."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 800
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "cabinet",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.6,
+              "h": 2.0,
+              "regions": [
+                "cabinet",
+                "door",
+                "feet"
+              ],
+              "material": "rack-steel"
+            },
+            {
+              "id": "server-block",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.1,
+              "w": 0.4,
+              "h": 0.7112,
+              "region": "servers",
+              "material": "chassis"
+            },
+            {
+              "id": "top-group",
+              "bone": "equipment",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 1.83355,
+              "w": 0.4,
+              "h": 0.13335,
+              "regions": [
+                "switch",
+                "blanks"
+              ],
+              "material": "chassis"
+            }
+          ],
+          "front": [
+            {
+              "id": "cabinet",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1.0,
+              "h": 2.0,
+              "regions": [
+                "cabinet",
+                "door",
+                "feet"
+              ],
+              "material": "rack-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "roof",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.5,
+              "w": 0.6,
+              "h": 1.0,
+              "regions": [
+                "cabinet",
+                "door",
+                "feet"
+              ],
+              "material": "rack-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A tower 1.2 mm wide and 4 mm tall on paper: one frame block with a dark server block at the bottom and a smaller top group above it, the door field left as open frame between them. Front view: one block 2 mm wide and 4 mm tall. Top view: one 1.2 by 2 mm roof block.",
+            "de": "Ein Turm von 1,2 mm Breite und 4 mm Höhe auf Papier: ein Rahmenblock mit einem dunklen Serverblock unten und einer kleineren oberen Gruppe darüber, das Türfeld bleibt dazwischen offener Rahmen. Vorderansicht: ein Block von 2 mm Breite und 4 mm Höhe. Draufsicht: ein Dachblock von 1,2 mal 2 mm."
+          },
+          "retained": {
+            "en": "Height 2.0 m, width 0.6 m, depth 1.0 m, the frame as one block, the 16U server block and the top group of switch and blanking panels.",
+            "de": "Höhe 2,0 m, Breite 0,6 m, Tiefe 1,0 m, der Rahmen als ein Block, der 16-HE-Serverblock und die obere Gruppe aus Switch und Blindblenden."
+          },
+          "merged": {
+            "en": "Cabinet, door and casters are one block (regions cabinet, door, feet); the equipment blocks are drawn 0.4 m wide so that the 0.1 m gap to the posts stays at the 0.2 mm gap of the print profile.",
+            "de": "Gehäuse, Tür und Rollen sind ein Block (Regionen Gehäuse, Tür, Füße); die Geräteblöcke sind 0,4 m breit gezeichnet, damit der Abstand von 0,1 m zu den Pfosten die 0,2 mm Lücke des Druckprofils hält."
+          },
+          "omitted": {
+            "en": "Corner posts, perforation, unit joints, casters and the door edge (all below 0.1 m, 0.2 mm) in all three views; the equipment is hidden behind the closed door in front and top view.",
+            "de": "Eckpfosten, Lochung, Einheitenfugen, Rollen und Türkante (alle unter 0,1 m, 0,2 mm) in allen drei Ansichten; die Geräte sind in Vorder- und Draufsicht hinter der geschlossenen Tür verdeckt."
+          },
+          "thinElements": {
+            "en": "None are drawn; no line is thinner than the 0.13 mm body pen.",
+            "de": "Keine werden gezeichnet; keine Linie ist dünner als der Körperstift von 0,13 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Line drawing with one filled frame block and filled equipment blocks; the thermal view paints the merged regions with their area-weighted values.",
+            "de": "Strichzeichnung mit einem gefüllten Rahmenblock und gefüllten Geräteblöcken; die Wärmeansicht färbt die zusammengefassten Regionen mit ihren flächengewichteten Werten."
+          },
+          "overlays": {
+            "en": "Dimension lines stand outside the block; the exhaust plume starts at the roof in side and front view and at the roof centre in top view.",
+            "de": "Maßlinien stehen außerhalb des Blocks; die Abluftfahne beginnt am Dach in Seiten- und Vorderansicht und in der Dachmitte in der Draufsicht."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "idle",
+        "title": {
+          "en": "Idle",
+          "de": "Leerlauf"
+        },
+        "description": {
+          "en": "The servers wait for work: 0.3 of the rated load, about 1.5 kW, and the fans run at 0.55 of full speed; warm air leaves at the rear and rises over the roof.",
+          "de": "Die Server warten auf Arbeit: 0,3 der Nennlast, etwa 1,5 kW, und die Lüfter laufen mit 0,55 der vollen Drehzahl; warme Luft tritt hinten aus und steigt über das Dach."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "door": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "servers": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "switch": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "blanks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cabinet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.5,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "exhaust-air": 1
+          },
+          "operating": {
+            "load": 0.3,
+            "airflow": 0.55
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "full-load",
+        "title": {
+          "en": "Full load",
+          "de": "Volllast"
+        },
+        "description": {
+          "en": "Rated load of 5 kW: the fans blow 0.26 m3/s from the cold front through the servers and out of the rear, 15 K warmer.",
+          "de": "Nennlast von 5 kW: die Lüfter blasen 0,26 m3/s von der kalten Front durch die Server und hinten 15 K wärmer wieder hinaus."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "door": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "servers": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "switch": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "blanks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cabinet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.5,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "exhaust-air": 1
+          },
+          "operating": {
+            "load": 1,
+            "airflow": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "off",
+        "title": {
+          "en": "Powered down",
+          "de": "Ausgeschaltet"
+        },
+        "description": {
+          "en": "All equipment off, the rack stands at room temperature.",
+          "de": "Alle Geräte aus, das Rack steht auf Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "door": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "servers": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "switch": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "blanks": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cabinet": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.5,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "exhaust-air": 1
+          },
+          "operating": {
+            "load": 0,
+            "airflow": 0
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "load-ramp",
+        "title": {
+          "en": "Load ramp",
+          "de": "Lastanstieg"
+        },
+        "description": {
+          "en": "A job arrives: over 15 s the load climbs from idle to full load, the fans follow, after 30 s at full load the job ends and the rack falls back to idle. The loop closes at the idle state.",
+          "de": "Ein Auftrag trifft ein: In 15 s steigt die Last vom Leerlauf auf Volllast, die Lüfter folgen, nach 30 s Volllast endet der Auftrag und das Rack fällt in den Leerlauf zurück. Die Schleife schließt im Leerlauf."
+        },
+        "durationS": 60,
+        "fps": 5,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle",
+            "ease": "smooth"
+          },
+          {
+            "t": 15,
+            "pose": "full-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 45,
+            "pose": "full-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 60,
+            "pose": "idle",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 60
+          }
+        ],
+        "phases": [
+          {
+            "id": "ramp-up",
+            "fromS": 0,
+            "toS": 15,
+            "title": {
+              "en": "Load climbs",
+              "de": "Last steigt"
+            }
+          },
+          {
+            "id": "full-load",
+            "fromS": 15,
+            "toS": 45,
+            "title": {
+              "en": "Full load",
+              "de": "Volllast"
+            }
+          },
+          {
+            "id": "ramp-down",
+            "fromS": 45,
+            "toS": 60,
+            "title": {
+              "en": "Load falls",
+              "de": "Last fällt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "load-on",
+            "title": {
+              "en": "Job arrives",
+              "de": "Auftrag trifft ein"
+            },
+            "target": "load"
+          },
+          {
+            "t": 45,
+            "kind": "load-off",
+            "title": {
+              "en": "Job ends",
+              "de": "Auftrag endet"
+            },
+            "target": "load"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3
+              },
+              {
+                "t": 15,
+                "v": 1
+              },
+              {
+                "t": 45,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0.3
+              }
+            ]
+          },
+          {
+            "target": "operating:airflow",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.55
+              },
+              {
+                "t": 15,
+                "v": 1
+              },
+              {
+                "t": 45,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0.55
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "power-up",
+        "title": {
+          "en": "Power up to idle",
+          "de": "Hochfahren in den Leerlauf"
+        },
+        "description": {
+          "en": "From cold: after 5 s the equipment is switched on, the fans spin up within 10 s and the cabinet warms up in the following 5 minutes.",
+          "de": "Aus dem kalten Zustand: nach 5 s werden die Geräte eingeschaltet, die Lüfter laufen innerhalb von 10 s hoch und der Schrank erwärmt sich in den folgenden 5 Minuten."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "idle",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "Idle, warming up",
+              "de": "Leerlauf, wärmt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Equipment switched on",
+              "de": "Geräte eingeschaltet"
+            },
+            "target": "load"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:load",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.3
+              }
+            ]
+          },
+          {
+            "target": "operating:airflow",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.55
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "load",
+          "title": {
+            "en": "Compute load",
+            "de": "Rechenlast"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.3,
+              "title": {
+                "en": "Idle (30 percent)",
+                "de": "Leerlauf (30 Prozent)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full load (5 kW)",
+                "de": "Volllast (5 kW)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "airflow",
+          "title": {
+            "en": "Fan airflow",
+            "de": "Lüfterluftstrom"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.55,
+              "title": {
+                "en": "Idle speed",
+                "de": "Leerlaufdrehzahl"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full speed (0.26 m3/s)",
+                "de": "Volle Drehzahl (0,26 m3/s)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "door",
+          "title": {
+            "en": "Perforated front door",
+            "de": "Gelochte Fronttür"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "mesh-steel",
+          "areaM2": 1.05,
+          "characteristicLengthM": 1.9,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "door-sheet",
+              "title": {
+                "en": "Perforated steel sheet 1.5 mm, 70 percent open",
+                "de": "Lochblech 1,5 mm, 70 Prozent offen"
+              },
+              "kind": "metal",
+              "material": "mesh-steel",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 3e-05,
+              "heatCapacityJM2K": 1800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 1800,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "servers",
+          "title": {
+            "en": "Server and storage fronts",
+            "de": "Server- und Speicherfronten"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chassis",
+          "areaM2": 0.343,
+          "characteristicLengthM": 0.09,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "front-bezel",
+              "title": {
+                "en": "Steel front with plastic bezel 2 mm",
+                "de": "Stahlfront mit Kunststoffblende 2 mm"
+              },
+              "kind": "metal",
+              "material": "chassis",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 5e-05,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "load",
+            "heatW": 100
+          },
+          "source": "authored-estimate",
+          "reference": "hosni-1999"
+        },
+        {
+          "id": "switch",
+          "title": {
+            "en": "Network switch front",
+            "de": "Front des Netzwerk-Switches"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "chassis",
+          "areaM2": 0.021,
+          "characteristicLengthM": 0.044,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "switch-front",
+              "title": {
+                "en": "Steel front 1.5 mm",
+                "de": "Stahlfront 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "chassis",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 4e-05,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "operating": {
+            "key": "load",
+            "heatW": 10
+          },
+          "source": "authored-estimate",
+          "reference": "hosni-1999"
+        },
+        {
+          "id": "blanks",
+          "title": {
+            "en": "Patch panel and cable brush",
+            "de": "Patchfeld und Kabelbürste"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "blank-steel",
+          "areaM2": 0.043,
+          "characteristicLengthM": 0.044,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "blank-sheet",
+              "title": {
+                "en": "Steel sheet 1.5 mm",
+                "de": "Stahlblech 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "blank-steel",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 3e-05,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "cabinet",
+          "title": {
+            "en": "Cabinet posts, roof, base and panels",
+            "de": "Schrankpfosten, Dach, Sockel und Wände"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "rack-steel",
+          "areaM2": 6.4,
+          "characteristicLengthM": 2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "cabinet-sheet",
+              "title": {
+                "en": "Powder-coated steel sheet 1.2 mm",
+                "de": "Pulverbeschichtetes Stahlblech 1,2 mm"
+              },
+              "kind": "metal",
+              "material": "rack-steel",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 2e-05,
+              "heatCapacityJM2K": 5800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5800,
+          "operating": {
+            "key": "load",
+            "heatW": 160
+          },
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "feet",
+          "title": {
+            "en": "Casters",
+            "de": "Rollen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "caster-rubber",
+          "areaM2": 0.06,
+          "characteristicLengthM": 0.07,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "caster-body",
+              "title": {
+                "en": "Nylon wheel and steel bracket",
+                "de": "Nylonrad mit Stahlbügel"
+              },
+              "kind": "metal",
+              "material": "caster-rubber",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.02,
+              "heatCapacityJM2K": 4000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "exhaust-air",
+          "kind": "fan",
+          "title": {
+            "en": "Warm exhaust air of the server fans, front to rear",
+            "de": "Warme Abluft der Serverlüfter, von vorn nach hinten"
+          },
+          "anchor": "exhaust-top",
+          "directionDeg": 90,
+          "diameterM": 0.5,
+          "operatingKey": "airflow",
+          "volumeFlowM3S": 0.26,
+          "temperatureRiseK": 15.1,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "ashrae-tc99-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Every watt ends as heat in the room: at level 1 the load heats the server fronts with 100 W (cold intake air washes them), the switch front with 10 W and the cabinet sheets with 160 W; the remaining 4730 W leave with the exhaust air of the fans.",
+          "de": "Jedes Watt endet als Wärme im Raum: bei Stufe 1 erwärmt die Last die Serverfronten mit 100 W (die kalte Ansaugluft umspült sie), die Switch-Front mit 10 W und die Schrankbleche mit 160 W; die übrigen 4730 W verlassen das Rack mit der Abluft der Lüfter."
+        },
+        {
+          "en": "The air crosses the rack from the cold front to the hot rear, perpendicular to the front elevation; the exhaust emitter sits on the roof edge and points upward, because the hot-aisle air rises there.",
+          "de": "Die Luft durchquert das Rack von der kalten Front zur heißen Rückseite, senkrecht zur Vorderansicht; der Abluft-Emitter sitzt an der Dachkante und zeigt nach oben, weil die Warmgangluft dort aufsteigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid cabinet on four casters 0.5 m by 0.9 m apart; the centre of mass lies on the vertical axis of the footprint, 0.95 m above the floor.",
+          "de": "Ein starrer Schrank auf vier Rollen im Abstand von 0,5 m mal 0,9 m; der Schwerpunkt liegt auf der Mittelachse der Standfläche, 0,95 m über dem Boden."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "full-load",
+      "defaultClip": "load-ramp",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

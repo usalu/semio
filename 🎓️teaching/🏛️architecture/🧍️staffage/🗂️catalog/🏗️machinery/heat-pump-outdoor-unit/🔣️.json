@@ -226,6 +226,7 @@
     "bone": "unit",
     "x": 0.26,
     "y": 0.8,
+    "z": 0.12,
     "kind": "emitter",
     "title": {
      "en": "Fan outlet centre",
@@ -544,6 +545,669 @@
        "region": "casing",
        "material": "powder-coat"
       }
+     ],
+     "front": [
+      {
+       "id": "fan-blade-1",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.1851,
+         0.83725
+        ],
+        [
+         0.21002,
+         0.87022
+        ],
+        [
+         0.23008,
+         0.90674
+        ],
+        [
+         0.24791,
+         0.94386
+        ],
+        [
+         0.26556,
+         0.98023
+        ],
+        [
+         0.28349,
+         1.01592
+        ],
+        [
+         0.30032,
+         1.05216
+        ],
+        [
+         0.30032,
+         1.05216
+        ],
+        [
+         0.31305,
+         0.98995
+        ],
+        [
+         0.31007,
+         0.93244
+        ],
+        [
+         0.29283,
+         0.88477
+        ],
+        [
+         0.26506,
+         0.84969
+        ],
+        [
+         0.23096,
+         0.82686
+        ],
+        [
+         0.19378,
+         0.81345
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-2",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.10469,
+         0.87342
+        ],
+        [
+         0.08103,
+         0.90731
+        ],
+        [
+         0.0525,
+         0.93768
+        ],
+        [
+         0.02271,
+         0.9661
+        ],
+        [
+         -0.00643,
+         0.99413
+        ],
+        [
+         -0.03483,
+         1.02221
+        ],
+        [
+         -0.06409,
+         1.04942
+        ],
+        [
+         -0.06409,
+         1.04942
+        ],
+        [
+         -0.001,
+         1.0423
+        ],
+        [
+         0.05277,
+         1.0217
+        ],
+        [
+         0.09279,
+         0.99057
+        ],
+        [
+         0.11757,
+         0.95331
+        ],
+        [
+         0.12874,
+         0.91383
+        ],
+        [
+         0.13001,
+         0.87433
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-3",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.04544,
+         0.80813
+        ],
+        [
+         0.0059,
+         0.7961
+        ],
+        [
+         -0.0318,
+         0.77835
+        ],
+        [
+         -0.06804,
+         0.7588
+        ],
+        [
+         -0.10369,
+         0.73975
+        ],
+        [
+         -0.13918,
+         0.72142
+        ],
+        [
+         -0.1741,
+         0.70199
+        ],
+        [
+         -0.1741,
+         0.70199
+        ],
+        [
+         -0.14783,
+         0.7598
+        ],
+        [
+         -0.11162,
+         0.80457
+        ],
+        [
+         -0.06965,
+         0.83301
+        ],
+        [
+         -0.02656,
+         0.84507
+        ],
+        [
+         0.01444,
+         0.84349
+        ],
+        [
+         0.0524,
+         0.83249
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-4",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.08923,
+         0.7316
+        ],
+        [
+         0.08845,
+         0.69028
+        ],
+        [
+         0.09368,
+         0.64894
+        ],
+        [
+         0.10108,
+         0.60843
+        ],
+        [
+         0.10818,
+         0.56864
+        ],
+        [
+         0.11465,
+         0.52922
+        ],
+        [
+         0.12233,
+         0.49001
+        ],
+        [
+         0.12233,
+         0.49001
+        ],
+        [
+         0.07546,
+         0.53285
+        ],
+        [
+         0.04408,
+         0.58113
+        ],
+        [
+         0.03,
+         0.62983
+        ],
+        [
+         0.03185,
+         0.67454
+        ],
+        [
+         0.04602,
+         0.71305
+        ],
+        [
+         0.06821,
+         0.74575
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-5",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.17554,
+         0.7496
+        ],
+        [
+         0.2146,
+         0.73609
+        ],
+        [
+         0.25553,
+         0.72829
+        ],
+        [
+         0.29634,
+         0.72281
+        ],
+        [
+         0.33639,
+         0.71726
+        ],
+        [
+         0.37587,
+         0.71123
+        ],
+        [
+         0.41554,
+         0.70643
+        ],
+        [
+         0.41554,
+         0.70643
+        ],
+        [
+         0.36031,
+         0.67509
+        ],
+        [
+         0.3047,
+         0.66016
+        ],
+        [
+         0.25403,
+         0.66182
+        ],
+        [
+         0.21208,
+         0.67739
+        ],
+        [
+         0.17984,
+         0.70277
+        ],
+        [
+         0.15559,
+         0.73398
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.04
+        ],
+        [
+         0.47,
+         -0.04
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.025
+        ],
+        [
+         0.22,
+         -0.025
+        ],
+        [
+         0.22,
+         0.025
+        ],
+        [
+         -0.02,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-hub",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.55,
+       "filled": false,
+       "tone": 0.15,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.07,
+       "ry": 0.07,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "fan-ring-inner",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.35,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.19,
+       "ry": 0.19,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "fan-ring-outer",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.35,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.27,
+       "ry": 0.27,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.35,
+       "ry": 0.35,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "compressor-panel",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.15,
+       "w": 1.1,
+       "h": 0.17,
+       "region": "compressor-casing",
+       "material": "powder-coat"
+      },
+      {
+       "id": "base-tray",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.08,
+       "w": 1.1,
+       "h": 0.07,
+       "region": "base-tray",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.08,
+       "w": 1.1,
+       "h": 1.33,
+       "region": "casing",
+       "material": "powder-coat"
+      },
+      {
+       "id": "foot-left",
+       "bone": "unit",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.34,
+       "y": 0,
+       "w": 0.18,
+       "h": 0.09,
+       "region": "feet",
+       "material": "rubber"
+      },
+      {
+       "id": "foot-right",
+       "bone": "unit",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.52,
+       "y": 0,
+       "w": 0.18,
+       "h": 0.09,
+       "region": "feet",
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.04
+        ],
+        [
+         0.47,
+         -0.04
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.025
+        ],
+        [
+         0.22,
+         -0.025
+        ],
+        [
+         0.22,
+         0.025
+        ],
+        [
+         -0.02,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.225,
+       "y": -0.23,
+       "w": 0.035,
+       "h": 0.7,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.55,
+       "w": 0.45,
+       "h": 1.1,
+       "region": "casing",
+       "material": "powder-coat"
+      }
      ]
     },
     "decisions": {
@@ -552,16 +1216,16 @@
       "de": "Alle 1:100-Teile plus der Paneelgriff."
      },
      "retained": {
-      "en": "Handle crossing the service panel line.",
-      "de": "Griff über der Wartungspaneelfuge."
+      "en": "Handle crossing the service panel line. Front view: casing with base tray and compressor panel, two rubber feet, the round fan guard with two rings and hub in front of five swept fan blades, the discharge louvre as a bar that rises and falls with its vane, and the lid plate that stands up when the lid opens. Plan: casing top, the lid plate that shortens towards the hinge as it opens, the fan bulge and the louvre. Lid and louvre are extruded solids of their side-view profile.",
+      "de": "Griff über der Wartungspaneelfuge. Vorderansicht: Gehäuse mit Bodenwanne und Verdichterblende, zwei Gummifüße, das runde Ventilatorgitter mit zwei Ringen und Nabe vor fünf gepfeilten Ventilatorflügeln, die Ausblaslamelle als Balken, der mit der Lamelle steigt und fällt, und die Deckelplatte, die sich beim Öffnen aufstellt. Grundriss: Gehäusedeckfläche, die Deckelplatte, die beim Öffnen zum Scharnier hin kürzer wird, die Ventilatorwölbung und die Lamelle. Deckel und Lamelle sind extrudierte Körper ihres Seitenansichtsprofils."
      },
      "merged": {
       "en": "Nothing merged.",
       "de": "Nichts zusammengefasst."
      },
      "omitted": {
-      "en": "Screws, nameplate, fan blade edges (not visible from the side).",
-      "de": "Schrauben, Typenschild, Lüfterblattkanten (von der Seite nicht sichtbar)."
+      "en": "Screws, nameplate, fan blade edges (not visible from the side). The fan blades are drawn static (they turn in operation); the coil guard on the side panels is edge-on in front and plan.",
+      "de": "Schrauben, Typenschild, Lüfterblattkanten (von der Seite nicht sichtbar). Die Ventilatorflügel sind statisch gezeichnet (im Betrieb drehen sie sich); der Tauscherschutz an den Seitenwänden steht in Vorderansicht und Grundriss auf der Kante."
      },
      "thinElements": {
       "en": "Lid 0.04 m (0.8 mm).",
@@ -668,8 +1332,7 @@
        "filled": true,
        "tone": 0.55,
        "region": "casing",
-       "material": "powder-coat"
-      ,
+       "material": "powder-coat",
        "penMm": 0.337
       },
       {
@@ -821,8 +1484,7 @@
        "filled": true,
        "tone": 0.35,
        "region": "top-lid",
-       "material": "powder-coat"
-      ,
+       "material": "powder-coat",
        "penMm": 0.336
       },
       {
@@ -885,6 +1547,574 @@
        "region": "casing",
        "material": "powder-coat"
       }
+     ],
+     "front": [
+      {
+       "id": "fan-blade-1",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.18456,
+         0.83816
+        ],
+        [
+         0.21997,
+         0.88885
+        ],
+        [
+         0.24918,
+         0.94272
+        ],
+        [
+         0.28011,
+         0.99363
+        ],
+        [
+         0.3127,
+         1.04283
+        ],
+        [
+         0.3127,
+         1.04283
+        ],
+        [
+         0.32075,
+         0.95108
+        ],
+        [
+         0.29617,
+         0.87758
+        ],
+        [
+         0.24964,
+         0.83289
+        ],
+        [
+         0.19397,
+         0.8124
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-2",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.10366,
+         0.8732
+        ],
+        [
+         0.06639,
+         0.92254
+        ],
+        [
+         0.02418,
+         0.96696
+        ],
+        [
+         -0.01467,
+         1.01211
+        ],
+        [
+         -0.0514,
+         1.05831
+        ],
+        [
+         -0.0514,
+         1.05831
+        ],
+        [
+         0.03835,
+         1.03761
+        ],
+        [
+         0.10066,
+         0.99153
+        ],
+        [
+         0.12878,
+         0.93346
+        ],
+        [
+         0.13106,
+         0.87418
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-3",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.04533,
+         0.80707
+        ],
+        [
+         -0.0131,
+         0.78688
+        ],
+        [
+         -0.0684,
+         0.76046
+        ],
+        [
+         -0.12334,
+         0.73746
+        ],
+        [
+         -0.17863,
+         0.71681
+        ],
+        [
+         -0.17863,
+         0.71681
+        ],
+        [
+         -0.13121,
+         0.79577
+        ],
+        [
+         -0.06813,
+         0.84079
+        ],
+        [
+         -0.00421,
+         0.8496
+        ],
+        [
+         0.05287,
+         0.83344
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-4",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0902,
+         0.73118
+        ],
+        [
+         0.09135,
+         0.66936
+        ],
+        [
+         0.09939,
+         0.60861
+        ],
+        [
+         0.10428,
+         0.54924
+        ],
+        [
+         0.10684,
+         0.49028
+        ],
+        [
+         0.10684,
+         0.49028
+        ],
+        [
+         0.04639,
+         0.55978
+        ],
+        [
+         0.02307,
+         0.63368
+        ],
+        [
+         0.03445,
+         0.69719
+        ],
+        [
+         0.06745,
+         0.74649
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "fan-blade-5",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.33,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.17625,
+         0.75039
+        ],
+        [
+         0.2354,
+         0.73238
+        ],
+        [
+         0.29566,
+         0.72125
+        ],
+        [
+         0.35363,
+         0.70756
+        ],
+        [
+         0.41049,
+         0.69177
+        ],
+        [
+         0.41049,
+         0.69177
+        ],
+        [
+         0.32572,
+         0.65576
+        ],
+        [
+         0.24823,
+         0.65642
+        ],
+        [
+         0.19134,
+         0.68686
+        ],
+        [
+         0.15465,
+         0.73349
+        ]
+       ],
+       "closed": true,
+       "region": "fan-guard",
+       "material": "aluminium"
+      },
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.04
+        ],
+        [
+         0.47,
+         -0.04
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.025
+        ],
+        [
+         0.22,
+         -0.025
+        ],
+        [
+         0.22,
+         0.025
+        ],
+        [
+         -0.02,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-hub",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.55,
+       "filled": false,
+       "tone": 0.15,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.08,
+       "ry": 0.08,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "fan-ring",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.35,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.24,
+       "ry": 0.24,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.35,
+       "ry": 0.35,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "compressor-panel",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.15,
+       "w": 1.1,
+       "h": 0.17,
+       "region": "compressor-casing",
+       "material": "powder-coat"
+      },
+      {
+       "id": "base-tray",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.08,
+       "w": 1.1,
+       "h": 0.07,
+       "region": "base-tray",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.08,
+       "w": 1.1,
+       "h": 1.33,
+       "region": "casing",
+       "material": "powder-coat"
+      },
+      {
+       "id": "foot-left",
+       "bone": "unit",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.34,
+       "y": 0,
+       "w": 0.18,
+       "h": 0.09,
+       "region": "feet",
+       "material": "rubber"
+      },
+      {
+       "id": "foot-right",
+       "bone": "unit",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.52,
+       "y": 0,
+       "w": 0.18,
+       "h": 0.09,
+       "region": "feet",
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.04
+        ],
+        [
+         0.47,
+         -0.04
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.025
+        ],
+        [
+         0.22,
+         -0.025
+        ],
+        [
+         0.22,
+         0.025
+        ],
+        [
+         -0.02,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.225,
+       "y": -0.23,
+       "w": 0.035,
+       "h": 0.7,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.55,
+       "w": 0.45,
+       "h": 1.1,
+       "region": "casing",
+       "material": "powder-coat"
+      }
      ]
     },
     "decisions": {
@@ -893,16 +2123,16 @@
       "de": "Wie 1:200 mit getrennten Gummifüßen, einem Wartungspaneelumriss und Lamellenschraffur auf dem Tauscherschutz."
      },
      "retained": {
-      "en": "Feet with notches, service panel line, louvre hatch.",
-      "de": "Füße mit Aussparungen, Wartungspaneelfuge, Lamellenschraffur."
+      "en": "Feet with notches, service panel line, louvre hatch. Front view: casing, tray, compressor panel, two feet, fan guard with one ring and hub in front of five swept blades, louvre bar and the lid plate. Plan: casing top, lid plate, fan bulge and louvre.",
+      "de": "Füße mit Aussparungen, Wartungspaneelfuge, Lamellenschraffur. Vorderansicht: Gehäuse, Wanne, Verdichterblende, zwei Füße, Ventilatorgitter mit einem Ring und Nabe vor fünf gepfeilten Flügeln, Lamellenbalken und die Deckelplatte. Grundriss: Gehäusedeckfläche, Deckelplatte, Ventilatorwölbung und Lamelle."
      },
      "merged": {
       "en": "Handle merged.",
       "de": "Griff zusammengefasst."
      },
      "omitted": {
-      "en": "Handle, screws, nameplate.",
-      "de": "Griff, Schrauben, Typenschild."
+      "en": "Handle, screws, nameplate. Fan spokes in the front view; the coil guard is edge-on.",
+      "de": "Griff, Schrauben, Typenschild. Ventilatorstreben in der Vorderansicht; der Tauscherschutz steht auf der Kante."
      },
      "thinElements": {
       "en": "Lid 0.04 m (0.4 mm).",
@@ -1182,6 +2412,252 @@
        "region": "casing",
        "material": "powder-coat"
       }
+     ],
+     "front": [
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.47,
+         -0.05
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.03
+        ],
+        [
+         0.22,
+         -0.03
+        ],
+        [
+         0.22,
+         0.03
+        ],
+        [
+         -0.02,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.35,
+       "ry": 0.35,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "compressor-panel",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.08,
+       "w": 1.1,
+       "h": 0.24,
+       "region": "compressor-casing",
+       "material": "powder-coat"
+      },
+      {
+       "id": "base-tray",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.08,
+       "w": 1.1,
+       "h": 0.07,
+       "region": "base-tray",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0,
+       "w": 1.1,
+       "h": 1.41,
+       "regions": [
+        "casing",
+        "feet"
+       ],
+       "material": "powder-coat"
+      }
+     ],
+     "plan": [
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.47,
+         -0.05
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.03
+        ],
+        [
+         0.22,
+         -0.03
+        ],
+        [
+         0.22,
+         0.03
+        ],
+        [
+         -0.02,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.225,
+       "y": -0.23,
+       "w": 0.035,
+       "h": 0.7,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.55,
+       "w": 0.45,
+       "h": 1.1,
+       "regions": [
+        "casing",
+        "feet",
+        "compressor-casing",
+        "base-tray"
+       ],
+       "material": "powder-coat"
+      }
      ]
     },
     "decisions": {
@@ -1190,12 +2666,12 @@
       "de": "Gehäuse bis zum Boden, Verdichterpaneel, Tauscherschutzfeld, Lüfterwölbung, Wanne, Deckel und Lamelle."
      },
      "retained": {
-      "en": "The coil guard field and the compressor panel.",
-      "de": "Das Tauscherschutzfeld und das Verdichterpaneel."
+      "en": "The coil guard field and the compressor panel. Front view: casing down to the ground, compressor panel, tray band, fan disc, louvre bar and lid plate. Plan: casing top, lid plate, fan bulge and louvre.",
+      "de": "Das Tauscherschutzfeld und das Verdichterpaneel. Vorderansicht: Gehäuse bis zum Boden, Verdichterblende, Wannenband, Ventilatorscheibe, Lamellenbalken und Deckelplatte. Grundriss: Gehäusedeckfläche, Deckelplatte, Ventilatorwölbung und Lamelle."
      },
      "merged": {
-      "en": "Feet merge into the casing at 1:200 (notches would be 0.28 mm).",
-      "de": "Die Füße gehen bei 1:200 im Gehäuse auf (Aussparungen wären 0,28 mm)."
+      "en": "Feet merge into the casing at 1:200 (notches would be 0.28 mm). Feet merge into the casing in the front view; in the plan the casing top lists casing, feet, compressor panel and tray.",
+      "de": "Die Füße gehen bei 1:200 im Gehäuse auf (Aussparungen wären 0,28 mm). Die Füße gehen in der Vorderansicht im Gehäuse auf; im Grundriss führt die Gehäusedeckfläche Gehäuse, Füße, Verdichterblende und Wanne."
      },
      "omitted": {
       "en": "Louvres, panel line, handle.",
@@ -1287,8 +2763,7 @@
         "fan-guard",
         "feet"
        ],
-       "material": "powder-coat"
-      ,
+       "material": "powder-coat",
        "penMm": 0.171
       },
       {
@@ -1319,8 +2794,7 @@
        "filled": true,
        "tone": 0.35,
        "region": "top-lid",
-       "material": "powder-coat"
-      ,
+       "material": "powder-coat",
        "penMm": 0.172
       },
       {
@@ -1353,6 +2827,212 @@
        "region": "discharge-vane",
        "material": "powder-coat"
       }
+     ],
+     "front": [
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.47,
+         -0.1
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.06
+        ],
+        [
+         0.22,
+         -0.06
+        ],
+        [
+         0.22,
+         0.06
+        ],
+        [
+         -0.02,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "fan-disc",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.35,
+       "ry": 0.35,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0,
+       "w": 1.1,
+       "h": 1.35,
+       "regions": [
+        "casing",
+        "coil-guard",
+        "compressor-casing",
+        "base-tray",
+        "feet"
+       ],
+       "material": "powder-coat"
+      }
+     ],
+     "plan": [
+      {
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.47,
+         -0.1
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "top-lid",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.56,
+        "z1": 0.56
+       }
+      },
+      {
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.06
+        ],
+        [
+         0.22,
+         -0.06
+        ],
+        [
+         0.22,
+         0.06
+        ],
+        [
+         -0.02,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "discharge-vane",
+       "material": "powder-coat",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.24,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.55,
+       "w": 0.485,
+       "h": 1.1,
+       "regions": [
+        "casing",
+        "coil-guard",
+        "compressor-casing",
+        "base-tray",
+        "fan-guard",
+        "feet"
+       ],
+       "material": "powder-coat"
+      }
      ]
     },
     "decisions": {
@@ -1361,12 +3041,12 @@
       "de": "Eine zusammengesetzte Gehäusesilhouette mit der Lüfterwölbung vorn, dem Wartungsdeckel oben und der Luftleitlamelle an der Ausblasseite."
      },
      "retained": {
-      "en": "The 0.45 x 1.45 m outline, the fan bulge, lid and vane (they move).",
-      "de": "Der Umriss von 0,45 x 1,45 m, die Lüfterwölbung, Deckel und Lamelle (sie bewegen sich)."
+      "en": "The 0.45 x 1.45 m outline, the fan bulge, lid and vane (they move). Front view: one casing form, the fan disc, the louvre bar (0.12 m, 0.24 mm) and the lid bar, both of which move. Plan: one casing form with the fan bulge, the lid plate and the louvre.",
+      "de": "Der Umriss von 0,45 x 1,45 m, die Lüfterwölbung, Deckel und Lamelle (sie bewegen sich). Vorderansicht: eine Gehäuseform, die Ventilatorscheibe, der Lamellenbalken (0,12 m, 0,24 mm) und der Deckelbalken, die sich beide bewegen. Grundriss: eine Gehäuseform mit der Ventilatorwölbung, die Deckelplatte und die Lamelle."
      },
      "merged": {
-      "en": "Casing, coil guard, compressor panel, tray, fan grille and feet are one form.",
-      "de": "Gehäuse, Tauscherschutz, Verdichterpaneel, Wanne, Lüftergitter und Füße sind eine Form."
+      "en": "Casing, coil guard, compressor panel, tray, fan grille and feet are one form. Casing, coil guard, compressor panel, tray and feet are one form in both views; the fan bulge is part of the plan form.",
+      "de": "Gehäuse, Tauscherschutz, Verdichterpaneel, Wanne, Lüftergitter und Füße sind eine Form. Gehäuse, Tauscherschutz, Verdichterblende, Wanne und Füße sind in beiden Ansichten eine Form; die Ventilatorwölbung gehört im Grundriss zur Form."
      },
      "omitted": {
       "en": "Louvres, panel lines, feet notches, handle.",
@@ -1393,14 +3073,14 @@
   },
   "symbols": [
    {
-    "id": "site-plan-footprint",
+    "id": "heat-pump-symbol",
     "title": {
-     "en": "Site-plan footprint with fan and air flow",
-     "de": "Baustellenplan-Grundriss mit Lüfter und Luftstrom"
+     "en": "Outdoor unit symbol",
+     "de": "Außengerätezeichen"
     },
     "description": {
-     "en": "Plan symbol of the 1.10 x 0.45 m unit: the footprint, the fan circle and the discharge air arrow.",
-     "de": "Planzeichen des Geräts von 1,10 x 0,45 m: Grundriss, Lüfterkreis und Pfeil des Ausblasluftstroms."
+     "en": "True-extent symbol of the 0.46 x 1.10 m outdoor unit in side, front and top view: casing, lid, the fan opening on the discharge face (offset to the left) and the discharge vane.",
+     "de": "Zeichen des 0,46 x 1,10 m grossen Aussengeräts in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Gehäuse, Deckel, die Ventilatoröffnung auf der Ausblasseite (nach links versetzt) und die Ausblaslamelle."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -1417,30 +3097,14 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
-     "plan": [
+     "elevation": [
       {
-       "kind": "poly",
-       "points": [
-        [
-         -0.55,
-         -0.225
-        ],
-        [
-         0.55,
-         -0.225
-        ],
-        [
-         0.55,
-         0.225
-        ],
-        [
-         -0.55,
-         0.225
-        ]
-       ],
-       "closed": true,
-       "id": "footprint",
+       "kind": "rect",
+       "x": -0.23,
+       "y": 0,
+       "w": 0.46,
+       "h": 1.41,
+       "id": "elevation-casing",
        "bone": "unit",
        "role": "body",
        "z": 1,
@@ -1448,43 +3112,157 @@
        "tone": 0.6
       },
       {
-       "kind": "ellipse",
-       "cx": 0.22,
-       "cy": 0,
-       "rx": 0.2,
-       "ry": 0.2,
-       "id": "fan-circle",
+       "kind": "rect",
+       "x": -0.23,
+       "y": 1.4,
+       "w": 0.46,
+       "h": 0.05,
+       "id": "elevation-lid",
        "bone": "unit",
-       "role": "detail",
+       "role": "body",
        "z": 2,
-       "filled": false,
+       "filled": true,
        "tone": 0.5
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         0.45,
-         0
-        ],
-        [
-         0.85,
-         0
-        ]
-       ],
-       "closed": false,
-       "id": "flow-arrow",
+       "kind": "rect",
+       "x": 0.21,
+       "y": 0.45,
+       "w": 0.05,
+       "h": 0.7,
+       "id": "elevation-fan-guard",
+       "bone": "unit",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": 0.23,
+       "y": 0.72,
+       "w": 0.25,
+       "h": 0.11,
+       "id": "elevation-vane",
+       "bone": "unit",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0,
+       "w": 1.1,
+       "h": 1.41,
+       "id": "front-casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": -0.55,
+       "y": 1.4,
+       "w": 1.1,
+       "h": 0.05,
+       "id": "front-lid",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.35,
+       "ry": 0.35,
+       "id": "front-fan-opening",
        "bone": "unit",
        "role": "detail",
        "z": 3,
        "filled": false,
        "tone": 0.5
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.12,
+       "cy": 0.8,
+       "rx": 0.06,
+       "ry": 0.06,
+       "id": "front-fan-hub",
+       "bone": "unit",
+       "role": "detail",
+       "z": 4,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.24,
+       "y": 0.72,
+       "w": 0.72,
+       "h": 0.11,
+       "id": "front-vane",
+       "bone": "unit",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.23,
+       "y": -0.55,
+       "w": 0.46,
+       "h": 1.1,
+       "id": "plan-casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": 0.23,
+       "y": -0.23,
+       "w": 0.03,
+       "h": 0.7,
+       "id": "plan-fan-guard",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": 0.23,
+       "y": -0.24,
+       "w": 0.25,
+       "h": 0.72,
+       "id": "plan-vane",
+       "bone": "unit",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4
       }
      ]
     },
     "dimensionalNote": {
-     "en": "True extent in model metres: 1.10 x 0.45 m footprint, fan circle 0.4 m, arrow 0.4 m long showing the discharge direction; real size at both listed scales.",
-     "de": "Wahre Ausdehnung in Modellmetern: Grundriss 1,10 x 0,45 m, Lüfterkreis 0,4 m, Pfeil 0,4 m lang für die Ausblasrichtung; in beiden gelisteten Maßstäben in Realgröße."
+     "en": "Model metres: casing 0.46 m deep x 1.10 m wide x 1.41 m high with the vane reaching 0.48 m ahead; side, front and top view.",
+     "de": "Modellmeter: Gehäuse 0,46 m tief x 1,10 m breit x 1,41 m hoch, die Lamelle ragt 0,48 m nach vorn; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -2925,10 +4703,7 @@
   "presentation": {
    "defaultPose": "heating",
    "defaultClip": "heating-sweep",
-   "defaultScale": 50,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 50
   },
   "exports": [
    "svg",

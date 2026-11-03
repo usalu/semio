@@ -1,0 +1,10 @@
+import { chromium } from "file:///C:/git/semio/node_modules/playwright/index.mjs";
+const browser = await chromium.launch();
+const page = await browser.newPage();
+page.on("pageerror", (e) => console.log("PAGEERROR", e.stack.slice(0, 900)));
+page.on("console", (m) => { if (m.type() === "error") console.log("CONSOLE", m.text().slice(0, 400)); });
+page.on("requestfailed", (r) => console.log("REQFAIL", r.url().slice(0, 200)));
+await page.goto("http://localhost:6071/?view=thermal&scale=50&t=0.5", { waitUntil: "load" });
+await page.waitForTimeout(8000);
+console.log((await page.content()).slice(0, 600));
+await browser.close();

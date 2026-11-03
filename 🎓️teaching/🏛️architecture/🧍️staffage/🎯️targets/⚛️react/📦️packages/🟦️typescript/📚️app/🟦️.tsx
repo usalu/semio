@@ -204,6 +204,7 @@ function Shell(): ReactElement {
       </main>
       <footer className="flex shrink-0 flex-wrap items-center justify-between gap-double border-t border-border px-double py-single text-[0.65rem] text-muted-foreground">
         <span>{t("footer.text")}</span>
+        {store.problems.length === 0 ? null : <span role="status">{store.problems.map((problem) => problem[language]).join(" ")}</span>}
         {store.mode === "volatile" ? <span role="status">{t("footer.volatile")}</span> : <span>{t("footer.local", { version: STORAGE_VERSION })}</span>}
       </footer>
     </div>

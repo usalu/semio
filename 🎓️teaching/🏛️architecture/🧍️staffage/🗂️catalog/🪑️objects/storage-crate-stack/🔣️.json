@@ -1,0 +1,3708 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "storage-crate-stack",
+    "category": "objects",
+    "title": {
+      "en": "Stack of Plastic Storage Crates",
+      "de": "Stapel aus Kunststoff-Lagerkisten"
+    },
+    "summary": {
+      "en": "Five stackable and nestable 600 by 400 by 300 mm plastic crates in side elevation: stacked loaded to 1.5 m, or nested empty to 0.62 m, with a half-high pose in between.",
+      "de": "Fünf stapel- und ineinanderstellbare Kunststoffkisten von 600 mal 400 mal 300 mm in der Seitenansicht: beladen auf 1,5 m gestapelt oder leer auf 0,62 m ineinandergestellt, mit einer halbhohen Stellung dazwischen."
+    },
+    "tags": [
+      "storage-crate",
+      "crate-stack",
+      "plastic-crate",
+      "warehouse",
+      "object",
+      "storage"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A8)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iso-3394",
+          "citation": "ISO 3394: Packaging - Complete, filled transport packages and unit loads - Dimensions of rigid rectangular packages (modular footprint 600 mm by 400 mm)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of five stackable and nestable crates of the 600 mm by 400 mm module (ISO 3394), 0.30 m high, with sidewalls tapering from 0.56 m at the foot to 0.60 m at the rim, a 20 mm rim and a 20 mm foot ring; the crates are 1.9 kg each (HDPE, authored estimate) and 9.5 kg in all. Stacked, each crate sits with its foot on the rim of the one below (pitch 0.30 m); nested, a crate sinks into the one below and only 0.08 m of its height shows above it (authored estimate; real nesting depths range from about 0.05 to 0.2 m with the crate type). The origin is the middle of the lowest crate's base on the floor. The crates have no heat source and exchange heat with the room; a nested crate exposes only 30 percent of its surface. Loaded poses carry 10 kg per crate as carried loads.",
+        "de": "Seitenansicht von fünf stapel- und ineinanderstellbaren Kisten des Moduls 600 mm mal 400 mm (ISO 3394), 0,30 m hoch, mit Seitenwänden, die sich vom Fuß mit 0,56 m auf 0,60 m am Rand weiten, einem 20 mm hohen Rand und einem 20 mm hohen Fußring; die Kisten wiegen je 1,9 kg (PE-HD, Schätzwert) und zusammen 9,5 kg. Gestapelt steht jede Kiste mit ihrem Fuß auf dem Rand der darunter (Raster 0,30 m); ineinandergestellt sinkt eine Kiste in die darunter, und nur 0,08 m ihrer Höhe ragen darüber hinaus (Schätzwert; echte Einstelltiefen liegen je nach Kistentyp bei etwa 0,05 bis 0,2 m). Der Ursprung ist die Mitte der Unterseite der untersten Kiste auf dem Boden. Die Kisten haben keine Wärmequelle und tauschen Wärme mit dem Raum aus; eine ineinandergestellte Kiste legt nur 30 Prozent ihrer Fläche frei. Beladene Stellungen tragen 10 kg je Kiste als mitgeführte Lasten."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.5,
+      "widthM": 0.62,
+      "depthM": 0.4,
+      "massKg": 9.5
+    },
+    "materials": [
+      {
+        "id": "hdpe-crate",
+        "title": {
+          "en": "HDPE crate moulding",
+          "de": "PE-HD-Spritzguss der Kiste"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 950,
+        "conductivityWmK": 0.5,
+        "specificHeatJKgK": 2300,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "crate-1",
+      "bones": [
+        {
+          "id": "crate-1",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Crate 1",
+            "de": "Kiste 1"
+          },
+          "lengthM": 0.3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.9,
+            "comX": 0,
+            "comY": 0.15,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "crate-2",
+          "parent": "crate-1",
+          "x": 0,
+          "y": 0.3,
+          "angleDeg": 0,
+          "title": {
+            "en": "Crate 2",
+            "de": "Kiste 2"
+          },
+          "lengthM": 0.3,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.21999999999999997,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 1.9,
+            "comX": 0,
+            "comY": 0.15,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "crate-3",
+          "parent": "crate-2",
+          "x": 0,
+          "y": 0.3,
+          "angleDeg": 0,
+          "title": {
+            "en": "Crate 3",
+            "de": "Kiste 3"
+          },
+          "lengthM": 0.3,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.21999999999999997,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 1.9,
+            "comX": 0,
+            "comY": 0.15,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "crate-4",
+          "parent": "crate-3",
+          "x": 0,
+          "y": 0.3,
+          "angleDeg": 0,
+          "title": {
+            "en": "Crate 4",
+            "de": "Kiste 4"
+          },
+          "lengthM": 0.3,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.21999999999999997,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 1.9,
+            "comX": 0,
+            "comY": 0.15,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "crate-5",
+          "parent": "crate-4",
+          "x": 0,
+          "y": 0.3,
+          "angleDeg": 0,
+          "title": {
+            "en": "Crate 5",
+            "de": "Kiste 5"
+          },
+          "lengthM": 0.3,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.21999999999999997,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 1.9,
+            "comX": 0,
+            "comY": 0.15,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "crate-1",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Foot ring on the floor",
+          "de": "Fußring auf dem Boden"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.54,
+        "footprintWidthM": 0.34,
+        "frictionCoefficient": 0.4
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "c1-foot",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.54,
+              "h": 0.02,
+              "region": "crate-1",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c1-body",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.02
+                ],
+                [
+                  0.28,
+                  0.02
+                ],
+                [
+                  0.3,
+                  0.28
+                ],
+                [
+                  -0.3,
+                  0.28
+                ]
+              ],
+              "closed": true,
+              "region": "crate-1",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c1-rim",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.92,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.28,
+              "w": 0.62,
+              "h": 0.02,
+              "region": "crate-1",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c1-slot-1",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.930000000000001,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c1-slot-2",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.930000000000001,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c1-slot-3",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.930000000000001,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.12,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c2-foot",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.45000000000000007,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.54,
+              "h": 0.02,
+              "region": "crate-2",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c2-body",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.02
+                ],
+                [
+                  0.28,
+                  0.02
+                ],
+                [
+                  0.3,
+                  0.28
+                ],
+                [
+                  -0.3,
+                  0.28
+                ]
+              ],
+              "closed": true,
+              "region": "crate-2",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c2-rim",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.819999999999999,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.28,
+              "w": 0.62,
+              "h": 0.02,
+              "region": "crate-2",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c2-slot-1",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c2-slot-2",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c2-slot-3",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.12,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c3-foot",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.54,
+              "h": 0.02,
+              "region": "crate-3",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c3-body",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.02
+                ],
+                [
+                  0.28,
+                  0.02
+                ],
+                [
+                  0.3,
+                  0.28
+                ],
+                [
+                  -0.3,
+                  0.28
+                ]
+              ],
+              "closed": true,
+              "region": "crate-3",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c3-rim",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.28,
+              "w": 0.62,
+              "h": 0.02,
+              "region": "crate-3",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c3-slot-1",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c3-slot-2",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c3-slot-3",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.12,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c4-foot",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.45000000000000007,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.54,
+              "h": 0.02,
+              "region": "crate-4",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c4-body",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.609999999999999,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.02
+                ],
+                [
+                  0.28,
+                  0.02
+                ],
+                [
+                  0.3,
+                  0.28
+                ],
+                [
+                  -0.3,
+                  0.28
+                ]
+              ],
+              "closed": true,
+              "region": "crate-4",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c4-rim",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.619999999999999,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.28,
+              "w": 0.62,
+              "h": 0.02,
+              "region": "crate-4",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c4-slot-1",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c4-slot-2",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c4-slot-3",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.12,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c5-foot",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0,
+              "w": 0.54,
+              "h": 0.02,
+              "region": "crate-5",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c5-body",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.02
+                ],
+                [
+                  0.28,
+                  0.02
+                ],
+                [
+                  0.3,
+                  0.28
+                ],
+                [
+                  -0.3,
+                  0.28
+                ]
+              ],
+              "closed": true,
+              "region": "crate-5",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c5-rim",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.28,
+              "w": 0.62,
+              "h": 0.02,
+              "region": "crate-5",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c5-slot-1",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c5-slot-2",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.05,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            },
+            {
+              "id": "c5-slot-3",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.12,
+              "y": 0.12,
+              "w": 0.1,
+              "h": 0.04
+            }
+          ],
+          "front": [
+            {
+              "id": "c1-foot",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.35,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.0,
+              "w": 0.3,
+              "h": 0.02
+            },
+            {
+              "id": "c1-body",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.02
+                ],
+                [
+                  0.17,
+                  0.02
+                ],
+                [
+                  0.19,
+                  0.28
+                ],
+                [
+                  -0.19,
+                  0.28
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c1-rim",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.92,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.28,
+              "w": 0.4,
+              "h": 0.02
+            },
+            {
+              "id": "c1-slot",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.93,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-1",
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.12,
+              "w": 0.14,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "c1-rib",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.93,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-1",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0.07
+                ],
+                [
+                  0.16,
+                  0.07
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c2-foot",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.3,
+              "w": 0.3,
+              "h": 0.02
+            },
+            {
+              "id": "c2-body",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.32
+                ],
+                [
+                  0.17,
+                  0.32
+                ],
+                [
+                  0.19,
+                  0.58
+                ],
+                [
+                  -0.19,
+                  0.58
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c2-rim",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.82,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.58,
+              "w": 0.4,
+              "h": 0.02
+            },
+            {
+              "id": "c2-slot",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-2",
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.42,
+              "w": 0.14,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "c2-rib",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-2",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0.37
+                ],
+                [
+                  0.16,
+                  0.37
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c3-foot",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.35,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.6,
+              "w": 0.3,
+              "h": 0.02
+            },
+            {
+              "id": "c3-body",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.62
+                ],
+                [
+                  0.17,
+                  0.62
+                ],
+                [
+                  0.19,
+                  0.88
+                ],
+                [
+                  -0.19,
+                  0.88
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c3-rim",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.88,
+              "w": 0.4,
+              "h": 0.02
+            },
+            {
+              "id": "c3-slot",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-3",
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.72,
+              "w": 0.14,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "c3-rib",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-3",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0.67
+                ],
+                [
+                  0.16,
+                  0.67
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c4-foot",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.9,
+              "w": 0.3,
+              "h": 0.02
+            },
+            {
+              "id": "c4-body",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.92
+                ],
+                [
+                  0.17,
+                  0.92
+                ],
+                [
+                  0.19,
+                  1.18
+                ],
+                [
+                  -0.19,
+                  1.18
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c4-rim",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 1.18,
+              "w": 0.4,
+              "h": 0.02
+            },
+            {
+              "id": "c4-slot",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-4",
+              "kind": "rect",
+              "x": -0.07,
+              "y": 1.02,
+              "w": 0.14,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "c4-rib",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-4",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0.97
+                ],
+                [
+                  0.16,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c5-foot",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 1.2,
+              "w": 0.3,
+              "h": 0.02
+            },
+            {
+              "id": "c5-body",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  1.22
+                ],
+                [
+                  0.17,
+                  1.22
+                ],
+                [
+                  0.19,
+                  1.48
+                ],
+                [
+                  -0.19,
+                  1.48
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c5-rim",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 1.48,
+              "w": 0.4,
+              "h": 0.02
+            },
+            {
+              "id": "c5-slot",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-5",
+              "kind": "rect",
+              "x": -0.07,
+              "y": 1.32,
+              "w": 0.14,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "c5-rib",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-5",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  1.27
+                ],
+                [
+                  0.16,
+                  1.27
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "c1-rim",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c1-body",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c1-floor",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.3,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.14,
+              "w": 0.5,
+              "h": 0.28,
+              "r": 0.01
+            },
+            {
+              "id": "c1-floor-rib-x",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-1",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.0
+                ],
+                [
+                  0.25,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c1-floor-rib-y",
+              "bone": "crate-1",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-1",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.14
+                ],
+                [
+                  0.0,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c2-rim",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c2-body",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c2-floor",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.4,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.14,
+              "w": 0.5,
+              "h": 0.28,
+              "r": 0.01
+            },
+            {
+              "id": "c2-floor-rib-x",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-2",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.0
+                ],
+                [
+                  0.25,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c2-floor-rib-y",
+              "bone": "crate-2",
+              "role": "detail",
+              "z": 4.63,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-2",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.14
+                ],
+                [
+                  0.0,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c3-rim",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c3-body",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c3-floor",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.3,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.14,
+              "w": 0.5,
+              "h": 0.28,
+              "r": 0.01
+            },
+            {
+              "id": "c3-floor-rib-x",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-3",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.0
+                ],
+                [
+                  0.25,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c3-floor-rib-y",
+              "bone": "crate-3",
+              "role": "detail",
+              "z": 4.73,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-3",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.14
+                ],
+                [
+                  0.0,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c4-rim",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c4-body",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c4-floor",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.82,
+              "filled": true,
+              "tone": 0.4,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.14,
+              "w": 0.5,
+              "h": 0.28,
+              "r": 0.01
+            },
+            {
+              "id": "c4-floor-rib-x",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-4",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.0
+                ],
+                [
+                  0.25,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c4-floor-rib-y",
+              "bone": "crate-4",
+              "role": "detail",
+              "z": 4.83,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-4",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.14
+                ],
+                [
+                  0.0,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c5-rim",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c5-body",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c5-floor",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.92,
+              "filled": true,
+              "tone": 0.3,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.14,
+              "w": 0.5,
+              "h": 0.28,
+              "r": 0.01
+            },
+            {
+              "id": "c5-floor-rib-x",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.93,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-5",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.0
+                ],
+                [
+                  0.25,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "c5-floor-rib-y",
+              "bone": "crate-5",
+              "role": "detail",
+              "z": 4.93,
+              "filled": false,
+              "tone": 0.3,
+              "region": "crate-5",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.14
+                ],
+                [
+                  0.0,
+                  0.14
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A stack of five crates, 12.4 mm wide and 30 mm high on paper: each a slightly tapered box with a projecting rim and a foot ring, stacked rim to foot, or nested so that only a strip of each crate shows above the one in front. Front view: five crates with foot, tapering end wall, rim band, one central handle slot and a moulded rib, each nesting into the one below when the stack is lowered. Plan view: per crate the rim ring, the inner wall, the floor with its two ribs; the stack is vertical, so only the top crate is seen from above.",
+            "de": "Ein Stapel aus fünf Kisten, auf Papier 12,4 mm breit und 30 mm hoch: jede ein leicht konischer Kasten mit vorstehendem Rand und Fußring, Rand auf Fuß gestapelt oder ineinandergestellt, sodass von jeder Kiste nur ein Streifen über der davorstehenden zu sehen ist. Vorderansicht: fünf Kisten mit Fuß, konischer Stirnwand, Randband, einem mittigen Griffschlitz und einer Formrippe; jede schiebt sich beim Absenken des Stapels in die darunter liegende. Draufsicht: pro Kiste Randring, Innenwand und Boden mit zwei Rippen; der Stapel steht senkrecht, von oben ist nur die oberste Kiste zu sehen."
+          },
+          "retained": {
+            "en": "Crate 0.60 m by 0.30 m (long side, ISO 3394 module 600 by 400), the taper from 0.56 to 0.60 m, the 20 mm rim, the 20 mm foot ring and three vent slots of 0.10 m by 0.04 m; nesting steps of 0.08 m. Front view: handle slot, rib, foot. Plan view: floor with ribs.",
+            "de": "Kiste 0,60 m mal 0,30 m (Längsseite, Modul 600 mal 400 nach ISO 3394), die Konizität von 0,56 auf 0,60 m, der 20 mm hohe Rand, der 20 mm hohe Fußring und drei Lüftungsschlitze von 0,10 m mal 0,04 m; Ineinanderstell-Stufen von 0,08 m. Vorderansicht: Griffschlitz, Rippe, Fuß. Draufsicht: Boden mit Rippen."
+          },
+          "merged": {
+            "en": "The reinforcing ribs and the hand-hole in the short ends are not seen from the long side; the corner posts join the walls.",
+            "de": "Die Verstärkungsrippen und das Griffloch in den Stirnseiten sieht man von der Längsseite nicht; die Eckpfosten gehen in den Wänden auf."
+          },
+          "omitted": {
+            "en": "Moulded text, the pivot handles of folding types, floor ribs and the grid of the base. Front and plan view: stacking lugs and the hand-hole texture are not drawn.",
+            "de": "Geformte Beschriftung, die Klappgriffe faltbarer Typen, Bodenrippen und das Raster des Bodens. Vorder- und Draufsicht: Stapelnocken und die Griffmuldentextur sind nicht gezeichnet."
+          },
+          "thinElements": {
+            "en": "The slots are 0.13 mm detail outlines of 0.8 mm by 2 mm; the rim of 20 mm is 0.4 mm on paper.",
+            "de": "Die Schlitze sind 0,13-mm-Detailumrisse von 0,8 mm mal 2 mm; der 20 mm hohe Rand ist auf Papier 0,4 mm hoch."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Crates alternate between tone 0.45 and 0.55 with a lighter rim and darker foot so neighbouring crates separate; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Die Kisten wechseln zwischen Ton 0,45 und 0,55 mit hellerem Rand und dunklerem Fuß, damit sich benachbarte Kisten trennen; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Each crate is its own region: nested crates show a smaller exposed fraction in the thermal view.",
+            "de": "Jede Kiste ist eine eigene Region: ineinandergestellte Kisten zeigen in der Thermalansicht einen kleineren frei liegenden Anteil."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "c1-body",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.3,
+                  0.275
+                ],
+                [
+                  -0.3,
+                  0.275
+                ]
+              ],
+              "closed": true,
+              "region": "crate-1",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c1-rim",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.92,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.275,
+              "w": 0.62,
+              "h": 0.025,
+              "region": "crate-1",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c2-body",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.3,
+                  0.275
+                ],
+                [
+                  -0.3,
+                  0.275
+                ]
+              ],
+              "closed": true,
+              "region": "crate-2",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c2-rim",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.819999999999999,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.275,
+              "w": 0.62,
+              "h": 0.025,
+              "region": "crate-2",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c3-body",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.3,
+                  0.275
+                ],
+                [
+                  -0.3,
+                  0.275
+                ]
+              ],
+              "closed": true,
+              "region": "crate-3",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c3-rim",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.275,
+              "w": 0.62,
+              "h": 0.025,
+              "region": "crate-3",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c4-body",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.609999999999999,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.3,
+                  0.275
+                ],
+                [
+                  -0.3,
+                  0.275
+                ]
+              ],
+              "closed": true,
+              "region": "crate-4",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c4-rim",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.619999999999999,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.275,
+              "w": 0.62,
+              "h": 0.025,
+              "region": "crate-4",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c5-body",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.3,
+                  0.275
+                ],
+                [
+                  -0.3,
+                  0.275
+                ]
+              ],
+              "closed": true,
+              "region": "crate-5",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c5-rim",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.275,
+              "w": 0.62,
+              "h": 0.025,
+              "region": "crate-5",
+              "material": "hdpe-crate"
+            }
+          ],
+          "front": [
+            {
+              "id": "c1-body",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.0
+                ],
+                [
+                  0.19,
+                  0.275
+                ],
+                [
+                  -0.19,
+                  0.275
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c1-rim",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.92,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.275,
+              "w": 0.4,
+              "h": 0.025
+            },
+            {
+              "id": "c2-body",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.3
+                ],
+                [
+                  0.17,
+                  0.3
+                ],
+                [
+                  0.19,
+                  0.575
+                ],
+                [
+                  -0.19,
+                  0.575
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c2-rim",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.82,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.575,
+              "w": 0.4,
+              "h": 0.025
+            },
+            {
+              "id": "c3-body",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.6
+                ],
+                [
+                  0.17,
+                  0.6
+                ],
+                [
+                  0.19,
+                  0.875
+                ],
+                [
+                  -0.19,
+                  0.875
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c3-rim",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.72,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.875,
+              "w": 0.4,
+              "h": 0.025
+            },
+            {
+              "id": "c4-body",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.9
+                ],
+                [
+                  0.17,
+                  0.9
+                ],
+                [
+                  0.19,
+                  1.175
+                ],
+                [
+                  -0.19,
+                  1.175
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c4-rim",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.62,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 1.175,
+              "w": 0.4,
+              "h": 0.025
+            },
+            {
+              "id": "c5-body",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  1.2
+                ],
+                [
+                  0.17,
+                  1.2
+                ],
+                [
+                  0.19,
+                  1.475
+                ],
+                [
+                  -0.19,
+                  1.475
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c5-rim",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 1.475,
+              "w": 0.4,
+              "h": 0.025
+            }
+          ],
+          "plan": [
+            {
+              "id": "c1-rim",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c1-body",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c2-rim",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c2-body",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c3-rim",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c3-body",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c4-rim",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.65,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c4-body",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            },
+            {
+              "id": "c5-rim",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c5-body",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.28,
+              "y": -0.17,
+              "w": 0.56,
+              "h": 0.34,
+              "r": 0.015
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A stack of five crates, 6.2 mm wide and 15 mm high: tapered boxes with a rim strip on top of each. Front view: five crates as a tapering body with a separate rim band, alternating light and dark tones so that the nested crates stay apart. Plan view: per crate the rim ring and the inner wall outline; the lower crates are covered by the top one and show in the thermal views only.",
+            "de": "Ein Stapel aus fünf Kisten, 6,2 mm breit und 15 mm hoch: konische Kästen mit einem Randstreifen auf jeder. Vorderansicht: fünf Kisten als konischer Körper mit eigenem Randband, abwechselnd hell und dunkel, damit die ineinander geschobenen Kisten getrennt bleiben. Draufsicht: pro Kiste Randring und innere Wandkontur; die unteren Kisten verdeckt die oberste, sie erscheinen nur in den thermischen Ansichten."
+          },
+          "retained": {
+            "en": "Crate 0.60 m by 0.30 m, the taper, the rim of 25 mm and the nesting step of 0.08 m. Front and plan view: body, rim band and inner wall of every crate.",
+            "de": "Kiste 0,60 m mal 0,30 m, die Konizität, der Rand von 25 mm und die Ineinanderstell-Stufe von 0,08 m. Vorder- und Draufsicht: Körper, Randband und Innenwand jeder Kiste."
+          },
+          "merged": {
+            "en": "The foot ring joins the body.",
+            "de": "Der Fußring geht im Körper auf."
+          },
+          "omitted": {
+            "en": "Vent slots and the foot ring as an own shape. Front and plan view: foot, handle slot and floor ribs are not drawn.",
+            "de": "Lüftungsschlitze und der Fußring als eigene Form. Vorder- und Draufsicht: Fuß, Griffschlitz und Bodenrippen sind nicht gezeichnet."
+          },
+          "thinElements": {
+            "en": "The rim is thickened from 20 to 25 mm (0.25 mm on paper) so that fill and pen reach the feature width.",
+            "de": "Der Rand ist von 20 auf 25 mm (0,25 mm auf Papier) verdickt, damit Füllung und Strich die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Alternating tones 0.45 and 0.55, lighter rim; one body pen of 0.18 mm.",
+            "de": "Wechselnde Töne 0,45 und 0,55, hellerer Rand; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Each crate keeps its region.",
+            "de": "Jede Kiste behält ihre Region."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "c1",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.31,
+                  0.3
+                ],
+                [
+                  -0.31,
+                  0.3
+                ]
+              ],
+              "closed": true,
+              "region": "crate-1",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c2",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.31,
+                  0.3
+                ],
+                [
+                  -0.31,
+                  0.3
+                ]
+              ],
+              "closed": true,
+              "region": "crate-2",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c3",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.31,
+                  0.3
+                ],
+                [
+                  -0.31,
+                  0.3
+                ]
+              ],
+              "closed": true,
+              "region": "crate-3",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c4",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.609999999999999,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.31,
+                  0.3
+                ],
+                [
+                  -0.31,
+                  0.3
+                ]
+              ],
+              "closed": true,
+              "region": "crate-4",
+              "material": "hdpe-crate"
+            },
+            {
+              "id": "c5",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.31,
+                  0.3
+                ],
+                [
+                  -0.31,
+                  0.3
+                ]
+              ],
+              "closed": true,
+              "region": "crate-5",
+              "material": "hdpe-crate"
+            }
+          ],
+          "front": [
+            {
+              "id": "c1",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.0
+                ],
+                [
+                  0.2,
+                  0.3
+                ],
+                [
+                  -0.2,
+                  0.3
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c2",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.3
+                ],
+                [
+                  0.17,
+                  0.3
+                ],
+                [
+                  0.2,
+                  0.6
+                ],
+                [
+                  -0.2,
+                  0.6
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c3",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.6
+                ],
+                [
+                  0.17,
+                  0.6
+                ],
+                [
+                  0.2,
+                  0.9
+                ],
+                [
+                  -0.2,
+                  0.9
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c4",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.9
+                ],
+                [
+                  0.17,
+                  0.9
+                ],
+                [
+                  0.2,
+                  1.2
+                ],
+                [
+                  -0.2,
+                  1.2
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "c5",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  1.2
+                ],
+                [
+                  0.17,
+                  1.2
+                ],
+                [
+                  0.2,
+                  1.5
+                ],
+                [
+                  -0.2,
+                  1.5
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "c1",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c2",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c3",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c4",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            },
+            {
+              "id": "c5",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4,
+              "r": 0.02
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A stack of five trapezoids, 3.1 mm wide and 7.5 mm high, each crate one tapered box; nested crates show as short steps. Front view: five stacked trapezoids, each 0.4 m wide at its rim, which sink into the one below as the crates nest. Plan view: one rounded rectangle per crate; the crates lie exactly above each other, so only the top crate shows and the nesting reads in the front and side views.",
+            "de": "Ein Stapel aus fünf Trapezen, 3,1 mm breit und 7,5 mm hoch, jede Kiste ein konischer Kasten; ineinandergestellte Kisten zeigen sich als kurze Stufen. Vorderansicht: fünf gestapelte Trapeze, am Rand je 0,4 m breit, die sich beim Ineinanderschieben in die darunter liegende Kiste senken. Draufsicht: pro Kiste ein abgerundetes Rechteck; die Kisten liegen genau übereinander, nur die oberste ist zu sehen, das Ineinanderschieben liest sich in Vorder- und Seitenansicht."
+          },
+          "retained": {
+            "en": "Crate 0.60 m by 0.30 m with the taper, the stack pitch of 0.30 m and the nesting step of 0.08 m (0.4 mm). Front and plan view: five crates, each its own region.",
+            "de": "Kiste 0,60 m mal 0,30 m mit der Konizität, der Stapelhöhe von 0,30 m und der Ineinanderstell-Stufe von 0,08 m (0,4 mm). Vorder- und Draufsicht: fünf Kisten, jede mit eigener Region."
+          },
+          "merged": {
+            "en": "Rim, foot ring and body are one trapezoid per crate.",
+            "de": "Rand, Fußring und Körper sind ein Trapez je Kiste."
+          },
+          "omitted": {
+            "en": "Rim strip, foot ring and vent slots. Front and plan view: no rim, no foot, no handle slots.",
+            "de": "Randstreifen, Fußring und Lüftungsschlitze. Vorder- und Draufsicht: kein Rand, kein Fuß, keine Griffschlitze."
+          },
+          "thinElements": {
+            "en": "None below the feature width; the nesting step is 0.4 mm and stays separate from the next outline.",
+            "de": "Nichts unterhalb der Mindestbreite; die Ineinanderstell-Stufe ist 0,4 mm hoch und bleibt vom nächsten Umriss getrennt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Alternating tones 0.45 and 0.55; one body pen of 0.18 mm.",
+            "de": "Wechselnde Töne 0,45 und 0,55; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Each crate keeps its region.",
+            "de": "Jede Kiste behält ihre Region."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "c1",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "x": -0.31,
+              "y": 0,
+              "w": 0.62,
+              "h": 0.3
+            },
+            {
+              "id": "c2",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "x": -0.31,
+              "y": 0,
+              "w": 0.62,
+              "h": 0.3
+            },
+            {
+              "id": "c3",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "x": -0.31,
+              "y": 0,
+              "w": 0.62,
+              "h": 0.3
+            },
+            {
+              "id": "c4",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.609999999999999,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "x": -0.31,
+              "y": 0,
+              "w": 0.62,
+              "h": 0.3
+            },
+            {
+              "id": "c5",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "x": -0.31,
+              "y": 0,
+              "w": 0.62,
+              "h": 0.3
+            }
+          ],
+          "front": [
+            {
+              "id": "c1",
+              "bone": "crate-1",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-1",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.3
+            },
+            {
+              "id": "c2",
+              "bone": "crate-2",
+              "role": "body",
+              "z": 4.81,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-2",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.3,
+              "w": 0.4,
+              "h": 0.3
+            },
+            {
+              "id": "c3",
+              "bone": "crate-3",
+              "role": "body",
+              "z": 4.71,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-3",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.6,
+              "w": 0.4,
+              "h": 0.3
+            },
+            {
+              "id": "c4",
+              "bone": "crate-4",
+              "role": "body",
+              "z": 4.61,
+              "filled": true,
+              "tone": 0.55,
+              "region": "crate-4",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.8999999999999999,
+              "w": 0.4,
+              "h": 0.3
+            },
+            {
+              "id": "c5",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.51,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 1.2,
+              "w": 0.4,
+              "h": 0.3
+            }
+          ],
+          "plan": [
+            {
+              "id": "c5",
+              "bone": "crate-5",
+              "role": "body",
+              "z": 4.91,
+              "filled": true,
+              "tone": 0.45,
+              "region": "crate-5",
+              "material": "hdpe-crate",
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.2,
+              "w": 0.62,
+              "h": 0.4
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Stack sign 1.2 x 3.0 mm: five tapered crate blocks one above the other in the side and front view, five square outlines on top of each other in plan; every crate is its own shape bound to its own bone, so crates stack, nest and unload with their poses.",
+            "de": "Stapelzeichen 1,2 x 3,0 mm: fünf konische Kistenblöcke übereinander in der Seiten- und Vorderansicht, fünf deckungsgleiche Quadratkonturen in der Draufsicht; jede Kiste ist eine eigene Form an ihrem eigenen Knochen, sodass sich die Kisten mit ihren Haltungen stapeln, ineinanderstellen und abladen."
+          },
+          "retained": {
+            "en": "Overall size 0.62 x 0.40 x 1.50 m, the five crate joints, the taper of every crate.",
+            "de": "Gesamtmaß 0,62 x 0,40 x 1,50 m, die fünf Kistenfugen, die Verjüngung jeder Kiste."
+          },
+          "merged": {
+            "en": "Handles, ribs and wall slots vanish into the crate block.",
+            "de": "Griffe, Rippen und Wandschlitze gehen im Kistenblock auf."
+          },
+          "omitted": {
+            "en": "Handles, ribs, slots and the nesting lip of 0.08 m (0.16 mm).",
+            "de": "Griffe, Rippen, Schlitze und die Stapelkante von 0,08 m (0,16 mm)."
+          },
+          "thinElements": {
+            "en": "The joint between two crates is the shared 0.18 mm outline; the 0.08 m nesting step is only readable in the poses as the crates sink into each other.",
+            "de": "Die Fuge zwischen zwei Kisten ist die gemeinsame 0,18-mm-Kontur; die Stapelstufe von 0,08 m ist nur in den Haltungen lesbar, wenn die Kisten ineinander sinken."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "All crates in one tone; one 0.18 mm outline.",
+            "de": "Alle Kisten in einem Ton; eine 0,18-mm-Kontur."
+          },
+          "overlays": {
+            "en": "Each crate keeps its thermal region as at 1:200.",
+            "de": "Jede Kiste behält ihre thermische Region wie bei 1:200."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "high",
+        "title": {
+          "en": "High stack",
+          "de": "Hoher Stapel"
+        },
+        "description": {
+          "en": "All five crates are stacked rim to foot, 1.5 m high, each carrying 10 kg of goods.",
+          "de": "Alle fünf Kisten sind Rand auf Fuß gestapelt, 1,5 m hoch, jede trägt 10 kg Ware."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "crate-1": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 20
+              }
+            },
+            "crate-2": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "crate-3": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "crate-4": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "crate-5": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "goods-1",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 1 (10 kg)",
+              "de": "Ware in Kiste 1 (10 kg)"
+            },
+            "bone": "crate-1",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "goods-2",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 2 (10 kg)",
+              "de": "Ware in Kiste 2 (10 kg)"
+            },
+            "bone": "crate-2",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "goods-3",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 3 (10 kg)",
+              "de": "Ware in Kiste 3 (10 kg)"
+            },
+            "bone": "crate-3",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "goods-4",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 4 (10 kg)",
+              "de": "Ware in Kiste 4 (10 kg)"
+            },
+            "bone": "crate-4",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "goods-5",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 5 (10 kg)",
+              "de": "Ware in Kiste 5 (10 kg)"
+            },
+            "bone": "crate-5",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "half",
+        "title": {
+          "en": "Half-high stack",
+          "de": "Halbhoher Stapel"
+        },
+        "description": {
+          "en": "Three crates are stacked with goods and the two top crates are nested empty into the third: 1.06 m high.",
+          "de": "Drei Kisten sind beladen gestapelt und die zwei oberen Kisten sind leer in die dritte gestellt: 1,06 m hoch."
+        },
+        "bones": {
+          "crate-4": {
+            "dy": -0.21999999999999997
+          },
+          "crate-5": {
+            "dy": -0.21999999999999997
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "crate-1": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 20
+              }
+            },
+            "crate-2": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "crate-3": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "crate-4": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0
+            },
+            "crate-5": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "goods-1",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 1 (10 kg)",
+              "de": "Ware in Kiste 1 (10 kg)"
+            },
+            "bone": "crate-1",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "goods-2",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 2 (10 kg)",
+              "de": "Ware in Kiste 2 (10 kg)"
+            },
+            "bone": "crate-2",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "goods-3",
+            "kind": "carried",
+            "title": {
+              "en": "Goods in crate 3 (10 kg)",
+              "de": "Ware in Kiste 3 (10 kg)"
+            },
+            "bone": "crate-3",
+            "x": 0,
+            "y": 0.1,
+            "fxN": 0,
+            "fyN": -98.0665,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "low",
+        "title": {
+          "en": "Low stack",
+          "de": "Niedriger Stapel"
+        },
+        "description": {
+          "en": "All five empty crates are nested into each other: 0.62 m high.",
+          "de": "Alle fünf leeren Kisten sind ineinandergestellt: 0,62 m hoch."
+        },
+        "bones": {
+          "crate-2": {
+            "dy": -0.21999999999999997
+          },
+          "crate-3": {
+            "dy": -0.21999999999999997
+          },
+          "crate-4": {
+            "dy": -0.21999999999999997
+          },
+          "crate-5": {
+            "dy": -0.21999999999999997
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "crate-1": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 20
+              }
+            },
+            "crate-2": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0
+            },
+            "crate-3": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0
+            },
+            "crate-4": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0
+            },
+            "crate-5": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "unload-stack",
+        "title": {
+          "en": "Unload the stack",
+          "de": "Stapel abbauen"
+        },
+        "description": {
+          "en": "The goods are taken out and the crates are nested: the stack drops from 1.5 m over 1.06 m to 0.62 m in twelve seconds.",
+          "de": "Die Ware wird entnommen und die Kisten werden ineinandergestellt: der Stapel sinkt in zwölf Sekunden von 1,5 m über 1,06 m auf 0,62 m."
+        },
+        "durationS": 14,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "high",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "half",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "low",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "low",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 14
+          }
+        ],
+        "phases": [
+          {
+            "id": "high",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Unloading the top",
+              "de": "Oben entladen"
+            }
+          },
+          {
+            "id": "nest",
+            "fromS": 6,
+            "toS": 12,
+            "title": {
+              "en": "Nesting the rest",
+              "de": "Rest ineinanderstellen"
+            }
+          },
+          {
+            "id": "rest",
+            "fromS": 12,
+            "toS": 14,
+            "title": {
+              "en": "Low stack",
+              "de": "Niedriger Stapel"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Unloading starts",
+              "de": "Entladen beginnt"
+            }
+          },
+          {
+            "t": 12,
+            "kind": "motion",
+            "title": {
+              "en": "Low stack reached",
+              "de": "Niedriger Stapel erreicht"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "load-stack",
+        "title": {
+          "en": "Load the stack",
+          "de": "Stapel aufbauen"
+        },
+        "description": {
+          "en": "The empty nested crates are pulled apart, loaded and stacked: the stack rises from 0.62 m to 1.5 m in twelve seconds.",
+          "de": "Die leeren ineinandergestellten Kisten werden auseinandergezogen, beladen und gestapelt: der Stapel wächst in zwölf Sekunden von 0,62 m auf 1,5 m."
+        },
+        "durationS": 14,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "low",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "half",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "high",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "high",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 14
+          }
+        ],
+        "phases": [
+          {
+            "id": "pull",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Pulling apart",
+              "de": "Auseinanderziehen"
+            }
+          },
+          {
+            "id": "stack",
+            "fromS": 6,
+            "toS": 12,
+            "title": {
+              "en": "Stacking",
+              "de": "Stapeln"
+            }
+          },
+          {
+            "id": "rest",
+            "fromS": 12,
+            "toS": 14,
+            "title": {
+              "en": "High stack",
+              "de": "Hoher Stapel"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Loading starts",
+              "de": "Beladen beginnt"
+            }
+          },
+          {
+            "t": 12,
+            "kind": "motion",
+            "title": {
+              "en": "High stack reached",
+              "de": "Hoher Stapel erreicht"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [],
+      "regions": [
+        {
+          "id": "crate-1",
+          "title": {
+            "en": "Crate 1",
+            "de": "Kiste 1"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "hdpe-crate",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "HDPE wall 3 mm",
+                "de": "PE-HD-Wand 3 mm"
+              },
+              "kind": "polymer",
+              "material": "hdpe-crate",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0075,
+              "heatCapacityJM2K": 6555,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6555,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "crate-2",
+          "title": {
+            "en": "Crate 2",
+            "de": "Kiste 2"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "hdpe-crate",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "HDPE wall 3 mm",
+                "de": "PE-HD-Wand 3 mm"
+              },
+              "kind": "polymer",
+              "material": "hdpe-crate",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0075,
+              "heatCapacityJM2K": 6555,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6555,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "crate-3",
+          "title": {
+            "en": "Crate 3",
+            "de": "Kiste 3"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "hdpe-crate",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "HDPE wall 3 mm",
+                "de": "PE-HD-Wand 3 mm"
+              },
+              "kind": "polymer",
+              "material": "hdpe-crate",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0075,
+              "heatCapacityJM2K": 6555,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6555,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "crate-4",
+          "title": {
+            "en": "Crate 4",
+            "de": "Kiste 4"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "hdpe-crate",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "HDPE wall 3 mm",
+                "de": "PE-HD-Wand 3 mm"
+              },
+              "kind": "polymer",
+              "material": "hdpe-crate",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0075,
+              "heatCapacityJM2K": 6555,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6555,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "crate-5",
+          "title": {
+            "en": "Crate 5",
+            "de": "Kiste 5"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "hdpe-crate",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "HDPE wall 3 mm",
+                "de": "PE-HD-Wand 3 mm"
+              },
+              "kind": "polymer",
+              "material": "hdpe-crate",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0075,
+              "heatCapacityJM2K": 6555,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6555,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The crates are passive HDPE shells; the contents are not modelled thermally, only as loads.",
+          "de": "Die Kisten sind passive PE-HD-Schalen; der Inhalt ist thermisch nicht modelliert, nur als Last."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid column of crates standing on the foot ring of the lowest crate; every crate transfers its weight and its 10 kg of goods through the rim to the one below.",
+          "de": "Eine starre Kistensäule auf dem Fußring der untersten Kiste; jede Kiste gibt ihr Gewicht und ihre 10 kg Ware über den Rand an die darunter weiter."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "high",
+      "defaultClip": "unload-stack",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

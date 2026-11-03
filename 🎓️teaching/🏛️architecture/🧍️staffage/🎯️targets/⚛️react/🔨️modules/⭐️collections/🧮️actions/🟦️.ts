@@ -23,7 +23,7 @@ export function placeAllEvents(assets: readonly Asset[], playground: Playground,
   const placed = assets.map((asset) => {
     const xM = cursor + asset.dimensions.widthM / 2;
     cursor += asset.dimensions.widthM + PLACEMENT_GAP_M;
-    return { id: newId(), asset: asset.id, xM, pick: null, offsetS: 0, mirrored: false } as const;
+    return { id: newId(), asset: asset.id, xM, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false } as const;
   });
   const events: ArchiveEvent[] = [];
   if (cursor > playground.lengthM) events.push({ type: "playground-configured", patch: { lengthM: Math.min(200, Math.ceil(cursor)) } });
@@ -33,7 +33,7 @@ export function placeAllEvents(assets: readonly Asset[], playground: Playground,
 /** ⚖️ The comparison address query of the first four assets in one view; null when fewer than two are given. */
 export function compareFirstFour(assets: readonly Slug[]): URLSearchParams | null {
   if (assets.length < 2) return null;
-  const state: CompareState = { panes: assets.slice(0, 4).map((asset) => ({ asset, view: "dark-line", selection: null })), scale: 100, timeS: null };
+  const state: CompareState = { panes: assets.slice(0, 4).map((asset) => ({ asset, view: "dark-line", viewpoint: "elevation", selection: null })), scale: 100, timeS: null };
   return compareToParams(state);
 }
 

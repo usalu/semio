@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "air": {
+    "densityKgM3": 1.2,
+    "specificHeatJKgK": 1005,
+    "volumetricHeatCapacityWhM3K": 0.34,
+    "latentHeatKJKg": 2450
+  },
+  "ventilation": {
+    "netVolumeM3": 440,
+    "airChangeRatePerH": 0.5,
+    "heatRecoveryEfficiency": 0.8
+  },
+  "winter": {
+    "indoorC": 20,
+    "outdoorDesignC": 0,
+    "groundDeltaK": 10
+  },
+  "summer": {
+    "indoorC": 26,
+    "outdoorC": 32,
+    "outdoorHumidityGKg": 15,
+    "indoorHumidityGKg": 10.5
+  },
+  "envelope": [
+    { "id": "roof", "nameDe": "Dach", "nameEn": "Roof", "areaM2": 89, "uValueWM2K": 0.2, "deltaK": 20 },
+    { "id": "wall", "nameDe": "Außenwand", "nameEn": "Exterior wall", "areaM2": 209, "uValueWM2K": 0.24, "deltaK": 20 },
+    { "id": "window", "nameDe": "Fenster", "nameEn": "Windows", "areaM2": 30, "uValueWM2K": 1.1, "deltaK": 20 },
+    { "id": "door", "nameDe": "Haustür", "nameEn": "Front door", "areaM2": 2, "uValueWM2K": 1.3, "deltaK": 20 },
+    { "id": "floor", "nameDe": "Boden", "nameEn": "Floor", "areaM2": 80, "uValueWM2K": 0.3, "deltaK": 10 }
+  ],
+  "season": {
+    "heatingDays": 212,
+    "degreeDaysKdPerA": 3500
+  },
+  "gains": {
+    "solarKWhPerA": 3000,
+    "internalKWhPerA": 2000
+  }
+}

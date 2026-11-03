@@ -5,7 +5,8 @@
  * - WebM uses `MediaRecorder` on a canvas stream where the browser supports it. Timestamps come from the wall clock, so the frame rate is
  *   only approximately constant, and alpha survives only where the browser's VP8/VP9 encoder writes it (reported as `unverified`).
  * <https://www.w3.org/TR/mediastream-recording/> · <https://www.itu.int/rec/T-REC-H.264> */
-import type { JobControl } from "../../🔗️contracts/🟦️.ts";
+import type { Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import type { JobControl, View } from "../../🔗️contracts/🟦️.ts";
 import { AvcPcmEncoder, writeAvcMp4, type EncodedVideoSample } from "../../../../../../🧰️framework/🔨️modules/🖌️raster/🎥️video/🟦️.ts";
 
 /** 🎞️ A frame source item: pixel data or a 2D canvas. */
@@ -38,10 +39,10 @@ export function videoCapabilities(): VideoCapabilities {
 }
 
 /** 🎬️ The encoded clip and what is honestly true about it. */
-export type EncodedClip = { readonly bytes: Uint8Array; readonly mime: string; readonly codec: string; readonly alpha: "none" | "unverified"; readonly frames: number; readonly note: { readonly en: string; readonly de: string } };
+export type EncodedClip = { readonly bytes: Uint8Array; readonly mime: string; readonly codec: string; readonly alpha: "none" | "unverified"; readonly viewpoint: Viewpoint; readonly frames: number; readonly note: { readonly en: string; readonly de: string } };
 
 /** ⚙️ Encoding options. */
-export type EncodeOptions = { readonly fps: number; readonly frameCount: number; readonly background?: string; readonly codec?: string; readonly control?: JobControl };
+export type EncodeOptions = { readonly viewpoint: Viewpoint; readonly fps: number; readonly frameCount: number; readonly background?: string; readonly codec?: string; readonly control?: JobControl };
 
 function pixels(frame: VideoFrame): { readonly data: Uint8ClampedArray; readonly width: number; readonly height: number } {
   if ("data" in frame) return frame;
@@ -83,7 +84,7 @@ async function encodeMp4(frames: AsyncIterable<VideoFrame>, options: EncodeOptio
     options.control?.progress?.(samples.length, options.frameCount, { en: "Encoding MP4", de: "MP4 wird kodiert" });
   }
   if (!encoder) throw new Error("clip has no frames");
-  return { bytes: writeAvcMp4(encoder.parameters, encoder.configuration(), samples), mime: "video/mp4", codec: "h264-pcm", alpha: "none", frames: samples.length, note: { en: "H.264 I_PCM, constant frame rate, no alpha channel; transparent pixels are composited over the background colour.", de: "H.264 I_PCM, konstante Bildrate, kein Alphakanal; transparente Pixel werden über die Hintergrundfarbe gerechnet." } };
+  return { bytes: writeAvcMp4(encoder.parameters, encoder.configuration(), samples), mime: "video/mp4", codec: "h264-pcm", alpha: "none", viewpoint: options.viewpoint, frames: samples.length, note: { en: "H.264 I_PCM, constant frame rate, no alpha channel; transparent pixels are composited over the background colour.", de: "H.264 I_PCM, konstante Bildrate, kein Alphakanal; transparente Pixel werden über die Hintergrundfarbe gerechnet." } };
 }
 
 async function encodeWebm(frames: AsyncIterable<VideoFrame>, options: EncodeOptions): Promise<EncodedClip> {
@@ -122,10 +123,13 @@ async function encodeWebm(frames: AsyncIterable<VideoFrame>, options: EncodeOpti
   recorder.stop();
   await stopped;
   const bytes = new Uint8Array(await new Blob(chunks, { type: chosen.mime }).arrayBuffer());
-  return { bytes, mime: "video/webm", codec: chosen.codec, alpha: "unverified", frames: count, note: { en: "Recorded in real time through MediaRecorder: the frame rate is approximately constant; alpha is kept only if this browser's encoder writes it.", de: "In Echtzeit über MediaRecorder aufgenommen: Die Bildrate ist nur näherungsweise konstant; Alpha bleibt nur erhalten, wenn der Encoder dieses Browsers es schreibt." } };
+  return { bytes, mime: "video/webm", codec: chosen.codec, alpha: "unverified", viewpoint: options.viewpoint, frames: count, note: { en: "Recorded in real time through MediaRecorder: the frame rate is approximately constant; alpha is kept only if this browser's encoder writes it.", de: "In Echtzeit über MediaRecorder aufgenommen: Die Bildrate ist nur näherungsweise konstant; Alpha bleibt nur erhalten, wenn der Encoder dieses Browsers es schreibt." } };
 }
 
 /** 🎬️ Encodes `frames` (ImageData-like or canvases, in schedule order) as MP4 or WebM, honest about alpha and frame-rate guarantees. */
 export function encodeClip(frames: AsyncIterable<VideoFrame>, format: VideoFormat, options: EncodeOptions): Promise<EncodedClip> {
   return format === "mp4" ? encodeMp4(frames, options) : encodeWebm(frames, options);
 }
+
+/** 📛️ The file name of an encoded clip: asset, clip, representation, viewpoint and scale are all part of it, so clips of two viewpoints never share a name. The first-party MP4 writer and `MediaRecorder` write no container tags, so the viewpoint of a browser clip lives in this name and in {@link EncodedClip.viewpoint}. */
+export const videoFileName = (asset: string, clip: string, view: View, viewpoint: Viewpoint, denominator: number, format: VideoFormat): string => `${asset}-${clip}-${view}-${viewpoint}-1to${denominator}.${format}`;

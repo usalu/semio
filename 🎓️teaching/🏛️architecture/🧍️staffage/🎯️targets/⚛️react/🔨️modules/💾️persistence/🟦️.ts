@@ -9,7 +9,8 @@
  * @see https://developer.mozilla.org/docs/Web/API/Window/storage_event — cross-tab events
  */
 import { useSyncExternalStore } from "react";
-import type { Language, Slug, View } from "@teaching/staffage";
+import { VIEWPOINTS } from "@teaching/staffage";
+import type { Language, Slug, Text, View, Viewpoint } from "@teaching/staffage";
 import { isLanguage } from "../🌐️i18n/🟦️.ts";
 
 /** 🔖️ The version of the stored document; a different version is dropped, not migrated. */
@@ -53,7 +54,7 @@ export type Motion = "system" | "reduced" | "full";
 export type TextSize = "normal" | "large";
 
 /** 🎛️ The reader's preferences; `language` stays unset until the reader or the browser's list decides. */
-export type Preferences = { readonly language?: Language; readonly theme: Theme; readonly motion: Motion; readonly textSize: TextSize; readonly playful: boolean };
+export type Preferences = { readonly language?: Language; readonly theme: Theme; readonly motion: Motion; readonly textSize: TextSize; readonly playful: boolean; readonly previewViewpoint: Viewpoint };
 
 /** 🖼️ The ground of the playground. */
 export const BACKGROUNDS = ["paper", "dark", "light", "transparent"] as const;
@@ -64,11 +65,11 @@ export type Background = (typeof BACKGROUNDS)[number];
 /** 🎯️ What a placed or compared figure shows: a static pose, or a clip with a phase offset in seconds. */
 export type Selection = { readonly kind: "pose"; readonly pose: Slug } | { readonly kind: "clip"; readonly clip: Slug };
 
-/** 📍️ One asset on the playground's ground line, `xM` metres from its left end. */
-export type Placement = { readonly id: string; readonly asset: Slug; readonly xM: number; readonly pick: Selection | null; readonly offsetS: number; readonly mirrored: boolean };
+/** 📍️ One asset on the playground's ground line: `xM` metres along the line from its left end, `zM` metres sideways (the asset's left is +), `yawDeg` its turn about the vertical axis. Every viewpoint projects this one position. */
+export type Placement = { readonly id: string; readonly asset: Slug; readonly xM: number; readonly zM: number; readonly yawDeg: number; readonly pick: Selection | null; readonly offsetS: number; readonly mirrored: boolean };
 
 /** 🧪️ The playground composition: shared scale, view and ground, plus its placements. */
-export type Playground = { readonly scale: number; readonly view: View; readonly background: Background; readonly lengthM: number; readonly placements: readonly Placement[] };
+export type Playground = { readonly scale: number; readonly view: View; readonly viewpoint: Viewpoint; readonly background: Background; readonly lengthM: number; readonly placements: readonly Placement[] };
 
 /** 📚️ A collection the reader saved. */
 export type SavedCollection = { readonly id: string; readonly name: string; readonly assets: readonly Slug[] };
@@ -84,7 +85,7 @@ export type ArchiveEvent =
   | { readonly type: "favorite-removed"; readonly asset: Slug }
   | { readonly type: "collection-saved"; readonly collection: SavedCollection }
   | { readonly type: "collection-removed"; readonly id: string }
-  | { readonly type: "playground-configured"; readonly patch: Partial<Pick<Playground, "scale" | "view" | "background" | "lengthM">> }
+  | { readonly type: "playground-configured"; readonly patch: Partial<Pick<Playground, "scale" | "view" | "viewpoint" | "background" | "lengthM">> }
   | { readonly type: "placement-added"; readonly placement: Placement }
   | { readonly type: "placement-changed"; readonly id: string; readonly patch: Partial<Omit<Placement, "id">> }
   | { readonly type: "placement-duplicated"; readonly id: string; readonly newId: string }
@@ -98,11 +99,18 @@ export const DEFAULT_LENGTH_M = 24;
 
 /** 🌱️ The state of a reader who has chosen nothing. */
 export const INITIAL_STATE: ArchiveState = {
-  preferences: { theme: "system", motion: "system", textSize: "normal", playful: true },
+  preferences: { theme: "system", motion: "system", textSize: "normal", playful: true, previewViewpoint: "elevation" },
   favorites: [],
   collections: [],
-  playground: { scale: 100, view: "dark-line", background: "paper", lengthM: DEFAULT_LENGTH_M, placements: [] },
+  playground: { scale: 100, view: "dark-line", viewpoint: "elevation", background: "paper", lengthM: DEFAULT_LENGTH_M, placements: [] },
 };
+
+function clampZ(playground: Playground, zM: number): number {
+  return Math.min(Math.max(zM, -playground.lengthM / 2), playground.lengthM / 2);
+}
+
+/** 🔄️ A yaw wrapped to -180 to 180 degrees. */
+export const wrapYaw = (yawDeg: number): number => ((((yawDeg + 180) % 360) + 360) % 360) - 180;
 
 function clampX(playground: Playground, xM: number): number {
   return Math.min(Math.max(xM, 0), playground.lengthM);
@@ -128,15 +136,15 @@ export function reduce(state: ArchiveState, event: ArchiveEvent): ArchiveState {
       return { ...state, collections: state.collections.filter((collection) => collection.id !== event.id) };
     case "playground-configured": {
       const next = { ...playground, ...event.patch };
-      return { ...state, playground: { ...next, placements: next.placements.map((placement) => ({ ...placement, xM: clampX(next, placement.xM) })) } };
+      return { ...state, playground: { ...next, placements: next.placements.map((placement) => ({ ...placement, xM: clampX(next, placement.xM), zM: clampZ(next, placement.zM) })) } };
     }
     case "placement-added":
-      return { ...state, playground: { ...playground, placements: [...playground.placements, { ...event.placement, xM: clampX(playground, event.placement.xM) }] } };
+      return { ...state, playground: { ...playground, placements: [...playground.placements, { ...event.placement, xM: clampX(playground, event.placement.xM), zM: clampZ(playground, event.placement.zM), yawDeg: wrapYaw(event.placement.yawDeg) }] } };
     case "placement-changed":
-      return { ...state, playground: { ...playground, placements: playground.placements.map((placement) => (placement.id === event.id ? { ...placement, ...event.patch, xM: clampX(playground, event.patch.xM ?? placement.xM) } : placement)) } };
+      return { ...state, playground: { ...playground, placements: playground.placements.map((placement) => (placement.id === event.id ? { ...placement, ...event.patch, mirrored: (event.patch.mirrored ?? placement.mirrored) && (event.patch.mirrored === undefined || playground.viewpoint === "elevation"), xM: clampX(playground, event.patch.xM ?? placement.xM), zM: clampZ(playground, event.patch.zM ?? placement.zM), yawDeg: wrapYaw(event.patch.yawDeg ?? placement.yawDeg) } : placement)) } };
     case "placement-duplicated": {
       const source = playground.placements.find((placement) => placement.id === event.id);
-      return source === undefined ? state : { ...state, playground: { ...playground, placements: [...playground.placements, { ...source, id: event.newId, xM: clampX(playground, source.xM + 0.6) }] } };
+      return source === undefined ? state : { ...state, playground: { ...playground, placements: [...playground.placements, { ...source, id: event.newId, xM: clampX(playground, source.xM + 0.6), zM: source.zM, yawDeg: source.yawDeg }] } };
     }
     case "placement-removed":
       return { ...state, playground: { ...playground, placements: playground.placements.filter((placement) => placement.id !== event.id) } };
@@ -175,6 +183,7 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
       motion: oneOf(prefs.motion, ["system", "reduced", "full"], "system"),
       textSize: oneOf(prefs.textSize, ["normal", "large"], "normal"),
       playful: prefs.playful !== false,
+      previewViewpoint: oneOf(prefs.previewViewpoint, VIEWPOINTS, "elevation"),
     },
     favorites: Array.isArray(favorites) ? [...new Set(favorites.filter(isSlug))] : [],
     collections: Array.isArray(collections)
@@ -183,17 +192,26 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
     playground: {
       scale: Math.max(1, finite(ground.scale, 100)),
       view: oneOf(ground.view, views, "dark-line"),
+      viewpoint: oneOf(ground.viewpoint, VIEWPOINTS, "elevation"),
       background: oneOf(ground.background, BACKGROUNDS, "paper"),
       lengthM,
       placements: Array.isArray(ground.placements)
         ? ground.placements.flatMap((item) =>
             isRecord(item) && typeof item.id === "string" && isSlug(item.asset)
-              ? [{ id: item.id, asset: item.asset, xM: Math.min(Math.max(finite(item.xM, 0), 0), lengthM), pick: sanitizePick(item.pick), offsetS: finite(item.offsetS, 0), mirrored: item.mirrored === true }]
+              ? [{ id: item.id, asset: item.asset, xM: Math.min(Math.max(finite(item.xM, 0), 0), lengthM), zM: Math.min(Math.max(finite(item.zM, 0), -lengthM / 2), lengthM / 2), yawDeg: wrapYaw(finite(item.yawDeg, 0)), pick: sanitizePick(item.pick), offsetS: finite(item.offsetS, 0), mirrored: item.mirrored === true }]
               : [],
           )
         : [],
     },
   };
+}
+
+/** 🚨️ What a stored document holds that cannot be read, in words: an unknown viewpoint is reported and replaced by the side elevation, never replaced silently. */
+export function storedProblems(value: unknown): readonly Text[] {
+  if (!isRecord(value) || value.version !== STORAGE_VERSION || !isRecord(value.state)) return [];
+  const { preferences, playground } = value.state;
+  const named = [isRecord(preferences) ? preferences.previewViewpoint : undefined, isRecord(playground) ? playground.viewpoint : undefined];
+  return named.flatMap((viewpoint) => (viewpoint === undefined || (VIEWPOINTS as readonly unknown[]).includes(viewpoint) ? [] : [{ en: `The saved viewpoint "${String(viewpoint)}" is unknown; the side elevation is used instead.`, de: `Die gespeicherte Blickrichtung "${String(viewpoint)}" ist unbekannt; stattdessen wird die Seitenansicht verwendet.` }]));
 }
 
 /** 🗃️ Whether what the store holds survives a reload. */
@@ -203,6 +221,7 @@ export type PersistenceMode = "durable" | "volatile";
 export class ArchiveStore {
   #state: ArchiveState;
   #mode: PersistenceMode;
+  #problems: readonly Text[] = [];
   readonly #listeners = new Set<() => void>();
   readonly #observers = new Set<(event: ArchiveEvent) => void>();
   readonly #storage: StorageArea;
@@ -213,6 +232,10 @@ export class ArchiveStore {
     this.#views = views;
     this.#mode = durable ? "durable" : "volatile";
     this.#state = this.#read();
+  }
+
+  get problems(): readonly Text[] {
+    return this.#problems;
   }
 
   get mode(): PersistenceMode {
@@ -256,8 +279,11 @@ export class ArchiveStore {
   #read(): ArchiveState {
     try {
       const raw = this.#storage.getItem(STORAGE_KEY);
-      return raw === null ? INITIAL_STATE : sanitize(JSON.parse(raw), this.#views);
+      const parsed: unknown = raw === null ? null : JSON.parse(raw);
+      this.#problems = storedProblems(parsed);
+      return raw === null ? INITIAL_STATE : sanitize(parsed, this.#views);
     } catch {
+      this.#problems = [];
       return INITIAL_STATE;
     }
   }

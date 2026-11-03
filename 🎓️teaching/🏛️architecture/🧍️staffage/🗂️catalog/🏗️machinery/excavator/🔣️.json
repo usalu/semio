@@ -9,8 +9,8 @@
    "de": "Bagger"
   },
   "summary": {
-   "en": "A 20 t diesel crawler excavator in side elevation: tracked undercarriage with four load-sharing ground contacts, house with cab, engine hood, exhaust stack and counterweight, and a boom, stick and bucket chain driven by three hydraulic cylinders with extending rods.",
-   "de": "Ein 20-t-Kettenbagger mit Dieselmotor in der Seitenansicht: Raupenfahrwerk mit vier lastverteilenden Bodenkontakten, Oberwagen mit Kabine, Motorhaube, Auspuffrohr und Gegengewicht sowie eine Ausleger-, Stiel- und Löffelkette mit drei Hydraulikzylindern und ausfahrenden Kolbenstangen."
+   "en": "A 20 t diesel crawler excavator in side elevation: tracked undercarriage with eight load-sharing ground contacts (four under each track), house with cab, engine hood, exhaust stack and counterweight, and a boom, stick and bucket chain driven by three hydraulic cylinders with extending rods.",
+   "de": "Ein 20-t-Kettenbagger mit Dieselmotor in der Seitenansicht: Raupenfahrwerk mit acht lastverteilenden Bodenkontakten (vier unter jeder Kette), Oberwagen mit Kabine, Motorhaube, Auspuffrohr und Gegengewicht sowie eine Ausleger-, Stiel- und Löffelkette mit drei Hydraulikzylindern und ausfahrenden Kolbenstangen."
   },
   "tags": [
    "machine",
@@ -185,15 +185,32 @@
      }
     },
     {
-     "id": "upper",
+     "id": "slew-ring",
      "parent": "undercarriage",
      "title": {
-      "en": "Upper structure with cab (slew ring fixed in elevation)",
-      "de": "Oberwagen mit Kabine (Drehkranz in der Ansicht fest)"
+      "en": "Slew ring (vertical axis)",
+      "de": "Drehkranz (senkrechte Achse)"
      },
      "x": 0,
      "y": 1,
-     "angleDeg": 0,
+     "angleDeg": 90,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 0
+     }
+    },
+    {
+     "id": "upper",
+     "parent": "slew-ring",
+     "title": {
+      "en": "Upper structure with cab (turns on the slew ring)",
+      "de": "Oberwagen mit Kabine (dreht auf dem Drehkranz)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": -90,
      "lengthM": 3.4,
      "joint": {
       "type": "fixed"
@@ -473,74 +490,147 @@
   },
   "anchors": [
    {
-    "id": "track-r2",
+    "id": "track-r2-l",
     "bone": "undercarriage",
     "x": -1.35,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Track patch, rear (sprocket end)",
-     "de": "Kettenstandfläche hinten (Antriebsrad)"
+     "en": "Track patch, rear (sprocket end) (left)",
+     "de": "Kettenstandfläche hinten (Antriebsrad) (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.9,
-    "footprintWidthM": 1.2,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": 1.2
    },
    {
-    "id": "track-r1",
+    "id": "track-r2-r",
+    "bone": "undercarriage",
+    "x": -1.35,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Track patch, rear (sprocket end) (right)",
+     "de": "Kettenstandfläche hinten (Antriebsrad) (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.9,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": -1.2
+   },
+   {
+    "id": "track-r1-l",
     "bone": "undercarriage",
     "x": -0.45,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Track patch, rear middle",
-     "de": "Kettenstandfläche hinten Mitte"
+     "en": "Track patch, rear middle (left)",
+     "de": "Kettenstandfläche hinten Mitte (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.9,
-    "footprintWidthM": 1.2,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": 1.2
    },
    {
-    "id": "track-f1",
+    "id": "track-r1-r",
+    "bone": "undercarriage",
+    "x": -0.45,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Track patch, rear middle (right)",
+     "de": "Kettenstandfläche hinten Mitte (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.9,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": -1.2
+   },
+   {
+    "id": "track-f1-l",
     "bone": "undercarriage",
     "x": 0.45,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Track patch, front middle",
-     "de": "Kettenstandfläche vorn Mitte"
+     "en": "Track patch, front middle (left)",
+     "de": "Kettenstandfläche vorn Mitte (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.9,
-    "footprintWidthM": 1.2,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": 1.2
    },
    {
-    "id": "track-f2",
+    "id": "track-f1-r",
+    "bone": "undercarriage",
+    "x": 0.45,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Track patch, front middle (right)",
+     "de": "Kettenstandfläche vorn Mitte (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.9,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": -1.2
+   },
+   {
+    "id": "track-f2-l",
     "bone": "undercarriage",
     "x": 1.35,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Track patch, front (idler end)",
-     "de": "Kettenstandfläche vorn (Leitrad)"
+     "en": "Track patch, front (idler end) (left)",
+     "de": "Kettenstandfläche vorn (Leitrad) (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.9,
-    "footprintWidthM": 1.2,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": 1.2
+   },
+   {
+    "id": "track-f2-r",
+    "bone": "undercarriage",
+    "x": 1.35,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Track patch, front (idler end) (right)",
+     "de": "Kettenstandfläche vorn (Leitrad) (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.9,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6,
+    "z": -1.2
    },
    {
     "id": "stack-mouth",
     "bone": "upper",
     "x": -1.2,
     "y": 1.84,
+    "z": -0.9,
     "kind": "emitter",
     "title": {
      "en": "Exhaust stack mouth",
@@ -786,7 +876,13 @@
        "kind": "path",
        "d": "M -1.75,0 L 1.6,0 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
        "region": "house",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
       },
       {
        "id": "skirt-line",
@@ -796,7 +892,13 @@
        "filled": false,
        "tone": 0.4,
        "kind": "path",
-       "d": "M -1.75,0.22 L 1.6,0.22"
+       "d": "M -1.75,0.22 L 1.6,0.22",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
       },
       {
        "id": "hood-grille",
@@ -808,7 +910,13 @@
        "kind": "path",
        "d": "M -1.55,0.4 L -0.55,0.4 L -0.55,1.05 L -1.55,1.05 Z",
        "region": "engine-compartment",
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.9,
+        "z1": 0.9
+       }
       },
       {
        "id": "hood-louvres",
@@ -819,7 +927,13 @@
        "tone": 0.3,
        "kind": "path",
        "d": "M -1.5,0.5 L -0.6,0.5 M -1.5,0.6 L -0.6,0.6 M -1.5,0.7 L -0.6,0.7 M -1.5,0.8 L -0.6,0.8 M -1.5,0.9 L -0.6,0.9 M -1.5,1.0 L -0.6,1.0",
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
       },
       {
        "id": "hood-rail",
@@ -848,7 +962,13 @@
         ]
        ],
        "closed": false,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.15,
+        "z1": -0.2
+       }
       },
       {
        "id": "stack",
@@ -865,7 +985,13 @@
        "r0": 0.055,
        "r1": 0.055,
        "region": "exhaust-stack",
-       "material": "exhaust-steel"
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
       },
       {
        "id": "stack-cap",
@@ -879,7 +1005,13 @@
        "y": 1.78,
        "w": 0.16,
        "h": 0.04,
-       "material": "exhaust-steel"
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.98,
+        "z1": -0.82
+       }
       },
       {
        "id": "cab-glass-front",
@@ -891,7 +1023,13 @@
        "kind": "path",
        "d": "M 1.02,0.58 L 1.46,0.58 C 1.45,1.1 1.4,1.6 1.34,1.82 C 1.3,1.87 1.24,1.87 1.2,1.87 L 1.02,1.87 Z",
        "region": "cab-glazing",
-       "material": "glass"
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
       },
       {
        "id": "cab-glass-side",
@@ -903,7 +1041,13 @@
        "kind": "path",
        "d": "M 0.3,0.6 L 0.95,0.6 L 0.95,1.9 L 0.45,1.9 C 0.35,1.9 0.3,1.85 0.3,1.75 Z",
        "region": "cab-glazing",
-       "material": "glass"
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
       },
       {
        "id": "cab-sill",
@@ -913,7 +1057,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 0.12,0.55 L 1.45,0.55"
+       "d": "M 0.12,0.55 L 1.45,0.55",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.25
+       }
       },
       {
        "id": "cab-seat",
@@ -929,7 +1079,13 @@
        "y1": 1.45,
        "r0": 0.1,
        "r1": 0.07,
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
       },
       {
        "id": "boom-foot",
@@ -941,7 +1097,13 @@
        "kind": "path",
        "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
        "region": "house",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.7,
+        "z1": 0.2
+       }
       },
       {
        "id": "boom-pin",
@@ -955,7 +1117,13 @@
        "cy": 0.65,
        "rx": 0.09,
        "ry": 0.09,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-cyl-foot",
@@ -969,7 +1137,13 @@
        "cy": 0.1,
        "rx": 0.08,
        "ry": 0.08,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
       },
       {
        "id": "counterweight-body",
@@ -981,7 +1155,13 @@
        "kind": "path",
        "d": "M 0.65,0 L -0.5,0 C -0.6,0 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
        "region": "counterweight",
-       "material": "cast-iron"
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
       },
       {
        "id": "counterweight-seam",
@@ -991,7 +1171,13 @@
        "filled": false,
        "tone": 0.2,
        "kind": "path",
-       "d": "M -0.55,0.4 L 0.65,0.4 M -0.55,0.8 L 0.65,0.8"
+       "d": "M -0.55,0.4 L 0.65,0.4 M -0.55,0.8 L 0.65,0.8",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
       },
       {
        "id": "engine-block",
@@ -1006,7 +1192,13 @@
        "w": 1.1,
        "h": 0.65,
        "region": "engine-compartment",
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
       },
       {
        "id": "boom-body",
@@ -1018,7 +1210,13 @@
        "kind": "path",
        "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-weld-1",
@@ -1028,7 +1226,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 1.4,-0.6 L 1.4,0.9"
+       "d": "M 1.4,-0.6 L 1.4,0.9",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-weld-2",
@@ -1038,7 +1242,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 3.4,0.05 L 3.4,0.9"
+       "d": "M 3.4,0.05 L 3.4,0.9",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-weld-3",
@@ -1048,7 +1258,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 4.6,-0.14 L 4.6,0.45"
+       "d": "M 4.6,-0.14 L 4.6,0.45",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-root-boss",
@@ -1062,7 +1278,13 @@
        "cy": 0,
        "rx": 0.28,
        "ry": 0.28,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-tip-boss",
@@ -1076,7 +1298,13 @@
        "cy": 0,
        "rx": 0.26,
        "ry": 0.26,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-rod-eye",
@@ -1090,7 +1318,13 @@
        "cy": -0.45,
        "rx": 0.07,
        "ry": 0.07,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
       },
       {
        "id": "stick-cyl-foot",
@@ -1104,7 +1338,13 @@
        "cy": 0.95,
        "rx": 0.07,
        "ry": 0.07,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.34,
+        "z1": -0.16
+       }
       },
       {
        "id": "stick-body",
@@ -1116,7 +1356,13 @@
        "kind": "path",
        "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "id": "stick-root-boss",
@@ -1130,7 +1376,13 @@
        "cy": 0,
        "rx": 0.28,
        "ry": 0.28,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "id": "stick-tip-boss",
@@ -1144,7 +1396,13 @@
        "cy": 0,
        "rx": 0.22,
        "ry": 0.22,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "id": "stick-rod-eye",
@@ -1158,7 +1416,13 @@
        "cy": 0.38,
        "rx": 0.07,
        "ry": 0.07,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.205
+       }
       },
       {
        "id": "bucket-cyl-foot",
@@ -1172,7 +1436,13 @@
        "cy": 0.36,
        "rx": 0.06,
        "ry": 0.06,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
       },
       {
        "id": "stick-seam",
@@ -1182,7 +1452,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 1.9,-0.34 L 1.9,0.3"
+       "d": "M 1.9,-0.34 L 1.9,0.3",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "id": "bucket-body",
@@ -1194,7 +1470,13 @@
        "kind": "path",
        "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 Z",
        "region": "attachment",
-       "material": "wear-steel"
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "bucket-teeth",
@@ -1206,7 +1488,13 @@
        "kind": "path",
        "d": "M 1.3,0.07 L 1.5,-0.03 L 1.28,-0.09 Z",
        "region": "attachment",
-       "material": "wear-steel"
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "bucket-plate",
@@ -1216,7 +1504,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 0.9,0.1 C 0.7,0.42 0.3,0.55 0.05,0.3"
+       "d": "M 0.9,0.1 C 0.7,0.42 0.3,0.55 0.05,0.3",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "bucket-pin",
@@ -1230,7 +1524,13 @@
        "cy": 0,
        "rx": 0.1,
        "ry": 0.1,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "bucket-ear",
@@ -1244,7 +1544,13 @@
        "cy": 0.36,
        "rx": 0.06,
        "ry": 0.06,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "boom-cyl-barrel",
@@ -1261,7 +1567,13 @@
        "r0": 0.1,
        "r1": 0.1,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
       },
       {
        "id": "boom-cyl-rod",
@@ -1278,7 +1590,13 @@
        "r0": 0.035,
        "r1": 0.035,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
       },
       {
        "id": "stick-cyl-barrel",
@@ -1295,7 +1613,13 @@
        "r0": 0.09,
        "r1": 0.09,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.34,
+        "z1": -0.16
+       }
       },
       {
        "id": "stick-cyl-rod",
@@ -1312,7 +1636,13 @@
        "r0": 0.045,
        "r1": 0.045,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.34,
+        "z1": -0.16
+       }
       },
       {
        "id": "bucket-cyl-barrel",
@@ -1329,7 +1659,13 @@
        "r0": 0.07,
        "r1": 0.07,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
       },
       {
        "id": "bucket-cyl-rod",
@@ -1346,7 +1682,2448 @@
        "r0": 0.03,
        "r1": 0.03,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      }
+     ],
+     "front": [
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 0.65,0 L -0.5,0 C -0.6,0 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "bucket-tooth-0",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.6
+       }
+      },
+      {
+       "id": "bucket-tooth-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.52,
+        "z1": -0.39999999999999997
+       }
+      },
+      {
+       "id": "bucket-tooth-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.31999999999999995,
+        "z1": -0.19999999999999996
+       }
+      },
+      {
+       "id": "bucket-tooth-3",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.11999999999999988,
+        "z1": 1.1102230246251565e-16
+       }
+      },
+      {
+       "id": "bucket-tooth-4",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.08000000000000007,
+        "z1": 0.20000000000000007
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-left",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.15,
+        "z1": 0.35
+       }
+      },
+      {
+       "id": "boom-rod-left",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-right",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
+      },
+      {
+       "id": "boom-rod-right",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
+      },
+      {
+       "id": "stick-cyl-barrel",
+       "bone": "stick-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.6,
+       "y1": 0,
+       "r0": 0.09,
+       "r1": 0.09,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.33999999999999997,
+        "z1": -0.16
+       }
+      },
+      {
+       "id": "stick-rod",
+       "bone": "stick-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 2.35,
+       "y1": 0,
+       "r0": 0.045,
+       "r1": 0.045,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.20500000000000002
+       }
+      },
+      {
+       "id": "bucket-cyl-barrel",
+       "bone": "bucket-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.85,
+       "y1": 0,
+       "r0": 0.07,
+       "r1": 0.07,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "bucket-rod",
+       "bone": "bucket-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.95,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
+       "id": "boom-foot",
+       "bone": "upper",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.7,
+        "z1": 0.2
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 1.02,0.58 L 1.46,0.58 C 1.45,1.1 1.4,1.6 1.34,1.82 C 1.3,1.87 1.24,1.87 1.2,1.87 L 1.02,1.87 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0.58,
+       "w": 1.38,
+       "h": 1.29,
+       "id": "cab-pillar",
+       "bone": "upper",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.3,
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.665,
+        "z1": 0.685
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.12,0.55 L 1.45,0.55",
+       "id": "cab-sill",
+       "bone": "upper",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.3,
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.2,
+       "y0": 1.25,
+       "x1": -1.2,
+       "y1": 1.8,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "stack",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -1.28,
+       "y": 1.78,
+       "w": 0.16,
+       "h": 0.04,
+       "id": "stack-cap",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.45,
+       "filled": true,
+       "tone": 0.2,
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.98,
+        "z1": -0.82
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.65,
+         1.25
+        ],
+        [
+         -1.65,
+         1.5
+        ],
+        [
+         -0.3,
+         1.5
+        ],
+        [
+         -0.3,
+         1.25
+        ]
+       ],
+       "closed": false,
+       "id": "hood-rail",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.15,
+        "z1": -0.2
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-block",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.62,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.75,0 L 1.6,0 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": 0.895,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "r": 0.12,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -1.495,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "r": 0.12,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.25,
+       "w": 1.8,
+       "h": 0.61,
+       "region": "tracks",
+       "material": "paint-steel"
+      },
+      {
+       "id": "slew-ring",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.8,
+       "y": 0.86,
+       "w": 1.6,
+       "h": 0.14,
+       "material": "paint-steel"
+      },
+      {
+       "id": "grouser-left-1",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.895,
+         0.15
+        ],
+        [
+         1.495,
+         0.15
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-2",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.895,
+         0.3
+        ],
+        [
+         1.495,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-3",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.895,
+         0.45
+        ],
+        [
+         1.495,
+         0.45
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-4",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.895,
+         0.6
+        ],
+        [
+         1.495,
+         0.6
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-5",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.895,
+         0.72
+        ],
+        [
+         1.495,
+         0.72
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-1",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.495,
+         0.15
+        ],
+        [
+         -0.895,
+         0.15
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-2",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.495,
+         0.3
+        ],
+        [
+         -0.895,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-3",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.495,
+         0.45
+        ],
+        [
+         -0.895,
+         0.45
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-4",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.495,
+         0.6
+        ],
+        [
+         -0.895,
+         0.6
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-5",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.495,
+         0.72
+        ],
+        [
+         -0.895,
+         0.72
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "bucket-tooth-0",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.6
+       }
+      },
+      {
+       "id": "bucket-tooth-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.52,
+        "z1": -0.39999999999999997
+       }
+      },
+      {
+       "id": "bucket-tooth-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.31999999999999995,
+        "z1": -0.19999999999999996
+       }
+      },
+      {
+       "id": "bucket-tooth-3",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.11999999999999988,
+        "z1": 1.1102230246251565e-16
+       }
+      },
+      {
+       "id": "bucket-tooth-4",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.08000000000000007,
+        "z1": 0.20000000000000007
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-left",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.15,
+        "z1": 0.35
+       }
+      },
+      {
+       "id": "boom-rod-left",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-right",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
+      },
+      {
+       "id": "boom-rod-right",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
+      },
+      {
+       "id": "stick-cyl-barrel",
+       "bone": "stick-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.6,
+       "y1": 0,
+       "r0": 0.09,
+       "r1": 0.09,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.33999999999999997,
+        "z1": -0.16
+       }
+      },
+      {
+       "id": "stick-rod",
+       "bone": "stick-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 2.35,
+       "y1": 0,
+       "r0": 0.045,
+       "r1": 0.045,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.20500000000000002
+       }
+      },
+      {
+       "id": "bucket-cyl-barrel",
+       "bone": "bucket-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.85,
+       "y1": 0,
+       "r0": 0.07,
+       "r1": 0.07,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "bucket-rod",
+       "bone": "bucket-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.95,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
+       "id": "boom-foot",
+       "bone": "upper",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.65,
+        "z1": 0.15
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 1.02,0.58 L 1.46,0.58 C 1.45,1.1 1.4,1.6 1.34,1.82 C 1.3,1.87 1.24,1.87 1.2,1.87 L 1.02,1.87 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-roof",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.2,
+       "y0": 1.25,
+       "x1": -1.2,
+       "y1": 1.8,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "stack",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.55,0.4 L -0.55,0.4 L -0.55,1.05 L -1.55,1.05 Z",
+       "id": "hood-grille",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "engine-compartment",
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.9,
+        "z1": 0.9
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -1.45,
+       "y": 0.5,
+       "w": 0,
+       "h": 0.5,
+       "id": "hood-louvre-1",
+       "bone": "upper",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -1.3,
+       "y": 0.5,
+       "w": 0,
+       "h": 0.5,
+       "id": "hood-louvre-2",
+       "bone": "upper",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -1.15,
+       "y": 0.5,
+       "w": 0,
+       "h": 0.5,
+       "id": "hood-louvre-3",
+       "bone": "upper",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -1,
+       "y": 0.5,
+       "w": 0,
+       "h": 0.5,
+       "id": "hood-louvre-4",
+       "bone": "upper",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -0.85,
+       "y": 0.5,
+       "w": 0,
+       "h": 0.5,
+       "id": "hood-louvre-5",
+       "bone": "upper",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.5,
+       "w": 0,
+       "h": 0.5,
+       "id": "hood-louvre-6",
+       "bone": "upper",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.75,0 L 1.6,0 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.65,0 L -0.5,0 C -0.6,0 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": 0.895,
+       "w": 4.16,
+       "h": 0.6,
+       "r": 0.3,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame-left",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -1.7,
+       "y": 0.995,
+       "w": 3.4,
+       "h": 0.4,
+       "region": "tracks",
+       "material": "paint-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": -1.495,
+       "w": 4.16,
+       "h": 0.6,
+       "r": 0.3,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame-right",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -1.7,
+       "y": -1.395,
+       "w": 3.4,
+       "h": 0.4,
+       "region": "tracks",
+       "material": "paint-steel"
+      },
+      {
+       "id": "grouser-left-1",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.9,
+         0.895
+        ],
+        [
+         -1.9,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-2",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.7,
+         0.895
+        ],
+        [
+         -1.7,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-3",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.5,
+         0.895
+        ],
+        [
+         -1.5,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-4",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.3,
+         0.895
+        ],
+        [
+         -1.3,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-5",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.1,
+         0.895
+        ],
+        [
+         -1.1,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-6",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         0.895
+        ],
+        [
+         -0.9,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-7",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.7,
+         0.895
+        ],
+        [
+         -0.7,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-8",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.5,
+         0.895
+        ],
+        [
+         -0.5,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-9",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.3,
+         0.895
+        ],
+        [
+         -0.3,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-10",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.895
+        ],
+        [
+         -0.1,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-11",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.1,
+         0.895
+        ],
+        [
+         0.1,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-12",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.3,
+         0.895
+        ],
+        [
+         0.3,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-13",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.5,
+         0.895
+        ],
+        [
+         0.5,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-14",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.7,
+         0.895
+        ],
+        [
+         0.7,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-15",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.9,
+         0.895
+        ],
+        [
+         0.9,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-16",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.1,
+         0.895
+        ],
+        [
+         1.1,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-17",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.895
+        ],
+        [
+         1.3,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-18",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.5,
+         0.895
+        ],
+        [
+         1.5,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-19",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.7,
+         0.895
+        ],
+        [
+         1.7,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-left-20",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         0.895
+        ],
+        [
+         1.9,
+         1.495
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-1",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.9,
+         -1.495
+        ],
+        [
+         -1.9,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-2",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.7,
+         -1.495
+        ],
+        [
+         -1.7,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-3",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.5,
+         -1.495
+        ],
+        [
+         -1.5,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-4",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.3,
+         -1.495
+        ],
+        [
+         -1.3,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-5",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -1.1,
+         -1.495
+        ],
+        [
+         -1.1,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-6",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         -1.495
+        ],
+        [
+         -0.9,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-7",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.7,
+         -1.495
+        ],
+        [
+         -0.7,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-8",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.5,
+         -1.495
+        ],
+        [
+         -0.5,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-9",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.3,
+         -1.495
+        ],
+        [
+         -0.3,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-10",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         -1.495
+        ],
+        [
+         -0.1,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-11",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.1,
+         -1.495
+        ],
+        [
+         0.1,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-12",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.3,
+         -1.495
+        ],
+        [
+         0.3,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-13",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.5,
+         -1.495
+        ],
+        [
+         0.5,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-14",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.7,
+         -1.495
+        ],
+        [
+         0.7,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-15",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.9,
+         -1.495
+        ],
+        [
+         0.9,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-16",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.1,
+         -1.495
+        ],
+        [
+         1.1,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-17",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         -1.495
+        ],
+        [
+         1.3,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-18",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.5,
+         -1.495
+        ],
+        [
+         1.5,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-19",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.7,
+         -1.495
+        ],
+        [
+         1.7,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
+      },
+      {
+       "id": "grouser-right-20",
+       "bone": "undercarriage",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         -1.495
+        ],
+        [
+         1.9,
+         -0.895
+        ]
+       ],
+       "closed": false,
+       "material": "track-steel"
       }
      ]
     },
@@ -1356,16 +4133,16 @@
       "de": "Vollständige Seitenansicht der ersten Fassung."
      },
      "retained": {
-      "en": "Everything: grousers, louvres, welds, bosses, rod eyes, seams.",
-      "de": "Alles: Stollen, Lamellen, Schweißnähte, Naben, Stangenaugen, Nähte."
+      "en": "Everything: grousers, louvres, welds, bosses, rod eyes, seams. Front view with all moving parts: bucket with five teeth, stick and boom, the boom cylinder pair, the stick and bucket cylinders with chrome rods and the boom foot; every arm part and cylinder is an extruded solid of its side-view outline, so a lowered boom, a curled bucket or an extended rod changes its height range exactly. House with cab block, glass, pillar, hood rail and stack, both track belts with grousers and the centre beam. Plan: the same arm solids seen from above (forward range of each part), boom foot, house, cab roof with the windscreen strip, engine hood with louvres, stack circle, counterweight and the two tracks with grouser lines.",
+      "de": "Alles: Stollen, Lamellen, Schweißnähte, Naben, Stangenaugen, Nähte. Vorderansicht mit allen beweglichen Teilen: Löffel mit fünf Zähnen, Stiel und Ausleger, das Auslegerzylinderpaar, Stiel- und Löffelzylinder mit Chromkolbenstangen und der Auslegerfuß; jedes Arm- und Zylinderteil ist ein extrudierter Körper seines Seitenansichtsumrisses, sodass ein gesenkter Ausleger, ein eingerollter Löffel oder eine ausgefahrene Stange ihren Höhenbereich genau ändern. Oberwagen mit Kabinenblock, Glas, Pfosten, Haubenreling und Auspuffrohr, beide Laufbänder mit Stollen und der Mittelträger. Grundriss: dieselben Armkörper von oben (Vorwärtsbereich jedes Teils), Auslegerfuß, Oberwagen, Kabinendach mit Frontscheibenstreifen, Motorhaube mit Lamellen, Rohrkreis, Gegengewicht und die zwei Ketten mit Stollenlinien."
      },
      "merged": {
       "en": "Nothing merged.",
       "de": "Nichts zusammengefasst."
      },
      "omitted": {
-      "en": "Hoses, handrails, lamps (not modelled).",
-      "de": "Schläuche, Handläufe, Leuchten (nicht modelliert)."
+      "en": "Hoses, handrails, lamps (not modelled). In the front view the engine compartment, counterweight, rollers, sprocket and idler are hidden behind the house and tracks; the arm is drawn on its own lateral line, right of the cab; weld lines are not drawn in the front and plan.",
+      "de": "Schläuche, Handläufe, Leuchten (nicht modelliert). In der Vorderansicht sind Motorraum, Gegengewicht, Rollen, Antriebs- und Leitrad hinter Oberwagen und Ketten verdeckt; der Arm liegt auf seiner eigenen Querlinie rechts der Kabine; Schweißnähte sind in Vorderansicht und Grundriss nicht gezeichnet."
      },
      "thinElements": {
       "en": "Grouser ticks 0.07 m long at texture pen.",
@@ -1436,7 +4213,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "house",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
       },
       {
        "kind": "path",
@@ -1448,7 +4231,13 @@
        "filled": true,
        "tone": 0.2,
        "region": "engine-compartment",
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.9,
+        "z1": 0.9
+       }
       },
       {
        "kind": "capsule",
@@ -1465,7 +4254,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "exhaust-stack",
-       "material": "exhaust-steel"
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
       },
       {
        "kind": "path",
@@ -1477,7 +4272,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "counterweight",
-       "material": "cast-iron"
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
       },
       {
        "kind": "path",
@@ -1489,7 +4290,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "kind": "path",
@@ -1501,7 +4308,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "kind": "path",
@@ -1513,7 +4326,13 @@
        "filled": true,
        "tone": 0.35,
        "region": "attachment",
-       "material": "wear-steel"
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "kind": "capsule",
@@ -1530,7 +4349,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
       },
       {
        "kind": "capsule",
@@ -1547,7 +4372,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.34,
+        "z1": -0.16
+       }
       },
       {
        "kind": "capsule",
@@ -1564,7 +4395,13 @@
        "filled": true,
        "tone": 0.7,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
       },
       {
        "kind": "capsule",
@@ -1581,7 +4418,13 @@
        "filled": true,
        "tone": 0.7,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.205
+       }
       },
       {
        "kind": "path",
@@ -1593,7 +4436,13 @@
        "filled": true,
        "tone": 0.85,
        "region": "cab-glazing",
-       "material": "glass"
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
       },
       {
        "kind": "capsule",
@@ -1610,7 +4459,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
       },
       {
        "id": "sprocket",
@@ -1750,7 +4605,13 @@
        "cy": 0.65,
        "rx": 0.09,
        "ry": 0.09,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-root-boss",
@@ -1764,7 +4625,13 @@
        "cy": 0,
        "rx": 0.2,
        "ry": 0.2,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "boom-tip-boss",
@@ -1778,7 +4645,13 @@
        "cy": 0,
        "rx": 0.26,
        "ry": 0.26,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "id": "stick-root-boss",
@@ -1792,7 +4665,13 @@
        "cy": 0,
        "rx": 0.28,
        "ry": 0.28,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "id": "stick-tip-boss",
@@ -1806,7 +4685,13 @@
        "cy": 0,
        "rx": 0.22,
        "ry": 0.22,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "id": "bucket-pin",
@@ -1820,7 +4705,13 @@
        "cy": 0,
        "rx": 0.1,
        "ry": 0.1,
-       "material": "track-steel"
+       "material": "track-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "cab-sill",
@@ -1830,7 +4721,13 @@
        "filled": false,
        "tone": 0.3,
        "kind": "path",
-       "d": "M 0.12,0.55 L 1.58,0.55"
+       "d": "M 0.12,0.55 L 1.58,0.55",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
       },
       {
        "id": "bucket-teeth",
@@ -1842,7 +4739,13 @@
        "kind": "path",
        "d": "M 1.3,0.07 L 1.5,-0.03 L 1.28,-0.09 Z",
        "region": "attachment",
-       "material": "wear-steel"
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "id": "skirt-line",
@@ -1852,7 +4755,13 @@
        "filled": false,
        "tone": 0.4,
        "kind": "path",
-       "d": "M -1.75,0.22 L 1.6,0.22"
+       "d": "M -1.75,0.22 L 1.6,0.22",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
       },
       {
        "id": "hood-rail",
@@ -1881,7 +4790,13 @@
         ]
        ],
        "closed": false,
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
       },
       {
        "id": "cab-seat",
@@ -1897,7 +4812,13 @@
        "y1": 1.45,
        "r0": 0.1,
        "r1": 0.07,
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
       },
       {
        "id": "boom-foot",
@@ -1909,6 +4830,1185 @@
        "kind": "path",
        "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
        "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.7,
+        "z1": 0.2
+       }
+      }
+     ],
+     "front": [
+      {
+       "kind": "path",
+       "d": "M 0.65,-0.16 L -0.5,-0.16 C -0.6,-0.16 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "bucket-tooth-0",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.6
+       }
+      },
+      {
+       "id": "bucket-tooth-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.52,
+        "z1": -0.39999999999999997
+       }
+      },
+      {
+       "id": "bucket-tooth-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.31999999999999995,
+        "z1": -0.19999999999999996
+       }
+      },
+      {
+       "id": "bucket-tooth-3",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.11999999999999988,
+        "z1": 1.1102230246251565e-16
+       }
+      },
+      {
+       "id": "bucket-tooth-4",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.08000000000000007,
+        "z1": 0.20000000000000007
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-left",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.15,
+        "z1": 0.35
+       }
+      },
+      {
+       "id": "boom-rod-left",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-right",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
+      },
+      {
+       "id": "boom-rod-right",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
+      },
+      {
+       "id": "stick-cyl-barrel",
+       "bone": "stick-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.6,
+       "y1": 0,
+       "r0": 0.09,
+       "r1": 0.09,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.33999999999999997,
+        "z1": -0.16
+       }
+      },
+      {
+       "id": "stick-rod",
+       "bone": "stick-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 2.35,
+       "y1": 0,
+       "r0": 0.045,
+       "r1": 0.045,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.20500000000000002
+       }
+      },
+      {
+       "id": "bucket-cyl-barrel",
+       "bone": "bucket-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.85,
+       "y1": 0,
+       "r0": 0.07,
+       "r1": 0.07,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "bucket-rod",
+       "bone": "bucket-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.95,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
+       "id": "boom-foot",
+       "bone": "upper",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.7,
+        "z1": 0.2
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,0.6 L 0.95,0.6 L 1.02,0.55 L 1.56,0.55 C 1.55,1.1 1.5,1.6 1.43,1.84 C 1.38,1.9 1.3,1.9 1.2,1.9 L 0.45,1.9 C 0.35,1.9 0.3,1.85 0.3,1.75 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.2,
+       "y0": 1.25,
+       "x1": -1.2,
+       "y1": 1.8,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "stack",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-block",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.62,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.75,-0.16 L 1.6,-0.16 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": 0.895,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "r": 0.12,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -1.495,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "r": 0.12,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.25,
+       "w": 1.8,
+       "h": 0.61,
+       "region": "tracks",
+       "material": "paint-steel"
+      },
+      {
+       "id": "slew-ring",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.8,
+       "y": 0.86,
+       "w": 1.6,
+       "h": 0.14,
+       "material": "paint-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "bucket-tooth-0",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.72,
+        "z1": -0.6
+       }
+      },
+      {
+       "id": "bucket-tooth-1",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.52,
+        "z1": -0.39999999999999997
+       }
+      },
+      {
+       "id": "bucket-tooth-2",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.31999999999999995,
+        "z1": -0.19999999999999996
+       }
+      },
+      {
+       "id": "bucket-tooth-3",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.11999999999999988,
+        "z1": 1.1102230246251565e-16
+       }
+      },
+      {
+       "id": "bucket-tooth-4",
+       "bone": "bucket",
+       "role": "detail",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         1.3,
+         0.07
+        ],
+        [
+         1.5,
+         -0.03
+        ],
+        [
+         1.28,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.08000000000000007,
+        "z1": 0.20000000000000007
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-left",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.15,
+        "z1": 0.35
+       }
+      },
+      {
+       "id": "boom-rod-left",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-right",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
+      },
+      {
+       "id": "boom-rod-right",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.035,
+       "r1": 0.035,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
+      },
+      {
+       "id": "stick-cyl-barrel",
+       "bone": "stick-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.6,
+       "y1": 0,
+       "r0": 0.09,
+       "r1": 0.09,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.33999999999999997,
+        "z1": -0.16
+       }
+      },
+      {
+       "id": "stick-rod",
+       "bone": "stick-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 2.35,
+       "y1": 0,
+       "r0": 0.045,
+       "r1": 0.045,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.20500000000000002
+       }
+      },
+      {
+       "id": "bucket-cyl-barrel",
+       "bone": "bucket-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.85,
+       "y1": 0,
+       "r0": 0.07,
+       "r1": 0.07,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "bucket-rod",
+       "bone": "bucket-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.95,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
+       "id": "boom-foot",
+       "bone": "upper",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.65,
+        "z1": 0.15
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,0.6 L 0.95,0.6 L 1.02,0.55 L 1.56,0.55 C 1.55,1.1 1.5,1.6 1.43,1.84 C 1.38,1.9 1.3,1.9 1.2,1.9 L 0.45,1.9 C 0.35,1.9 0.3,1.85 0.3,1.75 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-roof",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.2,
+       "y0": 1.25,
+       "x1": -1.2,
+       "y1": 1.8,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "stack",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.55,0.4 L -0.55,0.4 L -0.55,1.05 L -1.55,1.05 Z",
+       "id": "hood-grille",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "engine-compartment",
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.9,
+        "z1": 0.9
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.75,-0.16 L 1.6,-0.16 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.65,-0.16 L -0.5,-0.16 C -0.6,-0.16 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": 0.895,
+       "w": 4.16,
+       "h": 0.6,
+       "r": 0.3,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame-left",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -1.7,
+       "y": 0.995,
+       "w": 3.4,
+       "h": 0.4,
+       "region": "tracks",
+       "material": "paint-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": -1.495,
+       "w": 4.16,
+       "h": 0.6,
+       "r": 0.3,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame-right",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -1.7,
+       "y": -1.395,
+       "w": 3.4,
+       "h": 0.4,
+       "region": "tracks",
        "material": "paint-steel"
       }
      ]
@@ -1919,16 +6019,16 @@
       "de": "Die 1:200-Zeichnung mit Laufrollen, Bolzennaben, Drehkranz, Auslegerfuß und Sitz, sodass die Maschine als Gelenkarm auf drehbarem Oberwagen lesbar ist."
      },
      "retained": {
-      "en": "Five track rollers, sprocket and idler hubs, boss circles at the three arm pins, slew ring, cab sill, seat, hood rail, bucket teeth.",
-      "de": "Fünf Laufrollen, Antriebs- und Leitradnaben, Nabenkreise an den drei Armgelenken, Drehkranz, Kabinenschweller, Sitz, Haubenreling, Löffelzähne."
+      "en": "Five track rollers, sprocket and idler hubs, boss circles at the three arm pins, slew ring, cab sill, seat, hood rail, bucket teeth. Front view: bucket with five teeth, stick, boom, boom foot and all three cylinders with rods as extruded solids of their side-view outlines, house, cab block with glass, stack, both belts and the centre beam with slew ring. Plan: the same arm solids, boom foot, house, cab roof and windscreen strip, hood grille, stack circle, counterweight and both tracks with their frames.",
+      "de": "Fünf Laufrollen, Antriebs- und Leitradnaben, Nabenkreise an den drei Armgelenken, Drehkranz, Kabinenschweller, Sitz, Haubenreling, Löffelzähne. Vorderansicht: Löffel mit fünf Zähnen, Stiel, Ausleger, Auslegerfuß und alle drei Zylinder mit Kolbenstangen als extrudierte Körper ihrer Seitenansichtsumrisse, Oberwagen, Kabinenblock mit Glas, Auspuffrohr, beide Laufbänder und der Mittelträger mit Drehkranz. Grundriss: dieselben Armkörper, Auslegerfuß, Oberwagen, Kabinendach und Frontscheibenstreifen, Haubengitter, Rohrkreis, Gegengewicht und beide Ketten mit ihren Rahmen."
      },
      "merged": {
       "en": "Bucket plate and ear merge into the bucket body.",
       "de": "Löffelplatte und Löffelohr gehen im Löffelkörper auf."
      },
      "omitted": {
-      "en": "Grousers, welds, louvres, rod eyes (below 0.04 m).",
-      "de": "Stollen, Schweißnähte, Lamellen, Stangenaugen (unter 0,04 m)."
+      "en": "Grousers, welds, louvres, rod eyes (below 0.04 m). Engine compartment, counterweight and rollers are hidden in the front view; no grousers.",
+      "de": "Stollen, Schweißnähte, Lamellen, Stangenaugen (unter 0,04 m). Motorraum, Gegengewicht und Rollen sind in der Vorderansicht verdeckt; keine Stollen."
      },
      "thinElements": {
       "en": "None thickened.",
@@ -2029,7 +6129,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "house",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
       },
       {
        "kind": "path",
@@ -2041,7 +6147,13 @@
        "filled": true,
        "tone": 0.2,
        "region": "engine-compartment",
-       "material": "engine-metal"
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.9,
+        "z1": 0.9
+       }
       },
       {
        "kind": "capsule",
@@ -2058,7 +6170,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "exhaust-stack",
-       "material": "exhaust-steel"
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
       },
       {
        "kind": "path",
@@ -2070,7 +6188,13 @@
        "filled": true,
        "tone": 0.85,
        "region": "cab-glazing",
-       "material": "glass"
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
       },
       {
        "kind": "path",
@@ -2082,7 +6206,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "counterweight",
-       "material": "cast-iron"
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
       },
       {
        "kind": "path",
@@ -2094,7 +6224,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "kind": "path",
@@ -2106,7 +6242,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "kind": "path",
@@ -2118,7 +6260,13 @@
        "filled": true,
        "tone": 0.35,
        "region": "attachment",
-       "material": "wear-steel"
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
       },
       {
        "kind": "capsule",
@@ -2135,7 +6283,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
       },
       {
        "kind": "capsule",
@@ -2152,7 +6306,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "hydraulics",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.34,
+        "z1": -0.16
+       }
       },
       {
        "kind": "capsule",
@@ -2169,7 +6329,13 @@
        "filled": true,
        "tone": 0.7,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
       },
       {
        "kind": "capsule",
@@ -2186,7 +6352,736 @@
        "filled": true,
        "tone": 0.7,
        "region": "hydraulics",
-       "material": "chrome"
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.205
+       }
+      }
+     ],
+     "front": [
+      {
+       "kind": "path",
+       "d": "M 0.65,-0.16 L -0.5,-0.16 C -0.6,-0.16 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 L 1.5,-0.03 L 1.28,0.07 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-left",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.15,
+        "z1": 0.35
+       }
+      },
+      {
+       "id": "boom-rod-left",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-right",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
+      },
+      {
+       "id": "boom-rod-right",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
+      },
+      {
+       "id": "stick-cyl-barrel",
+       "bone": "stick-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.6,
+       "y1": 0,
+       "r0": 0.09,
+       "r1": 0.09,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.33999999999999997,
+        "z1": -0.16
+       }
+      },
+      {
+       "id": "stick-rod",
+       "bone": "stick-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 2.35,
+       "y1": 0,
+       "r0": 0.045,
+       "r1": 0.045,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.20500000000000002
+       }
+      },
+      {
+       "id": "bucket-cyl-barrel",
+       "bone": "bucket-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.85,
+       "y1": 0,
+       "r0": 0.07,
+       "r1": 0.07,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.35,0.62 L 0.95,0.62 L 1.0,0.58 L 1.46,0.58 C 1.45,1.1 1.4,1.6 1.34,1.82 C 1.3,1.87 1.24,1.87 1.2,1.87 L 0.45,1.87 C 0.38,1.87 0.35,1.83 0.35,1.75 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.2,
+       "y0": 1.25,
+       "x1": -1.2,
+       "y1": 1.8,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "stack",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-block",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.55,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.75,-0.16 L 1.6,-0.16 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": 0.895,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -1.495,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame",
+       "bone": "undercarriage",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.25,
+       "w": 1.8,
+       "h": 0.61,
+       "region": "tracks",
+       "material": "paint-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 L 1.5,-0.03 L 1.28,0.07 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-left",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.15,
+        "z1": 0.35
+       }
+      },
+      {
+       "id": "boom-rod-left",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "boom-cyl-barrel-right",
+       "bone": "boom-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.45,
+       "y1": 0,
+       "r0": 0.1,
+       "r1": 0.1,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": -0.65
+       }
+      },
+      {
+       "id": "boom-rod-right",
+       "bone": "boom-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.65,
+       "y1": 0,
+       "r0": 0.05,
+       "r1": 0.05,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.8,
+        "z1": -0.7
+       }
+      },
+      {
+       "id": "stick-cyl-barrel",
+       "bone": "stick-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 1.6,
+       "y1": 0,
+       "r0": 0.09,
+       "r1": 0.09,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.33999999999999997,
+        "z1": -0.16
+       }
+      },
+      {
+       "id": "stick-rod",
+       "bone": "stick-rod",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 2.35,
+       "y1": 0,
+       "r0": 0.045,
+       "r1": 0.045,
+       "region": "hydraulics",
+       "material": "chrome",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.295,
+        "z1": -0.20500000000000002
+       }
+      },
+      {
+       "id": "bucket-cyl-barrel",
+       "bone": "bucket-cyl",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.85,
+       "y1": 0,
+       "r0": 0.07,
+       "r1": 0.07,
+       "region": "hydraulics",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.35,0.62 L 0.95,0.62 L 1.0,0.58 L 1.46,0.58 C 1.45,1.1 1.4,1.6 1.34,1.82 C 1.3,1.87 1.24,1.87 1.2,1.87 L 0.45,1.87 C 0.38,1.87 0.35,1.83 0.35,1.75 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-roof",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.55,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.2,
+       "y0": 1.25,
+       "x1": -1.2,
+       "y1": 1.8,
+       "r0": 0.055,
+       "r1": 0.055,
+       "id": "stack",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.955,
+        "z1": -0.845
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.55,0.4 L -0.55,0.4 L -0.55,1.05 L -1.55,1.05 Z",
+       "id": "hood-grille",
+       "bone": "upper",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "engine-compartment",
+       "material": "engine-metal",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.9,
+        "z1": 0.9
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -1.75,-0.16 L 1.6,-0.16 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "house",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.65,-0.16 L -0.5,-0.16 C -0.6,-0.16 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.2,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": 0.895,
+       "w": 4.16,
+       "h": 0.6,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": -1.495,
+       "w": 4.16,
+       "h": 0.6,
+       "region": "tracks",
+       "material": "track-steel"
       }
      ]
     },
@@ -2196,16 +7091,16 @@
       "de": "Laufwerk mit Antriebs- und Leitradkreisen, Oberwagen mit Kabine und Motorhaube, Gegengewicht, Ausleger, Stiel und Löffel als massive zusammengesetzte Formen, drei Zylinder."
      },
      "retained": {
-      "en": "Track frame, sprocket, idler, house, hood grille, exhaust stack (0.11 m = 0.55 mm), cab glass, counterweight, arm, all hydraulic barrels and rods.",
-      "de": "Laufwerksrahmen, Antriebsrad, Leitrad, Oberwagen, Motorhaubengitter, Abgasrohr (0,11 m = 0,55 mm), Kabinenglas, Gegengewicht, Arm, alle Hydraulikrohre und -stangen."
+      "en": "Track frame, sprocket, idler, house, hood grille, exhaust stack (0.11 m = 0.55 mm), cab glass, counterweight, arm, all hydraulic barrels and rods. Front view: bucket, stick and boom as massive extruded bars, the boom cylinder pair, stick cylinder with rod and the bucket barrel, house with cab block, glass and stack, two belts and the centre beam. Plan: the arm solids from above, cab roof, glass strip, hood grille, stack circle, house, counterweight and both belts.",
+      "de": "Laufwerksrahmen, Antriebsrad, Leitrad, Oberwagen, Motorhaubengitter, Abgasrohr (0,11 m = 0,55 mm), Kabinenglas, Gegengewicht, Arm, alle Hydraulikrohre und -stangen. Vorderansicht: Löffel, Stiel und Ausleger als massive extrudierte Balken, das Auslegerzylinderpaar, Stielzylinder mit Kolbenstange und der Löffelzylinder, Oberwagen mit Kabinenblock, Glas und Auspuffrohr, zwei Laufbänder und der Mittelträger. Grundriss: die Armkörper von oben, Kabinendach, Glasstreifen, Haubengitter, Rohrkreis, Oberwagen, Gegengewicht und beide Laufbänder."
      },
      "merged": {
       "en": "Cab front and side glass form one pane; the stack cap merges into the stack.",
       "de": "Kabinenfront- und Seitenglas bilden eine Scheibe; die Rohrkappe geht im Rohr auf."
      },
      "omitted": {
-      "en": "Rollers (0.22 m but not resolved against the belt), pins, bosses, welds, grousers, louvres, seat.",
-      "de": "Laufrollen (0,22 m, gegen das Laufwerk nicht aufgelöst), Bolzen, Naben, Schweißnähte, Stollen, Lamellen, Sitz."
+      "en": "Rollers (0.22 m but not resolved against the belt), pins, bosses, welds, grousers, louvres, seat. Bucket rod, pins and bosses; counterweight and engine compartment are hidden in the front view.",
+      "de": "Laufrollen (0,22 m, gegen das Laufwerk nicht aufgelöst), Bolzen, Naben, Schweißnähte, Stollen, Lamellen, Sitz. Löffelkolbenstange, Bolzen und Naben; Gegengewicht und Motorraum sind in der Vorderansicht verdeckt."
      },
      "thinElements": {
       "en": "Rods are 0.09 to 0.1 m (0.45 to 0.5 mm) at real size.",
@@ -2269,7 +7164,13 @@
         "exhaust-stack",
         "counterweight"
        ],
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
       },
       {
        "kind": "path",
@@ -2281,7 +7182,13 @@
        "filled": true,
        "tone": 0.85,
        "region": "cab-glazing",
-       "material": "glass"
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
       },
       {
        "kind": "path",
@@ -2296,7 +7203,13 @@
         "attachment",
         "hydraulics"
        ],
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.05
+       }
       },
       {
        "kind": "path",
@@ -2308,7 +7221,13 @@
        "filled": true,
        "tone": 0.55,
        "region": "attachment",
-       "material": "paint-steel"
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.01
+       }
       },
       {
        "kind": "path",
@@ -2320,7 +7239,363 @@
        "filled": true,
        "tone": 0.35,
        "region": "attachment",
-       "material": "wear-steel"
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      }
+     ],
+     "front": [
+      {
+       "kind": "path",
+       "d": "M -2.85,-0.16 L 1.6,-0.16 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -2.5,1.22 C -2.75,1.2 -2.95,1.1 -2.98,0.85 L -3.0,0.25 C -3.0,0.1 -2.95,-0.16 -2.85,-0.16 Z",
+       "id": "house-counterweight",
+       "bone": "upper",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "house",
+        "engine-compartment",
+        "exhaust-stack",
+        "counterweight"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
+      },
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 L 1.5,-0.03 L 1.28,0.07 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "regions": [
+        "attachment",
+        "hydraulics"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,0.6 L 0.95,0.6 L 1.02,0.55 L 1.56,0.55 C 1.55,1.1 1.5,1.6 1.43,1.84 C 1.38,1.9 1.3,1.9 1.2,1.9 L 0.45,1.9 C 0.35,1.9 0.3,1.85 0.3,1.75 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-block",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "house",
+        "engine-compartment",
+        "exhaust-stack",
+        "counterweight"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -3,
+       "y": 0,
+       "w": 4.6,
+       "h": 1.25,
+       "id": "house",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "house",
+        "engine-compartment",
+        "exhaust-stack",
+        "counterweight"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 0.1
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": 0.895,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -1.495,
+       "y": 0,
+       "w": 0.6,
+       "h": 0.86,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-frame",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.25,
+       "w": 1.8,
+       "h": 0.61,
+       "region": "tracks",
+       "material": "track-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "bucket-body",
+       "bone": "bucket",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 L 1.5,-0.03 L 1.28,0.07 Z",
+       "region": "attachment",
+       "material": "wear-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.75,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "stick-body",
+       "bone": "stick",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+       "region": "attachment",
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.49,
+        "z1": -0.010000000000000009
+       }
+      },
+      {
+       "id": "boom-body",
+       "bone": "boom",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+       "regions": [
+        "attachment",
+        "hydraulics"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.04999999999999999
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,0.6 L 0.95,0.6 L 1.02,0.55 L 1.56,0.55 C 1.55,1.1 1.5,1.6 1.43,1.84 C 1.38,1.9 1.3,1.9 1.2,1.9 L 0.45,1.9 C 0.35,1.9 0.3,1.85 0.3,1.75 Z",
+       "id": "cab-glass",
+       "bone": "upper",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 1.15
+       }
+      },
+      {
+       "kind": "path",
+       "d": "M -2.85,-0.16 L 1.6,-0.16 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -2.5,1.22 C -2.75,1.2 -2.95,1.1 -2.98,0.85 L -3.0,0.25 C -3.0,0.1 -2.95,-0.16 -2.85,-0.16 Z",
+       "id": "house-counterweight",
+       "bone": "upper",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "house",
+        "engine-compartment",
+        "exhaust-stack",
+        "counterweight"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.25,
+        "z1": 1.25
+       }
+      },
+      {
+       "kind": "rect",
+       "x": 0.12,
+       "y": 0,
+       "w": 1.38,
+       "h": 1.97,
+       "id": "cab-roof",
+       "bone": "upper",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "house"
+       ],
+       "material": "paint-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1,
+        "z1": 1.2
+       }
+      },
+      {
+       "id": "track-belt-left",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": 0.895,
+       "w": 4.16,
+       "h": 0.6,
+       "region": "tracks",
+       "material": "track-steel"
+      },
+      {
+       "id": "track-belt-right",
+       "bone": "undercarriage",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -2.08,
+       "y": -1.495,
+       "w": 4.16,
+       "h": 0.6,
+       "region": "tracks",
+       "material": "track-steel"
       }
      ]
     },
@@ -2330,16 +7605,16 @@
       "de": "Kettenbagger als ein dunkles Laufwerk, ein Oberwagen mit Kabine, das Gegengewicht und drei massive Armteile; in der eingefahrenen Haltung liegt der Arm über der Kabine."
      },
      "retained": {
-      "en": "Track belt, house, cab glass, counterweight, boom, stick, bucket with teeth and the boom cylinder (barrel and rod) so the arm drive is still shown.",
-      "de": "Laufwerk, Oberwagen, Kabinenglas, Gegengewicht, Ausleger, Stiel, Löffel mit Zähnen und der Auslegerzylinder (Rohr und Stange), damit der Armantrieb sichtbar bleibt."
+      "en": "Track belt, house, cab glass, counterweight, boom, stick, bucket with teeth and the boom cylinder (barrel and rod) so the arm drive is still shown. Front view: two dark belts, one house block with cab glass, and boom, stick and bucket as three extruded bars; stowed it folds in front of the cab. Plan: two belts, one house and counterweight block, the cab roof with its glass strip and the three arm bars.",
+      "de": "Laufwerk, Oberwagen, Kabinenglas, Gegengewicht, Ausleger, Stiel, Löffel mit Zähnen und der Auslegerzylinder (Rohr und Stange), damit der Armantrieb sichtbar bleibt. Vorderansicht: zwei dunkle Laufbänder, ein Oberwagenblock mit Kabinenglas und Ausleger, Stiel und Löffel als drei extrudierte Balken; gestaut klappt er vor der Kabine zusammen. Grundriss: zwei Laufbänder, ein Block aus Oberwagen und Gegengewicht, das Kabinendach mit Glasstreifen und die drei Armbalken."
      },
      "merged": {
       "en": "Engine compartment and exhaust stack merge into the house fill (area-weighted overlay); track frame, rollers, sprocket and idler merge into the belt.",
       "de": "Motorraum und Abgasrohr gehen in der Oberwagenfläche auf (flächengewichtete Überlagerung); Laufwerksrahmen, Rollen, Antriebsrad und Leitrad gehen im Laufwerk auf."
      },
      "omitted": {
-      "en": "Stick and bucket cylinders (bones remain), pins, welds, grousers, louvres, seat, hand rails.",
-      "de": "Stiel- und Löffelzylinder (Knochen bleiben erhalten), Bolzen, Schweißnähte, Stollen, Lamellen, Sitz, Handläufe."
+      "en": "Stick and bucket cylinders (bones remain), pins, welds, grousers, louvres, seat, hand rails. Cylinders (as in the side view), stack, hood grille and pins in both views.",
+      "de": "Stiel- und Löffelzylinder (Knochen bleiben erhalten), Bolzen, Schweißnähte, Stollen, Lamellen, Sitz, Handläufe. Zylinder (wie in der Seitenansicht), Auspuffrohr, Haubengitter und Bolzen in beiden Ansichten."
      },
      "thinElements": {
       "en": "The boom cylinder barrel is 0.2 m (0.4 mm) and the rod 0.14 m (0.28 mm, real 0.1 m, thickened 0.04 m); all other parts at real size.",
@@ -2408,10 +7683,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "track-r2",
-     "track-r1",
-     "track-f1",
-     "track-f2"
+     "track-r2-l",
+     "track-r2-r",
+     "track-r1-l",
+     "track-r1-r",
+     "track-f1-l",
+     "track-f1-r",
+     "track-f2-l",
+     "track-f2-r"
     ],
     "thermal": {
      "operating": {
@@ -2508,10 +7787,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "track-r2",
-     "track-r1",
-     "track-f1",
-     "track-f2"
+     "track-r2-l",
+     "track-r2-r",
+     "track-r1-l",
+     "track-r1-r",
+     "track-f1-l",
+     "track-f1-r",
+     "track-f2-l",
+     "track-f2-r"
     ],
     "thermal": {
      "operating": {
@@ -2621,10 +7904,14 @@
     },
     "ground": "auto",
     "contacts": [
-     "track-r2",
-     "track-r1",
-     "track-f1",
-     "track-f2"
+     "track-r2-l",
+     "track-r2-r",
+     "track-r1-l",
+     "track-r1-r",
+     "track-f1-l",
+     "track-f1-r",
+     "track-f2-l",
+     "track-f2-r"
     ],
     "thermal": {
      "operating": {
@@ -3320,22 +8607,42 @@
     ],
     "contacts": [
      {
-      "anchor": "track-r2",
+      "anchor": "track-r2-l",
       "fromS": 0,
       "toS": 9
      },
      {
-      "anchor": "track-r1",
+      "anchor": "track-r2-r",
       "fromS": 0,
       "toS": 9
      },
      {
-      "anchor": "track-f1",
+      "anchor": "track-r1-l",
       "fromS": 0,
       "toS": 9
      },
      {
-      "anchor": "track-f2",
+      "anchor": "track-r1-r",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f1-l",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f1-r",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f2-l",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f2-r",
       "fromS": 0,
       "toS": 9
      }
@@ -3552,6 +8859,9 @@
        },
        "bucket-rod": {
         "dx": 0.057
+       },
+       "slew-ring": {
+        "twistDeg": 0
        }
       }
      },
@@ -3586,6 +8896,9 @@
        },
        "bucket-rod": {
         "dx": 0.1345
+       },
+       "slew-ring": {
+        "twistDeg": 12
        }
       }
      },
@@ -3620,6 +8933,9 @@
        },
        "bucket-rod": {
         "dx": 0.2913
+       },
+       "slew-ring": {
+        "twistDeg": 35
        }
       }
      },
@@ -3654,6 +8970,9 @@
        },
        "bucket-rod": {
         "dx": 0.4638
+       },
+       "slew-ring": {
+        "twistDeg": 62
        }
       }
      },
@@ -3688,6 +9007,9 @@
        },
        "bucket-rod": {
         "dx": 0.5883
+       },
+       "slew-ring": {
+        "twistDeg": 82
        }
       }
      },
@@ -3722,6 +9044,9 @@
        },
        "bucket-rod": {
         "dx": 0.6388
+       },
+       "slew-ring": {
+        "twistDeg": 90
        }
       }
      },
@@ -3756,6 +9081,9 @@
        },
        "bucket-rod": {
         "dx": 0.4966
+       },
+       "slew-ring": {
+        "twistDeg": 90
        }
       }
      },
@@ -3790,6 +9118,9 @@
        },
        "bucket-rod": {
         "dx": 0.2039
+       },
+       "slew-ring": {
+        "twistDeg": 90
        }
       }
      },
@@ -3824,6 +9155,9 @@
        },
        "bucket-rod": {
         "dx": 0.0966
+       },
+       "slew-ring": {
+        "twistDeg": 90
        }
       }
      },
@@ -3858,6 +9192,9 @@
        },
        "bucket-rod": {
         "dx": 0.1254
+       },
+       "slew-ring": {
+        "twistDeg": 90
        }
       }
      },
@@ -3892,6 +9229,9 @@
        },
        "bucket-rod": {
         "dx": 0.1915
+       },
+       "slew-ring": {
+        "twistDeg": 78
        }
       }
      },
@@ -3926,6 +9266,9 @@
        },
        "bucket-rod": {
         "dx": 0.2977
+       },
+       "slew-ring": {
+        "twistDeg": 55
        }
       }
      },
@@ -3960,6 +9303,9 @@
        },
        "bucket-rod": {
         "dx": 0.4307
+       },
+       "slew-ring": {
+        "twistDeg": 30
        }
       }
      },
@@ -3994,6 +9340,9 @@
        },
        "bucket-rod": {
         "dx": 0.5651
+       },
+       "slew-ring": {
+        "twistDeg": 12
        }
       }
      },
@@ -4028,6 +9377,9 @@
        },
        "bucket-rod": {
         "dx": 0.6766
+       },
+       "slew-ring": {
+        "twistDeg": 3
        }
       }
      },
@@ -4062,6 +9414,9 @@
        },
        "bucket-rod": {
         "dx": 0.7525
+       },
+       "slew-ring": {
+        "twistDeg": 0
        }
       }
      },
@@ -4078,22 +9433,42 @@
     ],
     "contacts": [
      {
-      "anchor": "track-r2",
+      "anchor": "track-r2-l",
       "fromS": 0,
       "toS": 9
      },
      {
-      "anchor": "track-r1",
+      "anchor": "track-r2-r",
       "fromS": 0,
       "toS": 9
      },
      {
-      "anchor": "track-f1",
+      "anchor": "track-r1-l",
       "fromS": 0,
       "toS": 9
      },
      {
-      "anchor": "track-f2",
+      "anchor": "track-r1-r",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f1-l",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f1-r",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f2-l",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "track-f2-r",
       "fromS": 0,
       "toS": 9
      }
@@ -4267,22 +9642,42 @@
     ],
     "contacts": [
      {
-      "anchor": "track-r2",
+      "anchor": "track-r2-l",
       "fromS": 0,
       "toS": 8
      },
      {
-      "anchor": "track-r1",
+      "anchor": "track-r2-r",
       "fromS": 0,
       "toS": 8
      },
      {
-      "anchor": "track-f1",
+      "anchor": "track-r1-l",
       "fromS": 0,
       "toS": 8
      },
      {
-      "anchor": "track-f2",
+      "anchor": "track-r1-r",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "track-f1-l",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "track-f1-r",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "track-f2-l",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "track-f2-r",
       "fromS": 0,
       "toS": 8
      }
@@ -4751,8 +10146,8 @@
    "supports": [],
    "assumptions": [
     {
-     "en": "Four equally stiff ground patches under the tracks share the load; a patch that would pull away from the ground is dropped, which exposes the tipping line about the front patch.",
-     "de": "Vier gleich steife Standflächen unter den Ketten teilen die Last; eine Fläche, die vom Boden abheben würde, entfällt; das zeigt die Kipplinie um die vordere Fläche."
+     "en": "Eight equally stiff ground patches, four under the left and four under the right track, share the load; a patch that would pull away from the ground is dropped, which exposes the tipping line about the two front patches.",
+     "de": "Acht gleich steife Standflächen, vier unter der linken und vier unter der rechten Kette, teilen die Last; eine Fläche, die vom Boden abheben würde, entfällt; das zeigt die Kipplinie um die beiden vorderen Flächen."
     },
     {
      "en": "The 1.3 t of soil is a point load at the bucket content centre (0.9 m3 at 1.45 t/m3); all dig-cycle motion is quasi-static (no digging resistance).",
@@ -4764,10 +10159,7 @@
   "presentation": {
    "defaultPose": "stowed",
    "defaultClip": "dig-cycle",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

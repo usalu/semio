@@ -13,7 +13,7 @@ import scenarios from "./🔣️.json" with { type: "json" };
 export type Keys = readonly (readonly [number, number])[];
 
 /** 🧾️ Kinematics of a scenario asset. */
-export type Kinematics = { readonly pivotX: number; readonly pivotY: number; readonly rootX: { readonly x0: number; readonly vx: number }; readonly angleKeysDeg: Keys; readonly operating: Readonly<Record<Slug, Keys>>; readonly emitters: Readonly<Record<Slug, Keys>> };
+export type Kinematics = { readonly pivotX: number; readonly pivotY: number; readonly rootX: { readonly x0: number; readonly vx: number }; readonly rootZ?: { readonly z0: number; readonly vz: number }; readonly yawKeysDeg?: Keys; readonly angleKeysDeg: Keys; readonly operating: Readonly<Record<Slug, Keys>>; readonly emitters: Readonly<Record<Slug, Keys>> };
 
 /** 🧾️ The scenario document. */
 export const SCENARIOS = scenarios as unknown as {
@@ -41,11 +41,19 @@ export function syntheticEvaluator(kinematics: Kinematics): (asset: Asset, query
     const t = query.timeS ?? 0;
     const angleDeg = lerpKeys(kinematics.angleKeysDeg, t, 0);
     const a = (angleDeg * Math.PI) / 180;
+    const yaw = (lerpKeys(kinematics.yawKeysDeg ?? [], t, 0) * Math.PI) / 180;
+    const cy = Math.cos(yaw);
+    const sy = Math.sin(yaw);
     const px = kinematics.rootX.x0 + kinematics.rootX.vx * t + kinematics.pivotX;
-    const anchors: Record<Slug, { anchor: Asset["anchors"][number]; at: Point }> = {};
-    for (const anchor of asset.anchors) anchors[anchor.id] = { anchor, at: { x: px + Math.cos(a) * anchor.x - Math.sin(a) * anchor.y, y: kinematics.pivotY + Math.sin(a) * anchor.x + Math.cos(a) * anchor.y } };
+    const pz = (kinematics.rootZ?.z0 ?? 0) + (kinematics.rootZ?.vz ?? 0) * t;
+    const anchors: Record<Slug, { anchor: Asset["anchors"][number]; at: Point; z: number }> = {};
+    for (const anchor of asset.anchors) {
+      const forward = Math.cos(a) * anchor.x - Math.sin(a) * anchor.y;
+      anchors[anchor.id] = { anchor, at: { x: px + forward * cy, y: kinematics.pivotY + Math.sin(a) * anchor.x + Math.cos(a) * anchor.y }, z: pz + forward * sy };
+    }
+    const frame = { o: { x: px, y: kinematics.pivotY, z: pz }, u: { x: Math.cos(a) * cy, y: Math.sin(a), z: Math.cos(a) * sy }, v: { x: -Math.sin(a) * cy, y: Math.cos(a), z: -Math.sin(a) * sy }, w: { x: -sy, y: 0, z: cy } };
     const bones: Record<string, unknown> = {};
-    for (const anchor of asset.anchors) bones[anchor.bone] = { id: anchor.bone, angleRad: a };
+    for (const anchor of asset.anchors) bones[anchor.bone] = { id: anchor.bone, angleRad: a, frame };
     const operating: Record<Slug, number> = {};
     for (const [key, keys] of Object.entries(kinematics.operating)) operating[key] = lerpKeys(keys, t, 0);
     const emitters: Record<Slug, number> = {};

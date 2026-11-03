@@ -1,0 +1,449 @@
+{
+  "description": "Language-agnostic vectors of the lateral spread (`abductionDeg`). The figure is the rig of the sample figure standing at a hip height of 0.96 m: pelvis origin (0, 0.96) pointing up, torso origin 0.1 m above it, arm-l origin 0.42 m up the torso at (0, 1.48) pointing down (length 0.6 m, hand at (0, 0.88)), thigh-l origin at the pelvis pointing down (0.45 m), shank-l 0.43 m, foot-l horizontal (0.22 m). A bone with spread phi turns out of the sagittal plane about its own normal: a point at distance s along the bone is s*sin(phi) to the left (+z) and keeps s*cos(phi) of its reach; children ride on the spread bone. The side view (elevation) is the orthographic projection of that three-dimensional chain, so it foreshortens by cos(phi) exactly as the front and plan views do: the three views agree in every pose. Hand computations: the hand of arm-l at phi = 60 deg is at z = 0.6*sin 60 = 0.519615 and at height 1.48 - 0.6*cos 60 = 1.18 (the elevation arm shrinks from 0.6 m to 0.3 m long); at phi = 30 deg z = 0.3 and height 1.48 - 0.6*cos 30 = 0.960385; the foot (phi = 90 deg, s = 0.22) lies entirely sideways: z = 0.22 and its projected tip is at the ankle; the thigh at phi = 90 deg puts the shank origin at z = 0.45 and 0.96 m high (hip height) and, the shank continuing along the thigh, the shank tip at z = 0.88. Front and plan shapes are authored in the rest pose (root at the origin: arm-l origin y 0.52, hand y -0.08) and move by the projected travel of their bone (standing +0.96 m up) plus the lateral position: a rigid shape follows the origin, a followTip rect stretches from the origin (u = 0) to the tip (u = 1). u is the fraction of the height (front) or of the forward position (plan) along the bone when the bone has at least half its length of that extent at rest (arm-l in front, foot-l in plan), otherwise the fraction across the lateral extent of the shape from its inner end to its outer end (arm-l in plan, foot-l in front). Extents are compared within extentToleranceM (1 mm). The transition case compares lateral extents only, because a transition advances the forward position slightly. Rigid shapes (not followTip, or followTip on a bone with at least half its length as extent in the view) of a spread or twisted subtree are carried by the full three-dimensional transform from the rest frame to the current frame and projected: a plan point (x, y) is the rest point (x, height of the bone origin, lateral y), a front point (x, y) the rest point (forward position of the bone origin, height y, lateral x). Hand computation for the arm-rigid front rectangle (lateral 0.4 to 0.5, height 0.4 to 0.5, shoulder at height 0.52 and 1.48 when standing) at 60 degrees: a = 0.52 - y, c = lateral, lateral' = 0.866025 a + 0.5 c, height' = 1.48 - 0.5 a + 0.866025 c, hence lateral 0.217321 to 0.353923 and height 1.76641 to 1.90301. For the shank rigid shapes at a thigh spread of 90 degrees the shank origin is at (0, 0.96, 0.45), its axis points left and its lateral axis up: front lateral' = 0.45 + a with a = -(y + 0.45) = 0.05 to 0.45, height' = 0.96 + c with c = 0.1 to 0.2; the plan footprint at the origin height keeps only the forward coordinate. Front and plan shapes of the bones that spread are authored centred on the bone (pivot at lateral 0): arm-follow lateral -0.05 to 0.05, so at 60 degrees the front rectangle (a = 0.52 - y in 0 to 0.6, c = lateral) has lateral' = 0.866025 a + 0.5 c from -0.025 to 0.544615 and height' = 1.48 - 0.5 a + 0.866025 c from 1.136699 to 1.523301; its plan footprint (a vertical bone has no forward extent) grows outwards to 0.569615. At 30 degrees (transition) lateral' = 0.5 a + 0.866025 c from -0.043301 to 0.343301 and height' = 1.48 - 0.866025 a + 0.5 c from 0.935385 to 1.505. The foot in plan (forward 0 to 0.22, lateral -0.05 to 0.05) is carried rigidly: (x, y) -> (-y, x) at 90 degrees, so x -0.05 to 0.05 and y 0 to 0.22; in front the foot lies along the viewing axis and grows outwards by 0.22 m. The shank rigid rectangle at a thigh spread of 90 degrees: front lateral 0.45 + a (0.5 to 0.9), height 0.96 + c (0.91 to 1.01), plan x 0 to 0.1 on the lateral line 0.45. Single 3D path: every front and plan shape of every bone is carried by the 3D transform from the rest frame to the current frame, so the thickness of a part turns with it (the foot, 0.1 m wide, spread by 90 degrees has no lateral width left in front, only the 0.22 m it grows outwards; a vertical arm spread by 60 degrees has half its plan width, 0.05 cos 60 deg = 0.025, plus the growth to the tip 0.519615: plan lateral -0.025 to 0.544615, at 30 degrees -0.043301 to 0.343301).",
+  "extentToleranceM": 0.001,
+  "asset": "sample-figure",
+  "scale": 100,
+  "poses": {
+    "arm-60": {
+      "bones": {
+        "arm-l": {
+          "abductionDeg": 60
+        }
+      }
+    },
+    "foot-90": {
+      "bones": {
+        "foot-l": {
+          "abductionDeg": 90
+        }
+      }
+    },
+    "straddle-90": {
+      "bones": {
+        "thigh-l": {
+          "abductionDeg": 90
+        }
+      }
+    }
+  },
+  "shapes": {
+    "elevation": [
+      {
+        "id": "arm",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.6,
+        "h": 0.1
+      }
+    ],
+    "front": [
+      {
+        "id": "arm-follow",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": -0.08,
+        "w": 0.1,
+        "h": 0.6,
+        "followTip": true
+      },
+      {
+        "id": "arm-rigid",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0.4,
+        "y": 0.4,
+        "w": 0.1,
+        "h": 0.1
+      },
+      {
+        "id": "foot-follow",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": -0.9,
+        "w": 0.1,
+        "h": 0.04,
+        "followTip": true
+      },
+      {
+        "id": "shank-rigid",
+        "kind": "rect",
+        "bone": "shank-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": -0.9,
+        "w": 0.1,
+        "h": 0.4
+      }
+    ],
+    "plan": [
+      {
+        "id": "arm-follow",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.1,
+        "h": 0.1,
+        "followTip": true
+      },
+      {
+        "id": "foot-follow",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.22,
+        "h": 0.1,
+        "followTip": true
+      },
+      {
+        "id": "shank-rigid",
+        "kind": "rect",
+        "bone": "shank-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.1,
+        "h": 0.1
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "without spread the shapes keep their authored extents lifted to the standing height",
+      "pose": "stand",
+      "extents": {
+        "elevation/arm": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.88,
+          "maxY": 1.48
+        },
+        "front/arm-follow": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.88,
+          "maxY": 1.48
+        },
+        "plan/arm-follow": {
+          "minX": 0,
+          "maxX": 0.1,
+          "minY": -0.05,
+          "maxY": 0.05
+        },
+        "front/foot-follow": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.06,
+          "maxY": 0.1
+        },
+        "plan/foot-follow": {
+          "minX": 0,
+          "maxX": 0.22,
+          "minY": -0.05,
+          "maxY": 0.05
+        }
+      }
+    },
+    {
+      "name": "an arm spread 60 degrees reaches 0.519615 m sideways in front, grows outwards in plan, shrinks to 0.3 m in the elevation, its rigid shape turns about the shoulder with the arm, and the elevation height range equals the front height range",
+      "pose": "arm-60",
+      "extents": {
+        "elevation/arm": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 1.18,
+          "maxY": 1.48
+        },
+        "front/arm-follow": {
+          "minX": -0.025,
+          "maxX": 0.544615,
+          "minY": 1.136699,
+          "maxY": 1.523301
+        },
+        "front/arm-rigid": {
+          "minX": 0.217321,
+          "maxX": 0.353923,
+          "minY": 1.76641,
+          "maxY": 1.90301
+        },
+        "plan/arm-follow": {
+          "minX": 0,
+          "maxX": 0.1,
+          "minY": -0.025,
+          "maxY": 0.544615
+        }
+      }
+    },
+    {
+      "name": "a transition half way to 60 degrees spreads the arm by 30 degrees (the clips interpolate abductionDeg)",
+      "pose": "arm-60",
+      "transitionAt": 0.5,
+      "abductionDeg": 30,
+      "extents": {
+        "front/arm-follow": {
+          "minX": -0.043301,
+          "maxX": 0.343301,
+          "minY": 0.935385,
+          "maxY": 1.505
+        },
+        "plan/arm-follow": {
+          "minY": -0.043301,
+          "maxY": 0.343301
+        },
+        "elevation/arm": {
+          "minY": 0.960385,
+          "maxY": 1.48
+        }
+      }
+    },
+    {
+      "name": "a foot spread 90 degrees lies sideways: in front it grows outwards by 0.22 m, in plan it turns into a lateral sliver",
+      "pose": "foot-90",
+      "extents": {
+        "front/foot-follow": {
+          "minX": 0,
+          "maxX": 0.22,
+          "minY": 0.06,
+          "maxY": 0.1
+        },
+        "plan/foot-follow": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0,
+          "maxY": 0.22
+        }
+      }
+    },
+    {
+      "name": "a thigh spread 90 degrees turns the rigid shape of the shank with it: its front view moves 0.45 to 0.85 m left and 1.06 m up, its plan footprint collapses to the lateral line at 0.45 m",
+      "pose": "straddle-90",
+      "extents": {
+        "front/shank-rigid": {
+          "minX": 0.5,
+          "maxX": 0.9,
+          "minY": 0.91,
+          "maxY": 1.01
+        },
+        "plan/shank-rigid": {
+          "minX": 0,
+          "maxX": 0.1,
+          "minY": 0.45,
+          "maxY": 0.45
+        }
+      }
+    }
+  ],
+  "displacements": [
+    {
+      "name": "arm at 60 degrees",
+      "pose": "arm-60",
+      "bone": "arm-l",
+      "originWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "tipWorld": {
+        "x": 0,
+        "y": 1.18
+      },
+      "originZ": 0,
+      "tipZ": 0.519615
+    },
+    {
+      "name": "foot at 90 degrees",
+      "pose": "foot-90",
+      "bone": "foot-l",
+      "originWorld": {
+        "x": 0,
+        "y": 0.08
+      },
+      "tipWorld": {
+        "x": 0,
+        "y": 0.08
+      },
+      "originZ": 0,
+      "tipZ": 0.22
+    },
+    {
+      "name": "shank at a thigh spread of 90 degrees",
+      "pose": "straddle-90",
+      "bone": "shank-l",
+      "originWorld": {
+        "x": 0,
+        "y": 0.96
+      },
+      "tipWorld": {
+        "x": 0,
+        "y": 0.96
+      },
+      "originZ": 0.45,
+      "tipZ": 0.88
+    }
+  ],
+  "limits": [
+    {
+      "name": "a spread of 60 degrees on a revolute joint is allowed",
+      "bone": "arm-l",
+      "joint": "revolute",
+      "abductionDeg": 60,
+      "refused": false
+    },
+    {
+      "name": "a spread of 180 degrees is the largest allowed",
+      "bone": "arm-l",
+      "joint": "revolute",
+      "abductionDeg": 180,
+      "refused": false
+    },
+    {
+      "name": "a spread above 180 degrees is refused",
+      "bone": "arm-l",
+      "joint": "revolute",
+      "abductionDeg": 190,
+      "refused": true
+    },
+    {
+      "name": "a fixed joint cannot be spread",
+      "bone": "arm-l",
+      "joint": "fixed",
+      "abductionDeg": 10,
+      "refused": true
+    },
+    {
+      "name": "a prismatic joint cannot be spread",
+      "bone": "arm-l",
+      "joint": "prismatic",
+      "abductionDeg": 10,
+      "refused": true
+    }
+  ],
+  "boneZ": {
+    "description": "The arm bone sits 0.25 m to the left of the symmetry plane (Bone.z). Its front and plan shapes are authored centred on that pivot (lateral 0.2 to 0.3). In a chain with no spread or twist z changes nothing: the shapes keep their authored extents (the front arm 0.2 to 0.3 lateral, 0.88 to 1.48 high). Spread by 60 degrees the pivot is 0.25 m out: the front rectangle (a = 0.52 - y, c = lateral - 0.25) reaches lateral 0.25 + (0.866025 a + 0.5 c) from 0.225 to 0.794615 and height 1.48 - 0.5 a + 0.866025 c from 1.136699 to 1.523301; in plan the vertical bone has no forward extent, so the footprint grows outwards by the 0.519615 m tip travel to 0.819615. The validator keeps bones inside half of the lateral dimension 0.46 m plus the tolerance max(0.02, 3 % of the largest dimension) = 0.052 m, so 0.25 m passes and 0.6 m is refused.",
+    "bone": "arm-l",
+    "z": 0.25,
+    "shapes": {
+      "front": [
+        {
+          "id": "arm-z",
+          "kind": "rect",
+          "bone": "arm-l",
+          "role": "body",
+          "z": 1,
+          "filled": true,
+          "tone": 0.5,
+          "x": 0.2,
+          "y": -0.08,
+          "w": 0.1,
+          "h": 0.6,
+          "followTip": true
+        }
+      ],
+      "plan": [
+        {
+          "id": "arm-z",
+          "kind": "rect",
+          "bone": "arm-l",
+          "role": "body",
+          "z": 1,
+          "filled": true,
+          "tone": 0.5,
+          "x": 0,
+          "y": 0.2,
+          "w": 0.1,
+          "h": 0.1,
+          "followTip": true
+        }
+      ]
+    },
+    "cases": [
+      {
+        "name": "a bone beside the symmetry plane in a chain without spread keeps the authored front and plan placement",
+        "pose": "stand",
+        "extents": {
+          "front/arm-z": {
+            "minX": 0.2,
+            "maxX": 0.3,
+            "minY": 0.88,
+            "maxY": 1.48
+          },
+          "plan/arm-z": {
+            "minX": 0,
+            "maxX": 0.1,
+            "minY": 0.2,
+            "maxY": 0.3
+          }
+        }
+      },
+      {
+        "name": "spread 60 degrees the same bone pivots about its own lateral position",
+        "pose": "arm-60",
+        "extents": {
+          "front/arm-z": {
+            "minX": 0.225,
+            "maxX": 0.794615,
+            "minY": 1.136699,
+            "maxY": 1.523301
+          },
+          "plan/arm-z": {
+            "minX": 0,
+            "maxX": 0.1,
+            "minY": 0.225,
+            "maxY": 0.794615
+          }
+        }
+      }
+    ],
+    "limits": [
+      {
+        "name": "a bone 0.25 m beside the symmetry plane of a 0.46 m wide asset is allowed",
+        "z": 0.25,
+        "refused": false
+      },
+      {
+        "name": "a bone 0.6 m beside the symmetry plane of a 0.46 m wide asset is refused",
+        "z": 0.6,
+        "refused": true
+      },
+      {
+        "name": "a negative offset is bounded the same way",
+        "z": -0.6,
+        "refused": true
+      }
+    ]
+  }
+}

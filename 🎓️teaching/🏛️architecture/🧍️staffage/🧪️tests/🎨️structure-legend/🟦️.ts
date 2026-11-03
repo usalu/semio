@@ -25,6 +25,15 @@ describe("structural legend", () => {
     expect(pressure.stops.at(-1)).toEqual({ at: 1, color: STRUCTURAL_COLORS.compressionStrong });
     expect(pressure.unit).toBe("Pa");
   });
+  it("takes the range from the included members only, so a view and the function agree", () => {
+    const two = { ...result, members: { m: result.members["m"]!, other: { bone: "other", stations: [station(900)], deflection: null } } } as unknown as StructuralResult;
+    expect(structuralLegend("axial", two, { mode: "auto" }).max).toBe(900);
+    expect(structuralLegend("axial", two, { mode: "auto" }, (bone) => bone === "m").max).toBe(100);
+  });
+  it("honours a fixed contact-pressure range without a floor", () => {
+    const fixed = structuralLegend("contact-pressure", result, { mode: "fixed", min: 0, max: 0.5 });
+    expect([fixed.min, fixed.max]).toEqual([0, 0.5]);
+  });
   it("collapses a zero span to the grey stop", () => {
     const legend = structuralLegend("shear", { reactions: [], members: {} } as unknown as StructuralResult, { mode: "auto" });
     expect(legend.stops).toEqual([{ at: 0, color: STRUCTURAL_COLORS.zero }]);

@@ -34,7 +34,7 @@ def source_files() -> tuple[Path, ...]:
     helpers = (visuals / "🐍️.py", authoring / "🔤️fonts/🐍️.py", Path(runtime.__file__))
     paths = {Path(__file__), _ROOT / "🔣️.json", _ROOT / "🧬️schema.json", *_theme.source_files(), *_interaction.source_files(), *_geometry.source_files(), *_typography.source_files(), *_browser.source_files(), *_hierarchy.source_files(), Path(_hierarchy_render.__file__),
              Path(_interaction_render.__file__), _ROOT / "🖱️interaction/🎬️scene/🐍️.py", _ROOT / "🖱️interaction/🎬️scene/🔣️.schema.json",
-             visuals / "🔣️.json", visuals / "🫟️silhouettes/🔣️.json"}
+             visuals / "🔣️.json", visuals / "🔣️icons/🔣️.json", visuals / "🧍️staffage/🔣️.json"}
     for helper in helpers:
         paths.update(runtime.source_dependencies(helper))
     return tuple(sorted(paths))
@@ -125,7 +125,6 @@ def _transition(video_id: str, snapshot: Path, output: Path, settings: dict, ses
                  "output": frames / f"{index:04d}.png", "snapshot": snapshot} for index in range(count)]
     if session.cancelled.is_set():
         raise InterruptedError("Presentation cancelled")
-    print(f"[DEBUG] Presentation {video_id} {phase}: actual UI batch of {count} frames", flush=True)
     _hierarchy_render.frame_batch(requests, settings, session=session)
     return frames, count
 
@@ -183,8 +182,6 @@ def _normalize_transition_frames(source: Path, output: Path, count: int, setting
 
 def _render_chapter(video_id: str, content: Path, output: Path, settings: dict, session, work: Path) -> Path:
     """🎥 Compose finite video and audio streams without unbounded filter scheduling."""
-    import time
-
     runtime = importlib.import_module(_PACKAGE + ".🎬️clip.⚙️runtime.🐍️")
     width, height, fps, _ = _settings(settings)
     ffmpeg = runtime.ffmpeg_command()
@@ -232,8 +229,6 @@ def _render_chapter(video_id: str, content: Path, output: Path, settings: dict, 
             "-r", str(fps), "-fps_mode", "cfr", "-frames:v", str(total_count), "-t", str(total_duration),
             "-c:v", "libx264", "-preset", "fast", "-crf", "0", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(partial)]
-    started = time.monotonic()
-    print(f"[DEBUG] Presentation {video_id}: composing {total_count} frames", flush=True)
     try:
         run(args, "compose.log")
         if not partial.is_file() or partial.stat().st_size == 0:
@@ -245,7 +240,6 @@ def _render_chapter(video_id: str, content: Path, output: Path, settings: dict, 
         partial.replace(output)
     finally:
         partial.unlink(missing_ok=True)
-    print(f"[DEBUG] Presentation {video_id}: composed in {time.monotonic() - started:.1f}s", flush=True)
     return output
 
 

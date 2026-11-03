@@ -2,7 +2,7 @@
 
 The fixture builds a one-region trunk body from the same inputs the library takes (clothing insulation `0.155 clo`, area factor `1 + 0.15 clo`, vapour resistance `f_cl · r_clo / (0.0165 i_cl)`
 with the library's permeation efficiency 0.45, radiation `ε·f_eff = 0.95 · 0.73`, skin and core heat capacities of 0.97 Wh/(kg K), respiratory ventilation from the library's dry loss
-`0.0014 M (34 − t_a)`), so the comparison isolates the controller and the heat balance. Run `uv run --with pythermalcomfort python -I 🐍️.py [--write]`.
+`0.0014 M (34 − t_a)`), so the comparison isolates the controller and the heat balance. Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import sys

@@ -30,7 +30,7 @@ describe("routes", () => {
 });
 
 describe("viewer state", () => {
-  const state: ViewerState = { ...DEFAULT_VIEWER, view: "thermal", scale: 50, selection: { kind: "clip", clip: "walk" }, timeS: 1.25, zoom: 2.5, pan: { xMm: 12, yMm: -4 }, background: "transparent", theme: "dark", thermalQuantity: "net-radiative-flux", range: { mode: "fixed", min: -50, max: 120 }, patterns: true, diagrams: { axial: true, shear: false, moment: false, freeBody: true }, environment: { airTempC: -5, relativeHumidity: 0.4, windMS: 6.5 } };
+  const state: ViewerState = { ...DEFAULT_VIEWER, view: "thermal", scale: 50, selection: { kind: "clip", clip: "walk" }, timeS: 1.25, zoom: 2.5, pan: { xMm: 12, yMm: -4 }, background: "transparent", theme: "dark", thermalQuantity: "net-radiative-flux", range: { mode: "fixed", min: -50, max: 120 }, patterns: false, diagrams: { axial: true, shear: false, moment: false, freeBody: true }, environment: { airTempC: -5, relativeHumidity: 0.4, windMS: 6.5 } };
 
   it("round-trips every parameter", () => {
     const params = viewerToParams(state);
@@ -55,12 +55,12 @@ describe("viewer state", () => {
 
 describe("compare and playground", () => {
   it("round-trips four compare panes", () => {
-    const compare = { panes: [{ asset: "a-one", view: "dark-line" as const, selection: null }, { asset: "a-one", view: "thermal" as const, selection: { kind: "pose" as const, pose: "stand" } }, { asset: "b-two", view: "forces" as const, selection: { kind: "clip" as const, clip: "walk" } }, { asset: "c-three", view: "moments" as const, selection: null }], scale: 200, timeS: 0.5 };
+    const compare = { panes: [{ asset: "a-one", view: "dark-line" as const, viewpoint: "elevation" as const, selection: null }, { asset: "a-one", view: "thermal" as const, viewpoint: "front" as const, selection: { kind: "pose" as const, pose: "stand" } }, { asset: "b-two", view: "forces" as const, viewpoint: "elevation" as const, selection: { kind: "clip" as const, clip: "walk" } }, { asset: "c-three", view: "moments" as const, viewpoint: "plan" as const, selection: null }], scale: 200, timeS: 0.5 };
     expect(compareFromParams(new URLSearchParams(compareToParams(compare).toString()))).toEqual(compare);
   });
 
   it("round-trips a playground layout and clamps positions to the ground", () => {
-    const playground = { scale: 50, view: "light-solid" as const, background: "dark" as const, lengthM: 30, placements: [{ id: "url-0", asset: "park-bench", xM: 3.25, pick: null, offsetS: 0, mirrored: false }, { id: "url-1", asset: "walking-commuter", xM: 12, pick: { kind: "clip" as const, clip: "walk" }, offsetS: 0.4, mirrored: true }] };
+    const playground = { scale: 50, view: "light-solid" as const, viewpoint: "elevation" as const, background: "dark" as const, lengthM: 30, placements: [{ id: "url-0", asset: "park-bench", xM: 3.25, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false }, { id: "url-1", asset: "walking-commuter", xM: 12, zM: 1.5, yawDeg: 30, pick: { kind: "clip" as const, clip: "walk" }, offsetS: 0.4, mirrored: true }] };
     expect(playgroundFromParams(new URLSearchParams(playgroundToParams(playground).toString()))).toEqual(playground);
     expect(playgroundFromParams(new URLSearchParams("len=10&p=park-bench~99"))?.placements[0]?.xM).toBe(10);
     expect(playgroundFromParams(new URLSearchParams())).toBeNull();

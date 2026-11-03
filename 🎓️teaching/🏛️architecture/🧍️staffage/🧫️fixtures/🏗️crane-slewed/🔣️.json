@@ -1,0 +1,152 @@
+{
+ "case": "🏗️crane-slewed",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "structural",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 90
+ },
+ "bones": [
+  {
+   "id": "mast",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 20.0,
+   "twistDeg": 90,
+   "mass": {
+    "kg": 4000.0,
+    "comX": 10.0,
+    "comY": 0.0,
+    "distribution": "uniform"
+   },
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  },
+  {
+   "id": "jib",
+   "parent": "mast",
+   "x": 20.0,
+   "y": 0,
+   "angleDeg": -90,
+   "lengthM": 15.0,
+   "mass": {
+    "kg": 1500.0,
+    "comX": 7.5,
+    "comY": 0.0,
+    "distribution": "uniform"
+   },
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "base",
+   "bone": "mast",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "support": "fixed"
+  }
+ ],
+ "contacts": [],
+ "supports": [
+  "base"
+ ],
+ "loads": [
+  {
+   "id": "hook",
+   "bone": "jib",
+   "at": {
+    "x": 0,
+    "y": 20.0,
+    "z": 15.0
+   },
+   "fxN": 0,
+   "fyN": -20000.0
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "unslewed",
+   "bones": {
+    "mast": {
+     "twistDeg": 0
+    }
+   },
+   "loads": [
+    {
+     "id": "hook",
+     "bone": "jib",
+     "at": {
+      "x": 15.0,
+      "y": 20.0,
+      "z": 0
+     },
+     "fxN": 0,
+     "fyN": -20000.0
+    }
+   ]
+  }
+ ],
+ "oracle": {
+  "tool": "numpy",
+  "version": "2.5.4",
+  "values": {
+   "slewed": {
+    "reaction": {
+     "fxN": 0.0,
+     "fyN": 73955.0,
+     "fzN": -0.0,
+     "mxNm": -410362.5,
+     "myNm": -0.0,
+     "mzNm": 0.0
+    },
+    "jibRootBendingNm": 410362.5,
+    "jibRootMomentVector": [
+     410362.5,
+     -0.0,
+     0.0
+    ],
+    "jibRootForce": [
+     0.0,
+     -34715.0,
+     -0.0
+    ],
+    "jibDirection": [
+     0,
+     0,
+     1
+    ]
+   },
+   "unslewed": {
+    "reaction": {
+     "fxN": 0.0,
+     "fyN": 73955.0,
+     "fzN": -0.0,
+     "mxNm": -0.0,
+     "myNm": -0.0,
+     "mzNm": 410362.5
+    }
+   }
+  }
+ }
+}

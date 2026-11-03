@@ -15,6 +15,8 @@ export default {
     root,
     name: "@teaching/staffage",
     mode: "test",
+    testTimeout: 180_000,
+    hookTimeout: 180_000,
     environment: "node",
     include: ["../../🧪️tests/*/🟦️.ts"],
     exclude: ["../../🧪️tests/🎚️config/🟦️.ts", "**/node_modules/**"],

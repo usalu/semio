@@ -71,8 +71,8 @@ def _scope():
     exec(compile(ast.Module(body=nodes,type_ignores=[]),str(ROOT),"exec"),core)
     if "part_faces" in core:
         shared.part_faces=core["part_faces"]
-    shared.face_appearance=MODEL._surface_finishes().face_appearance
-    shared.appearance_colour=MODEL._surface_finishes().appearance_colour
+    shared.face_appearance=MODEL.surface_finishes().face_appearance
+    shared.appearance_colour=MODEL.surface_finishes().appearance_colour
     shared.surface_role=core["surface_role"]
     shared.service_surface_role=core["service_surface_role"]
     nodes=_definitions(ROOT/"📋️plan/🐍️.py")

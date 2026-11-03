@@ -20,7 +20,7 @@ CASES = json.loads(Path(__file__).with_name("🔣️.cases.json").read_text(enco
 def helpers(chapter):
     """🔬 Load authored geometry without voice timing or scene side effects."""
     tree = ast.parse((CHAPTERS / chapter / "🐍️.py").read_text(encoding="utf-8"))
-    names = {"_room", "_stand", "_person", "_house_section", "_pf_house", "_to_scene", "_poly", "_shoelace", "_vent_room", "_open_sash", "_clip_above", "_clip_below"}
+    names = {"_room", "_stand", "_remember", "_level", "_house_section", "_pf_house", "_to_scene", "_poly", "_shoelace", "_vent_room", "_open_sash", "_clip_above", "_clip_below"}
     tree.body = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
     scope = dict(globals())
     scope.update(vars(VISUALS))
@@ -67,8 +67,12 @@ class VentilationArchitecture(unittest.TestCase):
                         row = int(round((0.5 - (y - center[1]) / raster["frame_height"]) * raster["pixel_height"]))
                         self.assertTrue(np.all(pixels[row - 1:row + 2, column - 1:column + 2] == 0))
                 person = api["_stand"](center, h, center[0], t=t)
-                self.assertAlmostEqual(person.height, case["occupant_ratio"] * (h - t))
-                self.assertAlmostEqual(person.get_bottom()[1], room[1].get_top()[1])
+                target = case["occupant_ratio"] * (h - t)
+                figure = person.get_points_defining_boundary()
+                self.assertAlmostEqual(figure[:, 1].max() - figure[:, 1].min(), target, delta=0.02 * target)
+                self.assertGreaterEqual(person.height, 0.95 * target)
+                self.assertLessEqual(person.height, 1.5 * target)
+                self.assertAlmostEqual(person.get_bottom()[1], room[1].get_top()[1], delta=0.01 * target)
 
     def test_small_symbolic_rooms_without_windows(self):
         for chapter in ("🪟️natural", "❓️need", "⚙️mechanical", "📦️volume"):
@@ -101,9 +105,12 @@ class VentilationArchitecture(unittest.TestCase):
         room = api["_vent_room"](case["origin_x"], case["floor_y"], case["units_per_m"], "test", VISUALS.P_CYAN)
         rad = room["rad"]
         k = case["units_per_m"]
-        self.assertAlmostEqual(rad.width, case["width_m"] * k)
-        self.assertAlmostEqual(rad.height, case["height_m"] * k)
-        self.assertAlmostEqual(rad.get_bottom()[1], case["floor_y"] + case["floor_clearance_m"] * k)
+        self.assertAlmostEqual(rad.height, case["height_m"] * k, delta=0.03 * rad.height)
+        self.assertAlmostEqual(rad.height, VISUALS.staffage_height("ventilation-natural-radiator-on-mirrored") * k, delta=0.03 * rad.height)
+        self.assertAlmostEqual(rad.get_bottom()[1], case["floor_y"] + case["floor_clearance_m"] * k, delta=0.1 * case["floor_clearance_m"] * k)
+        self.assertLess(rad.get_top()[1], room["sill"])
+        self.assertLess(rad[0].get_left()[0], room["x_in"])
+        self.assertGreater(rad[0].get_left()[0], room["x_in"] - 0.4 * k)
 
 
 if __name__ == "__main__":

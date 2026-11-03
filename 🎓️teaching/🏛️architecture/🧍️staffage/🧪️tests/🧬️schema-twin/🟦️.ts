@@ -5,7 +5,7 @@ import { CATEGORIES, LANGUAGES, SCHEMA_VERSION } from "../../📦️packages/�
 
 describe("schema twin vocabularies", () => {
   it("names the catalog categories in contract order", () => {
-    expect(CATEGORIES).toEqual(["humans", "animals", "vegetation", "furniture", "objects", "vehicles", "machinery", "components"]);
+    expect(CATEGORIES).toEqual(["humans", "animals", "vegetation", "furniture", "appliances", "objects", "vehicles", "machinery", "components"]);
   });
   it("offers English first and German second without a default", () => {
     expect(LANGUAGES).toEqual(["en", "de"]);

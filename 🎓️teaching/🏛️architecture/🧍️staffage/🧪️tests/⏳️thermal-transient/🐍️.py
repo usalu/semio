@@ -1,7 +1,7 @@
 """⏳️ Independent oracle of the transient response: scipy `solve_ivp` (LSODA, rtol 1e-10) of the nonlinear lumped energy balance `C dT/dt = q_in + α G f − ε σ (T⁴ − T_env⁴) − h(T) (T − T_air)`
 for a sunlit passive plate and a plate heated from inside, with CoolProp air properties and the Churchill–Chu / laminar flat plate mixed convection.
 
-Run `uv run --with scipy --with CoolProp python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import math

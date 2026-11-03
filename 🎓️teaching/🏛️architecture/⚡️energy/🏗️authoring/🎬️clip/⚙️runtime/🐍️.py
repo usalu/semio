@@ -117,19 +117,26 @@ def manim_command() -> list[str]:
     return [sys.executable, "-m", "manim"]
 
 
-def ffmpeg_command() -> list[str]:
-    """🎞️ Resolve FFmpeg through its provisioned executable interface."""
-    executable = os.environ.get("SEMIO_FFMPEG_BINARY") or shutil.which("ffmpeg")
-    if not executable:
-        try:
-            from imageio_ffmpeg import get_ffmpeg_exe
+_FFMPEG = {}
 
-            executable = get_ffmpeg_exe()
-        except ImportError:
-            executable = None
-    if executable:
-        return [executable]
-    raise FileNotFoundError("FFmpeg is unavailable; run the teaching bootstrap first")
+
+def ffmpeg_command() -> list[str]:
+    """🎞️ Resolve FFmpeg once per configuration and PATH, because scanning PATH costs seconds on Windows under load."""
+    key = (os.environ.get("SEMIO_FFMPEG_BINARY"), os.environ.get("PATH"))
+    executable = _FFMPEG.get(key)
+    if executable is None:
+        executable = key[0] or shutil.which("ffmpeg")
+        if not executable:
+            try:
+                from imageio_ffmpeg import get_ffmpeg_exe
+
+                executable = get_ffmpeg_exe()
+            except ImportError:
+                executable = None
+        if not executable:
+            raise FileNotFoundError("FFmpeg is unavailable; run the teaching bootstrap first")
+        _FFMPEG[key] = executable
+    return [executable]
 
 
 def _stop_process(process: subprocess.Popen) -> None:
@@ -426,7 +433,8 @@ def segment_state(segment: dict, settings: dict) -> dict:
     theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
     timing = [source_speech_root(source, language=settings["language"]) / "timing.json" for source in sources]
     recordings = [path for _, path in source_narration(segment, language=settings["language"])]
-    return {**clip_state(settings, [*sources, *assets, *timing, *recordings, *theme.source_files(), *_audience.source_files()]), "segment": segment}
+    staffage = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🐍️")
+    return {**clip_state(settings, [*sources, *assets, *timing, *recordings, *theme.source_files(), *_audience.source_files()]), "segment": segment, "casts": staffage.casts_in(sources)}
 
 
 def source_speech_root(script: Path, *, language: str) -> Path:
@@ -613,7 +621,7 @@ def excerpt_segment(source: Path, segment: dict, settings: dict, *,
     sidecar.unlink(missing_ok=True)
     print(f"[excerpt] Selecting {segment['scene']} {segment['clauses']}", flush=True)
     cut_clip(source, output, *interval)
-    if hashlib.sha256(trace.read_bytes()).hexdigest() != state["trace"] or _cursor_hash(source) != state["cursor"] or segment_state(segment, settings) != {key: state[key] for key in ("settings", "sources", "segment")}:
+    if hashlib.sha256(trace.read_bytes()).hexdigest() != state["trace"] or _cursor_hash(source) != state["cursor"] or segment_state(segment, settings) != {key: state[key] for key in ("settings", "sources", "segment", "casts")}:
         raise RuntimeError(f"Authored inputs changed while selecting {segment['scene']}")
     _write_state(sidecar, state)
     return output

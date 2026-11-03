@@ -1,0 +1,26 @@
+{
+  "manifest": {
+    "version": 1,
+    "casts": {
+      "quick": { "asset": "panel-radiator", "viewpoint": "elevation", "pose": "rated", "view": "dark-solid", "theme": "dark", "scale": 50 },
+      "slow-a": { "asset": "panel-radiator", "viewpoint": "elevation", "pose": "comfort", "view": "thermal", "theme": "dark", "scale": 50, "fps": 15, "timeline": [{ "t": 0, "environment": "office-neutral", "ease": "linear" }, { "t": 100, "environment": "summer-hot-sun", "ease": "linear" }] },
+      "slow-b": { "asset": "panel-radiator", "viewpoint": "elevation", "pose": "comfort", "view": "thermal", "theme": "dark", "scale": 50, "fps": 15, "timeline": [{ "t": 0, "environment": "summer-hot-sun", "ease": "linear" }, { "t": 100, "environment": "office-neutral", "ease": "linear" }] },
+      "slow-c": { "asset": "panel-radiator", "viewpoint": "elevation", "pose": "comfort", "view": "thermal", "theme": "light", "scale": 50, "fps": 15, "timeline": [{ "t": 0, "environment": "office-neutral", "ease": "linear" }, { "t": 100, "environment": "summer-hot-sun", "ease": "linear" }] }
+    }
+  },
+  "completeIds": ["quick"],
+  "slowIds": ["slow-a", "slow-b", "slow-c"],
+  "slowFrames": 600,
+  "cancelAfterFrames": 30,
+  "cancelledExitCode": 130,
+  "progress": {
+    "pid": "^\\[pid (\\d+)\\] ppid (\\d+)$",
+    "cast": "^\\[cast (\\d+)/(\\d+)\\] (.+)$",
+    "frames": "^\\[(\\d+)/(\\d+)\\] ",
+    "cancelled": "^\\[cancelled\\]$"
+  },
+  "linkedEntry": { "ids": ["quick"], "mustReport": "[cast 1/1] quick", "mustWrite": "quick/🔣️.json" },
+  "expectedProgress": {
+    "quick": ["[cast 1/1] quick", "[1/1] Rendering cast frames / Besetzungsbilder werden gerendert"]
+  }
+}

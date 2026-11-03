@@ -11,8 +11,8 @@ from pathlib import Path
 import numpy as np
 
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
-face_appearance = _model._surface_finishes().face_appearance
-appearance_colour = _model._surface_finishes().appearance_colour
+face_appearance = _model.surface_finishes().face_appearance
+appearance_colour = _model.surface_finishes().appearance_colour
 DISCIPLINES = ("architecture", "structure", "services")
 _sources: dict = {}
 _snapshots: dict = {}
@@ -95,8 +95,8 @@ def _retain(cache,key,value):
 
 def _source_revision():
     """📄 Detect source publication without reparsing the model for each actor."""
-    stat = Path(_model.__file__).with_name("🔣️.json").stat()
-    return stat.st_mtime_ns,stat.st_size,_model._source
+    stat = _model.source_path().stat()
+    return stat.st_mtime_ns,stat.st_size,_model.source_text
 
 
 def source_model(model=None):
@@ -110,7 +110,7 @@ def source_model(model=None):
             hit = _sources.get(_default_source[1])
             if hit is not None:
                 return hit
-        model = json.loads(_model._source())
+        model = json.loads(_model.source_text())
     encoded = json.dumps(model,ensure_ascii=False,sort_keys=True,separators=(",",":"))
     key = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
     source = _sources.get(key)
@@ -126,7 +126,7 @@ def source_model(model=None):
 def geometry_context(model=None):
     """🧭 Return one source snapshot and its matching immutable physical geometry."""
     source = source_model(model)
-    key = source._source_digest,_model.building_geometry,tuple(_model._geometry_producers()),_freeze
+    key = source._source_digest,_model.building_geometry,tuple(_model.geometry_producers()),_freeze
     result = _snapshots.get(key)
     if result is None:
         result = _retain(_snapshots,key,_freeze(_model.building_geometry(source)))

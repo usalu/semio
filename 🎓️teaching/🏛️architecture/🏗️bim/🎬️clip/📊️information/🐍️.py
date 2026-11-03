@@ -127,7 +127,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return tag
 
     def _grid_keys(self, tag):
-        """📍 Grid bubbles only for actual measured coincidence with a support axis."""
+        """🎯 Grid bubbles only for actual measured coincidence with a support axis."""
         point=self._xy(tag)
         grid=self._g["grid"]
         return [f"label_{axis}:{label}" for index,axis in enumerate(("x","y"))
@@ -153,7 +153,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return [_engine.FadeOut(mob) for mob in mobs]
 
     def _xy(self, tag):
-        """📍 Plan coordinates of a piloti in metres."""
+        """🗺️ Plan coordinates of a piloti in metres."""
         item = next(p for p in self._g["pilotis"] if p["tag"] == tag)
         return item["x"], item["y"]
 
@@ -208,23 +208,10 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return _fonts.section_heading(self.tr("Villa Savoye · Ground floor", "Villa Savoye · Erdgeschoss"))
 
     def _car(self, scale, heading=0.0, color=DATA):
-        """🚘 Top view of the assumed period car (long bonnet, separate wings, running boards), nose along +x before rotation by the heading in degrees."""
-        length, width = self._c["car_length"] * scale, self._c["car_width"] * scale
-        ink = _draft.mix(color, BACKGROUND, 0.55)
-        dark = _draft.mix(color, BACKGROUND, 0.82)
-        body = _engine.RoundedRectangle(width=length * 0.96, height=width * 0.64, corner_radius=width * 0.2, stroke_color=color, stroke_width=1.6, fill_color=ink, fill_opacity=0.95)
-        bonnet = _engine.RoundedRectangle(width=length * 0.3, height=width * 0.46, corner_radius=width * 0.1, stroke_color=color, stroke_width=1.0, fill_color=dark, fill_opacity=0.9).shift(
-            np.array([length * 0.31, 0, 0]))
-        cabin = _engine.RoundedRectangle(width=length * 0.26, height=width * 0.54, corner_radius=width * 0.1, stroke_width=0, fill_color=BACKGROUND, fill_opacity=0.85).shift(
-            np.array([-length * 0.09, 0, 0]))
-        screen = _draft.segments([((length * 0.05, -width * 0.24, 0), (length * 0.05, width * 0.24, 0))], color, 1.4)
-        wings = [_engine.RoundedRectangle(width=length * (0.24 if sx > 0 else 0.2), height=width * 0.18, corner_radius=width * 0.08, stroke_color=color, stroke_width=1.2,
-                                          fill_color=dark, fill_opacity=1.0).move_to(np.array([sx * length * (0.3 if sx > 0 else 0.3), sy * width * 0.41, 0]))
-                 for sx in (-1, 1) for sy in (-1, 1)]
-        boards = [_engine.Rectangle(width=length * 0.2, height=width * 0.07, stroke_width=0, fill_color=color, fill_opacity=0.8).move_to(np.array([0.0, sy * width * 0.36, 0]))
-                  for sy in (-1, 1)]
-        lights = [_engine.Circle(radius=width * 0.06, stroke_width=0, fill_color=INK, fill_opacity=1).move_to(np.array([length * 0.48, sy * width * 0.2, 0])) for sy in (-1, 1)]
-        return _engine.VGroup(*boards, body, bonnet, cabin, screen, *wings, *lights).rotate(math.radians(heading), about_point=np.zeros(3))
+        """🚘 Top view of the handcrafted 1929 saloon scaled uniformly, so its real proportions hold, until it fits inside the model's assumed car length and width, nose along +x before rotation by the heading in degrees. [staffage](../../../🧍️staffage/README.md)"""
+        car = _art.staffage("bim-information-car", unit=scale, color=color)
+        car.scale(min(self._c["car_length"] * scale / car.width, self._c["car_width"] * scale / car.height))
+        return car.move_to(np.zeros(3)).rotate(math.radians(heading), about_point=np.zeros(3))
 
     def _pose(self, t):
         """🧭 Position and heading of the car at fraction ``t`` of its path, interpolated between model samples."""
@@ -261,7 +248,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return group
 
     def _rows(self, rows, point, width, title=None):
-        """📋 Table of rows ``{name, value, sub, basis, dot, vtone, ntone, live}``: the frame and title as the result, ``result.rows`` as separate groups."""
+        """🗃️ Table of rows ``{name, value, sub, basis, dot, vtone, ntone, live}``: the frame and title as the result, ``result.rows`` as separate groups."""
         pitch = [0.66 if r.get("sub") or r.get("basis") else 0.42 for r in rows]
         head = 0.46 if title else 0.0
         height = sum(pitch) + 0.2 + head
@@ -353,7 +340,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                      self._say(self.quantity(lim["min_margin"], "m"), (xa - 0.16 if left else xb + 0.16, cy + 0.68), size=SMALL, color=WARN, edge="r" if left else "l"),
                      _draft.segments([((xa - 0.1 if left else xb + 0.1, cy + 0.68, 0), ((x0 + x1) / 2, cy + 0.68, 0))], WARN, _draft.W_HAIR, 0.9))
         car = self._car(k, 270).move_to((car_x, cy, 0))
-        car.stretch(w / self._c["car_width"], 0)
+        car.scale(w / self._c["car_width"])
         car_dim = _engine.VGroup(self.dimension((car_x - reach, cy, 0), (car_x + reach, cy, 0), None, offset=half + 0.1, color=DATA),
                                  self._say(self.quantity(w, "m"), (car_x, cy + half + 0.3), color=DATA))
         fit = lim["fits"]
@@ -392,7 +379,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return ruler
 
     def _gauge(self):
-        """📏 Spacing gauge: the fit zone, the no-fit zone growing in from the moving threshold, the current spacing and the first grid, all from the trackers."""
+        """🎚️ Spacing gauge: the fit zone, the no-fit zone growing in from the moving threshold, the current spacing and the first grid, all from the trackers."""
         st = self.st
         s, d, w = st.s.get_value(), st.d.get_value(), st.w.get_value()
         lim = _model.clearance_limits(self._m, spacing=s, diameter=d, car_width=w)
@@ -428,7 +415,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return group.move_to(np.array([point[0], point[1], 0.0]))
 
     def _profile_pair(self, item):
-        """📏 Closest points of the actual vehicle rectangle and occupied source profile outlines."""
+        """📐 Closest points of the actual vehicle rectangle and occupied source profile outlines."""
         x,y,heading=item["pose"]
         c,s=math.cos(math.radians(heading)),math.sin(math.radians(heading))
         half=np.array([self._c["car_length"],self._c["car_width"]])/2
@@ -458,11 +445,11 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return min(pairs,key=lambda pair:np.linalg.norm(pair[0]-pair[1]))
 
     def _nearest(self, item):
-        """📍 Closest vehicle boundary point to the actual occupied support contour."""
+        """🧲 Closest vehicle boundary point to the actual occupied support contour."""
         return self._profile_pair(item)[0]
 
     def _away(self, item):
-        """🧭 Unit screen direction from the closest car point to the piloti, the side where a marker stays clear of the car."""
+        """🌀 Unit screen direction from the closest car point to the piloti, the side where a marker stays clear of the car."""
         vec = np.array(item["centre"]) - self._nearest(item)
         vec = vec / max(np.linalg.norm(vec), 1e-9)
         return np.array([vec[0], vec[1], 0.0])
@@ -566,7 +553,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return part
 
     def _pick(self, excerpt, *needles):
-        """✂️ The lines of a STEP excerpt that contain one of the needles, with their token spans."""
+        """🪡 The lines of a STEP excerpt that contain one of the needles, with their token spans."""
         keep = [i for i, line in enumerate(excerpt["lines"]) if any(n in line for n in needles)]
         return {"lines": [excerpt["lines"][i] for i in keep],
                 "spans": [{**span, "line": keep.index(span["line"])} for span in excerpt["spans"] if span["line"] in keep]}
@@ -588,7 +575,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         self._mid = (g["box"]["length"] / 2, g["box"]["width"] / 2)
         a, b = self._entry
         at = self._at
-        (xa, ya), (xb, yb) = self._xy(a), self._xy(b)
+        (xa, ya), (xb, _) = self._xy(a), self._xy(b)
         gap_x = (xa + xb) / 2
         storey = next(s for s in m["storeys"] if s["id"] == "ground")["name"][lang]
         ground_mark = "±" + self.number(abs(g["storeys"]["ground"]))
@@ -809,7 +796,6 @@ class Beat1_DataToInformation(_visuals.ClipScene):
              "basis": (self._word(info_load["basis"]), TONES[info_load["basis"]])},
             {"name": info_external["label"], "value": truth(info_external["value"]), "vtone": GOOD, "sub": "Pset_ColumnCommon.IsExternal", "num": ("4", MUTED),
              "basis": (self._word(info_external["basis"]), TONES[info_external["basis"]])}], (4.65, 0.95), 4.6)
-        slab_t = next(s_["thickness"] for s_ in g["slabs"] if s_["kind"] == "FLOOR")
         caveat = _engine.VGroup(
             self._say(self.tr("teaching model, this piloti only", "Lehrmodell, nur diese Stütze"), (4.65, -0.65), size=SMALL, color=MUTED, width=4.3),
             self._say(f"{self.quantity(_model.quantities(a, m)['height'], 'm')} · " + self.tr("physical support height", "physische Stützenhöhe"), (4.65, -1.05),

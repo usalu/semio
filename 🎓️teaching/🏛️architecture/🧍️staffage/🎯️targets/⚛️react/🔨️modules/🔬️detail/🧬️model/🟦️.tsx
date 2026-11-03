@@ -39,6 +39,8 @@ function parameters(region: ThermalRegion, language: Language, t: ReturnType<typ
   if (region.leaf !== undefined) list.push(`${t("detail.param.stomatal")} ${sci(region.leaf.stomatalConductanceMaxMS, language)} m/s`);
   if (region.operating !== undefined) list.push(`${t("detail.param.operating")} ${region.operating.key} · ${num(region.operating.heatW, language)} W`);
   if (region.conditioned !== undefined) list.push(`${t("detail.param.coreTemp")} ${num(region.conditioned.interiorTempC, language)} °C`);
+  if (region.hydronic !== undefined) list.push(`${t("detail.param.circuit")} ${region.hydronic.key} · ${t("detail.param.supply")} ${num(Math.max(...region.hydronic.rows.map((row) => row.supplyTempC)), language)} °C`);
+  if (region.coupled !== undefined) list.push(`${t("detail.param.source")} ${region.coupled.region} · ${num(region.coupled.wetFraction * 100, language)} %`);
   if (region.fixed !== undefined) list.push(`${t("detail.param.surfaceTemp")} ${num(region.fixed.surfaceTempC, language)} °C`);
   return list;
 }
@@ -138,8 +140,8 @@ function StructuralInspector(props: { readonly asset: Asset; readonly state: Eva
         ))}
       </DataTable>
       {state === null || state.loads.length === 0 ? <p className="m-0 text-xs text-muted-foreground">{t("detail.structure.noLoads")}</p> : (
-        <DataTable caption={t("detail.structure.loads")} head={[t("detail.col.load"), t("detail.col.kind"), t("detail.col.fx"), t("detail.col.fy"), t("detail.col.moment")]}>
-          {state.loads.map((load) => <Row key={`${load.id}-${load.at.x}-${load.at.y}`} head={load.title[language]} cells={[load.kind, formatQuantity(load.fxN, "N", language), formatQuantity(load.fyN, "N", language), formatQuantity(load.momentNm, "N·m", language)]} />)}
+        <DataTable caption={t("detail.structure.loads")} head={[t("detail.col.load"), t("detail.col.kind"), t("detail.col.fx"), t("detail.col.fy"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.moment")]}>
+          {state.loads.map((load) => <Row key={`${load.id}-${load.at.x}-${load.at.y}`} head={load.title[language]} cells={[load.kind, formatQuantity(load.fxN, "N", language), formatQuantity(load.fyN, "N", language), formatQuantity(load.fzN, "N", language), formatQuantity(load.mxNm, "N·m", language), formatQuantity(load.myNm, "N·m", language), formatQuantity(load.mzNm, "N·m", language)]} />)}
         </DataTable>
       )}
       {structure === null ? <p className="m-0 text-xs text-muted-foreground">{t("detail.structure.unsolved")}</p> : (
@@ -147,15 +149,15 @@ function StructuralInspector(props: { readonly asset: Asset; readonly state: Eva
           <dl className="m-0 grid gap-x-4 sm:grid-cols-3" data-totals="structure">
             <Fact term={t("detail.structure.totalMass")}>{num(structure.totalMassKg, language)} kg</Fact>
             <Fact term={t("detail.structure.centre")}>({num(structure.centreOfMass.x, language)}; {num(structure.centreOfMass.y, language)}) m</Fact>
-            <Fact term={t("detail.structure.residual")}>{formatQuantity(structure.residual.fxN, "N", language)} · {formatQuantity(structure.residual.fyN, "N", language)} · {formatQuantity(structure.residual.momentNm, "N·m", language)}</Fact>
+            <Fact term={t("detail.structure.residual")}>{formatQuantity(structure.residual.fxN, "N", language)} · {formatQuantity(structure.residual.fyN, "N", language)} · {formatQuantity(structure.residual.fzN, "N", language)} · {formatQuantity(structure.residual.mxNm, "N·m", language)} · {formatQuantity(structure.residual.myNm, "N·m", language)} · {formatQuantity(structure.residual.mzNm, "N·m", language)}</Fact>
           </dl>
-          <DataTable caption={t("detail.structure.reactions")} head={[t("detail.col.anchor"), t("detail.col.fx"), t("detail.col.fy"), t("detail.col.moment"), t("detail.col.pressure"), t("detail.col.active")]}>
-            {structure.reactions.map((reaction) => <Row key={reaction.anchor} head={asset.anchors.find((anchor) => anchor.id === reaction.anchor)?.title[language] ?? reaction.anchor} cells={[formatQuantity(reaction.fxN, "N", language), formatQuantity(reaction.fyN, "N", language), formatQuantity(reaction.momentNm, "N·m", language), reaction.pressurePa === null ? "—" : formatQuantity(reaction.pressurePa, "Pa", language), t(reaction.active ? "detail.yes" : "detail.no")]} />)}
+          <DataTable caption={t("detail.structure.reactions")} head={[t("detail.col.anchor"), t("detail.col.fx"), t("detail.col.fy"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.moment"), t("detail.col.pressure"), t("detail.col.active")]}>
+            {structure.reactions.map((reaction) => <Row key={reaction.anchor} head={asset.anchors.find((anchor) => anchor.id === reaction.anchor)?.title[language] ?? reaction.anchor} cells={[formatQuantity(reaction.fxN, "N", language), formatQuantity(reaction.fyN, "N", language), formatQuantity(reaction.fzN, "N", language), formatQuantity(reaction.mxNm, "N·m", language), formatQuantity(reaction.myNm, "N·m", language), formatQuantity(reaction.mzNm, "N·m", language), reaction.pressurePa === null ? "—" : formatQuantity(reaction.pressurePa, "Pa", language), t(reaction.active ? "detail.yes" : "detail.no")]} />)}
           </DataTable>
           <details>
             <summary className="min-h-6 cursor-pointer text-xs">{t("detail.structure.joints")}</summary>
-            <DataTable className="mt-single" caption={t("detail.structure.joints")} head={[t("detail.col.bone"), t("detail.col.axial"), t("detail.col.shear"), t("detail.col.jointMoment")]}>
-              {Object.values(structure.joints).map((joint) => <Row key={joint.bone} head={asset.rig.bones.find((bone) => bone.id === joint.bone)?.title[language] ?? joint.bone} cells={[formatQuantity(joint.axialN, "N", language), formatQuantity(joint.shearN, "N", language), formatQuantity(joint.momentNm, "N·m", language)]} />)}
+            <DataTable className="mt-single" caption={t("detail.structure.joints")} head={[t("detail.col.bone"), t("detail.col.axial"), t("detail.col.shear"), t("detail.col.fz"), t("detail.col.mx"), t("detail.col.my"), t("detail.col.torsion"), t("detail.col.jointMoment")]}>
+              {Object.values(structure.joints).map((joint) => <Row key={joint.bone} head={asset.rig.bones.find((bone) => bone.id === joint.bone)?.title[language] ?? joint.bone} cells={[formatQuantity(joint.axialN, "N", language), formatQuantity(joint.shearN, "N", language), formatQuantity(joint.fzN, "N", language), formatQuantity(joint.mxNm, "N·m", language), formatQuantity(joint.myNm, "N·m", language), formatQuantity(joint.torsionNm, "N·m", language), formatQuantity(joint.momentNm, "N·m", language)]} />)}
             </DataTable>
           </details>
         </>

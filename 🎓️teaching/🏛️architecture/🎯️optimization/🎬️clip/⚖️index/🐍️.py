@@ -22,7 +22,7 @@ mn = importlib.import_module("manim")
 
 INK, MUTED, GOOD, WARN, BAD = _art.P_WHITE, _art.PASTEL_GREY, _art.P_GREEN, _art.P_ORANGE, _art.P_PRIMARY
 COLORS = {"electricity": _art.PASTEL_PURPLE, "cost": _art.P_ORANGE, "daylight": _art.P_YELLOW, "carbon": _art.PASTEL_GREY}
-GLYPHS = {"electricity": "bulb", "daylight": "sun", "carbon": "factory"}
+GLYPHS = {"electricity": "lamp", "daylight": "sun", "carbon": "factory"}
 ORDER = [item["id"] for item in _model.criteria()]
 CRITERIA = {item["id"]: item for item in _model.criteria()}
 DIGITS = {"electricity": 2, "cost": 0, "daylight": 2, "carbon": 0}
@@ -42,7 +42,7 @@ ENERGY = (("heating", _room.HEAT), ("cooling", _room.COOL), ("lighting", _room.L
 
 
 def source_files() -> tuple[Path, ...]:
-    """🧾 Include this scene in the shared render provenance."""
+    """📦 Include this scene in the shared render provenance."""
     return (Path(__file__),)
 
 
@@ -74,7 +74,7 @@ def table(weights, extra=False, pool=None):
 
 
 def raw(identifier, criterion):
-    """📏 The model's raw value of one variant and criterion."""
+    """🔬 The model's raw value of one variant and criterion."""
     return by_id(identifier)[CRITERIA[criterion]["key"]]
 
 
@@ -125,12 +125,15 @@ def block(value, point=(0, 0, 0), *, size=S0, color=INK, width=None):
 
 
 def glyph(criterion, point=(0, 0, 0), width=0.34, color=None):
-    """🔣 The criterion's pictogram: bulb, coin, sun or factory."""
+    """🔣 The criterion's pictogram: handcrafted pendant lamp, coin, sun or factory icon."""
     color = color or COLORS[criterion]
     if criterion == "cost":
         return mn.VGroup(mn.Circle(radius=width / 2, color=color, stroke_width=2.2, fill_color=color, fill_opacity=.18),
                          mn.Circle(radius=width / 3.4, color=color, stroke_width=1.4)).move_to(point)
-    return _art.object_silhouette(GLYPHS[criterion], color=color, width=width).move_to(point)
+    if GLYPHS[criterion] == "lamp":
+        cast = "shared-lamp-neutral"
+        return _art.staffage(cast, unit=1.4 * width / _art.staffage_height(cast)).move_to(point)
+    return _art.icon_glyph(GLYPHS[criterion], color=color, width=width).move_to(point)
 
 
 def arrow(criterion, point=(0, 0, 0), length=0.3):
@@ -154,7 +157,7 @@ def nice_step(span, target):
 
 
 def lerp(a, b, t):
-    """➗ Linear interpolation."""
+    """📈 Linear interpolation."""
     return a + (b - a) * t
 
 
@@ -222,7 +225,7 @@ def runs_of(items):
 
 
 def sorted_index(pool, values, identifier):
-    """🔢 Position of an id when the pool is sorted by value (ties by pool order)."""
+    """🔽 Position of an id when the pool is sorted by value (ties by pool order)."""
     ordered = sorted(pool, key=lambda i: (values[i], list(pool).index(i)))
     return ordered.index(identifier)
 
@@ -277,12 +280,12 @@ class Ruler:
             self.o_val.set_value(1.0)
 
     def x_of(self, value):
-        """📍 Screen x of a physical value under the live offset, scale and mirror."""
+        """🗺️ Screen x of a physical value under the live offset, scale and mirror."""
         pre = self.xb.get_value() + (value - self.best) * self.g.get_value()
         return self.center + self.sigma.get_value() * (pre - self.center)
 
     def fraction(self, identifier):
-        """🔢 Position of a variant along the ruler frame, 0 at the left end and 1 at the right."""
+        """🔸 Position of a variant along the ruler frame, 0 at the left end and 1 at the right."""
         return (self.x_of(self.values[identifier]) - self.x0) / self.length
 
     def clamp(self, x):
@@ -416,12 +419,12 @@ class Ruler:
 
 @lru_cache(maxsize=None)
 def glyph_proto(criterion):
-    """🧊 A cached small pictogram to clone from."""
+    """🖼️ A cached small pictogram to clone from."""
     return glyph(criterion, width=.26)
 
 
 def head_content(scene, criterion):
-    """🏷️ Column head content: pictogram, name (one word per line when long) and unit with its direction arrow, in the criterion colour."""
+    """🎫 Column head content: pictogram, name (one word per line when long) and unit with its direction arrow, in the criterion colour."""
     name = SHORT[criterion][1 if scene.language() == "de" else 0]
     rows = [_room.text([word], size=13, color=COLORS[criterion]) for word in (name.split() if len(name) > 12 else [name])]
     rows.append(_room.text([*CRITERIA[criterion]["unit"].split(), "~↓" if CRITERIA[criterion]["direction"] == "min" else "~↑"], size=13, color=COLORS[criterion]))
@@ -479,7 +482,7 @@ class Board:
         return self.scan[int(round(position))], lerp(self.y(a), self.y(b), position - low)
 
     def visit(self, positions, travel=.3, move_room=True):
-        """🧭 Move the focus row (and the room) along scan positions."""
+        """🚩 Move the focus row (and the room) along scan positions."""
         steps = []
         for position in positions:
             moves = [self.focus.animate(run_time=travel).set_value(position)]
@@ -499,7 +502,7 @@ class Board:
         return self.y0 - self.r[identifier].get_value() * self.pitch
 
     def state(self):
-        """📋 Live normalized values and scores, blended towards the six-variant normalization by ``t``."""
+        """🧪 Live normalized values and scores, blended towards the six-variant normalization by ``t``."""
         key = tuple(round(v, 6) for v in self.weights())
         five, t = table(key, False), self.t.get_value()
         six = table(key, True) if self.extra else None
@@ -515,12 +518,13 @@ class Board:
         return out
 
     def winner(self):
-        """🥇 The id with the lowest live score among visible rows."""
+        """🏆 The id with the lowest live score among visible rows."""
         state = self.state()
         return min((i for i in self.all if self.row_o[i].get_value() > .5), key=lambda i: state[i]["score"])
 
     def _build(self):
-        s, german = self.scene, self.scene.language() == "de"
+        s = self.scene
+        self.scene.language()
         group = mn.VGroup()
         ws = self.weights()
         state = self.state()
@@ -600,7 +604,7 @@ class Board:
         return group
 
     def mobjects(self):
-        """🧩 Labels and the live table in one group."""
+        """🧶 Labels and the live table in one group."""
         return mn.VGroup(*self.labels.values(), self.live)
 
     def rank_to(self, ranks, run_time=2.0):
@@ -608,12 +612,12 @@ class Board:
         return mn.AnimationGroup(*[self.r[i].animate(run_time=run_time).set_value(rank - 1) for i, rank in ranks.items()])
 
     def weights_to(self, weights, run_time=2.5):
-        """🎚️ Tween the weights together."""
+        """🎛️ Tween the weights together."""
         return mn.AnimationGroup(*[self.w[c].animate(run_time=run_time).set_value(v) for c, v in zip(ORDER, weights)])
 
 
 class Beat4_NormalizedIndex(_visuals.ClipScene):
-    """📚 Present authored bilingual narration with model-bound animation."""
+    """🗣️ Present authored bilingual narration with model-bound animation."""
 
     TITLE = {"en": "Multiple Criteria and a Normalized Index", "de": "Mehrere Kriterien und ein normierter Index"}
     NARRATION = [
@@ -729,23 +733,23 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return group
 
     def name(self, identifier, size=S0, width=1.5, color=INK, limit=14):
-        """🏷️ The variant's model title in the scene language, on one or two lines."""
+        """📛 The variant's model title in the scene language, on one or two lines."""
         return block(lines(by_id(identifier)["title"][self.language()], limit), size=size, color=color, width=width)
 
     def value_text(self, criterion, value, digits=None):
-        """🔢 A raw value with the model's digits for its criterion."""
+        """🖋️ A raw value with the model's digits for its criterion."""
         return self.number(value, DIGITS[criterion] if digits is None else digits)
 
     def unit_label(self, criterion):
-        """🏷️ The unit of a criterion as the model gives it."""
+        """🔠 The unit of a criterion as the model gives it."""
         return CRITERIA[criterion]["unit"].replace("kWh/(m²·a)", _room.INTENSITY_UNIT)
 
     def focus_id(self):
-        """📌 The variant the room panel currently shows."""
+        """🖥️ The variant the room panel currently shows."""
         return ids(True)[int(round(min(max(self.focus.get_value(), 0), len(ids(True)) - 1)))]
 
     def set_focus(self, identifier, run_time=1.0):
-        """🎯 Move the room panel to a variant: the design trackers and the focus index move together."""
+        """🧲 Move the room panel to a variant: the design trackers and the focus index move together."""
         return mn.AnimationGroup(self.set_design(self._rt, by_id(identifier)["design"], run_time), self.focus.animate(run_time=run_time).set_value(ids(True).index(identifier)))
 
     def build_panel(self):
@@ -837,7 +841,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
                 WIDTH * design["overhang"] * factor("overhang")]
 
     def value_strip(self):
-        """🔢 The four raw values of the room on show, each with its pictogram and unit; the active criterion is framed."""
+        """🍃 The four raw values of the room on show, each with its pictogram and unit; the active criterion is framed."""
         rt = self._rt
 
         def build():
@@ -904,7 +908,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return self.equation(items, LEFT + .4, y - .07, size=14, width=6.6)
 
     def bar_row(self, group, parts, total_parts, unit, colour_of):
-        """📊 A horizontal stacked bar of the parts (length ∝ value) with the total in front of its end."""
+        """🥞 A horizontal stacked bar of the parts (length ∝ value) with the total in front of its end."""
         cursor = LEFT + .4
         for value, colour in zip(parts, colour_of):
             width = max(value * unit, 1e-3)
@@ -913,12 +917,12 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         group.add(self.equation([(total_parts, INK)], cursor + .15, -.62 - .07, size=15))
 
     def highlight(self, group, k, y):
-        """🔦 Frame row ``k`` of a build-up while the clause talks about it."""
+        """🖍️ Frame row ``k`` of a build-up while the clause talks about it."""
         if int(round(self.row_hi.get_value())) == k:
             group.add(mn.Rectangle(width=6.8, height=.31, color=INK, stroke_width=2, stroke_opacity=.8).move_to([(LEFT + RIGHT) / 2, y, 0]))
 
     def block_electricity(self):
-        """⚡ Heating, cooling and lighting electricity of the room on show: stacked bar and the arithmetic behind every part, down to kWh/(m²·a)."""
+        """🔌 Heating, cooling and lighting electricity of the room on show: stacked bar and the arithmetic behind every part, down to kWh/(m²·a)."""
         rt = self._rt
 
         def build():
@@ -950,7 +954,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return live(build, lambda: (_room.design_key(rt)(), round(self.detail.get_value()), round(self.row_hi.get_value())))
 
     def block_cost(self):
-        """💰 The façade price of the room on show as its parts: fixed items, wall, insulation, windows and overhang, each with area × price."""
+        """💶 The façade price of the room on show as its parts: fixed items, wall, insulation, windows and overhang, each with area × price."""
         rt = self._rt
 
         def build():
@@ -963,7 +967,6 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
             colours = [LAYER[k] for k in ("fixed", "wall", "insulation", "window", "overhang")]
             group = mn.VGroup()
             self.bar_row(group, raws, [self.n(sum(shown)), "CHF"], 4.6 / 22500, colours)
-            cost = lambda name, rest: ([self.tr(*name)], colours[("fixed", "wall", "insulation", "window", "overhang").index(name[2])])
             rows = [(("Fixed items", "Fixposten", "fixed"), []),
                     (("Wall", "Wand", "wall"), [self.n(wall, 1), "m²", "×", self.n(price("wall")), "CHF/m²"]),
                     (("Insulation", "Dämmung", "insulation"), [self.n(wall, 1), "m²", "×", self.n(thickness), "cm", "×", self.n(price("insulation_per_cm")), "CHF/m²/cm"]),
@@ -978,7 +981,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return live(build, lambda: (_room.design_key(rt)(), round(self.row_hi.get_value())))
 
     def block_carbon(self):
-        """🏭 The embodied carbon of the room on show as material layers: masonry, insulation, glass and the concrete overhang, in kg CO₂e per layer."""
+        """🌫️ The embodied carbon of the room on show as material layers: masonry, insulation, glass and the concrete overhang, in kg CO₂e per layer."""
         rt = self._rt
 
         def build():
@@ -1041,7 +1044,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return live(build, _room.design_key(rt))
 
     def index_terms(self, identifier, weights):
-        """🧮 Weights, normalized values and the four weighted parts as printed: the parts add up to the printed index and every product holds as printed."""
+        """🧷 Weights, normalized values and the four weighted parts as printed: the parts add up to the printed index and every product holds as printed."""
         row = table(tuple(round(w, 6) for w in weights))[identifier]
         for digits in (2, 3, 4):
             printed_w = [round(w, digits) for w in weights]
@@ -1052,7 +1055,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return printed_w, norm, parts, digits
 
     def block_index(self, getter, weights, *, full=False, y=-2.2):
-        """⚖️ The index of one variant written out: ``w × n`` per criterion, the four parts and their sum; ``full`` adds the raw value behind every normalized value."""
+        """🪙 The index of one variant written out: ``w × n`` per criterion, the four parts and their sum; ``full`` adds the raw value behind every normalized value."""
         def build():
             ws = weights()
             identifier = getter()
@@ -1079,7 +1082,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return live(build, lambda: (getter(), tuple(round(w, 4) for w in weights())))
 
     def criterion_chip(self, criterion, x, bottom):
-        """🔖 The head of a table column: pictogram, name, unit and direction in a chip whose bottom edge sits at ``bottom``."""
+        """🪧 The head of a table column: pictogram, name, unit and direction in a chip whose bottom edge sits at ``bottom``."""
         chip = _art.window_chip(head_content(self, criterion), color=COLORS[criterion])
         return chip.move_to([x, bottom + chip.height / 2, 0])
 
@@ -1135,7 +1138,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return {i: sum(raw(i, c) / (scale if c in ("cost", "carbon") else 1) for c in ORDER) for i in ids()}
 
     def naive_rows(self, scale):
-        """📶 One row per variant: thumbnail, name, a bar of four coloured segments and the sum, sorted by the sum."""
+        """🗃️ One row per variant: thumbnail, name, a bar of four coloured segments and the sum, sorted by the sum."""
         sums = self.sums(scale)
         order = sorted(ids(), key=sums.get)
         longest = max(sums.values())
@@ -1158,7 +1161,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return rows, order
 
     def legend(self, scale):
-        """🏷️ Four coloured pictograms with the unit each segment is counted in."""
+        """🌈 Four coloured pictograms with the unit each segment is counted in."""
         group = mn.VGroup()
         for c in ORDER:
             unit = self.unit_label(c)
@@ -1170,7 +1173,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return group.arrange(mn.RIGHT, buff=.4).move_to([-3.5, -1.95, 0])
 
     def screen_units(self):
-        """➕ Why kWh/(m²·a) and CHF cannot be added, and why a naive sum depends on the unit."""
+        """🔗 Why kWh/(m²·a) and CHF cannot be added, and why a naive sum depends on the unit."""
         first = ids()[0]
         item = by_id(first)
         chips = []
@@ -1179,7 +1182,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
             chips.append(_art.window_chip(content, color=COLORS[c]))
         plus = text("+", size=S2 + 6)
         tail = mn.VGroup(text("=", size=S2 + 6), text("?", size=S2 + 6)).arrange(mn.RIGHT, buff=.25)
-        equation = mn.VGroup(chips[0], plus, chips[1], tail).arrange(mn.DOWN, buff=.18).move_to([-3.5, .5, 0])
+        mn.VGroup(chips[0], plus, chips[1], tail).arrange(mn.DOWN, buff=.18).move_to([-3.5, .5, 0])
         cross = _art.cross_mark(color=BAD, size=.28).next_to(tail, mn.RIGHT, buff=.3)
         verdict = _art.window_chip(text(self.tr("no unit", "keine Einheit"), size=S2, color=BAD), color=BAD).move_to([-3.5, -1.75, 0])
         subject = mn.VGroup(self.thumbnail(item["design"], (0, 0, 0), .26, ramp=self._ramp, value=self._ramp.low), self.name(first, size=S1, width=3.2)).arrange(mn.RIGHT, buff=.3).move_to([-3.5, 2.6, 0])
@@ -1209,7 +1212,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return mn.AnimationGroup(ruler.tween(run_time, o_abs=level, o_val=level, o_ring=level), *[(mn.FadeOut(part) if away else mn.FadeIn(part)) for part in parts], run_time=run_time)
 
     def screen_rulers(self):
-        """📏 One ruler per criterion: real values, subtract the best, divide by the span; then the table."""
+        """🪜 One ruler per criterion: real values, subtract the best, divide by the span; then the table."""
         pool = ids()
         self.clear_stage()
         ruler = Ruler(self, "electricity", pool, pool)
@@ -1278,7 +1281,6 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
             loss = conductance * hours
             digits, _ = reproduce(lambda value: value * hours, [conductance], loss, 0, limit=3)
             parts = _room.apportion([found["u_wall"] * found["wall_area"], constant("envelope", "u_window") * found["window_area"], constant("envelope", "h_other")], digits, total=conductance)
-            free = round(loss) - round(found["heating_demand"])
             group = mn.VGroup(self.equation([([self.tr("Winter (Zurich-like climate): sun low, heat leaves through wall and window", "Winter (Zürcher Klima): Sonne tief, Wärme geht durch Wand und Fenster verloren")], _room.HEAT)],
                                             LEFT + .4, 3.0, size=16, width=6.4),
                               self.equation([([self.tr("Conductance", "Leitwert"), "H", "=", self.n(parts[0], digits), "+", self.n(parts[1], digits), "+", self.n(parts[2], digits), "=", self.n(sum(parts), digits), "W/K"], INK)],
@@ -1291,7 +1293,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return live(build, _room.design_key(rt))
 
     def step_note(self, ruler, sign, value):
-        """🧾 The operation of a normalization step, e.g. − best value with its unit."""
+        """🗒️ The operation of a normalization step, e.g. − best value with its unit."""
         number = _room.Number(sign + self.number(value, ruler.digits_tag)) if sign == "−" else self.n(value, ruler.digits_tag)
         label = _room.text([*([] if sign == "−" else [sign]), number, self.unit_label(ruler.criterion)], (ruler.center, -1.15, 0), size=S1, color=ruler.color)
         return label
@@ -1305,7 +1307,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return items.move_to([LEFT + items.width / 2, 3.34, 0])
 
     def next_ruler(self, criterion, old, header, block, extras, retire=()):
-        """🔁 Replace the ruler by the next criterion; returns the new parts and the animations (flip first for daylight)."""
+        """⏭️ Replace the ruler by the next criterion; returns the new parts and the animations (flip first for daylight)."""
         pool = ids()
         new = Ruler(self, criterion, pool, pool)
         new_header = self.ruler_header(new)
@@ -1337,7 +1339,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return moves, swaps
 
     def table_legend(self):
-        """🧭 How to read the table: 0 is the best and 1 the worst of the compared set; the arrows of the column heads give the direction."""
+        """📖 How to read the table: 0 is the best and 1 the worst of the compared set; the arrows of the column heads give the direction."""
         scale = mn.VGroup(text(self.tr("Normalized value:", "Normierter Wert:"), size=S0),
                           text(self.tr("0 = best", "0 = Bester"), size=S0, color=GOOD),
                           text(self.tr("1 = worst", "1 = Schlechtester"), size=S0, color=WARN)).arrange(mn.RIGHT, buff=.3)
@@ -1346,7 +1348,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return mn.VGroup(scale, under).arrange(mn.DOWN, buff=.1).move_to([-3.55, -2.3, 0])
 
     def screen_board(self):
-        """⚖️ Weights, the index bar, its arithmetic, the winner's room and a cost-driven re-weighting; the focus row moves the room."""
+        """🎲 Weights, the index bar, its arithmetic, the winner's room and a cost-driven re-weighting; the focus row moves the room."""
         board = self.board
         ws = self._weights
         self.step("weights", board.mode.animate(run_time=1.2).set_value(1.0), seconds=1.4)
@@ -1405,7 +1407,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return mn.VGroup(line, ticks, _room.place(text(self.tr("Index", "Index"), size=S1, color=INK), (board.xl - .15, y, 0), "right"))
 
     def switch_shares(self, base):
-        """🔀 The cost weights (in percent) at which the winner switches, found by bisection on the model's index."""
+        """🌗 The cost weights (in percent) at which the winner switches, found by bisection on the model's index."""
         champion = lambda share: winner_of(tuple(_model.reweigh(base, "cost", share / 100)[c] for c in ORDER))
         found, previous = [], champion(0)
         for k in range(1, 401):
@@ -1449,7 +1451,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         return bands
 
     def screen_sweep(self):
-        """🔀 Rank of every variant against the cost weight, with the winner strip, the switch shares and the room of the current winner."""
+        """🌀 Rank of every variant against the cost weight, with the winner strip, the switch shares and the room of the current winner."""
         self.clear_stage()
         pool = ids()
         shares = [2.5 * k for k in range(41)]
@@ -1523,7 +1525,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         self.sweep_share = share
 
     def screen_range(self):
-        """➕ A sixth variant stretches the cost ruler, squeezes the others and flips the order of two of them."""
+        """🌅 A sixth variant stretches the cost ruler, squeezes the others and flips the order of two of them."""
         self.clear_stage()
         for tracker in (*self._rt.values(), self.focus):
             tracker.clear_updaters()
@@ -1572,7 +1574,6 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
             note.identifier = i
             note.add_updater(lambda m: (m.move_to([-.98 - m.width / 2, board.y(m.identifier), 0]), m.set_opacity(board.row_o[m.identifier].get_value())))
             notes.add(note)
-        flipped = [i for i in five if (sorted(five, key=old_ranks.get).index(i) != sorted([f for f in six if f in five], key=new_ranks.get).index(i))]
         heading = _room.place(text(self.tr("rank old → new (orange: changed)", "Rang alt → neu (orange: geändert)"), size=S0, color=MUTED), (LEFT + .4, -1.35, 0), "left")
         link = None
         board_parts = mn.VGroup(board.live, axis, notes, heading)

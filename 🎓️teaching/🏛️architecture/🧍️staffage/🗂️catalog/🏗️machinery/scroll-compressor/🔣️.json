@@ -1,0 +1,2350 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "scroll-compressor",
+    "category": "machinery",
+    "title": {
+      "en": "Hermetic Scroll Compressor",
+      "de": "Hermetischer Scrollverdichter"
+    },
+    "summary": {
+      "en": "A 0.43 m hermetic scroll compressor of a small heat pump with a round sight glass onto the orbiting scroll: the discharge dome runs hot, the suction stub stays cold and the motor shell warms.",
+      "de": "Ein 0,43 m hoher hermetischer Scrollverdichter einer kleinen Wärmepumpe mit rundem Schauglas auf die orbitierende Spirale: der Druckdom läuft heiß, der Saugstutzen bleibt kalt und das Motorgehäuse erwärmt sich."
+    },
+    "tags": [
+      "compressor",
+      "scroll",
+      "heat-pump",
+      "refrigeration",
+      "hot-gas",
+      "machinery"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-14511-2022",
+          "citation": "DIN EN 14511:2022 Air conditioners, liquid chilling packages and heat pumps for space heating and cooling - Terms, test conditions and performance (rating conditions A7/W35 and A35/W7)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "copeland-2015",
+          "citation": "Emerson Climate Technologies (2015). Copeland Scroll compressors for refrigeration and air conditioning, application engineering bulletin (shell temperatures: discharge dome 80 to 110 degC, suction line cold)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A hermetic scroll compressor of the 4 to 6 kW class of an air-to-water heat pump: a welded steel shell 0.2 m across and 0.31 m high with a domed top and a discharge stub, a suction stub at the left, a terminal box at the right and a foot plate on rubber grommets. The round sight glass of the asset is an authored device showing the orbiting scroll, so that the cycle clips can show the compression; real hermetic scroll shells have no sight window. The mass 12.5 kg comes from shell and feet 9.4, dome 2.6, terminal 0.3 and scroll 0.2 kg. The dome and the shell release 40 W each into the room at full speed (surfaces of 80 and 60 degC, authored estimates after Copeland 2015); the suction side is 5 degC.",
+        "de": "Ein hermetischer Scrollverdichter der Klasse 4 bis 6 kW einer Luft-Wasser-Wärmepumpe: ein geschweißtes Stahlgehäuse von 0,2 m Durchmesser und 0,31 m Höhe mit gewölbtem Dom und einem Druckstutzen, einem Saugstutzen links, einem Anschlusskasten rechts und einer Fußplatte auf Gummitüllen. Das runde Schauglas des Assets ist ein erfundenes Bauteil, das die orbitierende Spirale zeigt, damit die Kreislauf-Clips die Verdichtung zeigen können; echte hermetische Scrollgehäuse haben kein Schauglas. Die Masse von 12,5 kg ergibt sich aus Gehäuse und Füßen 9,4, Dom 2,6, Anschlusskasten 0,3 und Spirale 0,2 kg. Dom und Gehäuse geben bei voller Drehzahl je 40 W an den Raum ab (Oberflächen von 80 und 60 degC, Schätzwerte nach Copeland 2015); die Saugseite hat 5 degC."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.43,
+      "widthM": 0.3,
+      "depthM": 0.28,
+      "massKg": 12.5
+    },
+    "materials": [
+      {
+        "id": "steel-shell",
+        "title": {
+          "en": "Painted steel",
+          "de": "Lackierter Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 480,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "copper",
+        "title": {
+          "en": "Copper pipe",
+          "de": "Kupferrohr"
+        },
+        "emissivity": 0.05,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 8900,
+        "conductivityWmK": 390,
+        "specificHeatJKgK": 385,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "pa-plastic",
+        "title": {
+          "en": "Glass-filled polyamide",
+          "de": "Glasfaserverstärktes Polyamid"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 1400,
+        "conductivityWmK": 0.3,
+        "specificHeatJKgK": 1600,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "cast-aluminium",
+        "title": {
+          "en": "Cast aluminium",
+          "de": "Aluminiumguss"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 160,
+        "specificHeatJKgK": 900,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "shell",
+      "bones": [
+        {
+          "id": "shell",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Hermetic shell with feet",
+            "de": "Hermetisches Gehäuse mit Füßen"
+          },
+          "lengthM": 0.34,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 9.4,
+            "comX": 0,
+            "comY": 0.17,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "dome",
+          "parent": "shell",
+          "x": 0,
+          "y": 0.34,
+          "angleDeg": 0,
+          "title": {
+            "en": "Discharge dome with stub",
+            "de": "Druckdom mit Stutzen"
+          },
+          "lengthM": 0.09,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.6,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "terminal",
+          "parent": "shell",
+          "x": 0.1,
+          "y": 0.25,
+          "angleDeg": 0,
+          "title": {
+            "en": "Terminal box",
+            "de": "Anschlusskasten"
+          },
+          "lengthM": 0.06,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.3,
+            "comX": 0.02,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rotor",
+          "parent": "shell",
+          "x": 0,
+          "y": 0.18,
+          "angleDeg": 0,
+          "title": {
+            "en": "Orbiting scroll seen in the sight glass",
+            "de": "Orbitierende Spirale im Schauglas"
+          },
+          "lengthM": 0.036,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 0.2,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "shell",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.26,
+        "footprintWidthM": 0.26,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "dome-top",
+        "bone": "dome",
+        "x": 0,
+        "y": 0.09,
+        "kind": "emitter",
+        "title": {
+          "en": "Top of the discharge stub",
+          "de": "Oberkante des Druckstutzens"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.014,
+              "y": 0.058,
+              "w": 0.028,
+              "h": 0.032,
+              "region": "discharge",
+              "material": "copper"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.1 0 C -0.1 0.042 -0.05 0.06 0 0.06 C 0.05 0.06 0.1 0.042 0.1 0 Z",
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.03,
+              "w": 0.2,
+              "h": 0.31,
+              "region": "shell",
+              "material": "steel-shell"
+            },
+            {
+              "id": "suction-stub",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.2,
+              "w": 0.052,
+              "h": 0.026,
+              "region": "suction",
+              "material": "copper"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            },
+            {
+              "id": "sight-ring",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.18,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "shell",
+              "material": "steel-shell"
+            },
+            {
+              "id": "scroll-disc",
+              "bone": "rotor",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "spiral",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.006,
+                  0
+                ],
+                [
+                  0.0067,
+                  0.00201
+                ],
+                [
+                  0.00668,
+                  0.00441
+                ],
+                [
+                  0.00577,
+                  0.00691
+                ],
+                [
+                  0.00393,
+                  0.0092
+                ],
+                [
+                  0.00123,
+                  0.01093
+                ],
+                [
+                  -0.00214,
+                  0.01181
+                ],
+                [
+                  -0.0059,
+                  0.01158
+                ],
+                [
+                  -0.00967,
+                  0.01012
+                ],
+                [
+                  -0.01305,
+                  0.0074
+                ],
+                [
+                  -0.0156,
+                  0.00356
+                ],
+                [
+                  -0.01696,
+                  -0.00114
+                ],
+                [
+                  -0.01685,
+                  -0.00632
+                ],
+                [
+                  -0.01512,
+                  -0.01151
+                ],
+                [
+                  -0.01176,
+                  -0.01618
+                ],
+                [
+                  -0.00694,
+                  -0.01982
+                ],
+                [
+                  -0.00099,
+                  -0.02198
+                ],
+                [
+                  0.00562,
+                  -0.0223
+                ],
+                [
+                  0.01231,
+                  -0.0206
+                ],
+                [
+                  0.01845,
+                  -0.01687
+                ],
+                [
+                  0.02343,
+                  -0.01128
+                ],
+                [
+                  0.02667,
+                  -0.00422
+                ],
+                [
+                  0.02775,
+                  0.00376
+                ],
+                [
+                  0.0264,
+                  0.01199
+                ],
+                [
+                  0.02259,
+                  0.01974
+                ],
+                [
+                  0.01649,
+                  0.02625
+                ],
+                [
+                  0.00851,
+                  0.03085
+                ],
+                [
+                  -0.00074,
+                  0.03299
+                ],
+                [
+                  -0.01051,
+                  0.03234
+                ]
+              ],
+              "closed": false,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "scroll-hub",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "feet",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.03,
+              "region": "feet",
+              "material": "steel-shell"
+            }
+          ],
+          "front": [
+            {
+              "id": "feet",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.03,
+              "region": "feet",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.03,
+              "w": 0.2,
+              "h": 0.31,
+              "region": "shell",
+              "material": "steel-shell"
+            },
+            {
+              "id": "sight-ring",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.108,
+              "y": 0.13,
+              "w": 0.008,
+              "h": 0.1,
+              "region": "shell",
+              "material": "steel-shell"
+            },
+            {
+              "id": "scroll-disc",
+              "bone": "rotor",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.106,
+              "y": 0.14,
+              "w": 0.004,
+              "h": 0.08,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.1 0.34 C -0.1 0.382 -0.05 0.4 0 0.4 C 0.05 0.4 0.1 0.382 0.1 0.34 Z",
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.014,
+              "y": 0.398,
+              "w": 0.028,
+              "h": 0.032,
+              "region": "discharge",
+              "material": "copper"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 0.25,
+              "w": 0.05,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "feet",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": -0.14,
+              "w": 0.28,
+              "h": 0.28,
+              "region": "feet",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.1,
+              "region": "shell",
+              "material": "steel-shell"
+            },
+            {
+              "id": "suction-stub",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.013,
+              "w": 0.052,
+              "h": 0.026,
+              "region": "suction",
+              "material": "copper"
+            },
+            {
+              "id": "sight-ring",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.11,
+              "w": 0.1,
+              "h": 0.01,
+              "region": "shell",
+              "material": "steel-shell"
+            },
+            {
+              "id": "scroll-disc",
+              "bone": "rotor",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.106,
+              "w": 0.08,
+              "h": 0.006,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.092,
+              "ry": 0.092,
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.03,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            },
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "discharge",
+              "material": "copper"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.43 m tall hermetic scroll compressor, 8.6 mm tall on paper: a cylindrical shell on a foot plate with a domed top, a discharge stub on top, a suction stub at the left, a terminal box at the right and a round sight glass with the orbiting scroll. Front and top views: the foot plate and shell are seen as their round cylinder and square plate, the terminal box stands in front of the shell, the suction stub is hidden behind it; the sight ring and the scroll disc show edge-on as thin strips on the right flank, and from above the dome with the discharge stub covers the shell.",
+            "de": "Ein 0,43 m hoher hermetischer Scrollverdichter, auf Papier 8,6 mm hoch: ein zylindrisches Gehäuse auf einer Fußplatte mit gewölbtem Dom, einem Druckstutzen oben, einem Saugstutzen links, einem Anschlusskasten rechts und einem runden Schauglas mit der orbitierenden Spirale. Vorder- und Draufsicht: Fußplatte und Gehäuse erscheinen als Zylinder und quadratische Platte, der Anschlusskasten steht vor dem Gehäuse, der Saugstutzen ist dahinter verdeckt; Schauglasring und Spiralscheibe zeigen sich als schmale Streifen an der rechten Flanke, und von oben deckt der Dom mit dem Druckstutzen das Gehäuse."
+          },
+          "retained": {
+            "en": "Foot plate, shell, dome, both pipe stubs, terminal box, sight ring, scroll disc with its spiral and hub.",
+            "de": "Fußplatte, Gehäuse, Dom, beide Rohrstutzen, Anschlusskasten, Schauglasring, Spiralscheibe mit Spirale und Nabe."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The oil sight glass, the welding seam, the rubber feet and the cable gland.",
+            "de": "Das Ölschauglas, die Schweißnaht, die Gummifüße und die Kabelverschraubung."
+          },
+          "thinElements": {
+            "en": "The sight glass is 80 mm wide (real window 70 mm); stubs are 26 to 28 mm thick.",
+            "de": "Das Schauglas ist 80 mm breit (Fenster real 70 mm); die Stutzen sind 26 bis 28 mm dick."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Shell, dome, two stubs, terminal, feet and scroll are seven regions: the dome and discharge stub run hot, the suction stub cold; the spiral turns with the rotor bone.",
+            "de": "Gehäuse, Dom, zwei Stutzen, Anschlusskasten, Füße und Spirale sind sieben Regionen: Dom und Druckstutzen laufen heiß, der Saugstutzen kalt; die Spirale dreht sich mit dem Rotorknochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.016,
+              "y": 0.058,
+              "w": 0.032,
+              "h": 0.034,
+              "region": "discharge",
+              "material": "copper"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.1 0 C -0.1 0.042 -0.05 0.06 0 0.06 C 0.05 0.06 0.1 0.042 0.1 0 Z",
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.03,
+              "w": 0.2,
+              "h": 0.31,
+              "regions": [
+                "shell",
+                "feet"
+              ],
+              "material": "steel-shell"
+            },
+            {
+              "id": "suction-stub",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.19,
+              "w": 0.052,
+              "h": 0.034,
+              "region": "suction",
+              "material": "copper"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.044,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            },
+            {
+              "id": "scroll-disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "spiral",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.01,
+                  0
+                ],
+                [
+                  0.01074,
+                  0.00271
+                ],
+                [
+                  0.01069,
+                  0.00575
+                ],
+                [
+                  0.00975,
+                  0.00892
+                ],
+                [
+                  0.00787,
+                  0.01192
+                ],
+                [
+                  0.00507,
+                  0.0145
+                ],
+                [
+                  0.00147,
+                  0.01636
+                ],
+                [
+                  -0.00274,
+                  0.01728
+                ],
+                [
+                  -0.0073,
+                  0.01708
+                ],
+                [
+                  -0.0119,
+                  0.01563
+                ],
+                [
+                  -0.0162,
+                  0.01292
+                ],
+                [
+                  -0.01984,
+                  0.00901
+                ],
+                [
+                  -0.02249,
+                  0.00408
+                ],
+                [
+                  -0.02387,
+                  -0.00161
+                ],
+                [
+                  -0.02378,
+                  -0.00773
+                ],
+                [
+                  -0.02208,
+                  -0.01387
+                ],
+                [
+                  -0.01876,
+                  -0.01962
+                ],
+                [
+                  -0.01392,
+                  -0.02454
+                ],
+                [
+                  -0.00779,
+                  -0.02823
+                ],
+                [
+                  -0.00068,
+                  -0.03035
+                ],
+                [
+                  0.00699,
+                  -0.03064
+                ],
+                [
+                  0.01475,
+                  -0.02896
+                ],
+                [
+                  0.02209,
+                  -0.02528
+                ],
+                [
+                  0.02848,
+                  -0.01973
+                ],
+                [
+                  0.03344,
+                  -0.01255
+                ],
+                [
+                  0.03655,
+                  -0.00412
+                ],
+                [
+                  0.03751,
+                  0.00508
+                ],
+                [
+                  0.03613,
+                  0.01449
+                ],
+                [
+                  0.03236,
+                  0.02351
+                ]
+              ],
+              "closed": false,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "foot-plate",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.03,
+              "region": "feet",
+              "material": "steel-shell"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-plate",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.03,
+              "region": "feet",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.03,
+              "w": 0.2,
+              "h": 0.31,
+              "regions": [
+                "shell",
+                "feet"
+              ],
+              "material": "steel-shell"
+            },
+            {
+              "id": "scroll-disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0.13,
+              "w": 0.02,
+              "h": 0.1,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.1 0.34 C -0.1 0.382 -0.05 0.4 0 0.4 C 0.05 0.4 0.1 0.382 0.1 0.34 Z",
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.016,
+              "y": 0.398,
+              "w": 0.032,
+              "h": 0.034,
+              "region": "discharge",
+              "material": "copper"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 0.25,
+              "w": 0.05,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "foot-plate",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": -0.14,
+              "w": 0.28,
+              "h": 0.28,
+              "region": "feet",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.1,
+              "regions": [
+                "shell",
+                "feet"
+              ],
+              "material": "steel-shell"
+            },
+            {
+              "id": "suction-stub",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.017,
+              "w": 0.052,
+              "h": 0.034,
+              "region": "suction",
+              "material": "copper"
+            },
+            {
+              "id": "scroll-disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.12,
+              "w": 0.1,
+              "h": 0.02,
+              "region": "scroll",
+              "material": "cast-aluminium"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.092,
+              "ry": 0.092,
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.03,
+              "w": 0.044,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            },
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.016,
+              "ry": 0.016,
+              "region": "discharge",
+              "material": "copper"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 4.3 mm tall compressor: shell with dome on a foot plate, three stubs and a round sight disc with a spiral. Front and top views: the shell and the foot plate stay one shape each, the scroll disc is a 20 mm raised pad on the right flank and the dome with the discharge stub tops the shell from above.",
+            "de": "Ein 4,3 mm hoher Verdichter: Gehäuse mit Dom auf einer Fußplatte, drei Stutzen und eine runde Schauscheibe mit Spirale. Vorder- und Draufsicht: Gehäuse und Fußplatte bleiben je eine Form, die Spiralscheibe ist ein 20 mm hohes Polster an der rechten Flanke, und der Dom mit dem Druckstutzen schließt das Gehäuse von oben ab."
+          },
+          "retained": {
+            "en": "Foot plate, shell, dome, discharge, suction, terminal and the scroll disc with spiral.",
+            "de": "Fußplatte, Gehäuse, Dom, Druck-, Saugstutzen, Anschlusskasten und die Spiralscheibe mit Spirale."
+          },
+          "merged": {
+            "en": "The shell shape carries shell and feet; the sight ring is dropped so that the disc sits directly on the shell.",
+            "de": "Die Gehäuseform trägt Gehäuse und Füße; der Schauglasring entfällt, die Scheibe sitzt direkt auf dem Gehäuse."
+          },
+          "omitted": {
+            "en": "Sight ring, hub and welding seam.",
+            "de": "Schauglasring, Nabe und Schweißnaht."
+          },
+          "thinElements": {
+            "en": "Spiral drawn with 1.1 turns so that the arms stay 0.3 mm apart.",
+            "de": "Die Spirale ist mit 1,1 Windungen gezeichnet, damit ihre Arme 0,3 mm Abstand behalten."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "The disc is the scroll region and still turns with the rotor bone.",
+            "de": "Die Scheibe ist die Spiralregion und dreht sich weiter mit dem Rotorknochen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 0.056,
+              "w": 0.04,
+              "h": 0.034,
+              "region": "discharge",
+              "material": "copper"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.1 0 C -0.1 0.042 -0.05 0.06 0 0.06 C 0.05 0.06 0.1 0.042 0.1 0 Z",
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.04,
+              "w": 0.2,
+              "h": 0.3,
+              "regions": [
+                "shell",
+                "feet",
+                "scroll"
+              ],
+              "material": "steel-shell"
+            },
+            {
+              "id": "suction-stub",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.16,
+              "y": 0.185,
+              "w": 0.062,
+              "h": 0.04,
+              "region": "suction",
+              "material": "copper"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.05,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            },
+            {
+              "id": "foot-plate",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.04,
+              "region": "feet",
+              "material": "steel-shell"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-plate",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.04,
+              "region": "feet",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.04,
+              "w": 0.2,
+              "h": 0.3,
+              "regions": [
+                "shell",
+                "feet",
+                "scroll"
+              ],
+              "material": "steel-shell"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.1 0.34 C -0.1 0.382 -0.05 0.4 0 0.4 C 0.05 0.4 0.1 0.382 0.1 0.34 Z",
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 0.396,
+              "w": 0.04,
+              "h": 0.034,
+              "region": "discharge",
+              "material": "copper"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 0.25,
+              "w": 0.05,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "foot-plate",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": -0.14,
+              "w": 0.28,
+              "h": 0.28,
+              "region": "feet",
+              "material": "steel-shell"
+            },
+            {
+              "id": "shell",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.1,
+              "regions": [
+                "shell",
+                "feet",
+                "scroll"
+              ],
+              "material": "steel-shell"
+            },
+            {
+              "id": "suction-stub",
+              "bone": "shell",
+              "role": "body",
+              "z": 3.45,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.16,
+              "y": -0.02,
+              "w": 0.062,
+              "h": 0.04,
+              "region": "suction",
+              "material": "copper"
+            },
+            {
+              "id": "dome",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.09,
+              "ry": 0.09,
+              "region": "dome",
+              "material": "steel-shell"
+            },
+            {
+              "id": "terminal",
+              "bone": "terminal",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.03,
+              "w": 0.05,
+              "h": 0.06,
+              "region": "terminal",
+              "material": "pa-plastic"
+            },
+            {
+              "id": "discharge-stub",
+              "bone": "dome",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "discharge",
+              "material": "copper"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.2 mm tall compressor of six shapes. Front and top views: five shapes from the front and six from above: foot plate, shell, dome, discharge stub and terminal box, plus the suction stub in the top view; the scroll disc is merged into the shell.",
+            "de": "Ein 2,2 mm hoher Verdichter aus sechs Formen. Vorder- und Draufsicht: fünf Formen von vorn und sechs von oben: Fußplatte, Gehäuse, Dom, Druckstutzen und Anschlusskasten, dazu der Saugstutzen in der Draufsicht; die Spiralscheibe geht im Gehäuse auf."
+          },
+          "retained": {
+            "en": "Shell, dome, two stubs, terminal and foot plate.",
+            "de": "Gehäuse, Dom, zwei Stutzen, Anschlusskasten und Fußplatte."
+          },
+          "merged": {
+            "en": "The sight glass is merged into the shell shape (regions shell, feet, scroll).",
+            "de": "Das Schauglas geht in der Gehäuseform auf (Regionen Gehäuse, Füße, Spirale)."
+          },
+          "omitted": {
+            "en": "Sight glass with scroll, any stub detail.",
+            "de": "Schauglas mit Spirale, jedes Stutzendetail."
+          },
+          "thinElements": {
+            "en": "Stubs are drawn 40 mm thick, the foot plate 40 mm.",
+            "de": "Die Stutzen sind 40 mm dick gezeichnet, die Fußplatte 40 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail none mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail keiner mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "The shell shape lists shell, feet and scroll as merged regions.",
+            "de": "Die Gehäuseform führt Gehäuse, Füße und Spirale als zusammengeführte Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the asset is only 0.6 mm wide on paper and its smallest part, the 28 mm discharge stub, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 0.6 mm breit auf Papier und sein kleinstes Teil, der 28 mm dicke Druckstutzen, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 28 mm discharge stub",
+          "de": "Der 28 mm dicke Druckstutzen"
+        },
+        "limitingSizeM": 0.028,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The compressor stands still and everything is at room temperature.",
+          "de": "Der Verdichter steht still und alles hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "dome": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "discharge": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "suction": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "terminal": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "feet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.6,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 21
+              }
+            },
+            "scroll": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "dome-plume": 0
+          },
+          "operating": {
+            "run": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "part-load",
+        "title": {
+          "en": "Part load",
+          "de": "Teillast"
+        },
+        "description": {
+          "en": "The motor turns at half speed: dome and shell warm, the suction line cools.",
+          "de": "Der Motor dreht mit halber Drehzahl: Dom und Gehäuse erwärmen sich, die Saugleitung kühlt ab."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 40
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "dome": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "discharge": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "suction": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "terminal": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "feet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.6,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 21
+              }
+            },
+            "scroll": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "dome-plume": 0.5
+          },
+          "operating": {
+            "run": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "full-load",
+        "title": {
+          "en": "Full load",
+          "de": "Volllast"
+        },
+        "description": {
+          "en": "The motor runs at full speed: the discharge side runs hot, the suction side cold.",
+          "de": "Der Motor läuft mit voller Drehzahl: die Druckseite läuft heiß, die Saugseite kalt."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 80
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "dome": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "discharge": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "suction": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "terminal": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "feet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.6,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 21
+              }
+            },
+            "scroll": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "dome-plume": 1
+          },
+          "operating": {
+            "run": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "spin",
+        "title": {
+          "en": "Orbiting scroll",
+          "de": "Orbitierende Spirale"
+        },
+        "description": {
+          "en": "The scroll in the sight glass turns three times in three seconds (the real shaft turns 50 times per second, shown slowed).",
+          "de": "Die Spirale im Schauglas dreht sich in drei Sekunden dreimal (die reale Welle dreht 50 Mal je Sekunde, verlangsamt gezeigt)."
+        },
+        "durationS": 3,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "full-load",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "full-load",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 1080
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 3
+          }
+        ],
+        "phases": [
+          {
+            "id": "run",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Running",
+              "de": "Läuft"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "start-up",
+        "title": {
+          "en": "Start up",
+          "de": "Anlaufen"
+        },
+        "description": {
+          "en": "The compressor starts and runs for five minutes: the dome heats, the suction stub cools.",
+          "de": "Der Verdichter startet und läuft fünf Minuten: der Dom erwärmt sich, der Saugstutzen kühlt ab."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "off",
+            "ease": "smooth"
+          },
+          {
+            "t": 10,
+            "pose": "full-load",
+            "ease": "linear"
+          },
+          {
+            "t": 300,
+            "pose": "full-load",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 3600
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "ramp",
+            "fromS": 5,
+            "toS": 10,
+            "title": {
+              "en": "Ramp up",
+              "de": "Hochlauf"
+            }
+          },
+          {
+            "id": "run",
+            "fromS": 10,
+            "toS": 300,
+            "title": {
+              "en": "Running",
+              "de": "Läuft"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "ignition",
+            "title": {
+              "en": "Motor started",
+              "de": "Motor gestartet"
+            },
+            "target": "run"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:run",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:dome-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "run",
+          "title": {
+            "en": "Compressor speed",
+            "de": "Verdichterdrehzahl"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Part load",
+                "de": "Teillast"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full load",
+                "de": "Volllast"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "shell",
+          "title": {
+            "en": "Motor shell",
+            "de": "Motorgehäuse"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "steel-shell",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.31,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "shell-skin",
+              "title": {
+                "en": "Motor shell",
+                "de": "Motorgehäuse"
+              },
+              "kind": "metal",
+              "material": "steel-shell",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.00006,
+              "heatCapacityJM2K": 9000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 9000,
+          "operating": {
+            "key": "run",
+            "heatW": 40
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "dome",
+          "title": {
+            "en": "Discharge dome",
+            "de": "Druckdom"
+          },
+          "kind": "exhaust",
+          "model": "operating",
+          "material": "steel-shell",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.2,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "dome-skin",
+              "title": {
+                "en": "Discharge dome",
+                "de": "Druckdom"
+              },
+              "kind": "metal",
+              "material": "steel-shell",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.00006,
+              "heatCapacityJM2K": 7000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 7000,
+          "operating": {
+            "key": "run",
+            "heatW": 40
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "discharge",
+          "title": {
+            "en": "Discharge stub",
+            "de": "Druckstutzen"
+          },
+          "kind": "exhaust",
+          "model": "operating",
+          "material": "copper",
+          "areaM2": 0.004,
+          "characteristicLengthM": 0.03,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "discharge-skin",
+              "title": {
+                "en": "Discharge stub",
+                "de": "Druckstutzen"
+              },
+              "kind": "metal",
+              "material": "copper",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00001,
+              "heatCapacityJM2K": 800,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 800,
+          "operating": {
+            "key": "run",
+            "heatW": 3
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "suction",
+          "title": {
+            "en": "Suction stub",
+            "de": "Saugstutzen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "copper",
+          "areaM2": 0.005,
+          "characteristicLengthM": 0.05,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "suction-skin",
+              "title": {
+                "en": "Suction stub",
+                "de": "Saugstutzen"
+              },
+              "kind": "metal",
+              "material": "copper",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00001,
+              "heatCapacityJM2K": 800,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 800,
+          "operating": {
+            "key": "run",
+            "heatW": -0.8
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "terminal",
+          "title": {
+            "en": "Terminal box",
+            "de": "Anschlusskasten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pa-plastic",
+          "areaM2": 0.008,
+          "characteristicLengthM": 0.06,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "terminal-skin",
+              "title": {
+                "en": "Terminal box",
+                "de": "Anschlusskasten"
+              },
+              "kind": "polymer",
+              "material": "pa-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.02,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "feet",
+          "title": {
+            "en": "Foot plate",
+            "de": "Fußplatte"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-shell",
+          "areaM2": 0.02,
+          "characteristicLengthM": 0.28,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "feet-skin",
+              "title": {
+                "en": "Foot plate",
+                "de": "Fußplatte"
+              },
+              "kind": "metal",
+              "material": "steel-shell",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.00008,
+              "heatCapacityJM2K": 5000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 5000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "scroll",
+          "title": {
+            "en": "Scroll in the sight glass",
+            "de": "Spirale im Schauglas"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "cast-aluminium",
+          "areaM2": 0.006,
+          "characteristicLengthM": 0.07,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "scroll-skin",
+              "title": {
+                "en": "Scroll in the sight glass",
+                "de": "Spirale im Schauglas"
+              },
+              "kind": "metal",
+              "material": "cast-aluminium",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.00005,
+              "heatCapacityJM2K": 4000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "operating": {
+            "key": "run",
+            "heatW": 3
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "dome-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Plume above the hot dome",
+            "de": "Fahne über dem heißen Dom"
+          },
+          "anchor": "dome-top",
+          "directionDeg": 90,
+          "diameterM": 0.12,
+          "region": "dome",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 80 W released to the room are the convective and radiative losses of dome and shell; the refrigerant power of the cycle is carried by the pipes, not by this asset.",
+          "de": "Die 80 W an den Raum sind die konvektiven und Strahlungsverluste von Dom und Gehäuse; die Kältemittelleistung des Kreislaufs tragen die Rohre, nicht dieses Asset."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 12.5 kg compressor stands on its foot plate: a unilateral contact of 0.26 m by 0.26 m carries the weight.",
+          "de": "Der 12,5 kg schwere Verdichter steht auf seiner Fußplatte: ein einseitiger Kontakt von 0,26 m mal 0,26 m trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "full-load",
+      "defaultClip": "spin",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

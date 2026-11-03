@@ -1,0 +1,2041 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "chalkboard",
+    "category": "objects",
+    "title": {
+      "en": "Wall-Mounted Classroom Chalkboard",
+      "de": "Wandtafel für den Klassenraum"
+    },
+    "summary": {
+      "en": "A wall-mounted classroom chalkboard 4.0 m wide and 1.2 m high in an aluminium frame with a chalk tray and a 2.0 m sliding front leaf, shown in front elevation; a passive surface that warms in the sun.",
+      "de": "Eine an der Wand montierte Klassenraumtafel von 4,0 m Breite und 1,2 m Höhe in einem Aluminiumrahmen mit Kreideablage und einem 2,0 m breiten Schiebeflügel, in Vorderansicht; eine passive Fläche, die sich in der Sonne erwärmt."
+    },
+    "tags": [
+      "chalkboard",
+      "classroom",
+      "teaching-board",
+      "school",
+      "wall-mounted",
+      "object"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A8)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-14434-2010",
+          "citation": "EN 14434:2010 Writing boards for educational institutions - Functional requirements, including safety requirements and test methods (board sizes, writing surface, tray, fixing)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Front elevation of a classroom board of the common 4.0 m by 1.2 m class: two fixed back panels of 2.0 m by 1.2 m in a 35 mm anodised aluminium frame with a 30 mm centre mullion, a 0.06 m chalk tray along the bottom edge and a front leaf of 2.0 m by 1.2 m that slides on rails in front of the panels. The origin is the middle of the lower edge of the tray; a call site places it about 0.85 m above the floor so that the writing surface runs from 0.95 m to 2.15 m. Panels are ceramic steel of 0.6 mm on a 16 mm MDF core (about 9 kg per square metre); dimensions and masses (72 kg) are rounded from this product class (authored estimate). The board has no heat source: it exchanges heat with the room and takes the sun that falls on it.",
+        "de": "Vorderansicht einer Klassenraumtafel der üblichen Größe von 4,0 m mal 1,2 m: zwei feste Rückplatten von 2,0 m mal 1,2 m in einem 35 mm breiten eloxierten Aluminiumrahmen mit einem 30 mm breiten Mittelsteg, eine 0,06 m hohe Kreideablage am unteren Rand und ein Vorderflügel von 2,0 m mal 1,2 m, der auf Schienen vor den Platten gleitet. Der Ursprung ist die Mitte der Unterkante der Ablage; ein Aufrufer setzt ihn etwa 0,85 m über den Boden, sodass die Schreibfläche von 0,95 m bis 2,15 m reicht. Die Platten sind 0,6 mm Keramikstahl auf einem 16 mm starken MDF-Kern (etwa 9 kg je Quadratmeter); Maße und Massen (72 kg) sind aus dieser Produktklasse gerundet (Schätzwert). Die Tafel hat keine Wärmequelle: sie tauscht Wärme mit dem Raum aus und nimmt die Sonne auf, die auf sie fällt."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.26,
+      "widthM": 4,
+      "depthM": 0.08,
+      "massKg": 72
+    },
+    "materials": [
+      {
+        "id": "enamel-board",
+        "title": {
+          "en": "Dark ceramic-steel writing surface",
+          "de": "Dunkle Schreibfläche aus Keramikstahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.85,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "mdf-core",
+        "title": {
+          "en": "MDF core",
+          "de": "MDF-Kern"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 750,
+        "conductivityWmK": 0.14,
+        "specificHeatJKgK": 1700,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "aluminium-frame",
+        "title": {
+          "en": "Anodised aluminium",
+          "de": "Eloxiertes Aluminium"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 160,
+        "specificHeatJKgK": 900,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "chalk",
+        "title": {
+          "en": "Chalk",
+          "de": "Kreide"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.2,
+        "densityKgM3": 2300,
+        "conductivityWmK": 0.9,
+        "specificHeatJKgK": 900,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "sponge",
+        "title": {
+          "en": "Cellulose sponge",
+          "de": "Zellulose-Schwamm"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 60,
+        "conductivityWmK": 0.05,
+        "specificHeatJKgK": 1500,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "frame",
+      "bones": [
+        {
+          "id": "frame",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Board frame with two back panels",
+            "de": "Tafelrahmen mit zwei Rückplatten"
+          },
+          "lengthM": 4,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 45,
+            "comX": 0,
+            "comY": 0.66,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "tray",
+          "parent": "frame",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Chalk tray",
+            "de": "Kreideablage"
+          },
+          "lengthM": 4,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "leaf",
+          "parent": "frame",
+          "x": 0,
+          "y": 0.06,
+          "angleDeg": 0,
+          "title": {
+            "en": "Sliding front leaf",
+            "de": "Schiebeflügel"
+          },
+          "lengthM": 2,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 2
+          },
+          "mass": {
+            "kg": 22,
+            "comX": -1,
+            "comY": 0.6,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-hook",
+        "bone": "frame",
+        "x": 0,
+        "y": 1.2,
+        "kind": "support",
+        "title": {
+          "en": "Upper hanging rail on the wall",
+          "de": "Obere Hängeschiene an der Wand"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.3
+      },
+      {
+        "id": "wall-rest",
+        "bone": "frame",
+        "x": 0,
+        "y": 0.1,
+        "kind": "support",
+        "title": {
+          "en": "Lower distance buffers against the wall",
+          "de": "Untere Abstandspuffer an der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.4
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -2,
+              "y": 0.06,
+              "w": 4,
+              "h": 1.2,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "face-left",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -1.965,
+              "y": 0.095,
+              "w": 1.95,
+              "h": 1.13,
+              "region": "board-face",
+              "material": "enamel-board"
+            },
+            {
+              "id": "face-right",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.015,
+              "y": 0.095,
+              "w": 1.95,
+              "h": 1.13,
+              "region": "board-face",
+              "material": "enamel-board"
+            },
+            {
+              "id": "tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -2,
+              "y": 0,
+              "w": 4,
+              "h": 0.06,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "frame-profile",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.05,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1.988,
+              "y": 0.072,
+              "w": 3.976,
+              "h": 1.176,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "tray-lip",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.25,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1.97,
+              "y": 0.006,
+              "w": 3.94,
+              "h": 0.016,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-profile",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 4.05,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1.988,
+              "y": 0.012,
+              "w": 1.976,
+              "h": 1.176,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "chalk-a",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -1.3,
+              "y": 0.022,
+              "w": 0.09,
+              "h": 0.014,
+              "region": "tray",
+              "material": "chalk"
+            },
+            {
+              "id": "chalk-b",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -1.15,
+              "y": 0.022,
+              "w": 0.07,
+              "h": 0.014,
+              "region": "tray",
+              "material": "chalk"
+            },
+            {
+              "id": "sponge",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.9,
+              "y": 0.022,
+              "w": 0.14,
+              "h": 0.036,
+              "region": "tray",
+              "material": "sponge"
+            },
+            {
+              "id": "leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -2,
+              "y": 0,
+              "w": 2,
+              "h": 1.2,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-face",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "rect",
+              "x": -1.965,
+              "y": 0.035,
+              "w": 1.93,
+              "h": 1.13,
+              "region": "leaf",
+              "material": "enamel-board"
+            },
+            {
+              "id": "leaf-grip-a",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -1.6,
+              "y": 0.048,
+              "w": 0.12,
+              "h": 0.02,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-grip-b",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.4,
+              "y": 0.048,
+              "w": 0.12,
+              "h": 0.02,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -1.988,
+              "y": 1.2,
+              "w": 3.976,
+              "h": 0.048,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-top-rail",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.75,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -1.988,
+              "y": 1.145,
+              "w": 1.976,
+              "h": 0.043,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "rail-track",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -1.988,
+                  1.224
+                ],
+                [
+                  1.988,
+                  1.224
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "hanger-a",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "x": -2,
+              "y": 0,
+              "w": 2,
+              "h": 1.2,
+              "region": "leaf",
+              "material": "aluminium-frame",
+              "cx": -1.7,
+              "cy": 1.166,
+              "rx": 0.022,
+              "ry": 0.022
+            },
+            {
+              "id": "hanger-b",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "x": -2,
+              "y": 0,
+              "w": 2,
+              "h": 1.2,
+              "region": "leaf",
+              "material": "aluminium-frame",
+              "cx": -0.3,
+              "cy": 1.166,
+              "rx": 0.022,
+              "ry": 0.022
+            },
+            {
+              "id": "ruler",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.7,
+              "y": 0.022,
+              "w": 0.9,
+              "h": 0.012,
+              "region": "tray",
+              "material": "chalk"
+            },
+            {
+              "id": "chalk-c",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -1.05,
+              "y": 0.022,
+              "w": 0.08,
+              "h": 0.014,
+              "region": "tray",
+              "material": "chalk"
+            }
+          ],
+          "front": [
+            {
+              "id": "end-tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0,
+              "w": 0.08,
+              "h": 0.06,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-tray-lip",
+              "bone": "tray",
+              "role": "detail",
+              "z": 3.25,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.032,
+              "y": 0.006,
+              "w": 0.064,
+              "h": 0.016,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.06,
+              "w": 0.08,
+              "h": 1.2,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-frame-profile",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.034,
+              "y": 0.072,
+              "w": 0.068,
+              "h": 1.176,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-panel",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.095,
+              "w": 0.03,
+              "h": 1.13,
+              "region": "board-face",
+              "material": "enamel-board"
+            },
+            {
+              "id": "end-leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.06,
+              "w": 0.035,
+              "h": 1.2,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-leaf-face",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "rect",
+              "x": -0.032,
+              "y": 0.095,
+              "w": 0.02,
+              "h": 1.13,
+              "region": "leaf",
+              "material": "enamel-board"
+            },
+            {
+              "id": "end-leaf-profile",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.037,
+              "y": 0.072,
+              "w": 0.029,
+              "h": 1.176,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 4,
+              "h": 0.08,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-frame-profile",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1.988,
+              "y": -0.034,
+              "w": 3.976,
+              "h": 0.068,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 2,
+              "h": 0.035,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-leaf-profile",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1.988,
+              "y": -0.037,
+              "w": 1.976,
+              "h": 0.029,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-leaf-face",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "rect",
+              "x": -1.965,
+              "y": -0.032,
+              "w": 1.93,
+              "h": 0.02,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 4.0 m wide, 1.26 m high sign, 80 mm by 25 mm on paper: a dark panel in a light aluminium frame with a slim chalk tray below and a second, sliding panel in front of the left half. Front: frame end cap with its inner profile line, panel edge, tray end with lip, and the leaf rail with its own profile line and panel edge; plan: frame rail and leaf rail each with their profile line and the leaf panel edge.",
+            "de": "Ein 4,0 m breites und 1,26 m hohes Zeichen, auf Papier 80 mm mal 25 mm: eine dunkle Tafel in einem hellen Aluminiumrahmen mit einer schmalen Kreideablage darunter und eine zweite, davor verschiebbare Tafel vor der linken Hälfte. Vorderansicht: Rahmenstirnkappe mit innerer Profillinie, Plattenkante, Ablagenende mit Lippe sowie Flügelschiene mit eigener Profillinie und Plattenkante; Draufsicht: Rahmenschiene und Flügelschiene mit je ihrer Profillinie und der Flügelplattenkante."
+          },
+          "retained": {
+            "en": "Overall 4.0 m by 1.2 m board plus the 0.06 m tray, the 35 mm frame, the 30 mm centre mullion, the sliding leaf of 2.0 m by 1.2 m with its own frame and two finger grips, two pieces of chalk and a sponge on the tray, the inner edge line of the frame profile (12 mm in from the outer edge, on the frame and on the leaf) and the 16 mm front lip of the tray that chalk and sponge sit behind.",
+            "de": "Gesamt 4,0 m mal 1,2 m Tafel plus die 0,06 m hohe Ablage, der 35 mm breite Rahmen, der 30 mm breite Mittelsteg, der Schiebeflügel von 2,0 m mal 1,2 m mit eigenem Rahmen und zwei Griffmulden, zwei Kreidestücke und ein Schwamm auf der Ablage, die innere Kantenlinie des Rahmenprofils (12 mm hinter der Außenkante, an Rahmen und Flügel) und die 16 mm hohe Vorderlippe der Ablage, hinter der Kreide und Schwamm liegen."
+          },
+          "merged": {
+            "en": "The two back panels share one frame shape; the tray lip and the tray are one strip.",
+            "de": "Die beiden Rückplatten teilen sich eine Rahmenform; Ablagelippe und Ablage sind ein Streifen."
+          },
+          "omitted": {
+            "en": "Wall brackets, the hanging rail, the cord guides, rulers and compasses, every writing on the surface. Chalk, sponge and grips lie below the top edge and behind the end cap and do not appear in front or plan.",
+            "de": "Wandhalter, Hängeschiene, Seilführungen, Lineale und Zirkel, jede Beschriftung auf der Fläche. Kreide, Schwamm und Griffe liegen unter der Oberkante und hinter der Stirnkappe und erscheinen weder in der Vorder- noch in der Draufsicht."
+          },
+          "thinElements": {
+            "en": "The chalk pieces are 14 mm thick (0.28 mm on paper) and the finger grips 20 mm.",
+            "de": "Die Kreidestücke sind 14 mm dick (0,28 mm auf Papier) und die Griffmulden 20 mm."
+          },
+          "hatching": {
+            "en": "None; the dark panel is a tone fill.",
+            "de": "Keine; die dunkle Tafel ist eine Tonfüllung."
+          },
+          "styles": {
+            "en": "Panels 0.1 to 0.12, frames 0.5 to 0.55, tray 0.45, chalk 0.85 to 0.9, sponge 0.6; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Tafeln 0,1 bis 0,12, Rahmen 0,5 bis 0,55, Ablage 0,45, Kreide 0,85 bis 0,9, Schwamm 0,6; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Back panels, frame, tray and sliding leaf are four regions: the thermal view shows how the leaf shades half of the back panels.",
+            "de": "Rückplatten, Rahmen, Ablage und Schiebeflügel sind vier Regionen: die Thermalansicht zeigt, wie der Flügel die Hälfte der Rückplatten abdeckt."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -2,
+              "y": 0.06,
+              "w": 4,
+              "h": 1.2,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "face-left",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -1.96,
+              "y": 0.1,
+              "w": 1.94,
+              "h": 1.12,
+              "region": "board-face",
+              "material": "enamel-board"
+            },
+            {
+              "id": "face-right",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0.1,
+              "w": 1.94,
+              "h": 1.12,
+              "region": "board-face",
+              "material": "enamel-board"
+            },
+            {
+              "id": "tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -2,
+              "y": 0,
+              "w": 4,
+              "h": 0.06,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -2,
+              "y": 0,
+              "w": 2,
+              "h": 1.2,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-face",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "rect",
+              "x": -1.96,
+              "y": 0.04,
+              "w": 1.92,
+              "h": 1.12,
+              "region": "leaf",
+              "material": "enamel-board"
+            },
+            {
+              "id": "top-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -1.98,
+              "y": 1.19,
+              "w": 3.96,
+              "h": 0.05,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf-top-rail",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.75,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -1.98,
+              "y": 1.135,
+              "w": 1.96,
+              "h": 0.045,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            }
+          ],
+          "front": [
+            {
+              "id": "end-tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0,
+              "w": 0.08,
+              "h": 0.06,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.06,
+              "w": 0.08,
+              "h": 1.2,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-panel",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.1,
+              "w": 0.03,
+              "h": 1.12,
+              "region": "board-face",
+              "material": "enamel-board"
+            },
+            {
+              "id": "end-leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.06,
+              "w": 0.035,
+              "h": 1.2,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-leaf-face",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "rect",
+              "x": -0.032,
+              "y": 0.1,
+              "w": 0.02,
+              "h": 1.12,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 4,
+              "h": 0.08,
+              "region": "frame",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 2,
+              "h": 0.035,
+              "region": "leaf",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "top-leaf-face",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "rect",
+              "x": -1.96,
+              "y": -0.032,
+              "w": 1.92,
+              "h": 0.02,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 40 mm by 12.6 mm sign: a framed dark panel with a tray strip and a front leaf over its left half. Front: the end cap of the aluminium frame with the board panel edge behind and the leaf rail and leaf panel edge in front; plan: the frame top rail with the leaf's top rail and panel edge sliding over it.",
+            "de": "Ein Zeichen von 40 mm mal 12,6 mm: eine gerahmte dunkle Tafel mit Ablagestreifen und ein Vorderflügel über der linken Hälfte. Vorderansicht: die Stirnkappe des Aluminiumrahmens mit der Plattenkante dahinter sowie Flügelrahmen und Flügelplattenkante davor; Draufsicht: die obere Rahmenschiene mit der oberen Flügelschiene und der Plattenkante, die darüber gleitet."
+          },
+          "retained": {
+            "en": "Board 4.0 m by 1.2 m, the tray 0.06 m, a 40 mm frame, the centre mullion and the leaf with its frame. Leaf and frame stay separate solids bound to their own bones, so plan follows every leaf pose and clip; in front the leaf stays in its channel.",
+            "de": "Tafel 4,0 m mal 1,2 m, die Ablage von 0,06 m, ein 40 mm breiter Rahmen, der Mittelsteg und der Flügel mit seinem Rahmen. Flügel und Rahmen bleiben getrennte Körper an ihren eigenen Knochen, die Draufsicht folgt daher jeder Flügelpose und jedem Clip; in der Vorderansicht bleibt der Flügel in seiner Laufschiene."
+          },
+          "merged": {
+            "en": "The leaf grips, the chalk and the sponge join the tray and the leaf frame.",
+            "de": "Griffmulden, Kreide und Schwamm gehen in Ablage und Flügelrahmen auf."
+          },
+          "omitted": {
+            "en": "Chalk pieces, sponge, finger grips, the tray lip.",
+            "de": "Kreidestücke, Schwamm, Griffmulden, die Ablagelippe."
+          },
+          "thinElements": {
+            "en": "The frame is widened from 35 to 40 mm (0.4 mm on paper) so that fill and 0.18 mm pen reach the feature width.",
+            "de": "Der Rahmen ist von 35 auf 40 mm (0,4 mm auf Papier) verbreitert, damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Panels 0.1 to 0.12, frames 0.5 to 0.55, tray 0.45; one body pen of 0.18 mm.",
+            "de": "Tafeln 0,1 bis 0,12, Rahmen 0,5 bis 0,55, Ablage 0,45; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Every part keeps its region, so the leaf and the back panels can differ in the thermal view.",
+            "de": "Jedes Teil behält seine Region, sodass sich Flügel und Rückplatten in der Thermalansicht unterscheiden können."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -2,
+              "y": 0.07,
+              "w": 4,
+              "h": 1.19,
+              "regions": [
+                "frame",
+                "board-face"
+              ],
+              "material": "enamel-board"
+            },
+            {
+              "id": "tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -2,
+              "y": 0,
+              "w": 4,
+              "h": 0.07,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -2,
+              "y": 0.01,
+              "w": 2,
+              "h": 1.19,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ],
+          "front": [
+            {
+              "id": "end-tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0,
+              "w": 0.08,
+              "h": 0.07,
+              "region": "tray",
+              "material": "aluminium-frame"
+            },
+            {
+              "id": "end-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.07,
+              "w": 0.08,
+              "h": 1.19,
+              "regions": [
+                "frame",
+                "board-face"
+              ],
+              "material": "enamel-board"
+            },
+            {
+              "id": "end-leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.07,
+              "w": 0.035,
+              "h": 1.19,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 4,
+              "h": 0.08,
+              "regions": [
+                "frame",
+                "board-face"
+              ],
+              "material": "enamel-board"
+            },
+            {
+              "id": "top-leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 2,
+              "h": 0.035,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 20 mm by 6.3 mm sign: a dark rectangle on a thin tray strip with the sliding leaf as a second rectangle in front of the left half. Front: the end of the board as a 0.08 m strip (tray, frame with panels, leaf in front); plan: the 4 m top edge with the leaf as a front strip that slides with it.",
+            "de": "Ein Zeichen von 20 mm mal 6,3 mm: ein dunkles Rechteck auf einem dünnen Ablagestreifen, davor der Schiebeflügel als zweites Rechteck vor der linken Hälfte. Vorderansicht: die Stirnseite der Tafel als Streifen von 0,08 m (Ablage, Rahmen mit Platten, Flügel davor); Draufsicht: die 4 m lange Oberkante mit dem Flügel als vorderem Streifen, der mit ihm mitgleitet."
+          },
+          "retained": {
+            "en": "Board 4.0 m by 1.2 m, the tray strip and the sliding leaf of 2.0 m by 1.2 m.",
+            "de": "Tafel 4,0 m mal 1,2 m, der Ablagestreifen und der Schiebeflügel von 2,0 m mal 1,2 m."
+          },
+          "merged": {
+            "en": "Frame and back panels are one rectangle (regions frame and board-face merged); the leaf frame and leaf face are one rectangle.",
+            "de": "Rahmen und Rückplatten sind ein Rechteck (Regionen Rahmen und Tafelfläche zusammengeführt); Flügelrahmen und Flügelfläche sind ein Rechteck."
+          },
+          "omitted": {
+            "en": "The mullion, grips, chalk, sponge and tray lip. Tray, board faces and chalk are not visible in plan, the panel edges not in front.",
+            "de": "Der Mittelsteg, Griffmulden, Kreide, Schwamm und die Ablagelippe. Ablage, Tafelflächen und Kreide sind in der Draufsicht nicht sichtbar, die Plattenkanten nicht in der Vorderansicht."
+          },
+          "thinElements": {
+            "en": "The tray is thickened from 60 to 70 mm (0.35 mm on paper); the 35 mm frame is only 0.18 mm on paper and shows as the outline pen.",
+            "de": "Die Ablage ist von 60 auf 70 mm (0,35 mm auf Papier) verdickt; der 35 mm breite Rahmen ist auf Papier nur 0,18 mm breit und zeigt sich als Umrissstift."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Back board 0.3, leaf 0.15, tray 0.45; one body pen of 0.18 mm.",
+            "de": "Rückplatte 0,3, Flügel 0,15, Ablage 0,45; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The rectangle lists frame and board face as merged regions; the leaf and the tray stay separate.",
+            "de": "Das Rechteck führt Rahmen und Tafelfläche als zusammengeführte Regionen; Flügel und Ablage bleiben getrennt."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -2,
+              "y": 0.07,
+              "w": 4,
+              "h": 1.19,
+              "regions": [
+                "frame",
+                "board-face"
+              ],
+              "material": "enamel-board"
+            },
+            {
+              "id": "tray",
+              "bone": "tray",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -2,
+                  0.035
+                ],
+                [
+                  2,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "tray"
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -2,
+              "y": 0.07,
+              "w": 2,
+              "h": 1.19,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ],
+          "front": [
+            {
+              "id": "end-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0,
+              "w": 0.08,
+              "h": 1.26,
+              "regions": [
+                "frame",
+                "board-face"
+              ],
+              "material": "enamel-board"
+            },
+            {
+              "id": "end-leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.07,
+              "w": 0.04,
+              "h": 1.19,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 4,
+              "h": 0.08,
+              "regions": [
+                "frame",
+                "board-face"
+              ],
+              "material": "enamel-board"
+            },
+            {
+              "id": "top-leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -2,
+              "y": -0.04,
+              "w": 2,
+              "h": 0.04,
+              "region": "leaf",
+              "material": "enamel-board"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Sliding blackboard sign 8.0 x 2.5 mm: the 4 m wall board as one long rectangle with the 2 m leaf as a second rectangle on top that slides left and right with the leaf bone; the side view is the board face, the front view the 0.08 m end of frame, tray and leaf, the plan the 0.16 mm thin top edge with the leaf strip.",
+            "de": "Zeichen der Schiebetafel 8,0 x 2,5 mm: die 4 m lange Wandtafel als ein langes Rechteck mit dem 2-m-Flügel als zweitem Rechteck darüber, das mit dem Flügelknochen nach links und rechts gleitet; die Seitenansicht ist die Tafelfläche, die Vorderansicht das 0,08 m dicke Ende aus Rahmen, Ablage und Flügel, die Draufsicht die 0,16 mm dünne Oberkante mit dem Flügelstreifen."
+          },
+          "retained": {
+            "en": "Overall width 4 m, height 1.26 m, the tray as its own band at the foot, the sliding leaf with its real travel of 2 m.",
+            "de": "Gesamtbreite 4 m, Höhe 1,26 m, die Ablage als eigener Streifen am Fuß, der Schiebeflügel mit seinem echten Weg von 2 m."
+          },
+          "merged": {
+            "en": "Frame, board face and chalk groove are one rectangle.",
+            "de": "Rahmen, Tafelfläche und Kreidenut sind ein Rechteck."
+          },
+          "omitted": {
+            "en": "Wall hooks, rest, chalk, frame profile and the leaf rails (all below 0.1 m).",
+            "de": "Wandhaken, Auflager, Kreide, Rahmenprofil und die Flügelschienen (alle unter 0,1 m)."
+          },
+          "thinElements": {
+            "en": "The 0.08 m depth is 0.16 mm on paper, drawn as the outline of one thin rectangle in the top view and the 0.18 mm outline of the end in the front view.",
+            "de": "Die Tiefe von 0,08 m ist 0,16 mm auf Papier, gezeichnet als Kontur eines dünnen Rechtecks in der Draufsicht und als 0,18-mm-Kontur des Endes in der Vorderansicht."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Board and leaf in one tone, tray darker; one 0.18 mm outline.",
+            "de": "Tafel und Flügel in einem Ton, Ablage dunkler; eine 0,18-mm-Kontur."
+          },
+          "overlays": {
+            "en": "Thermal regions as at 1:200: frame and board face share one shape, the leaf and the tray stay separate so the leaf moves with its bone.",
+            "de": "Thermische Regionen wie bei 1:200: Rahmen und Tafelfläche teilen eine Form, Flügel und Ablage bleiben getrennt, damit sich der Flügel mit seinem Knochen bewegt."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "leaf-left",
+        "title": {
+          "en": "Leaf on the left",
+          "de": "Flügel links"
+        },
+        "description": {
+          "en": "The sliding leaf covers the left back panel: two writing surfaces are free, the leaf on the left and the back panel on the right.",
+          "de": "Der Schiebeflügel deckt die linke Rückplatte ab: zwei Schreibflächen sind frei, der Flügel links und die Rückplatte rechts."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "board-face": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            },
+            "frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leaf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "tray": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "leaf-middle",
+        "title": {
+          "en": "Leaf in the middle",
+          "de": "Flügel in der Mitte"
+        },
+        "description": {
+          "en": "The leaf is pushed to the middle and covers half of each back panel.",
+          "de": "Der Flügel ist in die Mitte geschoben und deckt die Hälfte jeder Rückplatte ab."
+        },
+        "bones": {
+          "leaf": {
+            "dx": 1
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "board-face": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            },
+            "frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leaf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "tray": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "leaf-right",
+        "title": {
+          "en": "Leaf on the right",
+          "de": "Flügel rechts"
+        },
+        "description": {
+          "en": "The leaf covers the right back panel and the left back panel is free.",
+          "de": "Der Flügel deckt die rechte Rückplatte ab und die linke Rückplatte ist frei."
+        },
+        "bones": {
+          "leaf": {
+            "dx": 2
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "board-face": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            },
+            "frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "leaf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "tray": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "slide-leaf",
+        "title": {
+          "en": "Slide the leaf",
+          "de": "Flügel verschieben"
+        },
+        "description": {
+          "en": "The leaf slides from the left over the middle to the right in six seconds, rests for three seconds and returns.",
+          "de": "Der Flügel gleitet in sechs Sekunden von links über die Mitte nach rechts, ruht drei Sekunden und kehrt zurück."
+        },
+        "durationS": 18,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "leaf-left",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "leaf-right",
+            "ease": "smooth"
+          },
+          {
+            "t": 9,
+            "pose": "leaf-right",
+            "ease": "smooth"
+          },
+          {
+            "t": 15,
+            "pose": "leaf-left",
+            "ease": "smooth"
+          },
+          {
+            "t": 18,
+            "pose": "leaf-left",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 18
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 18
+          }
+        ],
+        "phases": [
+          {
+            "id": "slide-out",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Sliding to the right",
+              "de": "Gleiten nach rechts"
+            }
+          },
+          {
+            "id": "rest",
+            "fromS": 6,
+            "toS": 9,
+            "title": {
+              "en": "At rest on the right",
+              "de": "Ruhe rechts"
+            }
+          },
+          {
+            "id": "slide-back",
+            "fromS": 9,
+            "toS": 15,
+            "title": {
+              "en": "Sliding back",
+              "de": "Zurückgleiten"
+            }
+          },
+          {
+            "id": "rest-left",
+            "fromS": 15,
+            "toS": 18,
+            "title": {
+              "en": "At rest on the left",
+              "de": "Ruhe links"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Leaf starts to slide",
+              "de": "Flügel beginnt zu gleiten"
+            }
+          },
+          {
+            "t": 6,
+            "kind": "motion",
+            "title": {
+              "en": "Right end reached",
+              "de": "Rechtes Ende erreicht"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "sun-on-board",
+        "title": {
+          "en": "Sun patch crosses the board",
+          "de": "Sonnenfleck auf der Tafel"
+        },
+        "description": {
+          "en": "Over ten minutes the sun reaches 60 percent of the board: the writing surfaces warm up, the frame follows.",
+          "de": "Binnen zehn Minuten erreicht die Sonne 60 Prozent der Tafel: die Schreibflächen erwärmen sich, der Rahmen folgt."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "leaf-left",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "leaf-left",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "shade",
+            "fromS": 0,
+            "toS": 60,
+            "title": {
+              "en": "In the shade",
+              "de": "Im Schatten"
+            }
+          },
+          {
+            "id": "sun",
+            "fromS": 60,
+            "toS": 600,
+            "title": {
+              "en": "Sun on the board",
+              "de": "Sonne auf der Tafel"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 60,
+            "kind": "thermal",
+            "title": {
+              "en": "Sun reaches the board",
+              "de": "Sonne erreicht die Tafel"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:board-face:sunlitFraction",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 60,
+                "v": 0
+              },
+              {
+                "t": 600,
+                "v": 0.6
+              }
+            ]
+          },
+          {
+            "target": "region:leaf:sunlitFraction",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 60,
+                "v": 0
+              },
+              {
+                "t": 600,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 300,
+        "diffuseFraction": 0.5,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [],
+      "regions": [
+        {
+          "id": "board-face",
+          "title": {
+            "en": "Back panels with writing surface",
+            "de": "Rückplatten mit Schreibfläche"
+          },
+          "kind": "wall",
+          "model": "passive",
+          "material": "enamel-board",
+          "areaM2": 4.5,
+          "characteristicLengthM": 1.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "enamel",
+              "title": {
+                "en": "Ceramic-steel writing surface 0.6 mm",
+                "de": "Schreibfläche aus Keramikstahl 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-board",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 1.2e-05,
+              "heatCapacityJM2K": 2260,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            },
+            {
+              "id": "core",
+              "title": {
+                "en": "MDF core 16 mm",
+                "de": "MDF-Kern 16 mm"
+              },
+              "kind": "timber",
+              "material": "mdf-core",
+              "thicknessM": 0.016,
+              "resistanceM2KW": 0.114,
+              "heatCapacityJM2K": 20400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 22660,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "frame",
+          "title": {
+            "en": "Aluminium frame and mullion",
+            "de": "Aluminiumrahmen und Mittelsteg"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "aluminium-frame",
+          "areaM2": 0.8,
+          "characteristicLengthM": 0.04,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "profile",
+              "title": {
+                "en": "Anodised aluminium profile 2 mm",
+                "de": "Eloxiertes Aluminiumprofil 2 mm"
+              },
+              "kind": "metal",
+              "material": "aluminium-frame",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 1.2e-05,
+              "heatCapacityJM2K": 5400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5400,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "leaf",
+          "title": {
+            "en": "Sliding front leaf",
+            "de": "Schiebeflügel"
+          },
+          "kind": "wall",
+          "model": "passive",
+          "material": "enamel-board",
+          "areaM2": 2.4,
+          "characteristicLengthM": 1.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "enamel",
+              "title": {
+                "en": "Ceramic-steel writing surface 0.6 mm",
+                "de": "Schreibfläche aus Keramikstahl 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-board",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 1.2e-05,
+              "heatCapacityJM2K": 2260,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            },
+            {
+              "id": "core",
+              "title": {
+                "en": "MDF core 16 mm",
+                "de": "MDF-Kern 16 mm"
+              },
+              "kind": "timber",
+              "material": "mdf-core",
+              "thicknessM": 0.016,
+              "resistanceM2KW": 0.114,
+              "heatCapacityJM2K": 20400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 22660,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "tray",
+          "title": {
+            "en": "Chalk tray with chalk and sponge",
+            "de": "Kreideablage mit Kreide und Schwamm"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "aluminium-frame",
+          "areaM2": 0.32,
+          "characteristicLengthM": 0.08,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "tray-sheet",
+              "title": {
+                "en": "Aluminium sheet 1.5 mm",
+                "de": "Aluminiumblech 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "aluminium-frame",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 1e-05,
+              "heatCapacityJM2K": 4050,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4050,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The board is a passive wall panel: the ceramic-steel face and the MDF core carry the sun load, the frame and the tray follow as thin aluminium parts.",
+          "de": "Die Tafel ist eine passive Wandplatte: Keramikstahlfläche und MDF-Kern tragen die Sonnenlast, Rahmen und Ablage folgen als dünne Aluminiumteile."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-hook",
+        "wall-rest"
+      ],
+      "assumptions": [
+        {
+          "en": "The 72 kg board hangs on the upper rail (pin) and leans on buffers at the lower edge (roller): the rail carries the weight, the pair resists the overturning moment of the sliding leaf.",
+          "de": "Die 72 kg schwere Tafel hängt an der oberen Schiene (Festlager) und lehnt unten an Puffern (Rollenlager): die Schiene trägt das Gewicht, das Paar nimmt das Kippmoment des Schiebeflügels auf."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "leaf-left",
+      "defaultClip": "slide-leaf",
+      "defaultScale": 100
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

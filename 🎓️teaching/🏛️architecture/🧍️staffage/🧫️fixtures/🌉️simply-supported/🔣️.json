@@ -79,15 +79,15 @@
   "values": {
    "reactionLeftFyN": 4499.999999999998,
    "reactionRightFyN": 4499.999999999999,
-   "maxMomentNm": -6999.999999999999,
+   "maxMomentNm": 6999.999999999999,
    "midDeflectionM": -0.0024508001045675147,
-   "analyticMaxMomentNm": -7000.0,
+   "analyticMaxMomentNm": 7000.0,
    "analyticMidDeflectionM": -0.002450800186260814,
    "stationMomentNm": {
-    "0.5": -2125.0,
-    "1.0": -4000.0,
-    "2.0": -7000.0,
-    "3.0": -4000.0
+    "0.5": 2125.0,
+    "1.0": 4000.0,
+    "2.0": 7000.0,
+    "3.0": 4000.0
    }
   }
  }

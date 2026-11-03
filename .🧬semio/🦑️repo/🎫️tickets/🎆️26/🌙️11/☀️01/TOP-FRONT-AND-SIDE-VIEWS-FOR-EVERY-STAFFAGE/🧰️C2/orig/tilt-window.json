@@ -1,0 +1,2014 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "tilt-window",
+    "category": "components",
+    "title": {
+      "en": "Tilt Window",
+      "de": "Kippfenster"
+    },
+    "summary": {
+      "en": "A 0.9 x 1.2 m timber sash with 4-16-4 low-e insulating glass, hinged at its bottom and tilting inward at the top, held by a head stay, drawn in vertical section with its blend-frame sill; conditioned element with interior on the left at 20 degC and a winter reference case.",
+      "de": "Ein 0,9 x 1,2 m Holzflügel mit Wärmeschutz-Isolierglas 4-16-4, unten angeschlagen und oben nach innen kippend, durch einen Stützarm gehalten, im Vertikalschnitt mit dem Blendrahmen-Sohlstück gezeichnet; konditioniertes Bauteil mit Innenraum links bei 20 °C und Winter-Referenzfall."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "window",
+      "tilt",
+      "glass",
+      "timber"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-338",
+          "citation": "EN 338:2016 Structural timber, strength classes: C24 mean density 420 kg/m3, E0,mean = 11 GPa."
+        },
+        {
+          "id": "en-572",
+          "citation": "EN 572-1:2012 Glass in building, basic soda lime silicate glass products (E = 70 GPa, emissivity per EN 673 typical 0.84)."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind actions on windows (suction on the external face; 0.8 kN/m2 estimate)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table A.1 densities (glass 25 kN/m3)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties (typical emissivity of glass and timber; typical rounded values guided by this chapter, not table look-ups)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for doors, windows and stairs)."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: concrete 2.3 W/mK, 1000 J/kgK; mineral wool 0.035 W/mK; softwood 0.13 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK; flat glass 1.0 W/mK, 750 J/kgK)."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters, calculation of thermal transmittance, part 1 (U_g, U_f, edge-of-glass linear transmittance psi_g)."
+        },
+        {
+          "id": "en-iso-10211",
+          "citation": "EN ISO 10211:2017 Thermal bridges in building construction, heat flows and surface temperatures, detailed calculations (linear transmittance psi)."
+        },
+        {
+          "id": "en-12898",
+          "citation": "EN 12898:2019 Glass in building, determination of the emissivity (uncoated float glass, corrected emissivity 0.837)."
+        },
+        {
+          "id": "en-iso-13786",
+          "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+        }
+      ],
+      "notes": {
+        "en": "The sash hinges at the bottom and tips inward (the tilt position of a tilt-and-turn window); the room is on the left, the exterior on the right. The stay is a head roller with horizontal normal. The glass is an insulating unit of two 4 mm panes with a 16 mm gas gap (U_g 1.1 W/(m2 K)); the pane mass is taken as the 24 mm total at glass density, as in the structural model.",
+        "de": "Der Flügel ist unten angeschlagen und kippt nach innen (Kippstellung eines Dreh-Kipp-Fensters); der Raum liegt links, außen rechts. Der Stützarm ist eine obere Rolle mit waagerechter Normalen. Das Glas ist eine Isolierverglasung aus zwei 4-mm-Scheiben mit 16 mm Gasfüllung (U_g 1,1 W/(m² K)); die Scheibenmasse ist wie im Tragwerksmodell als 24 mm Gesamtdicke mit Glasdichte angesetzt."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.25,
+      "widthM": 0.3,
+      "depthM": 0.9,
+      "massKg": 72.8
+    },
+    "materials": [
+      {
+        "id": "timber",
+        "title": {
+          "en": "Timber C24 frame",
+          "de": "Holzrahmen C24"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 420,
+        "elasticModulusPa": 11000000000,
+        "source": "literature",
+        "reference": "en-338",
+        "conductivityWmK": 0.13,
+        "specificHeatJKgK": 1600
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "Insulating glass 4-16-4 low-e, argon",
+          "de": "Isolierglas 4-16-4 Low-E, Argon"
+        },
+        "emissivity": 0.837,
+        "solarAbsorptivity": 0.08,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 70000000000,
+        "source": "literature",
+        "reference": "en-12898",
+        "conductivityWmK": 1.0,
+        "specificHeatJKgK": 750
+      },
+      {
+        "id": "glass-unit-cavity",
+        "title": {
+          "en": "16 mm argon cavity with low-e coating and warm-edge spacer (equivalent)",
+          "de": "16-mm-Argonfüllung mit Low-E-Beschichtung und warmer Kante (äquivalent)"
+        },
+        "emissivity": 0.84,
+        "solarAbsorptivity": 0.08,
+        "conductivityWmK": 0.022,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "edge-zone",
+        "title": {
+          "en": "Edge-of-glass zone (spacer and gas), equivalent",
+          "de": "Glasrandzone (Abstandhalter und Gas), äquivalent"
+        },
+        "emissivity": 0.84,
+        "solarAbsorptivity": 0.2,
+        "conductivityWmK": 0.05,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "sill",
+      "bones": [
+        {
+          "id": "sill",
+          "parent": null,
+          "title": {
+            "en": "Frame sill (rigid root)",
+            "de": "Blendrahmen (starre Wurzel)"
+          },
+          "x": -0.15,
+          "y": 0.05,
+          "angleDeg": 0,
+          "lengthM": 0.3,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "sash",
+          "parent": "sill",
+          "title": {
+            "en": "Sash, revolute at the bottom hinge",
+            "de": "Flügel, Drehgelenk am unteren Gelenk"
+          },
+          "x": 0.15,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 1.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 72.8,
+            "comX": 0.6,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          },
+          "section": {
+            "areaM2": 0.0081,
+            "secondMomentM4": 5.4675e-06,
+            "extremeFibreM": 0.045,
+            "material": "timber",
+            "title": {
+              "en": "Sash frame, equivalent section",
+              "de": "Flügelrahmen, Ersatzquerschnitt"
+            }
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "hinge",
+        "bone": "sash",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Bottom hinge, pin",
+          "de": "Unteres Gelenk, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "stay",
+        "bone": "sash",
+        "x": 1.2,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Head stay, horizontal roller",
+          "de": "Oberer Stützarm, waagerechte Rolle"
+        },
+        "support": "roller",
+        "normalDeg": 0
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "A window section is 0.30 x 1.25 m, i.e. 0.6 x 2.5 mm at 1:500; the sash is 0.18 mm and the 24 mm glass 0.05 mm thick, below every printable stroke, and any thickening would multiply the real thickness.",
+          "de": "Ein Fensterschnitt ist 0,30 x 1,25 m groß, bei 1:500 also 0,6 x 2,5 mm; der Flügel ist 0,18 mm und das 24-mm-Glas 0,05 mm dick, unter jeder druckbaren Strichstärke, und jede Verdickung würde die echte Dicke vervielfachen."
+        },
+        "limitingFeature": {
+          "en": "Glass pane thickness 24 mm in a sash of 90 mm",
+          "de": "Scheibendicke 24 mm in einem Flügel von 90 mm"
+        },
+        "limitingSizeM": 0.024,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "symbol",
+            "symbol": "window-plan"
+          },
+          {
+            "kind": "symbol",
+            "symbol": "tilt-opening-sign"
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sill",
+              "bone": "sill",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-sill",
+              "material": "timber",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05,
+              "w": 0.3,
+              "h": 0.05
+            },
+            {
+              "id": "rail-bottom",
+              "bone": "sash",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-timber",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.045
+                ],
+                [
+                  0.0,
+                  -0.045
+                ],
+                [
+                  0.06,
+                  -0.045
+                ],
+                [
+                  0.06,
+                  0.045
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "rail-top",
+              "bone": "sash",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-timber",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.14,
+                  0.045
+                ],
+                [
+                  1.14,
+                  -0.045
+                ],
+                [
+                  1.2,
+                  -0.045
+                ],
+                [
+                  1.2,
+                  0.045
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4,
+              "filled": false,
+              "tone": 0.92,
+              "regions": [
+                "pane-glass",
+                "pane-edge"
+              ],
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.06,
+                  0.0
+                ],
+                [
+                  1.14,
+                  0.0
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A section of a sash with a heavier sill: two small timber blocks at the ends of a single glass line; the sash is 6 mm tall, the sill 1.5 mm wide.",
+            "de": "Ein Schnitt durch einen Flügel mit schwererem Sohlstück: zwei kleine Holzblöcke an den Enden einer einzigen Glaslinie; der Flügel ist 6 mm hoch, das Sohlstück 1,5 mm breit."
+          },
+          "retained": {
+            "en": "Sill block (1.5 x 0.5 mm), the two sash rails (0.45 x 0.3 mm) and the glass pane between them.",
+            "de": "Sohlstück (1,5 x 0,5 mm), die beiden Flügelrahmenhölzer (0,45 x 0,3 mm) und die Glasscheibe dazwischen."
+          },
+          "merged": {
+            "en": "Both panes, the cavity and the spacer are one glass line; glass centre and 65 mm edge zones share it.",
+            "de": "Beide Scheiben, der Gasraum und der Abstandhalter sind eine Glaslinie; Scheibenmitte und 65-mm-Randzonen teilen sie."
+          },
+          "omitted": {
+            "en": "Handle (it sits on the side stile, outside the section plane), hinge pin, glazing beads, seals and the drip edge.",
+            "de": "Griff (er sitzt am seitlichen Flügelholz, außerhalb der Schnittebene), Gelenkbolzen, Glasleisten, Dichtungen und die Tropfkante."
+          },
+          "thinElements": {
+            "en": "The 24 mm glass is a line of 0.1 mm pen (20 mm); the rails have 0.1 mm outlines on 0.45 x 0.3 mm blocks.",
+            "de": "Das 24-mm-Glas ist eine Linie mit 0,1 mm Feder (20 mm); die Rahmenhölzer haben 0,1-mm-Konturen auf 0,45 x 0,3 mm großen Blöcken."
+          },
+          "hatching": {
+            "en": "No hatch: the blocks are too small.",
+            "de": "Keine Schraffur: die Blöcke sind zu klein."
+          },
+          "styles": {
+            "en": "Dark timber blocks, a thin light glass line.",
+            "de": "Dunkle Holzblöcke, eine dünne helle Glaslinie."
+          },
+          "overlays": {
+            "en": "The glass line carries merged centre and edge values; rails and sill are separate cells.",
+            "de": "Die Glaslinie trägt zusammengefasste Werte für Mitte und Rand; Rahmenhölzer und Sohlstück sind getrennte Zellen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sill",
+              "bone": "sill",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-sill",
+              "material": "timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05,
+              "w": 0.3,
+              "h": 0.05
+            },
+            {
+              "id": "rail-bottom",
+              "bone": "sash",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-timber",
+              "material": "timber",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.045
+                ],
+                [
+                  0.0,
+                  -0.045
+                ],
+                [
+                  0.06,
+                  -0.045
+                ],
+                [
+                  0.06,
+                  0.045
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "rail-top",
+              "bone": "sash",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-timber",
+              "material": "timber",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  1.14,
+                  0.045
+                ],
+                [
+                  1.14,
+                  -0.045
+                ],
+                [
+                  1.2,
+                  -0.045
+                ],
+                [
+                  1.2,
+                  0.045
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-edge-bottom",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4,
+              "filled": true,
+              "tone": 0.8,
+              "region": "pane-edge",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.06,
+                  0.012
+                ],
+                [
+                  0.06,
+                  -0.012
+                ],
+                [
+                  0.125,
+                  -0.012
+                ],
+                [
+                  0.125,
+                  0.012
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-centre",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4,
+              "filled": true,
+              "tone": 0.92,
+              "region": "pane-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.125,
+                  0.012
+                ],
+                [
+                  0.125,
+                  -0.012
+                ],
+                [
+                  1.075,
+                  -0.012
+                ],
+                [
+                  1.075,
+                  0.012
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-edge-top",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4,
+              "filled": true,
+              "tone": 0.8,
+              "region": "pane-edge",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.075,
+                  0.012
+                ],
+                [
+                  1.075,
+                  -0.012
+                ],
+                [
+                  1.14,
+                  -0.012
+                ],
+                [
+                  1.14,
+                  0.012
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "hinge-pin",
+              "bone": "sash",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.02,
+              "ry": 0.02
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A section of the sash as a thin glass band between two rail blocks on a sill block, with the hinge pin.",
+            "de": "Ein Schnitt des Flügels als dünnes Glasband zwischen zwei Rahmenblöcken auf einem Sohlstück, mit Gelenkbolzen."
+          },
+          "retained": {
+            "en": "Sill (3 x 1 mm), rails (0.9 x 0.6 mm), glass band 0.24 x 10.8 mm split into centre and the two 0.65 mm edge zones, hinge pin (0.4 mm).",
+            "de": "Sohlstück (3 x 1 mm), Rahmenhölzer (0,9 x 0,6 mm), Glasband 0,24 x 10,8 mm geteilt in Mitte und zwei Randzonen zu 0,65 mm, Gelenkbolzen (0,4 mm)."
+          },
+          "merged": {
+            "en": "The two panes and the cavity are one glass band; the glazing beads are merged into the rails.",
+            "de": "Die zwei Scheiben und der Gasraum sind ein Glasband; die Glasleisten sind in den Rahmenhölzern zusammengefasst."
+          },
+          "omitted": {
+            "en": "Handle (on the side stile, outside the section plane), pane lines, spacer, seals, rebates and the drip edge.",
+            "de": "Griff (am seitlichen Flügelholz, außerhalb der Schnittebene), Scheibenlinien, Abstandhalter, Dichtungen, Falze und Tropfkante."
+          },
+          "thinElements": {
+            "en": "The glass band is a 0.24 mm filled strip with a 0.1 mm outline (0.34 mm total, 34 mm real vs 24 mm).",
+            "de": "Das Glasband ist ein 0,24 mm breiter gefüllter Streifen mit 0,1 mm Kontur (insgesamt 0,34 mm, 34 mm real gegen 24 mm)."
+          },
+          "hatching": {
+            "en": "No hatch: the cut timber is 1 mm and below the printable hatch spacing.",
+            "de": "Keine Schraffur: das geschnittene Holz ist 1 mm klein und unter dem druckbaren Schraffurabstand."
+          },
+          "styles": {
+            "en": "Cut timber dark, glass light with darker edge zones.",
+            "de": "Geschnittenes Holz dunkel, Glas hell mit dunkleren Randzonen."
+          },
+          "overlays": {
+            "en": "Glass centre and the two edge zones are separate overlay cells, so the colder centre and the warmer spacer edge read differently.",
+            "de": "Glasmitte und die beiden Randzonen sind getrennte Überlagerungszellen, so lesen sich die kältere Mitte und der wärmere Abstandhalterrand verschieden."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "timber-cross",
+            "title": {
+              "en": "Timber, cross section",
+              "de": "Holz, Querschnitt"
+            },
+            "pattern": "cross",
+            "angleDeg": 45,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sill",
+              "bone": "sill",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-sill",
+              "material": "timber",
+              "hatch": "timber-cross",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05,
+              "w": 0.3,
+              "h": 0.05
+            },
+            {
+              "id": "sill-drip",
+              "bone": "sill",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-sill",
+              "kind": "poly",
+              "points": [
+                [
+                  0.28,
+                  -0.05
+                ],
+                [
+                  0.28,
+                  -0.02
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rail-bottom",
+              "bone": "sash",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-timber",
+              "material": "timber",
+              "hatch": "timber-cross",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.045
+                ],
+                [
+                  0.0,
+                  -0.045
+                ],
+                [
+                  0.06,
+                  -0.045
+                ],
+                [
+                  0.06,
+                  -0.013
+                ],
+                [
+                  0.045,
+                  -0.013
+                ],
+                [
+                  0.045,
+                  0.013
+                ],
+                [
+                  0.06,
+                  0.013
+                ],
+                [
+                  0.06,
+                  0.045
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "rail-top",
+              "bone": "sash",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-timber",
+              "material": "timber",
+              "hatch": "timber-cross",
+              "kind": "poly",
+              "points": [
+                [
+                  1.2,
+                  0.045
+                ],
+                [
+                  1.2,
+                  -0.045
+                ],
+                [
+                  1.14,
+                  -0.045
+                ],
+                [
+                  1.14,
+                  -0.013
+                ],
+                [
+                  1.155,
+                  -0.013
+                ],
+                [
+                  1.155,
+                  0.013
+                ],
+                [
+                  1.14,
+                  0.013
+                ],
+                [
+                  1.14,
+                  0.045
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "spacer-bottom",
+              "bone": "sash",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pane-edge",
+              "material": "edge-zone",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.045,
+                  0.012
+                ],
+                [
+                  0.045,
+                  -0.012
+                ],
+                [
+                  0.06,
+                  -0.012
+                ],
+                [
+                  0.06,
+                  0.012
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "spacer-top",
+              "bone": "sash",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pane-edge",
+              "material": "edge-zone",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.14,
+                  0.012
+                ],
+                [
+                  1.14,
+                  -0.012
+                ],
+                [
+                  1.155,
+                  -0.012
+                ],
+                [
+                  1.155,
+                  0.012
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "pane-inner-edge-bottom",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.9,
+              "region": "pane-edge",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.06,
+                  0.012
+                ],
+                [
+                  0.125,
+                  0.012
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pane-inner-centre",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.9,
+              "region": "pane-glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.125,
+                  0.012
+                ],
+                [
+                  1.075,
+                  0.012
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pane-inner-edge-top",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.9,
+              "region": "pane-edge",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.075,
+                  0.012
+                ],
+                [
+                  1.14,
+                  0.012
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pane-outer-edge-bottom",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.9,
+              "region": "pane-edge",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.06,
+                  -0.012
+                ],
+                [
+                  0.125,
+                  -0.012
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pane-outer-centre",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.9,
+              "region": "pane-glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.125,
+                  -0.012
+                ],
+                [
+                  1.075,
+                  -0.012
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pane-outer-edge-top",
+              "bone": "sash",
+              "role": "glazing",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.9,
+              "region": "pane-edge",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.075,
+                  -0.012
+                ],
+                [
+                  1.14,
+                  -0.012
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "hinge-pin",
+              "bone": "sash",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.02,
+              "ry": 0.02
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The section through the sash and the sill: two hatched timber rails with glass rebates, an insulating unit drawn as two pane lines with a gas gap and spacers, the hinge and the cross-hatched sill with a drip.",
+            "de": "Der Schnitt durch Flügel und Sohlstück: zwei schraffierte Holzrahmenhölzer mit Glasfalzen, eine Isolierverglasung als zwei Scheibenlinien mit Gasraum und Abstandhaltern, das Gelenk und das kreuzschraffierte Sohlstück mit Tropfkante."
+          },
+          "retained": {
+            "en": "Rails 4.5 x 3 mm with 0.65 mm rebates, pane lines 0.24 mm apart, spacers (0.5 x 0.75 mm), glass centre and 65 mm edge zones, hinge pin, sill (15 x 5 mm) with drip.",
+            "de": "Rahmenhölzer 4,5 x 3 mm mit 0,65 mm Falz, Scheibenlinien 0,24 mm Abstand, Abstandhalter (0,5 x 0,75 mm), Glasmitte und 65-mm-Randzonen, Gelenkbolzen, Sohlstück (15 x 5 mm) mit Tropfkante."
+          },
+          "merged": {
+            "en": "Both panes are drawn only as lines; the argon gap is the space between them.",
+            "de": "Beide Scheiben sind nur als Linien gezeichnet; der Argonraum ist der Zwischenraum."
+          },
+          "omitted": {
+            "en": "Glazing beads, gaskets, the stay arm (the frame head is not modelled) and the sealing bulbs.",
+            "de": "Glasleisten, Dichtungen, der Stützarm (der Blendrahmenkopf ist nicht modelliert) und die Dichtungsprofile."
+          },
+          "thinElements": {
+            "en": "The 4 mm panes are 0.1 mm pen lines (5 mm real) at their true 20 mm distance (0.4 mm hole); the spacers are 0.5 x 0.75 mm blocks.",
+            "de": "Die 4-mm-Scheiben sind 0,1-mm-Linien (5 mm real) in ihrem wahren Abstand von 20 mm (0,4 mm); die Abstandhalter sind 0,5 x 0,75 mm große Blöcke."
+          },
+          "hatching": {
+            "en": "Cut timber is cross-hatched at 45 degrees, 0.8 mm (DIN ISO 128-50 timber across the grain); glass stays unhatched with lines for the panes.",
+            "de": "Geschnittenes Holz ist 45° kreuzschraffiert, 0,8 mm (DIN ISO 128-50 Holz quer zur Faser); Glas bleibt ungeschraffiert mit Linien für die Scheiben."
+          },
+          "styles": {
+            "en": "Outline 0.35 mm, details 0.18 mm, glazing 0.13 mm, hatch 0.1 mm; cut timber hatched, spacers dark.",
+            "de": "Kontur 0,35 mm, Details 0,18 mm, Verglasung 0,13 mm, Schraffur 0,1 mm; geschnittenes Holz schraffiert, Abstandhalter dunkel."
+          },
+          "overlays": {
+            "en": "Rails, sill, spacer edge zones and the glass centre are separate overlay cells; the pane lines are bound to the zone they lie in.",
+            "de": "Rahmenhölzer, Sohlstück, Randzonen am Abstandhalter und Glasmitte sind getrennte Überlagerungszellen; die Scheibenlinien sind an die Zone gebunden, in der sie liegen."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "window-plan",
+        "title": {
+          "en": "Window in plan",
+          "de": "Fenster im Grundriss"
+        },
+        "description": {
+          "en": "The conventional plan sign of a window in a wall opening: the wall cut at the reveals, three lines across the opening for the frames and the glass (DIN 1356-1).",
+          "de": "Das übliche Grundrisszeichen eines Fensters in einer Wandöffnung: die Wand an den Laibungen geschnitten, drei Linien quer über die Öffnung für die Rahmen und das Glas (DIN 1356-1)."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          500,
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "wall-left",
+              "bone": "sill",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  -0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  -0.15,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wall-right",
+              "bone": "sill",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.9,
+                  -0.15
+                ],
+                [
+                  1.05,
+                  -0.15
+                ],
+                [
+                  1.05,
+                  0.15
+                ],
+                [
+                  0.9,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "frame-interior",
+              "bone": "sill",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.06
+                ],
+                [
+                  0.9,
+                  -0.06
+                ]
+              ],
+              "closed": false,
+              "region": "frame-sill"
+            },
+            {
+              "id": "glass-line",
+              "bone": "sill",
+              "role": "glazing",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.9,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "pane-glass"
+            },
+            {
+              "id": "frame-exterior",
+              "bone": "sill",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.06
+                ],
+                [
+                  0.9,
+                  0.06
+                ]
+              ],
+              "closed": false,
+              "region": "frame-sill"
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Real size: opening 0.90 m wide in a 0.30 m wall; the three lines are 60 mm apart, which is 0.12 mm at 1:500 and merges into one line.",
+          "de": "Echte Größe: Öffnung 0,90 m breit in einer 0,30 m dicken Wand; die drei Linien liegen 60 mm auseinander, bei 1:500 sind das 0,12 mm und sie verschmelzen zu einer Linie."
+        }
+      },
+      {
+        "id": "tilt-opening-sign",
+        "title": {
+          "en": "Tilt sign in the facade elevation",
+          "de": "Kippzeichen in der Fassadenansicht"
+        },
+        "description": {
+          "en": "The facade-view opening sign of a bottom-hinged tilt sash: two lines from the head corners that meet at the hinge side (DIN 1356-1).",
+          "de": "Das Öffnungszeichen eines unten angeschlagenen Kippflügels in der Fassadenansicht: zwei Linien von den oberen Ecken, die sich auf der Bandseite treffen (DIN 1356-1)."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "window-outline",
+              "bone": "sill",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.9,
+                  0
+                ],
+                [
+                  0.9,
+                  1.2
+                ],
+                [
+                  0,
+                  1.2
+                ]
+              ],
+              "closed": true,
+              "region": "frame-timber"
+            },
+            {
+              "id": "tilt-line-a",
+              "bone": "sill",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  1.2
+                ],
+                [
+                  0.45,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tilt-line-b",
+              "bone": "sill",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.9,
+                  1.2
+                ],
+                [
+                  0.45,
+                  0.0
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Real size: the sash outline 0.90 x 1.20 m in the facade plane; the lines carry only the opening direction.",
+          "de": "Echte Größe: der Flügelumriss 0,90 x 1,20 m in der Fassadenebene; die Linien tragen nur die Öffnungsrichtung."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "closed",
+        "title": {
+          "en": "Closed",
+          "de": "Geschlossen"
+        },
+        "description": {
+          "en": "Sash vertical, held by the head stay.",
+          "de": "Flügel senkrecht, vom oberen Stützarm gehalten."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "stay"
+        ],
+        "thermal": {
+          "regions": {
+            "pane-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "pane-edge": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "frame-timber": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "frame-sill": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilted-open",
+        "title": {
+          "en": "Tilted open 15 deg",
+          "de": "Gekippt 15 Grad"
+        },
+        "description": {
+          "en": "Sash tilted 15 degrees inward about the bottom hinge; the self-weight moment is taken by the stay.",
+          "de": "Flügel 15 Grad nach innen um das untere Gelenk gekippt; das Eigengewichtsmoment nimmt der Stützarm auf."
+        },
+        "bones": {
+          "sash": {
+            "angleDeg": 15
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "stay"
+        ],
+        "thermal": {
+          "regions": {
+            "pane-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "pane-edge": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "frame-timber": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "frame-sill": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "fully-tilted",
+        "title": {
+          "en": "Fully tilted with wind pressure",
+          "de": "Voll gekippt mit Winddruck"
+        },
+        "description": {
+          "en": "Sash at 30 degrees inward under 0.8 kN/m2 wind pressure on the exterior face over 0.9 m width.",
+          "de": "Flügel 30 Grad nach innen unter 0,8 kN/m² Winddruck auf der Außenseite über 0,9 m Breite."
+        },
+        "bones": {
+          "sash": {
+            "angleDeg": 30
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "stay"
+        ],
+        "thermal": {
+          "regions": {
+            "pane-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "pane-edge": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "frame-timber": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "frame-sill": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "wind-pressure",
+            "kind": "wind",
+            "title": {
+              "en": "Wind pressure 720 N/m along the sash",
+              "de": "Winddruck 720 N/m entlang des Flügels"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "sash",
+              "fromM": 0,
+              "toM": 1.2,
+              "wxNPerM": -623.5,
+              "wyNPerM": -360
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "tilt-open-close",
+        "title": {
+          "en": "Tilt open and close",
+          "de": "Kippen auf und zu"
+        },
+        "description": {
+          "en": "The sash tilts inward to 15 degrees, to 30 degrees and returns smoothly to closed.",
+          "de": "Der Flügel kippt nach innen auf 15 Grad, dann auf 30 Grad und kehrt weich in die Schließlage zurück."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "tilted-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "fully-tilted",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "tilted-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stay",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "open",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Tilting open",
+              "de": "Auskippen"
+            }
+          },
+          {
+            "id": "close",
+            "fromS": 3,
+            "toS": 6,
+            "title": {
+              "en": "Closing",
+              "de": "Schließen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "motion",
+            "title": {
+              "en": "Maximum tilt",
+              "de": "Maximaler Kippwinkel"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "wind-pressure-pulse",
+        "title": {
+          "en": "Wind pressure pulse",
+          "de": "Windstoß"
+        },
+        "description": {
+          "en": "A pressure gust pulses on the fully tilted sash for 4 seconds.",
+          "de": "Ein Druckstoß wirkt 4 Sekunden auf den voll gekippten Flügel."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "fully-tilted",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "fully-tilted",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stay",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "gust",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Gust",
+              "de": "Windstoß"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "load-on",
+            "title": {
+              "en": "Gust peak",
+              "de": "Spitze des Windstoßes"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:wind-pressure",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sun-and-shade",
+        "title": {
+          "en": "Sun and shade",
+          "de": "Sonne und Schatten"
+        },
+        "description": {
+          "en": "A cloud shadow crosses the closed window: glass and sash lose the direct sun and the surface temperatures follow with their heat capacity.",
+          "de": "Ein Wolkenschatten wandert über das geschlossene Fenster: Glas und Flügel verlieren die direkte Sonne und die Oberflächentemperaturen folgen mit ihrer Wärmekapazität."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stay",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "shadow",
+            "fromS": 0,
+            "toS": 8,
+            "title": {
+              "en": "Cloud shadow passes",
+              "de": "Wolkenschatten zieht durch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "thermal",
+            "title": {
+              "en": "Deepest shade",
+              "de": "Tiefster Schatten"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:pane-glass:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1.0
+              }
+            ]
+          },
+          {
+            "target": "region:pane-edge:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1.0
+              }
+            ]
+          },
+          {
+            "target": "region:frame-timber:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 0,
+        "meanRadiantTempC": 0,
+        "skyTempC": -12,
+        "groundTempC": 2,
+        "relativeHumidity": 0.8,
+        "windMS": 3,
+        "windDirectionDeg": 0,
+        "solarWM2": 300,
+        "diffuseFraction": 0.25,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "pane-glass",
+          "title": {
+            "en": "Insulating glass, centre of pane",
+            "de": "Isolierglas, Scheibenmitte"
+          },
+          "kind": "glazing",
+          "model": "conditioned",
+          "material": "glass",
+          "areaM2": 0.6,
+          "characteristicLengthM": 1.08,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "pane-inner",
+              "title": {
+                "en": "Float glass pane 4 mm",
+                "de": "Floatglasscheibe 4 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.004,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 7500,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "cavity",
+              "title": {
+                "en": "16 mm gas cavity, equivalent resistance 0.731 m2K/W (U_g 1.1)",
+                "de": "16-mm-Gasraum, äquivalenter Widerstand 0,731 m²K/W (U_g 1,1)"
+              },
+              "kind": "air-gap",
+              "material": "glass-unit-cavity",
+              "resistanceM2KW": 0.731,
+              "source": "authored-estimate",
+              "thicknessM": 0.016,
+              "heatCapacityJM2K": 0,
+              "reference": "en-iso-10077-1"
+            },
+            {
+              "id": "pane-outer",
+              "title": {
+                "en": "Float glass pane 4 mm",
+                "de": "Floatglasscheibe 4 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.004,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 7500,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 15000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "authored-estimate",
+          "reference": "en-iso-10077-1"
+        },
+        {
+          "id": "pane-edge",
+          "title": {
+            "en": "Insulating glass, edge zone 65 mm (spacer thermal bridge)",
+            "de": "Isolierglas, Randzone 65 mm (Wärmebrücke Abstandhalter)"
+          },
+          "kind": "glazing",
+          "model": "conditioned",
+          "material": "edge-zone",
+          "areaM2": 0.24,
+          "characteristicLengthM": 0.065,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "pane-inner",
+              "title": {
+                "en": "Float glass pane 4 mm",
+                "de": "Floatglasscheibe 4 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.004,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 7500,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "edge-body",
+              "title": {
+                "en": "Edge zone, equivalent resistance 0.405 m2K/W (psi_g 0.04 W/mK over 65 mm)",
+                "de": "Randzone, äquivalenter Widerstand 0,405 m²K/W (psi_g 0,04 W/mK über 65 mm)"
+              },
+              "kind": "air-gap",
+              "material": "edge-zone",
+              "resistanceM2KW": 0.405,
+              "source": "authored-estimate",
+              "thicknessM": 0.016,
+              "heatCapacityJM2K": 0,
+              "reference": "en-iso-10077-1"
+            },
+            {
+              "id": "pane-outer",
+              "title": {
+                "en": "Float glass pane 4 mm",
+                "de": "Floatglasscheibe 4 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.004,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 7500,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 15000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "authored-estimate",
+          "reference": "en-iso-10077-1"
+        },
+        {
+          "id": "frame-timber",
+          "title": {
+            "en": "Timber sash frame",
+            "de": "Holzflügelrahmen"
+          },
+          "kind": "surface",
+          "model": "conditioned",
+          "material": "timber",
+          "areaM2": 0.238,
+          "characteristicLengthM": 0.09,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sash-timber",
+              "title": {
+                "en": "Softwood sash profile 90 mm",
+                "de": "Nadelholz-Flügelprofil 90 mm"
+              },
+              "kind": "timber",
+              "material": "timber",
+              "resistanceM2KW": 0.692,
+              "source": "literature",
+              "thicknessM": 0.09,
+              "heatCapacityJM2K": 24000,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 24000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "literature",
+          "reference": "en-iso-10077-1"
+        },
+        {
+          "id": "frame-sill",
+          "title": {
+            "en": "Blend-frame sill (outer face)",
+            "de": "Blendrahmen-Sohlstück (Außenseite)"
+          },
+          "kind": "surface",
+          "model": "conditioned",
+          "material": "timber",
+          "areaM2": 0.09,
+          "characteristicLengthM": 0.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "sill-timber",
+              "title": {
+                "en": "Softwood sill 300 mm deep",
+                "de": "Nadelholz-Sohlstück 300 mm tief"
+              },
+              "kind": "timber",
+              "material": "timber",
+              "resistanceM2KW": 2.31,
+              "source": "literature",
+              "thicknessM": 0.3,
+              "heatCapacityJM2K": 24000,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 24000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "literature",
+          "reference": "en-iso-10077-1"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Winter reference case: air 0 degC, sky -12 degC, wind 3 m/s, 300 W/m2 normal irradiance; interior 20 degC with R_si 0.13 m2K/W. The viewer may select any preset.",
+          "de": "Winter-Referenzfall: Luft 0 °C, Himmel -12 °C, Wind 3 m/s, 300 W/m² Normalstrahlung; Innenraum 20 °C mit R_si 0,13 m²K/W. Der Betrachter kann jede Voreinstellung wählen."
+        },
+        {
+          "en": "Glass centre: R_si 0.13 + 0.004 + 0.731 + 0.004 + R_se 0.04 gives U_g 1.1 W/(m2 K); the 65 mm edge zone adds psi_g 0.04 W/(mK) (warm-edge spacer), U about 1.7 W/(m2 K); the 90 mm softwood frame gives U_f about 1.2 W/(m2 K) (EN ISO 10077-1).",
+          "de": "Glasmitte: R_si 0,13 + 0,004 + 0,731 + 0,004 + R_se 0,04 ergibt U_g 1,1 W/(m² K); die 65 mm breite Randzone fügt psi_g 0,04 W/(mK) hinzu (warme Kante), U etwa 1,7 W/(m² K); der 90-mm-Nadelholzrahmen ergibt U_f etwa 1,2 W/(m² K) (EN ISO 10077-1)."
+        },
+        {
+          "en": "The thermal bridges (spacer edge, frame) are approximated by separate regions, as in EN ISO 10077-1 where U_g, U_f and psi_g are combined by area; the equivalent resistances are authored estimates.",
+          "de": "Die Wärmebrücken (Abstandhalterrand, Rahmen) sind durch eigene Regionen angenähert, wie in EN ISO 10077-1, wo U_g, U_f und psi_g flächenweise kombiniert werden; die äquivalenten Widerstände sind Schätzungen."
+        },
+        {
+          "en": "Sun-exposed and shaded faces differ through the pose sunlit fractions: glass and sash in the sun, the sill half shaded by the reveal.",
+          "de": "Besonnte und verschattete Flächen unterscheiden sich über die Besonnungsanteile der Posen: Glas und Flügel in der Sonne, das Sohlstück halb durch die Laibung verschattet."
+        },
+        {
+          "en": "The glass thickness is 24 mm in the geometry and the structural mass; only the thermal layers resolve the 4-16-4 build-up.",
+          "de": "Die Glasdicke beträgt in Geometrie und Tragwerksmasse 24 mm; nur die thermischen Schichten lösen den Aufbau 4-16-4 auf."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "hinge"
+      ],
+      "assumptions": [
+        {
+          "en": "Sash is one rigid body with a pin at the bottom hinge; the head stay is a horizontal roller that is active in every pose, so the system is statically determinate.",
+          "de": "Der Flügel ist ein starrer Körper mit Festlager am unteren Gelenk; der obere Stützarm ist eine waagerechte Rolle, in jeder Pose aktiv, das System ist statisch bestimmt."
+        },
+        {
+          "en": "The stay stiffness and mechanism are not measured; the wind is pressure on the exterior face, normal to the sash in the section plane, 0.8 kN/m2 over 0.9 m.",
+          "de": "Steifigkeit und Mechanismus des Stützarms sind nicht gemessen; der Wind ist Druck auf die Außenseite, senkrecht zum Flügel in der Schnittebene, 0,8 kN/m² über 0,9 m."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "closed",
+      "defaultClip": "tilt-open-close",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

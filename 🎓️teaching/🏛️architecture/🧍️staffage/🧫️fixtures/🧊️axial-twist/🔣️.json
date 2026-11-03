@@ -1,0 +1,1143 @@
+{
+  "description": "Language-agnostic vectors of the axial twist (`twistDeg`). The figure is the rig of the sample figure standing at a hip height of 0.96 m: the torso origin is at (0, 1.06) pointing up, arm-l hangs from (0, 1.48) pointing down (0.6 m), shank-l ends at the ankle (0, 0.08) where foot-l (0.22 m) points forward. After its own sagittal rotation (and spread) a bone turns about its own longitudinal axis by twistDeg, accumulating down the chain; positive twist turns the local +y axis of the bone towards the right of the asset, so a bone pointing up turns counter-clockwise seen from above (forward goes to the left) and a bone pointing down turns clockwise. Elevation, front and plan are the orthographic projections of the same three-dimensional chain. Hand computations: the arm raised forward (angleDeg 90, its tip 0.6 m ahead at rest of the twist) on a torso twisted by tau points 0.6*cos(tau) ahead and 0.6*sin(tau) to the left at height 1.48: tau = 45 deg gives 0.424264 ahead and 0.424264 left, tau = 90 deg gives 0 ahead and 0.6 left, tau = 180 deg gives 0.6 behind and 0 sideways. Half way of a transition from standing to that pose (torso 45 deg, arm 45 deg) the arm direction is -0.7071*up - 0.7071*v' = (0.5, -0.7071, 0.5), so its tip is at (0.3, 1.055736) and 0.3 m left; its bone normal projects to (0.5, 0.7071), which gives the elevation extents. A shank twisted by -90 deg turns its foot (0.22 m) sideways to the left: the projected tip stays at the ankle and lies 0.22 m left, so the front view grows outwards by 0.22 m and the plan view turns into a lateral sliver. Front and plan shapes are authored in the rest pose and move by the projected travel of their bone plus its lateral position (see the lateral-spread vectors). Extents are compared within extentToleranceM (1 mm); the transition case compares the vertical and lateral extents only because a transition advances the forward position slightly. Rigid shapes of a twisted subtree turn exactly about the vertical: the rigid block on the torso (plan: 0.1 to 0.3 ahead, 0.1 either side; front: 0.1 to 0.3 lateral, height 1.0 to 1.1 at rest) is rotated about the torso axis in plan by tau, (x, z) -> (x cos tau - z sin tau, x sin tau + z cos tau): tau = 45 deg gives 0 to 0.282843 both ways, tau = 90 deg gives x -0.1 to 0.1 and z 0.1 to 0.3, tau = 180 deg gives x -0.3 to -0.1 and z -0.1 to 0.1; in front the lateral coordinate becomes z cos tau (0.070711 to 0.212132 at 45 deg, 0 at 90 deg, -0.3 to -0.1 at 180 deg) and the height is the rest height plus the standing travel of 0.96 m. A twist of the shank leaves the torso block where it was. The shapes of the bones that twist are centred on the bone (arm-follow and foot-follow lateral -0.05 to 0.05). The arm raised forward under a torso twist tau has the frame u = (cos tau, 0, sin tau), w = (-sin tau, 0, cos tau) and stays at height 1.48, so its front rectangle (a = 0.52 - y, c = lateral) has lateral' = a sin tau + c cos tau: -0.035355 to 0.459619 at 45 degrees, 0 to 0.6 at 90 degrees, -0.05 to 0.05 at 180 degrees. At the half way of the transition u = (0.5, -0.7071, 0.5) and w = (-0.7071, 0, 0.7071): lateral' = 0.5 a + 0.7071 c from -0.035355 to 0.335355, height' = 1.48 - 0.7071 a from 1.055736 to 1.48. The foot twisted sideways by the shank (u = (0, 0, 1), w = (-1, 0, 0)) maps the plan point (x, y) to (-y, x): x -0.05 to 0.05, y 0 to 0.22. Solids on a twisted or spread subtree use the full 3D frame. Extruded: the profile (a along the bone, b along its normal) swept along the lateral axis c from z0 to z1 (rest lateral of the bone origin subtracted), P = O + a u + b v + c w, projected to the view and hulled. Torso slab (a 0 to 0.45, b -0.1 to 0.1, z -0.2 to 0.2, torso origin (0, 1.06)): twisted by tau the torso frame is u = (0, 1, 0), v = (-cos tau, 0, -sin tau), w = (-sin tau, 0, cos tau), so plan x = -b cos tau - c sin tau and plan y = -b sin tau + c cos tau: tau = 90 gives x = -c (-0.2 to 0.2) and y = -b (-0.1 to 0.1), tau = 45 gives 0.7071 (b + c) and 0.7071 (c - b), both -0.212132 to 0.212132. Revolved: the circle of radius b (the distance of the profile point from the axis) at the height a along the axis, normal n, projects to half-width b sqrt(1 - n_k^2) per coordinate k. Drum (a 0.1 to 0.4, b 0 to 0.1) on the torso tilted back by 14 degrees: n = u = (-sin 14, cos 14, 0) = (-0.241922, 0.970296, 0), centres (-0.241922 a, 1.06 + 0.970296 a, 0): plan x from -0.241922 * 0.4 - 0.1 * 0.970296 = -0.193799 to -0.241922 * 0.1 + 0.0970296 = 0.072838, plan y +-0.1; front lateral +-0.1, front y from 1.06 + 0.970296 * 0.1 - 0.1 * 0.241922 = 1.132838 to 1.06 + 0.970296 * 0.4 + 0.0241922 = 1.47231. Lid (the arm, rest axis down, raised 105 degrees on the torso twisted by 90 degrees): the arm frame is u = (0, 0.258819, 0.965926), v = (0, 0.965926, -0.258819), w = (-1, 0, 0), the revolved axis (the carried vertical) n = -u = (0, -0.258819, -0.965926); centres (0, 1.48 + 0.258819 a, 0.965926 a), a 0.1 to 0.5, radius b up to 0.1: front lateral from 0.096593 - 0.1 * 0.258819 = 0.070711 to 0.482963 + 0.025882 = 0.508845, front y from 1.505882 - 0.0965926 = 1.409289 to 1.60941 + 0.0965926 = 1.706003; plan x +-0.1. Extruded lid slab (a 0.1 to 0.5, b -0.05 to 0.05, c -0.1 to 0.1): x = -c, lateral = 0.965926 a - 0.258819 b (0.083652 to 0.495904), y = 1.48 + 0.258819 a + 0.965926 b (1.457586 to 1.657706). Single 3D path: the foot turned sideways by the shank twist keeps no width in front, only the 0.22 m it extends (front lateral 0 to 0.22). Elevation solids: a solid on an elevation shape is the same 3D definition projected to the side view: the torso slab twisted by tau has the elevation x = -b cos tau - c sin tau and y = 1.06 + a, so 0.2 m (-0.1 to 0.1) upright, 0.424264 m at 45 degrees and 0.4 m (-0.2 to 0.2) at 90 degrees, and the drum (revolved) stays 0.2 m wide in every twist. Plain sagittal lid: the arm raised 105 degrees without twist has the frame u = (0.965926, 0.258819, 0), v = (-0.258819, 0.965926, 0), the carried vertical axis n = -u = (-0.965926, -0.258819, 0) and the circles of radius b (up to 0.1) at the centres (0.965926 a, 1.48 + 0.258819 a, 0); the side and plan half-widths are b * 0.258819 along x and b * 0.965926 along y, so the revolved lid spans x 0.070711 to 0.508845 and y 1.409289 to 1.706003 (the former vertical axis gave a 0.2 m wide disc), and the extruded lid slab x = 0.965926 a - 0.258819 b (0.083652 to 0.495904), y = 1.48 + 0.258819 a + 0.965926 b (1.457586 to 1.657706). One outline per solid: the projection of a solid is the union of the swept edges (shapely unary_union equivalent), never a ring per profile edge. Concave profile: the L-shaped bracket (a along the bone, b across; the vertical bar a 0 to 0.05, b -0.1 to 0.1, the foot a 0 to 0.45, b -0.1 to -0.05, area 0.03 m2) extruded z -0.2 to 0.2 on the torso twisted 90 degrees projects to the front as (z, y) = (-b, 1.06 + a): the mirrored L, a single non-convex ring of 6 vertices and area 0.03 m2 (the lateral sweep c runs along the forward axis and does not show); twisted 45 degrees (z = -0.7071 b + 0.7071 c, swept 0.282843 horizontally) the horizontal slices are 0.141421 + 0.282843 = 0.424264 wide for a 0 to 0.05 and 0.035355 + 0.282843 = 0.318198 wide for a 0.05 to 0.45: area 0.05 * 0.424264 + 0.4 * 0.318198 = 0.148492 m2. An upright extruded rectangle (the slab 0.45 by 0.2 m, 0.4 m deep) is exactly its rectangle: one ring of 4 vertices, area 0.18 m2 in front (0.4 wide by 0.45 high), 0.08 in plan (0.2 by 0.4) and 0.09 in elevation (0.2 by 0.45); twisted 90 degrees the front slab is 0.2 by 0.45 = 0.09 m2. Depth of flat shapes: a plan shape is carried at the height of the middle of its elevation twin (same id, same bone) at rest, a front shape at its forward position. The pedestal (elevation twin at a = 0.9 to 1.0, rest height 1.05 m, torso origin 0.1 m) in plan at forward -0.05 to 0.05: torso tilted back by 14 degrees, u = (-0.241922, 0.970296), v = (-0.970296, -0.241922): x' = -0.241922 * 0.95 - 0.970296 * (-x)... = -0.229826 + 0.970296 x, so -0.278342 to -0.18131. Without a twin the depth is the bone origin (x' = 0.970296 x); author such a part as a solid. Tilted rest axis: a revolved solid revolves about the longitudinal axis of its axis bone (its own rest direction, carried by the pose), not about the vertical. Hub: the foot (rest axis horizontal, forward, origin (0, 0.08) standing), profile a 0 to 0.22 along the bone, b 0 to 0.1 up: circles of radius b at the centres (a, 0.08, 0) with the normal (1, 0, 0): front disc of radius 0.1 (lateral -0.1 to 0.1, height -0.02 to 0.18), plan and elevation x 0 to 0.22 by +-0.1. (A pose tilting the foot would also change the grounding of the figure, so the tilted-pose revolve is covered by the drum on the torso tilted back 14 degrees.)",
+  "extentToleranceM": 0.001,
+  "asset": "sample-figure",
+  "scale": 100,
+  "poses": {
+    "turn-45": {
+      "bones": {
+        "torso": {
+          "twistDeg": 45
+        },
+        "arm-l": {
+          "angleDeg": 90
+        }
+      }
+    },
+    "turn-90": {
+      "bones": {
+        "torso": {
+          "twistDeg": 90
+        },
+        "arm-l": {
+          "angleDeg": 90
+        }
+      }
+    },
+    "turn-180": {
+      "bones": {
+        "torso": {
+          "twistDeg": 180
+        },
+        "arm-l": {
+          "angleDeg": 90
+        }
+      }
+    },
+    "foot-left": {
+      "bones": {
+        "shank-l": {
+          "twistDeg": -90
+        }
+      }
+    },
+    "twist-45": {
+      "bones": {
+        "torso": {
+          "twistDeg": 45
+        }
+      }
+    },
+    "twist-90": {
+      "bones": {
+        "torso": {
+          "twistDeg": 90
+        }
+      }
+    },
+    "tilt-14": {
+      "bones": {
+        "torso": {
+          "angleDeg": 14,
+          "twistDeg": 90
+        }
+      }
+    },
+    "lid-105": {
+      "bones": {
+        "torso": {
+          "twistDeg": 90
+        },
+        "arm-l": {
+          "angleDeg": 105
+        }
+      }
+    },
+    "upright": {
+      "bones": {}
+    },
+    "lid-sagittal": {
+      "bones": {
+        "arm-l": {
+          "angleDeg": 105
+        }
+      }
+    },
+    "tilt-only": {
+      "bones": {
+        "torso": {
+          "angleDeg": 14
+        }
+      }
+    },
+    "foot-axis": {
+      "bones": {}
+    },
+    "turn-270-full": {
+      "bones": {
+        "torso": {
+          "twistDeg": 270
+        },
+        "arm-l": {
+          "angleDeg": 90
+        }
+      }
+    },
+    "turn-360-full": {
+      "bones": {
+        "torso": {
+          "twistDeg": 360
+        },
+        "arm-l": {
+          "angleDeg": 90
+        }
+      }
+    }
+  },
+  "shapes": {
+    "elevation": [
+      {
+        "id": "arm",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.6,
+        "h": 0.1
+      },
+      {
+        "id": "slab",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.2,
+          "z1": 0.2
+        },
+        "x": 0,
+        "y": -0.1,
+        "w": 0.45,
+        "h": 0.2
+      },
+      {
+        "id": "drum",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "torso",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        },
+        "x": 0.1,
+        "y": 0,
+        "w": 0.3,
+        "h": 0.1
+      },
+      {
+        "id": "lid-revolved",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "arm-l",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        },
+        "x": 0.1,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.1
+      },
+      {
+        "id": "lid-slab",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.1,
+          "z1": 0.1
+        },
+        "x": 0.1,
+        "y": -0.05,
+        "w": 0.4,
+        "h": 0.1
+      },
+      {
+        "id": "ped",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0.9,
+        "y": -0.05,
+        "w": 0.1,
+        "h": 0.1
+      },
+      {
+        "id": "hub",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.22,
+        "h": 0.1,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "foot-l",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        }
+      }
+    ],
+    "front": [
+      {
+        "id": "arm-follow",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": -0.08,
+        "w": 0.1,
+        "h": 0.6,
+        "followTip": true
+      },
+      {
+        "id": "foot-follow",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": -0.9,
+        "w": 0.1,
+        "h": 0.04,
+        "followTip": true
+      },
+      {
+        "id": "torso-block",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0.1,
+        "y": 1.0,
+        "w": 0.2,
+        "h": 0.1
+      },
+      {
+        "id": "slab",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.2,
+          "z1": 0.2
+        },
+        "x": 0,
+        "y": -0.1,
+        "w": 0.45,
+        "h": 0.2
+      },
+      {
+        "id": "drum",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "torso",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        },
+        "x": 0.1,
+        "y": 0,
+        "w": 0.3,
+        "h": 0.1
+      },
+      {
+        "id": "lid-revolved",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "arm-l",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        },
+        "x": 0.1,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.1
+      },
+      {
+        "id": "lid-slab",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.1,
+          "z1": 0.1
+        },
+        "x": 0.1,
+        "y": -0.05,
+        "w": 0.4,
+        "h": 0.1
+      },
+      {
+        "id": "bracket",
+        "kind": "poly",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "points": [
+          [
+            0,
+            -0.1
+          ],
+          [
+            0.45,
+            -0.1
+          ],
+          [
+            0.45,
+            -0.05
+          ],
+          [
+            0.05,
+            -0.05
+          ],
+          [
+            0.05,
+            0.1
+          ],
+          [
+            0,
+            0.1
+          ]
+        ],
+        "closed": true,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.2,
+          "z1": 0.2
+        }
+      },
+      {
+        "id": "hub",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.22,
+        "h": 0.1,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "foot-l",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        }
+      }
+    ],
+    "plan": [
+      {
+        "id": "foot-follow",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.22,
+        "h": 0.1,
+        "followTip": true
+      },
+      {
+        "id": "torso-block",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0.1,
+        "y": -0.1,
+        "w": 0.2,
+        "h": 0.2
+      },
+      {
+        "id": "slab",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.2,
+          "z1": 0.2
+        },
+        "x": 0,
+        "y": -0.1,
+        "w": 0.45,
+        "h": 0.2
+      },
+      {
+        "id": "drum",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "torso",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        },
+        "x": 0.1,
+        "y": 0,
+        "w": 0.3,
+        "h": 0.1
+      },
+      {
+        "id": "lid-revolved",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "arm-l",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        },
+        "x": 0.1,
+        "y": 0,
+        "w": 0.4,
+        "h": 0.1
+      },
+      {
+        "id": "lid-slab",
+        "kind": "rect",
+        "bone": "arm-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.1,
+          "z1": 0.1
+        },
+        "x": 0.1,
+        "y": -0.05,
+        "w": 0.4,
+        "h": 0.1
+      },
+      {
+        "id": "ped",
+        "kind": "rect",
+        "bone": "torso",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.05,
+        "y": -0.05,
+        "w": 0.1,
+        "h": 0.1
+      },
+      {
+        "id": "hub",
+        "kind": "rect",
+        "bone": "foot-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.22,
+        "h": 0.1,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "foot-l",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0,
+          "mirror": true
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "a torso twisted 45 degrees turns the forward arm 0.424264 m to the left and shortens it in the elevation",
+      "pose": "turn-45",
+      "extents": {
+        "elevation/arm": {
+          "minX": 0,
+          "maxX": 0.424264,
+          "minY": 1.43,
+          "maxY": 1.53
+        },
+        "front/arm-follow": {
+          "minX": -0.035355,
+          "maxX": 0.459619,
+          "minY": 1.48,
+          "maxY": 1.48
+        },
+        "plan/torso-block": {
+          "minX": 0,
+          "maxX": 0.282843,
+          "minY": 0,
+          "maxY": 0.282843
+        },
+        "front/torso-block": {
+          "minX": 0.070711,
+          "maxX": 0.212132,
+          "minY": 1.96,
+          "maxY": 2.06
+        }
+      }
+    },
+    {
+      "name": "a torso twisted 90 degrees turns the arm fully to the left: it vanishes in the elevation and reaches 0.6 m sideways in front",
+      "pose": "turn-90",
+      "extents": {
+        "elevation/arm": {
+          "minX": 0,
+          "maxX": 0,
+          "minY": 1.43,
+          "maxY": 1.53
+        },
+        "front/arm-follow": {
+          "minX": 0,
+          "maxX": 0.6,
+          "minY": 1.48,
+          "maxY": 1.48
+        },
+        "plan/torso-block": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 0.1,
+          "maxY": 0.3
+        },
+        "front/torso-block": {
+          "minX": 0,
+          "maxX": 0,
+          "minY": 1.96,
+          "maxY": 2.06
+        }
+      }
+    },
+    {
+      "name": "a torso twisted 180 degrees turns the arm to the back and leaves no lateral reach",
+      "pose": "turn-180",
+      "extents": {
+        "elevation/arm": {
+          "minX": -0.6,
+          "maxX": 0,
+          "minY": 1.43,
+          "maxY": 1.53
+        },
+        "front/arm-follow": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 1.48,
+          "maxY": 1.48
+        },
+        "plan/torso-block": {
+          "minX": -0.3,
+          "maxX": -0.1,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "front/torso-block": {
+          "minX": -0.3,
+          "maxX": -0.1,
+          "minY": 1.96,
+          "maxY": 2.06
+        }
+      }
+    },
+    {
+      "name": "a transition half way interpolates the twist (torso 45 degrees, arm 45 degrees)",
+      "pose": "turn-90",
+      "transitionAt": 0.5,
+      "extents": {
+        "elevation/arm": {
+          "minY": 1.020381,
+          "maxY": 1.515355
+        },
+        "front/arm-follow": {
+          "minX": -0.035355,
+          "maxX": 0.335355,
+          "minY": 1.055736,
+          "maxY": 1.48
+        }
+      }
+    },
+    {
+      "name": "a shank twisted by -90 degrees turns its foot sideways: it grows outwards in front and becomes a lateral sliver in plan",
+      "pose": "foot-left",
+      "extents": {
+        "front/foot-follow": {
+          "minX": 0,
+          "maxX": 0.22,
+          "minY": 0.06,
+          "maxY": 0.1
+        },
+        "plan/foot-follow": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0,
+          "maxY": 0.22
+        },
+        "plan/torso-block": {
+          "minX": 0.1,
+          "maxX": 0.3,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "front/torso-block": {
+          "minX": 0.1,
+          "maxX": 0.3,
+          "minY": 1.96,
+          "maxY": 2.06
+        }
+      }
+    },
+    {
+      "name": "an extruded slab on a torso twisted 90 degrees swaps its depth and width: 0.4 m wide in plan, 0.2 m in front",
+      "pose": "twist-90",
+      "extents": {
+        "front/slab": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.06,
+          "maxY": 1.51
+        },
+        "plan/slab": {
+          "minX": -0.2,
+          "maxX": 0.2,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "front/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.16,
+          "maxY": 1.46
+        },
+        "plan/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "elevation/slab": {
+          "minX": -0.2,
+          "maxX": 0.2,
+          "minY": 1.06,
+          "maxY": 1.51
+        },
+        "elevation/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.16,
+          "maxY": 1.46
+        }
+      },
+      "rings": {
+        "front/bracket": {
+          "count": 1,
+          "vertices": 6,
+          "area": 0.03
+        },
+        "front/slab": {
+          "count": 1,
+          "vertices": 4,
+          "area": 0.09
+        }
+      }
+    },
+    {
+      "name": "an extruded slab on a torso twisted 45 degrees is 0.424264 m across in both views",
+      "pose": "twist-45",
+      "extents": {
+        "front/slab": {
+          "minX": -0.212132,
+          "maxX": 0.212132,
+          "minY": 1.06,
+          "maxY": 1.51
+        },
+        "plan/slab": {
+          "minX": -0.212132,
+          "maxX": 0.212132,
+          "minY": -0.212132,
+          "maxY": 0.212132
+        },
+        "elevation/slab": {
+          "minX": -0.212132,
+          "maxX": 0.212132,
+          "minY": 1.06,
+          "maxY": 1.51
+        }
+      },
+      "rings": {
+        "front/bracket": {
+          "count": 1,
+          "area": 0.148492
+        }
+      }
+    },
+    {
+      "name": "a revolved drum on a torso tilted back by 14 degrees (and twisted) revolves about the tilted axis: its front circles flatten by sin 14 and its plan reaches back",
+      "pose": "tilt-14",
+      "extents": {
+        "front/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.132838,
+          "maxY": 1.47231
+        },
+        "plan/drum": {
+          "minX": -0.193799,
+          "maxX": 0.072838,
+          "minY": -0.1,
+          "maxY": 0.1
+        }
+      }
+    },
+    {
+      "name": "a lid opened 105 degrees on a twisted body: its revolved part turns about the tilted axis and its extruded part is swept along the turned lateral axis",
+      "pose": "lid-105",
+      "extents": {
+        "front/lid-revolved": {
+          "minX": 0.070711,
+          "maxX": 0.508845,
+          "minY": 1.409289,
+          "maxY": 1.706003
+        },
+        "plan/lid-revolved": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 0.070711,
+          "maxY": 0.508845
+        },
+        "front/lid-slab": {
+          "minX": 0.083652,
+          "maxX": 0.495904,
+          "minY": 1.457586,
+          "maxY": 1.657706
+        },
+        "plan/lid-slab": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 0.083652,
+          "maxY": 0.495904
+        }
+      }
+    },
+    {
+      "name": "an upright torso: the extruded slab and the revolved drum project to their authored profile in the side view and swap nothing",
+      "pose": "upright",
+      "extents": {
+        "elevation/slab": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.06,
+          "maxY": 1.51
+        },
+        "front/slab": {
+          "minX": -0.2,
+          "maxX": 0.2,
+          "minY": 1.06,
+          "maxY": 1.51
+        },
+        "plan/slab": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.2,
+          "maxY": 0.2
+        },
+        "elevation/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.16,
+          "maxY": 1.46
+        },
+        "front/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.16,
+          "maxY": 1.46
+        },
+        "plan/drum": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.1,
+          "maxY": 0.1
+        }
+      },
+      "rings": {
+        "front/slab": {
+          "count": 1,
+          "vertices": 4,
+          "area": 0.18
+        },
+        "plan/slab": {
+          "count": 1,
+          "vertices": 4,
+          "area": 0.08
+        },
+        "elevation/slab": {
+          "count": 1,
+          "vertices": 4,
+          "area": 0.09
+        }
+      }
+    },
+    {
+      "name": "a lid opened 105 degrees by a plain sagittal rotation (no spread, no twist) revolves about its tilted axis too: a dome of 0.438 m by 0.297 m instead of a vertical disc",
+      "pose": "lid-sagittal",
+      "extents": {
+        "front/lid-revolved": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.409289,
+          "maxY": 1.706003
+        },
+        "plan/lid-revolved": {
+          "minX": 0.070711,
+          "maxX": 0.508845,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "elevation/lid-revolved": {
+          "minX": 0.070711,
+          "maxX": 0.508845,
+          "minY": 1.409289,
+          "maxY": 1.706003
+        },
+        "front/lid-slab": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": 1.457586,
+          "maxY": 1.657706
+        },
+        "plan/lid-slab": {
+          "minX": 0.083652,
+          "maxX": 0.495904,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "elevation/lid-slab": {
+          "minX": 0.083652,
+          "maxX": 0.495904,
+          "minY": 1.457586,
+          "maxY": 1.657706
+        }
+      }
+    },
+    {
+      "name": "a flat plan part high on a tilted bone is carried at the height of its elevation twin: the 0.1 m pedestal at the top of the torso tilted back 14 degrees shifts back by 0.95 sin 14 deg = 0.229826 m, not as if it sat at the origin",
+      "pose": "tilt-only",
+      "extents": {
+        "plan/ped": {
+          "minX": -0.278342,
+          "maxX": -0.18131,
+          "minY": -0.05,
+          "maxY": 0.05
+        }
+      }
+    },
+    {
+      "name": "a body of revolution on a bone whose rest axis is horizontal revolves about that axis (the foot axis points forward): end-on it is a disc of radius 0.1 m in front, a 0.22 m by 0.2 m band in the other views",
+      "pose": "foot-axis",
+      "extents": {
+        "front/hub": {
+          "minX": -0.1,
+          "maxX": 0.1,
+          "minY": -0.02,
+          "maxY": 0.18
+        },
+        "plan/hub": {
+          "minX": 0,
+          "maxX": 0.22,
+          "minY": -0.1,
+          "maxY": 0.1
+        },
+        "elevation/hub": {
+          "minX": 0,
+          "maxX": 0.22,
+          "minY": -0.02,
+          "maxY": 0.18
+        }
+      }
+    }
+  ],
+  "frames": [
+    {
+      "name": "arm at torso twist 45",
+      "pose": "turn-45",
+      "bone": "arm-l",
+      "originWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "tipWorld": {
+        "x": 0.424264,
+        "y": 1.48
+      },
+      "originZ": 0,
+      "tipZ": 0.424264
+    },
+    {
+      "name": "arm at torso twist 90",
+      "pose": "turn-90",
+      "bone": "arm-l",
+      "originWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "tipWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "originZ": 0,
+      "tipZ": 0.6
+    },
+    {
+      "name": "arm at torso twist 180",
+      "pose": "turn-180",
+      "bone": "arm-l",
+      "originWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "tipWorld": {
+        "x": -0.6,
+        "y": 1.48
+      },
+      "originZ": 0,
+      "tipZ": 0
+    },
+    {
+      "name": "foot at shank twist -90",
+      "pose": "foot-left",
+      "bone": "foot-l",
+      "originWorld": {
+        "x": 0,
+        "y": 0.08
+      },
+      "tipWorld": {
+        "x": 0,
+        "y": 0.08
+      },
+      "originZ": 0,
+      "tipZ": 0.22
+    },
+    {
+      "name": "arm at torso twist 270 (a joint with whole turns)",
+      "pose": "turn-270-full",
+      "bone": "arm-l",
+      "originWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "tipWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "originZ": 0,
+      "tipZ": -0.6
+    },
+    {
+      "name": "arm at torso twist 360 (a joint with whole turns)",
+      "pose": "turn-360-full",
+      "bone": "arm-l",
+      "originWorld": {
+        "x": 0,
+        "y": 1.48
+      },
+      "tipWorld": {
+        "x": 0.6,
+        "y": 1.48
+      },
+      "originZ": 0,
+      "tipZ": 0
+    }
+  ],
+  "limits": [
+    {
+      "name": "a twist of 90 degrees on a revolute joint is allowed",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistDeg": 90,
+      "refused": false
+    },
+    {
+      "name": "a twist of 180 degrees is the largest allowed",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistDeg": 180,
+      "refused": false
+    },
+    {
+      "name": "a twist above 180 degrees is refused",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistDeg": 190,
+      "refused": true
+    },
+    {
+      "name": "a fixed joint cannot twist",
+      "bone": "torso",
+      "joint": "fixed",
+      "twistDeg": 10,
+      "refused": true
+    },
+    {
+      "name": "a prismatic joint cannot twist",
+      "bone": "torso",
+      "joint": "prismatic",
+      "twistDeg": 10,
+      "refused": true
+    },
+    {
+      "name": "a twist of 300 degrees is allowed on a joint with twistMaxDeg 360",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistMaxDeg": 360,
+      "twistDeg": 300,
+      "refused": false
+    },
+    {
+      "name": "a twist above twistMaxDeg is refused",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistMaxDeg": 360,
+      "twistDeg": 370,
+      "refused": true
+    },
+    {
+      "name": "a twist of -300 degrees is allowed on a joint with twistMinDeg -360",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistMinDeg": -360,
+      "twistDeg": -300,
+      "refused": false
+    },
+    {
+      "name": "a twist of -190 degrees is refused when twistMinDeg is not given",
+      "bone": "torso",
+      "joint": "revolute",
+      "twistDeg": -190,
+      "refused": true
+    }
+  ],
+  "fullTurnJoint": {
+    "bone": "torso",
+    "twistMinDeg": -360,
+    "twistMaxDeg": 360
+  }
+}

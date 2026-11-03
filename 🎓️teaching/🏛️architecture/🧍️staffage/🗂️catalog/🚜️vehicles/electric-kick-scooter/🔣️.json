@@ -175,17 +175,17 @@
      },
      "x": 0.4,
      "y": 0.3,
-     "angleDeg": 0,
-     "lengthM": 0.2,
+     "angleDeg": 98,
+     "lengthM": 0.8,
      "joint": {
       "type": "revolute",
-      "minDeg": -12,
-      "maxDeg": 12
+      "minDeg": 0,
+      "maxDeg": 0
      },
      "mass": {
       "kg": 0.9,
-      "comX": 0,
-      "comY": -0.1,
+      "comX": -0.099,
+      "comY": 0.0139,
       "distribution": "point",
       "source": "authored-estimate"
      }
@@ -199,7 +199,7 @@
      },
      "x": 0,
      "y": 0,
-     "angleDeg": 98,
+     "angleDeg": 0,
      "lengthM": 0.8,
      "joint": {
       "type": "revolute",
@@ -221,9 +221,9 @@
       "en": "Front wheel with hub motor",
       "de": "Vorderrad mit Nabenmotor"
      },
-     "x": 0.02999999999999997,
-     "y": -0.192,
-     "angleDeg": 0,
+     "x": -0.1943,
+     "y": -0.003,
+     "angleDeg": -98,
      "lengthM": 0.108,
      "joint": {
       "type": "revolute"
@@ -282,8 +282,8 @@
    {
     "id": "contact-f",
     "bone": "fork",
-    "x": 0.02999999999999997,
-    "y": -0.3,
+    "x": -0.3013,
+    "y": 0.012,
     "kind": "contact",
     "title": {
      "en": "Front tyre patch",
@@ -338,7 +338,13 @@
        "filled": true,
        "tone": 0.1,
        "region": "tyres",
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.022,
+        "z1": 0.023
+       }
       },
       {
        "kind": "ellipse",
@@ -353,7 +359,13 @@
        "filled": true,
        "tone": 0.75,
        "region": "hub-motor",
-       "material": "motor-alloy"
+       "material": "motor-alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.022,
+        "z1": 0.045
+       }
       },
       {
        "kind": "ellipse",
@@ -368,7 +380,13 @@
        "filled": true,
        "tone": 0.45,
        "region": "hub-motor",
-       "material": "motor-alloy"
+       "material": "motor-alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.023,
+        "z1": 0.045
+       }
       },
       {
        "kind": "ellipse",
@@ -701,8 +719,8 @@
        "kind": "capsule",
        "x0": 0,
        "y0": 0,
-       "x1": 0.03,
-       "y1": -0.192,
+       "x1": -0.1943,
+       "y1": -0.003,
        "r0": 0.014,
        "r1": 0.014,
        "id": "fork-blade",
@@ -712,26 +730,32 @@
        "filled": true,
        "tone": 0.4,
        "region": "stem-bars",
-       "material": "anodised"
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.044,
+        "z1": 0.064
+       }
       },
       {
        "kind": "poly",
        "points": [
         [
-         -0.035,
-         -0.05
+         -0.0446,
+         0.0416
         ],
         [
-         0.035,
-         -0.05
+         -0.0544,
+         -0.0277
         ],
         [
-         0.035,
-         0.03
+         0.0248,
+         -0.0388
         ],
         [
-         -0.035,
-         0.03
+         0.0346,
+         0.0305
         ]
        ],
        "closed": true,
@@ -742,7 +766,13 @@
        "filled": true,
        "tone": 0.3,
        "region": "stem-bars",
-       "material": "anodised"
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       }
       },
       {
        "kind": "capsule",
@@ -759,7 +789,13 @@
        "filled": true,
        "tone": 0.4,
        "region": "stem-bars",
-       "material": "anodised"
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.019,
+        "z1": 0.019
+       }
       },
       {
        "kind": "ellipse",
@@ -774,7 +810,13 @@
        "filled": true,
        "tone": 0.1,
        "region": "stem-bars",
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": 0.215
+       }
       },
       {
        "kind": "capsule",
@@ -791,14 +833,641 @@
        "filled": true,
        "tone": 0.2,
        "region": "stem-bars",
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.16,
+        "z1": 0.18
+       }
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.0225,
+       "y": 0,
+       "w": 0.045,
+       "h": 0.216,
+       "r": 0.02,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.03,
+       "y": 0.128,
+       "w": 0.06,
+       "h": 0.106,
+       "r": 0.012,
+       "id": "fender-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "kind": "rect",
+       "x": 0.0225,
+       "y": 0.078,
+       "w": 0.02,
+       "h": 0.06,
+       "r": 0.004,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.45,
+       "region": "brake-disc",
+       "material": "steel-disc"
+      },
+      {
+       "kind": "rect",
+       "x": -0.085,
+       "y": 0.095,
+       "w": 0.17,
+       "h": 0.05,
+       "r": 0.008,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "deck-battery",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": -0.07,
+       "y": 0.135,
+       "w": 0.14,
+       "h": 0.023,
+       "r": 0.004,
+       "id": "grip-tape",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.12,
+       "region": "deck-grip",
+       "material": "griptape"
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0225,
+        "z1": 0.0225
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.45,
+       "region": "hub-motor",
+       "material": "motor-alloy",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.035,
+       "ry": 0.035,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.0225,
+        "z1": 0.0445
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": -0.1943,
+       "y1": -0.003,
+       "r0": 0.0085,
+       "r1": 0.0085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.045,
+        "z1": 0.062
+       },
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0446,
+         0.0416
+        ],
+        [
+         -0.0544,
+         -0.0277
+        ],
+        [
+         0.0248,
+         -0.0388
+        ],
+        [
+         0.0346,
+         0.0305
+        ]
+       ],
+       "closed": true,
+       "id": "head-block",
+       "bone": "fork",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.019,
+       "r1": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.019,
+        "z1": 0.019
+       },
+       "id": "stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.785,
+       "y": -0.014,
+       "w": 0.03,
+       "h": 0.028,
+       "r": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       },
+       "id": "bar",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.12,
+        "z1": 0.215
+       },
+       "id": "grip-l",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": -0.12
+       },
+       "id": "grip-r",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.8036,
+       "y0": -0.0106,
+       "x1": 0.7762,
+       "y1": -0.0976,
+       "r0": 0.008,
+       "r1": 0.008,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.16,
+        "z1": 0.18
+       },
+       "id": "brake-lever",
+       "bone": "stem",
+       "role": "detail",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.2,
+       "region": "stem-bars",
+       "material": "anodised"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.538,
+       "y": -0.0225,
+       "w": 0.216,
+       "h": 0.045,
+       "r": 0.012,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.46,
+       "y": 0.0225,
+       "w": 0.06,
+       "h": 0.006,
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.45,
+       "region": "brake-disc",
+       "material": "steel-disc"
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": -0.085,
+       "w": 0.79,
+       "h": 0.17,
+       "r": 0.02,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "deck-battery",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": -0.36,
+       "y": -0.07,
+       "w": 0.66,
+       "h": 0.14,
+       "r": 0.012,
+       "id": "grip-tape",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.12,
+       "region": "deck-grip",
+       "material": "griptape"
+      },
+      {
+       "kind": "rect",
+       "x": -0.554,
+       "y": -0.03,
+       "w": 0.246,
+       "h": 0.06,
+       "r": 0.02,
+       "id": "fender-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0225,
+        "z1": 0.0225
+       }
+      },
+      {
+       "kind": "ellipse",
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.45,
+       "region": "hub-motor",
+       "material": "motor-alloy",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.0225,
+        "z1": 0.0445
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": -0.1943,
+       "y1": -0.003,
+       "r0": 0.0085,
+       "r1": 0.0085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.045,
+        "z1": 0.062
+       },
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.306,
+         0.058
+        ],
+        [
+         -0.311,
+         0.028
+        ],
+        [
+         0.028,
+         -0.019
+        ],
+        [
+         0.032,
+         0.011
+        ]
+       ],
+       "closed": true,
+       "id": "fork-crown",
+       "bone": "fork",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.069
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0446,
+         0.0416
+        ],
+        [
+         -0.0544,
+         -0.0277
+        ],
+        [
+         0.0248,
+         -0.0388
+        ],
+        [
+         0.0346,
+         0.0305
+        ]
+       ],
+       "closed": true,
+       "id": "head-block",
+       "bone": "fork",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.035,
+        "z1": 0.035
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.019,
+       "r1": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.019,
+        "z1": 0.019
+       },
+       "id": "stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.785,
+       "y": -0.014,
+       "w": 0.03,
+       "h": 0.028,
+       "r": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       },
+       "id": "bar",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.12,
+        "z1": 0.215
+       },
+       "id": "grip-l",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": -0.12
+       },
+       "id": "grip-r",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.8036,
+       "y0": -0.0106,
+       "x1": 0.7762,
+       "y1": -0.0976,
+       "r0": 0.008,
+       "r1": 0.008,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.16,
+        "z1": 0.18
+       },
+       "id": "brake-lever",
+       "bone": "stem",
+       "role": "detail",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.2,
+       "region": "stem-bars",
        "material": "anodised"
       }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Full side elevation: tyre and rim rings, hub motor, brake rotor, deck with grip tape, fender, fork, head block, folding stem, grip end, brake lever and front mudguard.",
-      "de": "Vollständige Seitenansicht: Reifen- und Felgenringe, Nabenmotor, Bremsscheibe, Trittbrett mit Griptape, Schutzblech, Gabel, Lenkkopf, Klappvorbau, Griffende, Bremshebel und Vorderradabdeckung."
+      "en": "Full side elevation: tyre and rim rings, hub motor, brake rotor, deck with grip tape, fender, fork, head block, folding stem, grip end, brake lever and front mudguard. Front: tyre, deck, hub cap, one-sided fork, stem and handlebar; top: both tyres, deck with grip tape, fender, fork, stem and handlebar with grips.",
+      "de": "Vollständige Seitenansicht: Reifen- und Felgenringe, Nabenmotor, Bremsscheibe, Trittbrett mit Griptape, Schutzblech, Gabel, Lenkkopf, Klappvorbau, Griffende, Bremshebel und Vorderradabdeckung. Vorn: Reifen, Trittbrett, Nabenkappe, einseitige Gabel, Vorbau und Lenker; Oben: beide Reifen, Trittbrett mit Griptape, Schutzblech, Gabel, Vorbau und Lenker mit Griffen."
      },
      "retained": {
       "en": "All printable construction parts.",
@@ -825,8 +1494,8 @@
       "de": "Dunkle Reifen, helle Felge und Motor, mitteltoniges Trittbrett, fast schwarzes Griptape."
      },
      "overlays": {
-      "en": "Each visible region has its own shape; the controller is hidden.",
-      "de": "Jede sichtbare Region hat eine eigene Form; die Steuerung ist verdeckt."
+      "en": "Each visible region has its own shape; the controller is hidden. Front and top shapes carry the regions of the side view. The stem and fork blade are bound with followTip (front rects, top capsule) and the handlebar to the added bone bars at the stem tip, so folding and braking move them correctly. Steering: the fork bone lies along the steering stem (98 degrees from the deck), wheel and bars ride on it, and the steered braking pose is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Jede sichtbare Region hat eine eigene Form; die Steuerung ist verdeckt. Vorder- und Draufsichtformen tragen die Regionen der Seitenansicht. Vorbau und Gabelholm sind mit followTip gebunden (Rechtecke vorn, Kapsel oben) und der Lenker an den ergänzten Knochen bars an der Vorbauspitze, so folgen sie dem Klappen und Bremsen. Lenkung: Der Gabelknochen liegt in der Lenkstange (98 Grad zum Trittbrett), Rad und Lenker hängen an ihm, und die gelenkte Bremspose ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    },
@@ -860,7 +1529,13 @@
        "filled": true,
        "tone": 0.1,
        "region": "tyres",
-       "material": "rubber"
+       "material": "rubber",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.022,
+        "z1": 0.023
+       }
       },
       {
        "kind": "ellipse",
@@ -875,7 +1550,13 @@
        "filled": true,
        "tone": 0.75,
        "region": "hub-motor",
-       "material": "motor-alloy"
+       "material": "motor-alloy",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.022,
+        "z1": 0.023
+       }
       },
       {
        "kind": "ellipse",
@@ -954,14 +1635,22 @@
        "points": [
         [
          0,
-         0
+         -0.015
         ],
         [
-         0.03,
-         -0.192
+         -0.194,
+         -0.018
+        ],
+        [
+         -0.195,
+         0.012
+        ],
+        [
+         0,
+         0.015
         ]
        ],
-       "closed": false,
+       "closed": true,
        "id": "fork-blade",
        "bone": "fork",
        "role": "body",
@@ -969,21 +1658,35 @@
        "filled": false,
        "tone": 0.3,
        "region": "stem-bars",
-       "penMm": 0.3
+       "penMm": 0.3,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.044,
+        "z1": 0.064
+       }
       },
       {
        "kind": "poly",
        "points": [
         [
          0,
-         0
+         0.018
         ],
         [
          0.8,
-         0
+         0.018
+        ],
+        [
+         0.8,
+         -0.017
+        ],
+        [
+         0,
+         -0.017
         ]
        ],
-       "closed": false,
+       "closed": true,
        "id": "stem",
        "bone": "stem",
        "role": "body",
@@ -991,7 +1694,13 @@
        "filled": false,
        "tone": 0.3,
        "region": "stem-bars",
-       "penMm": 0.35
+       "penMm": 0.35,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.019,
+        "z1": 0.019
+       }
       },
       {
        "kind": "ellipse",
@@ -1122,20 +1831,415 @@
        "region": "fenders",
        "penMm": 0.13
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.0225,
+       "y": 0,
+       "w": 0.045,
+       "h": 0.216,
+       "r": 0.02,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.03,
+       "y": 0.128,
+       "w": 0.06,
+       "h": 0.092,
+       "r": 0.012,
+       "id": "fender-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "kind": "rect",
+       "x": -0.085,
+       "y": 0.095,
+       "w": 0.17,
+       "h": 0.05,
+       "r": 0.008,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "deck-battery",
+        "deck-grip",
+        "bms-controller"
+       ],
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "hub-motor"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0225,
+        "z1": 0.0225
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": -0.1943,
+       "y1": -0.003,
+       "r0": 0.0085,
+       "r1": 0.0085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.045,
+        "z1": 0.062
+       },
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.019,
+       "r1": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.019,
+        "z1": 0.019
+       },
+       "id": "stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.785,
+       "y": -0.014,
+       "w": 0.03,
+       "h": 0.028,
+       "r": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       },
+       "id": "bar",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.12,
+        "z1": 0.215
+       },
+       "id": "grip-l",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": -0.12
+       },
+       "id": "grip-r",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.538,
+       "y": -0.0225,
+       "w": 0.216,
+       "h": 0.045,
+       "r": 0.012,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": -0.085,
+       "w": 0.79,
+       "h": 0.17,
+       "r": 0.02,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "deck-battery",
+        "deck-grip",
+        "bms-controller"
+       ],
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": -0.54,
+       "y": -0.03,
+       "w": 0.232,
+       "h": 0.06,
+       "r": 0.02,
+       "id": "fender-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "kind": "ellipse",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "hub-motor"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0225,
+        "z1": 0.0225
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": -0.1943,
+       "y1": -0.003,
+       "r0": 0.0085,
+       "r1": 0.0085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.045,
+        "z1": 0.062
+       },
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.365,
+       "y": -0.035,
+       "w": 0.07,
+       "h": 0.07,
+       "r": 0.008,
+       "id": "fork-crown",
+       "bone": "fork",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.019,
+       "r1": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.019,
+        "z1": 0.019
+       },
+       "id": "stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.785,
+       "y": -0.014,
+       "w": 0.03,
+       "h": 0.028,
+       "r": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       },
+       "id": "bar",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.35,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.12,
+        "z1": 0.215
+       },
+       "id": "grip-l",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.028,
+       "ry": 0.028,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": -0.12
+       },
+       "id": "grip-r",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Tyre rings with hub discs, deck block, rear fender arc, fork and stem strokes at real width and the grip end.",
-      "de": "Reifenringe mit Nabenscheiben, Trittbrettblock, Hinterradschutzblech-Bogen, Gabel- und Lenkerstriche in Realbreite und das Griffende."
+      "en": "Tyre rings with hub discs, deck block, rear fender arc, fork and stem strokes at real width and the grip end. Front and top view drawn as articulated masses: tyres, deck, fender, fork blade, stem, bar and grips.",
+      "de": "Reifenringe mit Nabenscheiben, Trittbrettblock, Hinterradschutzblech-Bogen, Gabel- und Lenkerstriche in Realbreite und das Griffende. Vorder- und Draufsicht als gegliederte Massen gezeichnet: Reifen, Trittbrett, Schutzblech, Gabelholm, Vorbau, Lenkerstange und Griffe."
      },
      "retained": {
       "en": "Wheels, hub motor, brake disc, deck, fender, fork, stem, grip.",
       "de": "Räder, Nabenmotor, Bremsscheibe, Trittbrett, Schutzblech, Gabel, Lenker, Griff."
      },
      "merged": {
-      "en": "Deck, grip tape and controller are one block.",
-      "de": "Trittbrett, Griptape und Steuerung sind ein Block."
+      "en": "Deck, grip tape and controller are one block. Front and top: deck, grip tape and controller are one shape; hub motor and brake disc sit inside their tyre shapes.",
+      "de": "Trittbrett, Griptape und Steuerung sind ein Block. Vorn und oben: Trittbrett, Griptape und Steuerung sind eine Form; Nabenmotor und Bremsscheibe liegen in ihren Reifenformen."
      },
      "omitted": {
       "en": "Spokes or rim holes, lever, latch, tread.",
@@ -1154,8 +2258,8 @@
       "de": "Dunkle Reifen, helle Naben, mitteltoniges Trittbrett."
      },
      "overlays": {
-      "en": "Controller, grip tape and battery share the deck block; fender is its own arc.",
-      "de": "Steuerung, Griptape und Akku teilen den Trittbrettblock; das Schutzblech ist ein eigener Bogen."
+      "en": "Controller, grip tape and battery share the deck block; fender is its own arc. Steering: the fork bone lies along the steering stem (98 degrees from the deck), wheel and bars ride on it, and the steered braking pose is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Steuerung, Griptape und Akku teilen den Trittbrettblock; das Schutzblech ist ein eigener Bogen. Lenkung: Der Gabelknochen liegt in der Lenkstange (98 Grad zum Trittbrett), Rad und Lenker hängen an ihm, und die gelenkte Bremspose ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    },
@@ -1260,14 +2364,22 @@
        "points": [
         [
          0,
-         0
+         0.018
         ],
         [
          0.8,
-         0
+         0.018
+        ],
+        [
+         0.8,
+         -0.018
+        ],
+        [
+         0,
+         -0.018
         ]
        ],
-       "closed": false,
+       "closed": true,
        "id": "fork-stem",
        "bone": "stem",
        "role": "body",
@@ -1275,7 +2387,13 @@
        "filled": false,
        "tone": 0.3,
        "region": "stem-bars",
-       "penMm": 0.18
+       "penMm": 0.18,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "kind": "poly",
@@ -1285,8 +2403,8 @@
          0
         ],
         [
-         0.03,
-         -0.192
+         -0.1943,
+         -0.003
         ]
        ],
        "closed": false,
@@ -1314,20 +2432,287 @@
        "region": "stem-bars",
        "material": "rubber"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.0225,
+       "y": 0,
+       "w": 0.045,
+       "h": 0.216,
+       "r": 0.02,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.085,
+       "y": 0.095,
+       "w": 0.17,
+       "h": 0.05,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "deck-battery",
+        "deck-grip",
+        "bms-controller",
+        "fenders"
+       ],
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "hub-motor"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0225,
+        "z1": 0.0225
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": -0.1943,
+       "y1": -0.003,
+       "r0": 0.0085,
+       "r1": 0.0085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0,
+        "z1": 0.06
+       },
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       },
+       "id": "fork-stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.77,
+       "y": -0.029,
+       "w": 0.06,
+       "h": 0.058,
+       "r": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": 0.215
+       },
+       "id": "bars",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.2,
+       "region": "stem-bars",
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.538,
+       "y": -0.0225,
+       "w": 0.216,
+       "h": 0.045,
+       "r": 0.01,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": -0.085,
+       "w": 0.79,
+       "h": 0.17,
+       "r": 0.02,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "deck-battery",
+        "deck-grip",
+        "bms-controller",
+        "fenders"
+       ],
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "hub-motor"
+       ],
+       "material": "rubber",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0225,
+        "z1": 0.0225
+       }
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": -0.1943,
+       "y1": -0.003,
+       "r0": 0.012,
+       "r1": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.028,
+        "z1": 0.052
+       },
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.022,
+       "r1": 0.022,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.022,
+        "z1": 0.022
+       },
+       "id": "fork-stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "rect",
+       "x": 0.77,
+       "y": -0.029,
+       "w": 0.06,
+       "h": 0.058,
+       "r": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.215,
+        "z1": 0.215
+       },
+       "id": "bars",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.2,
+       "region": "stem-bars",
+       "material": "rubber"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Two solid wheel discs, a thin deck bar, a stem stroke leaning back and a grip dot; the folded stem lies along the deck.",
-      "de": "Zwei volle Radscheiben, ein schmaler Trittbrettbalken, ein zurückgeneigter Lenkerstrich und ein Griffpunkt; der geklappte Lenker liegt am Trittbrett."
+      "en": "Two solid wheel discs, a thin deck bar, a stem stroke leaning back and a grip dot; the folded stem lies along the deck. Front and top view show only the main masses: two tyre bodies, deck, one-sided fork blade, stem and a single handlebar bar.",
+      "de": "Zwei volle Radscheiben, ein schmaler Trittbrettbalken, ein zurückgeneigter Lenkerstrich und ein Griffpunkt; der geklappte Lenker liegt am Trittbrett. Vorder- und Draufsicht zeigen nur die Hauptmassen: zwei Reifenkörper, Trittbrett, einseitigen Gabelholm, Vorbau und eine einzige Lenkerstange."
      },
      "retained": {
       "en": "Wheels, deck, fork, stem and grip.",
       "de": "Räder, Trittbrett, Gabel, Lenker und Griff."
      },
      "merged": {
-      "en": "Grip tape, battery enclosure, controller and fender are one deck bar; tyre and hub motor or brake disc are one disc per wheel.",
-      "de": "Griptape, Akkugehäuse, Steuerung und Schutzblech sind ein Trittbrettbalken; Reifen und Nabenmotor beziehungsweise Bremsscheibe sind eine Scheibe je Rad."
+      "en": "Grip tape, battery enclosure, controller and fender are one deck bar; tyre and hub motor or brake disc are one disc per wheel. Front and top: grips and bar are one shape; fender, grip tape and controller are part of the deck shape.",
+      "de": "Griptape, Akkugehäuse, Steuerung und Schutzblech sind ein Trittbrettbalken; Reifen und Nabenmotor beziehungsweise Bremsscheibe sind eine Scheibe je Rad. Vorn und oben: Griffe und Stange sind eine Form; Schutzblech, Griptape und Steuerung gehören zur Trittbrettform."
      },
      "omitted": {
       "en": "Brake lever, latch, mudguard, rim, disc detail.",
@@ -1346,13 +2731,14 @@
       "de": "Dunkle Radscheiben, mitteltoniges Trittbrett, ein Strichstärke für Lenker und Gabel."
      },
      "overlays": {
-      "en": "Wheel discs paint tyres with hub motor (front) or brake disc (rear) as area-weighted mean; the deck paints battery, grip and fender merged.",
-      "de": "Radscheiben zeigen Reifen mit Nabenmotor (vorn) beziehungsweise Bremsscheibe (hinten) als flächengewichtetes Mittel; das Trittbrett zeigt Akku, Griptape und Schutzblech vereint."
+      "en": "Wheel discs paint tyres with hub motor (front) or brake disc (rear) as area-weighted mean; the deck paints battery, grip and fender merged. Steering: the fork bone lies along the steering stem (98 degrees from the deck), wheel and bars ride on it, and the steered braking pose is a twist about that axis, so front and top turn the wheel and the handlebar.",
+      "de": "Radscheiben zeigen Reifen mit Nabenmotor (vorn) beziehungsweise Bremsscheibe (hinten) als flächengewichtetes Mittel; das Trittbrett zeigt Akku, Griptape und Schutzblech vereint. Lenkung: Der Gabelknochen liegt in der Lenkstange (98 Grad zum Trittbrett), Rad und Lenker hängen an ihm, und die gelenkte Bremspose ist eine Drehung um diese Achse, sodass Vorder- und Draufsicht Rad und Lenker drehen."
      }
     }
    },
    "500": {
     "status": "unavailable",
+    "cause": "below-printable-feature",
     "denominator": 500,
     "reason": {
      "en": "At 1:500 the scooter is 2.2 mm long: the 0.216 m wheels are 0.43 mm discs, the 0.035 m stem 0.07 mm and the 0.05 m deck 0.1 mm, all below the printable feature size, and a composed silhouette would be an unreadable blob.",
@@ -1370,21 +2756,21 @@
      },
      {
       "kind": "symbol",
-      "symbol": "kick-scooter-plan"
+      "symbol": "kick-scooter-symbol"
      }
     ]
    }
   },
   "symbols": [
    {
-    "id": "kick-scooter-plan",
+    "id": "kick-scooter-symbol",
     "title": {
-     "en": "Kick scooter plan symbol",
-     "de": "Tretroller-Grundrisszeichen"
+     "en": "E-scooter symbol",
+     "de": "E-Scooter-Zeichen"
     },
     "description": {
-     "en": "True-extent plan of the e-scooter: deck, both wheels edge-on, stem and handlebar width.",
-     "de": "Grundriss des E-Rollers in wahrer Ausdehnung: Trittbrett, beide Räder von der Kante, Lenker und Lenkerbreite."
+     "en": "True-extent symbol of the e-scooter in side, front and top view: deck, both wheels, steering fork and stem, handlebar.",
+     "de": "Zeichen des E-Scooters in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Trittbrett, beide Räder, Gabel und Lenkstange, Lenker."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -1401,104 +2787,187 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
-     "plan": [
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0.43,
+       "cy": 0.11,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "elevation-wheel-f",
+       "bone": "deck",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.43,
+       "cy": 0.11,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "elevation-wheel-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": 0.1,
+       "w": 0.79,
+       "h": 0.05,
+       "id": "elevation-deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4
+      },
       {
        "kind": "poly",
        "points": [
         [
-         -0.4,
-         -0.085
+         0.43,
+         0.11
         ],
         [
-         0.37,
-         -0.085
+         0.4,
+         0.3
         ],
         [
-         0.37,
-         0.085
-        ],
-        [
-         -0.4,
-         0.085
+         0.29,
+         1.05
         ]
        ],
-       "closed": true,
+       "closed": false,
+       "id": "elevation-fork",
+       "bone": "deck",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 0.25,
+       "y": 1.05,
+       "w": 0.07,
+       "h": 0.06,
+       "id": "elevation-grip",
+       "bone": "deck",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.02,
+       "y": 0,
+       "w": 0.04,
+       "h": 0.22,
+       "id": "front-wheel",
+       "bone": "deck",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.09,
+       "y": 0.1,
+       "w": 0.18,
+       "h": 0.05,
+       "id": "front-deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.03,
+       "y": 0.28,
+       "w": 0.06,
+       "h": 0.83,
+       "id": "front-stem",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.215,
+       "y": 1.05,
+       "w": 0.43,
+       "h": 0.06,
+       "id": "front-bars",
+       "bone": "deck",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": 0.32,
+       "y": -0.02,
+       "w": 0.22,
+       "h": 0.04,
+       "id": "plan-wheel-f",
+       "bone": "deck",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.54,
+       "y": -0.02,
+       "w": 0.22,
+       "h": 0.04,
+       "id": "plan-wheel-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": -0.09,
+       "w": 0.79,
+       "h": 0.18,
        "id": "plan-deck",
        "bone": "deck",
        "role": "body",
        "z": 3,
        "filled": true,
-       "tone": 0.4,
-       "material": "anodised"
+       "tone": 0.4
       },
       {
        "kind": "poly",
        "points": [
         [
-         0.322,
-         -0.025
-        ],
-        [
-         0.538,
-         -0.025
-        ],
-        [
-         0.538,
-         0.025
-        ],
-        [
-         0.322,
-         0.025
-        ]
-       ],
-       "closed": true,
-       "id": "plan-wheel-f",
-       "bone": "deck",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.1,
-       "material": "rubber"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.538,
-         -0.025
-        ],
-        [
-         -0.322,
-         -0.025
-        ],
-        [
-         -0.322,
-         0.025
-        ],
-        [
-         -0.538,
-         0.025
-        ]
-       ],
-       "closed": true,
-       "id": "plan-wheel-r",
-       "bone": "deck",
-       "role": "body",
-       "z": 3,
-       "filled": true,
-       "tone": 0.1,
-       "material": "rubber"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.4,
+         0.27,
          0
         ],
         [
-         0.29,
+         0.43,
          0
         ]
        ],
@@ -1508,37 +2977,26 @@
        "role": "body",
        "z": 4,
        "filled": false,
-       "tone": 0.4,
-       "material": "anodised",
-       "penMm": 0.18
+       "tone": 0.4
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         0.29,
-         -0.215
-        ],
-        [
-         0.29,
-         0.215
-        ]
-       ],
-       "closed": false,
+       "kind": "rect",
+       "x": 0.26,
+       "y": -0.215,
+       "w": 0.06,
+       "h": 0.43,
        "id": "plan-bars",
        "bone": "deck",
        "role": "body",
-       "z": 4,
-       "filled": false,
-       "tone": 0.4,
-       "material": "anodised",
-       "penMm": 0.18
+       "z": 5,
+       "filled": true,
+       "tone": 0.4
       }
      ]
     },
     "dimensionalNote": {
-     "en": "Model metres: length 1.08 m, handlebar width 0.43 m, deck width 0.17 m.",
-     "de": "Modellmeter: Länge 1,08 m, Lenkerbreite 0,43 m, Trittbrettbreite 0,17 m."
+     "en": "Model metres: length 1.09 m, handlebar width 0.43 m, height 1.11 m; side, front and top view.",
+     "de": "Modellmeter: Länge 1,09 m, Lenkerbreite 0,43 m, Höhe 1,11 m; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -1620,12 +3078,12 @@
      "de": "Bremsen bis zum Stillstand"
     },
     "description": {
-     "en": "Disc brake at full effort after 25 km/h, motor off, steering turned 4 degrees.",
-     "de": "Scheibenbremse mit voller Wirkung nach 25 km/h, Motor aus, Lenkung um 4 Grad eingeschlagen."
+     "en": "Disc brake at full effort after 25 km/h, motor off, steering turned 10 degrees.",
+     "de": "Scheibenbremse mit voller Wirkung nach 25 km/h, Motor aus, Lenkung um 10 Grad eingeschlagen."
     },
     "bones": {
      "fork": {
-      "angleDeg": 4
+      "twistDeg": 10
      }
     },
     "root": {
@@ -1835,7 +3293,7 @@
     "id": "loop-start",
     "title": {
      "en": "Ride loop start",
-     "de": "Fahrschleife start"
+     "de": "Fahrschleife Start"
     },
     "description": {
      "en": "Technical key of the ride loop: wheels have turned theta = -x / r.",
@@ -2508,8 +3966,8 @@
      },
      "source": "authored-estimate",
      "hidden": {
-      "en": "Enclosed inside the deck, not visible in elevation.",
-      "de": "Im Trittbrett eingeschlossen, in der Ansicht nicht sichtbar."
+      "en": "Enclosed inside the deck, not visible in the side, front or top view in any pose or clip.",
+      "de": "Im Trittbrett eingeschlossen, in Seiten-, Vorder- und Draufsicht in keiner Pose und keinem Clip sichtbar."
      }
     },
     {
@@ -2689,10 +4147,7 @@
   "presentation": {
    "defaultPose": "riding-cruise",
    "defaultClip": "ride-loop",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

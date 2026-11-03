@@ -8,10 +8,11 @@
  * @see ../⏱️clock/🟦️.ts — the clock figures follow
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
-import type { Asset, DisplayRange, EvaluationQuery, Language, View } from "@teaching/staffage";
+import type { Asset, DisplayRange, EvaluationQuery, Language, View, Viewpoint } from "@teaching/staffage";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { defaultQuery, depictionOptions, evaluateState, inlineSvg, sceneOf } from "../🧮️pipeline/🟦️.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
+import { VIEWPOINT_PHRASES, resolveViewpoint, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
 
 /** 🎯️ The evaluation query of a placement: a pose, a clip at the clock time plus an offset, or the asset's default clip. */
 export function placementQuery(asset: Asset, selection: Selection | null, timeS: number | null, offsetS = 0): EvaluationQuery {
@@ -35,6 +36,7 @@ export type PlacedFigureProps = {
   readonly clock: StaffageClock;
   readonly offsetS?: number;
   readonly view: View;
+  readonly viewpoint: Viewpoint;
   readonly scale: number;
   readonly language: Language;
   readonly pxPerMm: number;
@@ -68,21 +70,20 @@ function useHeldFrame(clock: StaffageClock, active: boolean): number | null {
 
 /** 📍️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. */
 export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
-  const { asset, selection, clock, offsetS = 0, view, scale, language, pxPerMm, xPx, groundPx, mirrored = false, travel, className, label, style } = props;
+  const { asset, selection, clock, offsetS = 0, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
+  const mirrored = mirroredRequest && viewpoint === "elevation";
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(true);
   const timeS = useHeldFrame(clock, visible);
   const query = useMemo(() => placementQuery(asset, selection, timeS, offsetS), [asset, selection, timeS, offsetS]);
   const drawingQuery = useMemo(() => drawingQueryOf(asset, query, view), [asset, query, view]);
+  const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
   const drawn = useMemo(() => {
-    try {
-      const options = depictionOptions({ view, scale: { denominator: scale }, language, transparent: true, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false }, ...(props.range === undefined ? {} : { range: props.range }) });
-      const state = evaluateState(asset, drawingQuery, options.representation);
-      return { scene: sceneOf(state, props.theme === undefined ? options : { ...options, theme: props.theme }), rootM: state.bones[asset.rig.root]?.origin.x ?? 0 };
-    } catch {
-      return null;
-    }
-  }, [asset, drawingQuery, view, scale, language, props.range, props.theme]);
+    if (!resolution.available) return null;
+    const options = depictionOptions({ view, viewpoint, scale: { denominator: scale }, language, transparent: true, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false }, ...(props.range === undefined ? {} : { range: props.range }) });
+    const state = evaluateState(asset, drawingQuery, options.representation);
+    return { scene: sceneOf(state, props.theme === undefined ? options : { ...options, theme: props.theme }), rootM: state.bones[asset.rig.root]?.origin.x ?? 0 };
+  }, [asset, drawingQuery, view, viewpoint, scale, language, props.range, props.theme, resolution]);
   const scene = drawn?.scene;
   const rootM = drawn?.rootM ?? 0;
   const markup = useMemo(() => (scene === undefined ? "" : inlineSvg(scene)), [scene]);
@@ -93,7 +94,10 @@ export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
     observer.observe(element);
     return () => observer.disconnect();
   }, [scene !== undefined]);
-  if (scene === undefined) return null;
+  if (scene === undefined || resolution.available === false)
+    return resolution.available ? null : (
+      <div role="img" aria-label={`${label ?? asset.title[language]}: ${viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}. ${resolution.message[language]}`} title={resolution.message[language]} data-placed={asset.id} data-viewpoint={viewpoint} data-placed-unavailable={resolution.reason} className={className} style={{ position: "absolute", left: xPx - 6, top: groundPx - 24, width: 12, height: 24, border: "1px dashed currentColor", fontSize: 10, textAlign: "center", pointerEvents: "none", ...style }}>⊘</div>
+    );
   const lane = travel === undefined ? null : (travelledM(asset, query) + (travel.phaseM ?? 0)) % travel.laneM;
   const shiftPx = (lane === null ? -rootM : lane) * pxPerMm * scene.metadata.mmPerMetre;
   const width = scene.widthMm * pxPerMm;
@@ -106,6 +110,7 @@ export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
       aria-label={label ?? asset.title[language]}
       className={className}
       data-placed={asset.id}
+      data-viewpoint={viewpoint}
       style={{ position: "absolute", left, top: groundPx - scene.metadata.origin.yMm * pxPerMm, width, height: scene.heightMm * pxPerMm, opacity: fade, transform: mirrored ? "scaleX(-1)" : undefined, transformOrigin: `${scene.metadata.origin.xMm * pxPerMm}px 0`, pointerEvents: "none", ...style }}
       dangerouslySetInnerHTML={{ __html: markup }}
     />

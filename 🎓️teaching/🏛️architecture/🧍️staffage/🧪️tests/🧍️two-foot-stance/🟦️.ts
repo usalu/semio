@@ -20,7 +20,7 @@ describe("two-foot stance against anastruct", () => {
       expect(near(foot(sc.id, "left").pressurePa!, v["pressureLeftPa"] as number, 1e-7)).toBe(true);
       expect(near(foot(sc.id, "right").pressurePa!, v["pressureRightPa"] as number, 1e-7)).toBe(true);
       expect(Math.hypot(result.residual.fxN, result.residual.fyN)).toBeLessThan(1e-9 * 1000);
-      expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * 1000);
+      expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * 1000);
     });
     it(`transmits the oracle shoulder load in ${sc.id}`, () => {
       const joint = result.joints["arm"]!;
@@ -49,7 +49,7 @@ describe("two-foot stance against anastruct", () => {
     expect(foot("reach-far-right", "right").active).toBe(true);
     expect(result.notes.some((n) => n.en.includes("lifted off"))).toBe(true);
     expect(foot("reach-far-right", "right").cop!.x).toBeLessThan(0.15 + 0.125);
-    expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * 1000);
+    expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * 1000);
   });
   it("gives the shoulder a load × perpendicular lever arm moment, CCW positive", () => {
     const sc = doc.scenarios.find((s) => s.id === "reach-left")!;

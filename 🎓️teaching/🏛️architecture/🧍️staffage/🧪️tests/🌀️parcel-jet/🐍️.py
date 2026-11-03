@@ -1,6 +1,6 @@
 """🌀️ Independent oracle of the parcel model: re-integrates the documented parcel ODE (slice jet/plume entrainment, momentum and enthalpy/total-water mixing, buoyancy with liquid loading, saturation adjustment) with scipy's RK45 (rtol 1e-10) and an independent psychrometric implementation (scipy brentq).
 
-Run `uv run --with scipy --with CoolProp --with numpy python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import math

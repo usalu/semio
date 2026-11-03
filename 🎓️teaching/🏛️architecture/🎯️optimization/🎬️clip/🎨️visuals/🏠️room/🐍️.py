@@ -216,7 +216,7 @@ def _label_points(size, key):
 
 
 def row(size, color, *parts):
-    """🏷️ One label from static words and live numbers, joined by a space; a leading ``~`` joins a word tightly to the previous part."""
+    """📝 One label from static words and live numbers, joined by a space; a leading ``~`` joins a word tightly to the previous part."""
     key = tuple((isinstance(part, Number), str(part).replace("kWh/(m²·a)", INTENSITY_UNIT)) for part in parts if part)
     return LiveText(_label_points(size, key).copy(), color, " ".join(part for _, part in key))
 
@@ -259,7 +259,7 @@ def place(item, point, edge="center"):
 
 
 def column(items, *, x, top, bottom, size=15, min_gap=0.34, pad=0.12):
-    """🏷️ Labels in a column at ``x``, dodged apart top-down; ``items`` are ``(anchor, parts, color)``; returns labels and leader lines."""
+    """🗂️ Labels in a column at ``x``, dodged apart top-down; ``items`` are ``(anchor, parts, color)``; returns labels and leader lines."""
     labels = [text(parts, size=size, color=color) for _, parts, color in items]
     ys = [float(anchor[1]) for anchor, _, _ in items]
     order = sorted(range(len(labels)), key=lambda i: -ys[i])
@@ -307,7 +307,7 @@ def result(design: dict) -> dict:
 
 @lru_cache(maxsize=1)
 def reference() -> dict:
-    """📏 Largest model responses over a coarse design grid: the shared full scales of bars and arrows."""
+    """🔍 Largest model responses over a coarse design grid: the shared full scales of bars and arrows."""
     best = {"heating_demand": 0.0, "cooling_demand": 0.0, "electricity": 0.0}
     for orientation in range(90, 451, 30):
         for wwr in (.1, .45, .8):
@@ -333,7 +333,7 @@ def constant(section: str, name: str) -> float:
 
 @lru_cache(maxsize=1)
 def electricity_range() -> tuple[float, float]:
-    """🌡️ Lowest and highest electricity of the south wall surface: the default colour range."""
+    """🔋 Lowest and highest electricity of the south wall surface: the default colour range."""
     grid = _model.surface(41)["electricity"]
     flat = [value for row_ in grid for value in row_]
     return min(flat), max(flat)
@@ -442,18 +442,18 @@ def _hit(origin, direction, boxes):
 
 
 def number(value: float, digits: int, german: bool) -> str:
-    """🔢 Group thousands and punctuate decimals per language."""
+    """🔣 Group thousands and punctuate decimals per language."""
     text_value = f"{round(value, digits):,.{digits}f}".replace("-", "−")
     return text_value.replace(",", "\0").replace(".", ",").replace("\0", ".") if german else text_value
 
 
 def unit_text(value: float, unit: str, digits: int, german: bool) -> str:
-    """📐 Number plus unit, joined by a narrow no-break space unless the unit hugs the number."""
+    """🔡 Number plus unit, joined by a narrow no-break space unless the unit hugs the number."""
     return number(value, digits, german) + ("" if unit in {"°", ""} else " ") + unit.replace("kWh/(m²·a)", INTENSITY_UNIT)
 
 
 def parts(value: float, unit: str, digits: int, german: bool) -> list:
-    """📐 Label parts for a live number and its unit."""
+    """🧾 Label parts for a live number and its unit."""
     return [Number(number(value, digits, german)), ("~" + unit) if unit == "°" else unit]
 
 
@@ -541,7 +541,7 @@ def nice_levels(low: float, high: float, count: int) -> list[float]:
 
 
 class RoomVisuals:
-    """🏠 Draw one design, live from shared trackers, as section, elevation, plan, bars, thumbnails and heat maps."""
+    """🧰 Draw one design, live from shared trackers, as section, elevation, plan, bars, thumbnails and heat maps."""
 
     def _german(self) -> bool:
         return self.language() == "de"
@@ -551,7 +551,7 @@ class RoomVisuals:
         super().__init__(*args, **kwargs)
 
     def _live(self, builder, key=None):
-        """♻️ A live group; pass ``key`` (a cheap callable returning a hashable snapshot of every input of ``builder``) to rebuild only when it changes."""
+        """🔁 A live group; pass ``key`` (a cheap callable returning a hashable snapshot of every input of ``builder``) to rebuild only when it changes."""
         return LiveGroup(builder, key)
 
     def _widget(self, builder, key):
@@ -559,7 +559,7 @@ class RoomVisuals:
         return self._live(builder).memoize(key)
 
     def study_trackers(self, design: dict | None = None) -> dict:
-        """🎚️ Create the four shared design trackers, filled up from the study baseline."""
+        """🎛️ Create the four shared design trackers, filled up from the study baseline."""
         base = {**baseline(), **(design or {})}
         return {key: _engine.ValueTracker(float(base[key])) for key in KEYS}
 
@@ -569,7 +569,7 @@ class RoomVisuals:
         return _engine.AnimationGroup(*moves)
 
     def room_section(self, trackers, point=(0, 0, 0), scale=0.5, season="winter", *, labels=True, demand=True, person=True, daylight=True, light_label=False, sky="direct"):
-        """🏠 Vertical section through the room: wall, window, overhang, model-driven sun rays, floor patch, sky light, daylight zone, lamps and heating or cooling.
+        """🛋️ Vertical section through the room: wall, window, overhang, model-driven sun rays, floor patch, sky light, daylight zone, lamps and heating or cooling.
 
         ``daylight`` draws the diffuse sky light (cream rays from four sky elevations enter the window, the overhang stops the high ones), the daylight-factor gradient along the floor,
         the daylit depth on the work plane and ceiling lamps whose glow and light cone follow ``1 − autonomy``. ``light_label`` (default off, it needs ≈ 0.3 units above the roof and
@@ -583,10 +583,9 @@ class RoomVisuals:
         P = lambda x, y: origin + s * np.array([x, y, 0.0])
         full = reference()
         sun_proto = _art.sun_glyph((0, 0, 0)).scale(0.3 * s / 0.6)
-        lamp_protos = [_art.lamp_glyph(P(x, HEIGHT), drop=0.1 * s / 0.5, scale=s / 0.6) for x in (1.2, 2.6, 4.0)]
-        figure_proto = _art.person_glyph(P(3.7, 0.875))
-        figure_proto.scale_to_fit_height(1.75 * s).move_to(P(3.7, 0.875))
-        radiator_proto = _art.radiator((0, 0, 0), HEAT, height=0.7 * s, width=0.8 * s)
+        lamp_protos = [pendant(P(x, HEIGHT), s) for x in (1.2, 2.6, 4.0)]
+        figure_proto = _art.staffage("optimization-room-occupant", unit=s, anchor=P(3.7, 0))
+        radiator_proto = _art.staffage("shared-radiator-winter", unit=s, anchor=P(DEPTH, 0), mirror=True)
         word_sun, word_behind = self.tr("Sun altitude", "Sonnenhöhe"), self.tr("Sun behind", "Sonne dahinter")
         word_diffuse = self.tr("Diffuse light only", "Nur diffuses Licht") if sky != "diffuse" else self.tr("Diffuse sky light", "Diffuses Himmelslicht")
         word_demand = self.tr("Heating", "Heizung") if season == "winter" else self.tr("Cooling", "Kühlung")
@@ -724,13 +723,12 @@ class RoomVisuals:
             low_autonomy, high_autonomy = autonomy_range()
             brightness = 1 - min(1.0, max(0.0, (found["autonomy"] - low_autonomy) / max(high_autonomy - low_autonomy, 1e-9)))
             for lamp in lamp_protos:
-                bulb = clone(lamp["bulb"]).set_fill(opacity=0.08 + 0.92 * brightness)
                 halo = mn.Circle(radius=0.28 * s / 0.6 * (.4 + .6 * brightness), stroke_width=0, fill_color=LIGHT, fill_opacity=.35 * brightness)
                 if daylight and brightness > 0.02:
-                    apex, floor_y = bulb.get_center(), P(0, WORK)[1]
+                    apex, floor_y = lamp["bulb"], P(0, WORK)[1]
                     group.add(mn.Polygon(apex, np.array([apex[0] - 0.9 * s, floor_y, 0.0]), np.array([apex[0] + 0.9 * s, floor_y, 0.0]),
                                          stroke_width=0, fill_color=LIGHT, fill_opacity=.3 * brightness))
-                group.add(halo.move_to(bulb.get_center()), clone(lamp["cable"]), clone(lamp["shade"]), bulb)
+                group.add(halo.move_to(lamp["bulb"]), *pendant_lit(lamp, brightness))
             if person:
                 group.add(clone(figure_proto))
             loss = []
@@ -783,7 +781,7 @@ class RoomVisuals:
                     for y in (1.1, 1.6, 2.1):
                         group.add(mn.Arrow(P(DEPTH - 0.5, y), P(DEPTH + MASONRY + 0.4 + length, y), buff=0, color=colour, stroke_width=3 + 3 * share,
                                            max_tip_length_to_length_ratio=.35, tip_length=0.13, max_stroke_width_to_length_ratio=12))
-                group.add(clone(radiator_proto).move_to(P(DEPTH - 0.6, 0.45)) if heating else _cooler(P(DEPTH - 0.9, 2.55), s, colour))
+                group.add(clone(radiator_proto) if heating else _cooler(P(DEPTH - 0.105, 2.55), s))
                 if labels:
                     electricity = parts(found["heating" if heating else "cooling"], "kWh/a", 0, german)
                     efficiency = ["COP" if heating else "EER", Number(number(systems()["cop" if heating else "eer"], 1, german))]
@@ -881,7 +879,7 @@ class RoomVisuals:
         return self._widget(build, design_key(trackers))
 
     def plan(self, trackers, point=(0, 0, 0), scale=0.28, *, ring_radius=6.0, arcs=False, sector=None, site=None, ghost=None, dimensions=False, season_labels=True):
-        """🧭 Plan of the room turning inside a fixed compass; extras: sun arcs, shaded bearing band, site labels, ghost room, dimensions."""
+        """🌐 Plan of the room turning inside a fixed compass; extras: sun arcs, shaded bearing band, site labels, ghost room, dimensions."""
         mn, s, german = _engine, scale, self._german()
         centre = np.array(point, dtype=float)
         R = ring_radius
@@ -938,8 +936,8 @@ class RoomVisuals:
 
         return mn.VGroup(static, self._widget(build, design_key(trackers)))
 
-    def energy_bars(self, trackers, point=(0, 0, 0), height=3.0, maximum=None, *, width=0.8, labels=True, compact=False, reference=None, intensity=True, size=15, digits=0, total=None, rule=True):
-        """📊 Stacked heating, cooling and lighting electricity with live kWh/a; fixed scale via ``maximum``; ``rule=False`` omits the vertical scale rule; ``reference`` adds a ghost bar; ``digits`` decimals of every printed kWh/a and of the intensity; ``total`` (``fn(design, found) -> kWh/a``) replaces the printed total when a scene derives it from its own printed parts."""
+    def energy_bars(self, trackers, point=(0, 0, 0), height=3.0, maximum=None, *, width=0.8, labels=True, compact=False, reference=None, intensity=True, size=15, digits=0, total=None, rule=True, total_label=True):
+        """📊 Stacked heating, cooling and lighting electricity with live kWh/a; fixed scale via ``maximum``; ``rule=False`` omits the vertical scale rule; ``reference`` adds a ghost bar; ``digits`` decimals of every printed kWh/a and of the intensity; ``total`` (``fn(design, found) -> kWh/a``) replaces the printed total when a scene derives it from its own printed parts; ``total_label=False`` leaves the total off the bar when the scene prints it beside the bar already."""
         mn, german = _engine, self._german()
         base = np.array(point, dtype=float)
         top_value = maximum or reference_scale()
@@ -973,7 +971,8 @@ class RoomVisuals:
                 anchors.append((np.array([base[0] + width / 2, base[1] + cursor + span / 2, 0]), [name, *parts(printed, "kWh/a", digits, german)], colour))
                 cursor += span
             printed_total = sum(shown) if total is None else total(values(trackers), found)
-            group.add(text(parts(printed_total, "kWh/a", digits, german), np.array([base[0], base[1] + cursor + .3, 0]), size=size + 3, color=INK))
+            if total_label:
+                group.add(text(parts(printed_total, "kWh/a", digits, german), np.array([base[0], base[1] + cursor + .3, 0]), size=size + 3, color=INK))
             if labels and not compact:
                 group.add(column(anchors, x=base[0] + width / 2 + .35, top=base[1] + height + .9, bottom=base[1] + .1, size=size))
             if intensity:
@@ -1188,7 +1187,7 @@ class RoomVisuals:
                                   _engine.FadeOut(outline, run_time=0.2 * run_time))
 
     def ramp(self, low=None, high=None):
-        """🎨 Colour function from the lowest (dark teal) to the highest (cream) electricity of the clip."""
+        """🖌️ Colour function from the lowest (dark teal) to the highest (cream) electricity of the clip."""
         return ramp(low, high)
 
     def ramp_strip(self, colour, point=(0, 0, 0), width=3.5, height=0.16, *, unit="kWh/a", size=15, ticks=(), title=None):
@@ -1333,15 +1332,26 @@ def _leader(item, target, color):
     return _engine.Line(item.get_right() + np.array([0.02, 0, 0]), np.array(target, dtype=float), color=color, stroke_width=1.4, stroke_opacity=.8)
 
 
-def _cooler(centre, scale, color):
-    box = _engine.Rectangle(width=1.0 * scale, height=0.4 * scale, color=color, stroke_width=2, fill_color=_art.P_DEEP_DARK, fill_opacity=1).move_to(centre)
-    flake = _engine.VGroup(*[_engine.Line(centre + 0.13 * scale * np.array([math.cos(a), math.sin(a), 0]), centre - 0.13 * scale * np.array([math.cos(a), math.sin(a), 0]),
-                                          color=color, stroke_width=2) for a in (0, math.pi / 3, 2 * math.pi / 3)])
-    return _engine.VGroup(box, flake)
+def pendant(ceiling, scale):
+    """🪔 The handcrafted pendant lamp hanging from ``ceiling`` in its off and on casts, with the bulb centre. [staffage](../../../../🧍️staffage/README.md)"""
+    drop = _art.staffage_height("shared-lamp-off-neutral")
+    anchor = np.array(ceiling, dtype=float) - np.array([0.0, drop * scale, 0.0])
+    return {"off": _art.staffage("shared-lamp-off-neutral", unit=scale, anchor=anchor),
+            "on": _art.staffage("shared-lamp-neutral", unit=scale, anchor=anchor), "bulb": anchor + np.array([0.0, 0.06 * scale, 0.0])}
+
+
+def pendant_lit(lamp, brightness):
+    """✨ The off lamp with the lit lamp crossfaded over it by ``brightness``."""
+    return clone(lamp["off"]), clone(lamp["on"]).set_opacity(0.08 + 0.92 * brightness)
+
+
+def _cooler(centre, scale):
+    """❄️ The handcrafted split-unit indoor cooler on the rear wall, centred on ``centre`` at ``scale`` drawing units per metre. [staffage](../../../../🧍️staffage/README.md)"""
+    return _art.staffage("optimization-room-cooler-mirrored", unit=scale, anchor=np.array(centre, dtype=float) + scale * np.array([0.105, -0.145, 0.0]))
 
 
 def sun_marker(point, scale, opacity):
-    """☀️ A small sun disc for plan arcs."""
+    """🔅 A small sun disc for plan arcs."""
     return clone(_SUN_PROTO()).scale(scale).move_to(point).set_opacity(opacity)
 
 

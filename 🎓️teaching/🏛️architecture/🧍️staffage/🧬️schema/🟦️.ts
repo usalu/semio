@@ -6,7 +6,7 @@
  *
  * Conventions (normative):
  * - Units are SI: metres, kilograms, seconds, newtons, pascals, watts, kelvin differences; temperatures are authored in °C.
- * - Model space is a right-handed elevation plane: x to the right, y up, origin on the ground at the asset's reference point.
+ * - World frame (asset-local and scene frame are one): x ahead, y up, z lateral with the left of the asset at +z, a left-handed triple; origin on the ground at the asset's reference point. The side elevation shows the x-y plane seen from the asset's right with ahead on the right of the paper.
  * - Angles are authored in degrees, counter-clockwise positive; a bone's local x axis points from its joint along the bone.
  * - Time is in seconds; frame n of a clip sits at t = n / fps; looping clips wrap the pose at `durationS`, root motion and air transport
  *   continue on the absolute timeline.
@@ -28,40 +28,40 @@ export type Text = { readonly en: string; readonly de: string };
 /** 🗣️ The languages every {@link Text} carries, English first. */
 export const LANGUAGES = ["en", "de"] as const;
 
-/** 🗣️ One of {@link LANGUAGES}. */
+/** 🌐️ One of {@link LANGUAGES}. */
 export type Language = (typeof LANGUAGES)[number];
 
 /** 🔖️ The document version of every catalog file. */
 export const SCHEMA_VERSION = "semio.staffage/v2" as const;
 
-/** 🗂️ The eight archive categories. */
-export const CATEGORIES = ["humans", "animals", "vegetation", "furniture", "objects", "vehicles", "machinery", "components"] as const;
+/** 🗂️ The nine archive categories. */
+export const CATEGORIES = ["humans", "animals", "vegetation", "furniture", "appliances", "objects", "vehicles", "machinery", "components"] as const;
 
-/** 🗂️ One of {@link CATEGORIES}. */
+/** 📁️ One of {@link CATEGORIES}. */
 export type CategoryId = (typeof CATEGORIES)[number];
 
 /** 🧾️ How a physical parameter is known: measured, taken from literature, calibrated against literature data, estimated by the author, or purely illustrative. */
 export const PARAMETER_SOURCES = ["measured", "literature", "calibrated", "authored-estimate", "illustrative"] as const;
 
-/** 🧾️ One of {@link PARAMETER_SOURCES}. */
+/** 🧪️ One of {@link PARAMETER_SOURCES}. */
 export type ParameterSource = (typeof PARAMETER_SOURCES)[number];
 
-/** 👁️ The projection an authored geometry set is drawn in. */
-export const VIEWPOINTS = ["elevation", "plan"] as const;
+/** 👁️ The projection an authored geometry set is drawn in. `elevation` is the side elevation, the rig plane (paper x = world x ahead, paper up = y), seen from the asset's right (-z). `front` is the front elevation, seen from ahead (+x): paper x = world z (the asset's left is paper right), paper up = y. `plan` is the plan (top view), seen from above (+y): paper x = world x, paper up = world z (the asset's left is up the page). Front and plan shapes are authored in the rest pose and follow their bone through its full 3D frame. */
+export const VIEWPOINTS = ["elevation", "front", "plan"] as const;
 
-/** 👁️ One of {@link VIEWPOINTS}. */
+/** 🔭️ One of {@link VIEWPOINTS}. */
 export type Viewpoint = (typeof VIEWPOINTS)[number];
 
 /** 📤️ The output kinds an asset can be exported to. */
 export const EXPORT_FORMATS = ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"] as const;
 
-/** 📤️ One of {@link EXPORT_FORMATS}. */
+/** 📦️ One of {@link EXPORT_FORMATS}. */
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 
 /** ✅️ How far an asset has come: planned, authored data only, or every representation, view, pose, clip, model and export checked. */
 export const COMPLETION = ["planned", "authored", "verified"] as const;
 
-/** ✅️ One of {@link COMPLETION}. */
+/** 🏁️ One of {@link COMPLETION}. */
 export type Completion = (typeof COMPLETION)[number];
 //#endregion 🔖️Scalars
 
@@ -84,6 +84,17 @@ export type Provenance = {
 //#endregion 📚️Provenance
 
 //#region 🧱️Materials
+/** 🧊️ The transitions a {@link PhaseChange} describes: `boiling` (liquid to vapour) and `melting` (solid to liquid). */
+export const PHASE_TRANSITIONS = ["boiling", "melting"] as const;
+
+/** 🔄️ One of {@link PHASE_TRANSITIONS}. */
+export type PhaseTransition = (typeof PHASE_TRANSITIONS)[number];
+
+/** 💧️ A phase change at constant temperature: while a region is heated, its temperature is capped at `pointC` and the surplus power is converted into mass of the new phase at `latentHeatJKg`
+ * (water: boiling 100 degC, 2.257 MJ/kg at 1 atm; ice: melting 0 degC, 0.334 MJ/kg). A region's own declaration overrides the one of its material. The inventory is assumed ample (no depletion).
+ * @see https://doi.org/10.1002/9781119175957 — Incropera & DeWitt, latent heat */
+export type PhaseChange = { readonly transition: PhaseTransition; readonly pointC: number; readonly latentHeatJKg: number };
+
 /** 🧱️ A material with the properties the thermal and structural models read; absent properties are not used by any model. */
 export type Material = {
   readonly id: Slug;
@@ -95,6 +106,7 @@ export type Material = {
   readonly specificHeatJKgK?: number;
   readonly elasticModulusPa?: number;
   readonly strengthPa?: number;
+  readonly phaseChange?: PhaseChange;
   readonly source: ParameterSource;
   readonly reference?: Slug;
 };
@@ -104,14 +116,16 @@ export type Material = {
 /** 🔩️ How a bone may move relative to its parent. */
 export const JOINT_TYPES = ["fixed", "revolute", "prismatic"] as const;
 
-/** 🔩️ One of {@link JOINT_TYPES}. */
+/** 🔗️ One of {@link JOINT_TYPES}. */
 export type JointType = (typeof JOINT_TYPES)[number];
 
-/** 🔩️ A joint and its limits; revolute limits are angle offsets from rest, prismatic limits are offsets along `axisDeg` (bone-parent frame). */
+/** 🦾️ A joint and its limits; revolute limits are angle offsets from rest, prismatic limits are offsets along `axisDeg` (bone-parent frame). */
 export type Joint = {
   readonly type: JointType;
   readonly minDeg?: number;
   readonly maxDeg?: number;
+  readonly twistMinDeg?: number;
+  readonly twistMaxDeg?: number;
   readonly axisDeg?: number;
   readonly minM?: number;
   readonly maxM?: number;
@@ -136,13 +150,14 @@ export type Section = {
   readonly title?: Text;
 };
 
-/** 🦴️ A bone: a rigid frame placed at (`x`, `y`) and rotated by `angleDeg` in its parent's frame at rest; its local x axis runs along it. */
+/** 🦴️ A bone: a rigid frame placed at (`x`, `y`) and rotated by `angleDeg` in its parent's frame at rest; its local x axis runs along it. `z` is the lateral rest offset of the origin in the parent frame (left is +, default 0): the pivot of a spread or twist of a bone beside the symmetry plane (a wing root, a shoulder). */
 export type Bone = {
   readonly id: Slug;
   readonly parent: Slug | null;
   readonly title: Text;
   readonly x: number;
   readonly y: number;
+  readonly z?: number;
   readonly angleDeg: number;
   readonly lengthM: number;
   readonly joint: Joint;
@@ -150,7 +165,7 @@ export type Bone = {
   readonly section?: Section;
 };
 
-/** 🦴️ A transform hierarchy with exactly one root. `kind` names the articulation family. */
+/** 🌳️ A transform hierarchy with exactly one root. `kind` names the articulation family. */
 export type Rig = {
   readonly kind: "anatomical" | "botanical" | "mechanical" | "structural";
   readonly root: Slug;
@@ -162,26 +177,28 @@ export type Rig = {
 /** 📍️ What an anchor is for. */
 export const ANCHOR_KINDS = ["contact", "support", "attachment", "emitter", "load"] as const;
 
-/** 📍️ One of {@link ANCHOR_KINDS}. */
+/** 🎯️ One of {@link ANCHOR_KINDS}. */
 export type AnchorKind = (typeof ANCHOR_KINDS)[number];
 
 /** 🧷️ How a support restrains: unilateral ground contact (compression only, friction), pin, roller or fixed. */
 export const SUPPORT_TYPES = ["contact", "pin", "roller", "fixed"] as const;
 
-/** 🧷️ One of {@link SUPPORT_TYPES}. */
+/** 🪨️ One of {@link SUPPORT_TYPES}. */
 export type SupportType = (typeof SUPPORT_TYPES)[number];
 
-/** 📍️ A point fixed on a bone (local coordinates); contacts and supports carry the footprint used for contact pressure. `normalDeg` is
- * the world direction a contact or roller restrains (default 90, vertical); for emitters `directionDeg` in the emitter gives the outflow. */
+/** 🪝️ A point fixed on a bone (local coordinates); contacts and supports carry the footprint used for contact pressure. `normalDeg` is
+ * the world direction a contact or roller restrains (default 90, vertical); `tiltDeg` (-90 to 90, default 0) lifts that normal out of the sagittal plane towards the left (+z) and is a physical value, not a placeholder: 0 keeps the restraint in the plane, 90 restrains the lateral direction only, so it is stated only on supports that restrain out of plane; for emitters `directionDeg` in the emitter gives the outflow. */
 export type Anchor = {
   readonly id: Slug;
   readonly bone: Slug;
   readonly x: number;
   readonly y: number;
+  readonly z?: number;
   readonly kind: AnchorKind;
   readonly title: Text;
   readonly support?: SupportType;
   readonly normalDeg?: number;
+  readonly tiltDeg?: number;
   readonly footprintLengthM?: number;
   readonly footprintWidthM?: number;
   readonly frictionCoefficient?: number;
@@ -192,26 +209,40 @@ export type Anchor = {
 /** 🖋️ The line-hierarchy role of a shape: silhouette, secondary detail, fine hatch/texture, transparent glazing or ground line. */
 export const SHAPE_ROLES = ["body", "detail", "texture", "glazing", "ground"] as const;
 
-/** 🖋️ One of {@link SHAPE_ROLES}. */
+/** 🎨️ One of {@link SHAPE_ROLES}. */
 export type ShapeRole = (typeof SHAPE_ROLES)[number];
 
-/** 💊️ A stadium between two local points with radii `r0` and `r1` (tangent hull of two circles). */
-export type CapsuleShape = { readonly kind: "capsule"; readonly x0: number; readonly y0: number; readonly x1: number; readonly y1: number; readonly r0: number; readonly r1: number };
+/** 💊️ A stadium between two local points with radii `r0` and `r1` (tangent hull of two circles). In plan geometry `followTip` makes the `(x1, y1)` end follow the x travel of the tip of the shape's bone (the `(x0, y0)` end follows its origin), so the stadium stretches along a limb seen from above. */
+export type CapsuleShape = { readonly kind: "capsule"; readonly x0: number; readonly y0: number; readonly x1: number; readonly y1: number; readonly r0: number; readonly r1: number; readonly followTip?: boolean };
 
 /** ⭕️ An ellipse in local coordinates. */
 export type EllipseShape = { readonly kind: "ellipse"; readonly cx: number; readonly cy: number; readonly rx: number; readonly ry: number; readonly rotationDeg?: number };
 
-/** ⬛️ A rectangle with optional corner radius, lower-left at (`x`, `y`). */
-export type RectShape = { readonly kind: "rect"; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly r?: number };
+/** ⬛️ A rectangle with optional corner radius, lower-left at (`x`, `y`). In front geometry `followTip` stretches it vertically between the origin and the tip of its bone (a vertex at the bone origin height follows the y travel of the origin, one at the tip height the y travel of the tip, linearly between). */
+export type RectShape = { readonly kind: "rect"; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly r?: number; readonly followTip?: boolean };
 
-/** 🔷️ A polygon or polyline through local points. */
-export type PolyShape = { readonly kind: "poly"; readonly points: readonly (readonly [number, number])[]; readonly closed: boolean };
+/** 🔷️ A polygon or polyline through local points. In front geometry `followTip` stretches it vertically between the origin and the tip of its bone, as for {@link RectShape}. */
+export type PolyShape = { readonly kind: "poly"; readonly points: readonly (readonly [number, number])[]; readonly closed: boolean; readonly followTip?: boolean };
 
 /** 〰️ An SVG-style path (`M L H V C Q A Z`, absolute or relative) in local metres, y up. */
 export type PathShape = { readonly kind: "path"; readonly d: string };
 
-/** ✏️ One of the shape primitives. */
-export type ShapeGeometry = CapsuleShape | EllipseShape | RectShape | PolyShape | PathShape;
+/** 📍️ An end point of a {@link MemberShape}: metres from the origin of `bone` (default the shape's own bone; the shape's own bone or one of its ancestors) at rest, `x` along the bone (u), `y` along its normal (v), `z` lateral (w, left is +); `z` is required and never defaulted. */
+export type MemberEnd = { readonly bone?: Slug; readonly x: number; readonly y: number; readonly z: number };
+
+/** 📐️ The physical section of a member: a rectangle of width `w` (along bar x bone-w) and height `h` (completing the orthonormal frame), or a circle of diameter `d`, in metres. */
+export type MemberSection = { readonly kind: "rect"; readonly w: number; readonly h: number } | { readonly kind: "circle"; readonly d: number };
+
+/** 🦴️ A prismatic bar between two bone-local end points with a physical section, carried by the full 3D frames of its bones and drawn in its true foreshortened outline in every viewpoint. It has no planar geometry and no `solid`: a diagonal is one member, never a bounding rectangle. */
+export type MemberShape = { readonly kind: "member"; readonly from: MemberEnd; readonly to: MemberEnd; readonly section: MemberSection };
+
+/** 🔺️ One of the shape primitives. */
+export type ShapeGeometry = CapsuleShape | EllipseShape | RectShape | PolyShape | PathShape | MemberShape;
+
+/** 🌀️ How a shape of any viewpoint is a solid of its rig-plane profile, authored in the bone's local frame like a side elevation shape and placed with the full 3D frame of its bone (spread, twist and sagittal rotation) and projected to the viewpoint (side elevation, front elevation or plan), so one 3D definition reads right in all three views at every pose and clip instant.
+ * `revolved`: an axisymmetric part (umbrella canopy, rib, lid, drum) about an axis through the rest origin of `axisBone` along its bone-local direction `axis` (`u` along the bone, `v` its normal in the sagittal plane, `w` the lateral axis), through the point translated from that origin by `axisX` along world x and `axisZ` along world z (default 0) at rest, the axis then carried with that bone; `axisBone` is the shape's own bone or one of its ancestors, so the solid moves rigidly with its bone; the optional `lateralScale` (> 0, default 1, a physical circle) scales the lateral radius to an elliptic cross-section; the front paper x is the lateral distance from the axis (`mirror` also draws the reflection, so a half profile reads as the whole body), the plan is the circle of the widest lateral reach about the axis.
+ * `extruded`: a prismatic part swept along the bone-local axis `sweep` (`w` lateral, with the profile in the (u, v) plane; `v` along the bone normal, with the profile in the (u, w) plane; required, never defaulted), here described for the lateral sweep: a part (blind slat, damper flap, door panel, boom, board) spanning `z0`..`z1` (left is +); the front is `z0`..`z1` by the height range of the profile, the plan the forward range of the profile by `z0`..`z1`. The optional `zTip` is the span at the bone tip in the same order as `z0`..`z1` (`zTip[0] < zTip[1]`); the span interpolates linearly along the bone from `z0`..`z1` at its origin, so a tapered limb, blade or branch is one extruded solid. */
+export type Solid = { readonly kind: "revolved"; readonly axisBone: Slug; readonly axis: "u" | "v" | "w"; readonly axisX: number; readonly axisZ?: number; readonly lateralScale?: number; readonly mirror?: boolean } | { readonly kind: "extruded"; readonly sweep: "v" | "w"; readonly z0: number; readonly z1: number; readonly zTip?: readonly [number, number] };
 
 /** ✏️ An authored shape of one representation, bound to a bone. `region` binds it to one thermal region; a shape that merges several
  * surfaces at a small scale lists them in `regions` instead and is painted with their area-weighted value (labelled as merged). `hatch`
@@ -228,6 +259,7 @@ export type Shape = ShapeGeometry & {
   readonly material?: Slug;
   readonly hatch?: Slug;
   readonly penMm?: number;
+  readonly solid?: Solid;
 };
 //#endregion ✏️Geometry
 
@@ -235,7 +267,7 @@ export type Shape = ShapeGeometry & {
 /** 🖨️ The preset drawing-scale denominators, smallest scale first; every asset decides each of them explicitly. */
 export const SCALE_DENOMINATORS = [500, 200, 100, 50] as const;
 
-/** 🖨️ One of {@link SCALE_DENOMINATORS}. */
+/** 🔢️ One of {@link SCALE_DENOMINATORS}. */
 export type ScaleDenominator = (typeof SCALE_DENOMINATORS)[number];
 
 /** 🔑️ The key of a representation in {@link Asset.representations}: the denominator as a string. */
@@ -259,7 +291,7 @@ export type RepresentationDecisions = {
   readonly overlays: Text;
 };
 
-/** 🖨️ A representation individually authored for one preset scale. `validRange` is the range of custom denominators this
+/** 🗺️ A representation individually authored for one preset scale. `validRange` is the range of custom denominators this
  * representation is validated for (it always contains its own denominator); custom scales inside it render it as a derived use. */
 export type AuthoredRepresentation = {
   readonly status: "authored";
@@ -267,25 +299,36 @@ export type AuthoredRepresentation = {
   readonly validRange: { readonly minDenominator: number; readonly maxDenominator: number };
   readonly pens: PenSet;
   readonly hatches: readonly Hatch[];
-  readonly geometry: { readonly elevation: readonly Shape[]; readonly plan?: readonly Shape[] };
+  readonly geometry: { readonly elevation: readonly Shape[]; readonly front: readonly Shape[]; readonly plan: readonly Shape[] };
+  readonly sections?: { readonly front?: ViewSection; readonly plan?: ViewSection };
   readonly decisions: RepresentationDecisions;
 };
+
+/** ✂️ A viewpoint drawn as a section: the cut plane lies at `plane` metres along the view axis (front: the forward position x of a plane across the forward axis, seen from ahead; plan: the height y of a horizontal plane, seen from above) and is named by `label` (such as A-A). The side elevation shows the cut-line marker at that plane; sheets and the viewer caption the cut "Section A-A" / "Schnitt A-A" (front) and "Plan section B-B" / "Grundriss-Schnitt B-B" (plan). */
+export type ViewSection = { readonly plane: number; readonly label: Text };
 
 /** ↪️ What to offer instead of an unavailable representation: another scale of the asset, a symbol of the asset, or another asset. */
 export type Alternative = { readonly kind: "scale"; readonly denominator: ScaleDenominator } | { readonly kind: "symbol"; readonly symbol: Slug } | { readonly kind: "asset"; readonly asset: Slug };
 
-/** 🚫️ An explicit decision that the asset cannot be meaningfully drawn at this scale: why, which feature limits it and at what real size,
+/** 🚫️ Why a scale has no physically scaled drawing, in all three viewpoints: a real feature is smaller than the print profile can print, or the asset has no meaningful physical depiction at this scale. */
+export const UNAVAILABLE_CAUSES = ["below-printable-feature", "no-physical-depiction"] as const;
+
+/** 🔎️ One of {@link UNAVAILABLE_CAUSES}. */
+export type UnavailableCause = (typeof UNAVAILABLE_CAUSES)[number];
+
+/** 🚫️ An explicit decision that the asset cannot be meaningfully drawn at this scale: why,which feature limits it and at what real size,
  * and what to use instead (at least one alternative). */
 export type UnavailableRepresentation = {
   readonly status: "unavailable";
   readonly denominator: ScaleDenominator;
+  readonly cause: UnavailableCause;
   readonly reason: Text;
   readonly limitingFeature: Text;
   readonly limitingSizeM: number;
   readonly alternatives: readonly Alternative[];
 };
 
-/** 🖨️ The decision for one preset scale. */
+/** 🔀️ The decision for one preset scale. */
 export type Representation = AuthoredRepresentation | UnavailableRepresentation;
 
 /** 🔣️ A conventional symbol, separately identified from the pictorial representations. Its dimensional semantics are explicit:
@@ -300,11 +343,11 @@ export type SymbolRepresentation = {
   readonly denominators: readonly ScaleDenominator[];
   readonly pens: PenSet;
   readonly hatches: readonly Hatch[];
-  readonly geometry: { readonly elevation: readonly Shape[]; readonly plan?: readonly Shape[] };
+  readonly geometry: { readonly elevation: readonly Shape[]; readonly front: readonly Shape[]; readonly plan: readonly Shape[] };
   readonly dimensionalNote: Text;
 };
 
-/** 🖨️ A print profile: the smallest stroke, gap between separate outlines, feature width and hatch spacing that reliably print. */
+/** 📃️ A print profile: the smallest stroke, gap between separate outlines, feature width and hatch spacing that reliably print. */
 export type PrintProfile = {
   readonly id: Slug;
   readonly title: Text;
@@ -317,13 +360,13 @@ export type PrintProfile = {
   readonly reference?: Slug;
 };
 
-/** 🖨️ The print profile document `🗂️catalog/🖨️print-profiles/🔣️.json`. */
+/** 📑️ The print profile document `🗂️catalog/🖨️print-profiles/🔣️.json`. */
 export type PrintProfileDocument = { readonly $schema: string; readonly version: typeof SCHEMA_VERSION; readonly defaultProfile: Slug; readonly profiles: readonly PrintProfile[]; readonly references: readonly Reference[] };
 //#endregion 🖨️Representations
 
 //#region 🧍️Poses
-/** 🎚️ An offset from rest for one bone: rotation delta and translation delta along the parent frame (prismatic joints). */
-export type BoneOffset = { readonly angleDeg?: number; readonly dx?: number; readonly dy?: number };
+/** 🎚️ An offset from rest for one bone: rotation delta and translation delta along the parent frame (prismatic joints). `abductionDeg` is the lateral spread of a revolute bone: the bone turns out of the sagittal plane about its own normal (positive towards the left of the asset, +z), added down the chain like `angleDeg`. `twistDeg` turns the bone and its subtree about its own longitudinal axis (a yaw for a vertical bone: slew, swivel, steering; positive counter-clockwise seen from above for a bone pointing up). Both are solved in a three-dimensional chain whose orthographic projections are the side elevation, the front elevation and the plan (top view). */
+export type BoneOffset = { readonly angleDeg?: number; readonly abductionDeg?: number; readonly twistDeg?: number; readonly dx?: number; readonly dy?: number };
 
 /** 🧲️ A load applied at an anchor or a bone point, in world newtons; `distributed` spreads `wyNPerM` along a bone segment instead. */
 export type AppliedLoad = {
@@ -336,17 +379,21 @@ export type AppliedLoad = {
   readonly y?: number;
   readonly fxN: number;
   readonly fyN: number;
+  readonly z?: number;
+  readonly fzN?: number;
+  readonly momentXNm?: number;
+  readonly momentYNm?: number;
   readonly momentNm?: number;
-  readonly distributed?: { readonly bone: Slug; readonly fromM: number; readonly toM: number; readonly wxNPerM: number; readonly wyNPerM: number };
+  readonly distributed?: { readonly bone: Slug; readonly fromM: number; readonly toM: number; readonly wxNPerM: number; readonly wyNPerM: number; readonly wzNPerM?: number };
   readonly source: ParameterSource;
   readonly reference?: Slug;
 };
 
-/** 🌡️ The region state a pose binds: share of the area exposed to air, share of the area in sun, whether the surface is wetted, and the
+/** 🌬️ The region state a pose binds: share of the area exposed to air, share of the area in sun, whether the surface is wetted, and the
  * conductive contact (seat, ground) it rests on. */
 export type RegionBinding = { readonly exposedFraction: number; readonly sunlitFraction: number; readonly wettedness?: number; readonly contact?: { readonly fraction: number; readonly tempC: number } };
 
-/** 🌡️ The thermal and respiratory state a pose or clip key binds explicitly: activity, external work, operating levels of machines,
+/** 🏃️ The thermal and respiratory state a pose or clip key binds explicitly: activity, external work, operating levels of machines,
  * the breathing pattern, every region and every emitter. Bodies bind `activityMet` and `breathing`; every pose binds every region and
  * every non-respiratory emitter (strength 0…1) of its asset. */
 export type ThermalBinding = {
@@ -359,7 +406,7 @@ export type ThermalBinding = {
   readonly emitters: Readonly<Record<Slug, number>>;
 };
 
-/** 🧍️ A configuration: bone offsets, root placement, active contacts, thermal binding and loads. `key: true` marks an in-between key
+/** 🧭️ A configuration: bone offsets, root placement, active contacts, thermal binding and loads. `key: true` marks an in-between key
  * pose of a clip, evaluable like any pose but not offered as a named pose; every asset has at least three named poses. */
 export type Pose = {
   readonly id: Slug;
@@ -380,10 +427,10 @@ export type Pose = {
  * looping clips, zero at the ends of non-looping ones); `linear` constant rate; `in`/`out` accelerate/decelerate; `step` holds. */
 export const EASES = ["linear", "smooth", "in", "out", "step"] as const;
 
-/** 📈️ One of {@link EASES}. */
+/** 🎢️ One of {@link EASES}. */
 export type Ease = (typeof EASES)[number];
 
-/** 🔑️ A clip key: at `t` the clip shows `pose` with optional bone overrides; `ease` shapes the way to the next key. */
+/** ⏱️ A clip key: at `t` the clip shows `pose` with optional bone overrides; `ease` shapes the way to the next key. */
 export type ClipKey = { readonly t: number; readonly pose: Slug; readonly ease: Ease; readonly bones?: Readonly<Record<Slug, BoneOffset>> };
 
 /** 🦶️ A time span during which an anchor is in contact; planted contacts do not slide. */
@@ -432,16 +479,17 @@ export type Environment = {
   readonly groundTempC?: number;
   readonly relativeHumidity: number;
   readonly windMS: number;
+  /** Horizontal bearing the air moves towards, degrees from the forward axis +x towards the left axis +z (0 forward, 90 towards the left of the asset, 180 backward; the frame is left-handed: x ahead, y up, z left); the wind has no vertical component. */
   readonly windDirectionDeg: number;
   readonly solarWM2: number;
   readonly diffuseFraction: number;
   readonly pressurePa: number;
 };
 
-/** 🌤️ A named environment preset of `🗂️catalog/🌤️environments/🔣️.json`, shared by every asset so results stay comparable. */
+/** 🏞️ A named environment preset of `🗂️catalog/🌤️environments/🔣️.json`, shared by every asset so results stay comparable. */
 export type EnvironmentPreset = { readonly id: Slug; readonly title: Text; readonly description: Text; readonly environment: Environment; readonly source: ParameterSource; readonly reference?: Slug };
 
-/** 🌤️ The environment preset document. */
+/** 🏔️ The environment preset document. */
 export type EnvironmentDocument = { readonly $schema: string; readonly version: typeof SCHEMA_VERSION; readonly presets: readonly EnvironmentPreset[]; readonly references: readonly Reference[] };
 
 /** 🧮️ How a region's surface temperature is obtained.
@@ -451,10 +499,12 @@ export type EnvironmentDocument = { readonly $schema: string; readonly version: 
  * - `passive`: solar absorption, radiation, convection and contact conduction of an inert object, with heat capacity.
  * - `operating`: an inert surface heated from inside by `operating.heatW × level` (engines, motors, lamps, heaters, exhausts).
  * - `conditioned`: a building element separating the environment from an interior at `conditioned.interiorTempC` through its `layers`.
+ * - `hydronic`: a surface heated by the water of a heating circuit: the inside temperature is the circuit water at the region's position along the flow, from the supply temperature falling to the return temperature, at the circuit's operating level; heat flows from it through the layers and the water-side film.
+ * - `coupled`: a surface whose inside is the water of another region of the asset (a jug or pot wall): below the fill level the wall follows that region's temperature through the layers and the water-side film, and the heat it draws is taken from that region.
  * - `fixed`: a prescribed surface temperature (only for reference fixtures). */
-export const THERMAL_MODELS = ["body", "leaf", "passive", "operating", "conditioned", "fixed"] as const;
+export const THERMAL_MODELS = ["body", "leaf", "passive", "operating", "conditioned", "hydronic", "coupled", "fixed"] as const;
 
-/** 🧮️ One of {@link THERMAL_MODELS}. */
+/** 🔬️ One of {@link THERMAL_MODELS}. */
 export type ThermalModelKind = (typeof THERMAL_MODELS)[number];
 
 /** 🧶️ One layer of a region, innermost first: thermal resistance, vapour resistance and areal heat capacity, all referred to the
@@ -471,6 +521,15 @@ export type ThermalLayer = {
   readonly source: ParameterSource;
   readonly reference?: Slug;
 };
+
+/** 💧️ One row of a heating-circuit table: the supply and return water temperatures at one operating level `v`. */
+export type CircuitRow = { readonly v: number; readonly supplyTempC: number; readonly returnTempC: number };
+
+/** 🚰️ The inside of a `hydronic` region: the water of the circuit driven by the operating level `key`. `rows` (ascending in `v`, at least one) give the supply and return temperatures at named levels and are interpolated linearly in between; below the first row the water falls linearly to the air temperature at level 0, above the last row it holds. `flowPosition` (0 at the inlet, 1 at the outlet) places the region along the flow: its water is `supply − (supply − return) · flowPosition`. `filmM2KW` is the resistance between that water and the layers (water-side film, fins), referred to the region's outer area. */
+export type HydronicCircuit = { readonly key: Slug; readonly rows: readonly CircuitRow[]; readonly flowPosition: number; readonly filmM2KW: number };
+
+/** 🫗️ The inside of a `coupled` region: the water of the region `region` of the same asset. `wetFraction` is the share of the outer area behind which the water stands (fill level over wall height); only that share conducts, `filmM2KW` is the water-side resistance referred to the wetted area. */
+export type WaterCoupling = { readonly region: Slug; readonly wetFraction: number; readonly filmM2KW: number };
 
 /** 🔥️ A thermal region: one surface patch with its area, shape for convection correlations, layers and model parameters. The outermost
  * layer's material (or `material` when there are no layers) gives emissivity and solar absorptivity. `hidden` explains why a region
@@ -491,11 +550,17 @@ export type ThermalRegion = {
   readonly leaf?: { readonly stomatalConductanceMaxMS: number; readonly leafAreaIndex: number; readonly photosynthesis: "c3" | "c4" | "cam" };
   readonly operating?: { readonly key: Slug; readonly heatW: number };
   readonly conditioned?: { readonly interiorTempC: number; readonly interiorFilmM2KW: number };
+  readonly hydronic?: HydronicCircuit;
+  readonly coupled?: WaterCoupling;
   readonly fixed?: { readonly surfaceTempC: number };
+  readonly phaseChange?: PhaseChange;
   readonly hidden?: Text;
   readonly source: ParameterSource;
   readonly reference?: Slug;
 };
+
+/** 🔑️ The operating key that drives a region: the key of its `operating` heat or of its `hydronic` circuit, else `null`. */
+export const operatingKeyOf = (region: ThermalRegion): Slug | null => region.operating?.key ?? region.hydronic?.key ?? null;
 
 /** 🫀️ The whole-body thermal physiology of a human or animal: size, basal metabolism, regulated set points and thermoregulatory limits. */
 export type BodyPhysiology = {
@@ -530,7 +595,7 @@ export type BreathingPattern = {
   readonly reference?: Slug;
 };
 
-/** 🫁️ Respiration of a body: the nostril and mouth emitters (emitter anchors on the head), exhaled air state, the patterns poses bind,
+/** 👃️ Respiration of a body: the nostril and mouth emitters (emitter anchors on the head), exhaled air state, the patterns poses bind,
  * and the chest/abdomen bones that move with lung volume (`angleDeg` and `dy` at one tidal volume above functional residual capacity). */
 export type Respiration = {
   readonly noseEmitter?: Slug;
@@ -550,6 +615,8 @@ export type Passenger = { readonly id: Slug; readonly title: Text; readonly phys
 
 /** 💨️ A rig-attached source of air or vapour. `breath` emitters take flow, temperature and humidity from {@link Respiration}; `exhaust`,
  * `vent`, `flue` and `fan` scale `volumeFlowM3S`, `temperatureRiseK` and `vapourKgPerKg` with the operating level of `operatingKey`;
+ * a `vent`, `flue`, `fan` or `exhaust` with a `region` instead releases the vapour mass rate of that region's evaporation (surface evaporation plus phase change) as air carrying `vapourKgPerKg`
+ * (its `volumeFlowM3S` is not used), heated by `temperatureRiseK` and weighted by the operating level;
  * `transpiration` releases the latent flux of its foliage `region` as vapour, spread over `anchors`; `plume` is the free convection
  * above a warm surface `region`. */
 export type Emitter = {
@@ -575,6 +642,7 @@ export type OperatingKey = { readonly id: Slug; readonly title: Text; readonly l
 /** 🌡️ The thermal model of an asset. */
 export type ThermalModel = {
   readonly environment: Environment;
+  readonly referenceEnvironment?: Slug | Environment;
   readonly baseMet?: number;
   readonly body?: BodyPhysiology;
   readonly respiration?: Respiration;
@@ -598,13 +666,14 @@ export type StructuralModel = {
 //#endregion 🏗️Structure
 
 //#region 🧍️Asset
-/** 📐️ Nominal overall real dimensions (bounding box of the default pose) and total mass; every authored representation reproduces them. */
+/** 📐️ Nominal overall real dimensions and total mass: the physical envelope of everything that belongs to the asset in its rest pose (held items, attachments, plates, flanges, lids, footings), without stroke width, ground shading, plumes, transport or annotations; every authored representation reproduces them in every viewpoint within max(2 % of the declared value, 15 mm).
+ * `heightM` is the extent along world y (up), `widthM` along world x (ahead: the real depth of an object drawn in side elevation; paper x of the side elevation and of the plan), `depthM` along world z (lateral: paper x of the front elevation, paper up of the plan; the left-right width of an object drawn in side elevation). */
 export type Dimensions = { readonly heightM: number; readonly widthM: number; readonly depthM: number; readonly massKg: number };
 
 /** 🖼️ Presentation defaults. */
-export type Presentation = { readonly defaultPose: Slug; readonly defaultClip: Slug; readonly defaultScale: ScaleDenominator; readonly viewpoints: readonly Viewpoint[] };
+export type Presentation = { readonly defaultPose: Slug; readonly defaultClip: Slug; readonly defaultScale: ScaleDenominator };
 
-/** 🧍️ One handcrafted staffage asset. The physical scenario is scale-independent; `representations` decides every preset scale. */
+/** 🏺️ One handcrafted staffage asset. The physical scenario is scale-independent; `representations` decides every preset scale. */
 export type Asset = {
   readonly id: Slug;
   readonly category: CategoryId;
@@ -627,7 +696,7 @@ export type Asset = {
   readonly completion: Completion;
 };
 
-/** 🗂️ One asset file: `🗂️catalog/<category folder>/<asset id>/🔣️.json`. */
+/** 📄️ One asset file: `🗂️catalog/<category folder>/<asset id>/🔣️.json`. */
 export type AssetDocument = { readonly $schema: string; readonly version: typeof SCHEMA_VERSION; readonly asset: Asset };
 //#endregion 🧍️Asset
 
@@ -645,16 +714,15 @@ export type ManifestEntry = {
   readonly representations: Readonly<Record<RepresentationKey, "authored" | "unavailable">>;
   readonly symbols: readonly Slug[];
   readonly analytics: readonly ("thermal" | "transport" | "structural")[];
-  readonly viewpoints: readonly Viewpoint[];
   readonly exports: readonly ExportFormat[];
   readonly distinction: Text;
   readonly completion: Completion;
 };
 
-/** 🗂️ A category of the archive with its folder of asset folders. */
+/** 📂️ A category of the archive with its folder of asset folders. */
 export type CategoryEntry = { readonly id: CategoryId; readonly emoji: string; readonly title: Text; readonly description: Text; readonly folder: string };
 
-/** 📋️ The archive manifest `🗂️catalog/🔣️.json`. */
+/** 📜️ The archive manifest `🗂️catalog/🔣️.json`. */
 export type Manifest = {
   readonly $schema: string;
   readonly version: typeof SCHEMA_VERSION;

@@ -9,8 +9,8 @@
       "de": "Abgespanntes Vordach"
     },
     "summary": {
-      "en": "A 5.5 m IPE 160 steel canopy beam (S355) with a glass roof, pinned to an externally insulated concrete wall through a thermally separated plate and held by a tube strut hinged at both ends rising to the wall above; it carries snow in tension and wind uplift in compression.",
-      "de": "Ein 5,5 m langer Stahlträger IPE 160 (S355) eines Vordachs mit Glasdeckung, über eine thermisch getrennte Platte gelenkig an einer außengedämmten Betonwand gelagert und durch einen beidseitig gelenkig angeschlossenen Rohrstab zur Wand darüber gehalten; er trägt Schnee auf Zug und Windsog auf Druck."
+      "en": "A 5.5 m IPE 160 steel canopy beam (S355) with a glass roof, pinned at door-head height (beam underside 2.25 m) to an externally insulated concrete wall through a thermally separated plate and held by a tube strut hinged at both ends rising to the wall above; it carries snow in tension and wind uplift in compression.",
+      "de": "Ein 5,5 m langer Stahlträger IPE 160 (S355) eines Vordachs mit Glasdeckung, über eine thermisch getrennte Platte gelenkig in Türsturzhöhe (Trägerunterkante 2,25 m) an einer außengedämmten Betonwand gelagert und durch einen beidseitig gelenkig angeschlossenen Rohrstab zur Wand darüber gehalten; er trägt Schnee auf Zug und Windsog auf Druck."
     },
     "tags": [
       "component",
@@ -91,9 +91,9 @@
       }
     },
     "dimensions": {
-      "heightM": 3.14,
-      "widthM": 6.0,
-      "depthM": 1.0,
+      "heightM": 5.35,
+      "widthM": 6,
+      "depthM": 1,
       "massKg": 86.78
     },
     "materials": [
@@ -137,7 +137,7 @@
         "emissivity": 0.837,
         "solarAbsorptivity": 0.08,
         "densityKgM3": 2500,
-        "conductivityWmK": 1.0,
+        "conductivityWmK": 1,
         "specificHeatJKgK": 750,
         "elasticModulusPa": 70000000000,
         "source": "literature",
@@ -195,7 +195,7 @@
             "de": "Vordachträger (starre Wurzel an der Wand)"
           },
           "x": 0,
-          "y": 0.12,
+          "y": 2.33,
           "angleDeg": 0,
           "lengthM": 5.5,
           "joint": {
@@ -211,7 +211,7 @@
           },
           "section": {
             "areaM2": 0.00201,
-            "secondMomentM4": 8.693e-06,
+            "secondMomentM4": 0.000008693,
             "extremeFibreM": 0.08,
             "material": "steel",
             "title": {
@@ -250,134 +250,33 @@
       }
     ],
     "representations": {
-      "500": {
+      "50": {
         "status": "authored",
-        "denominator": 500,
+        "denominator": 50,
         "validRange": {
-          "minDenominator": 350,
-          "maxDenominator": 1000
+          "minDenominator": 20,
+          "maxDenominator": 75
         },
         "pens": {
-          "body": 0.13,
-          "detail": null,
-          "texture": null,
-          "glazing": null,
-          "ground": 0.18
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
         },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "wall",
-              "bone": "canopy",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.6,
-              "regions": [
-                "wall-face",
-                "wall-plate"
-              ],
-              "material": "concrete",
-              "kind": "rect",
-              "x": -0.5,
-              "y": -0.12,
-              "w": 0.5,
-              "h": 3.14
+        "hatches": [
+          {
+            "id": "concrete",
+            "title": {
+              "en": "Reinforced concrete",
+              "de": "Stahlbeton"
             },
-            {
-              "id": "beam",
-              "bone": "canopy",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.4,
-              "regions": [
-                "canopy-steel",
-                "canopy-glass"
-              ],
-              "material": "steel",
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.08,
-              "w": 5.5,
-              "h": 0.18
-            },
-            {
-              "id": "strut",
-              "bone": "canopy",
-              "role": "body",
-              "z": 5,
-              "filled": false,
-              "tone": 0.45,
-              "region": "rod-steel",
-              "material": "steel",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  4.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  2.88
-                ]
-              ],
-              "closed": false
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "A tall wall bar on the left, a horizontal canopy bar projecting 5.5 m from its foot and a single strut line rising from the beam to the wall; a classic tied canopy diagram.",
-            "de": "Ein hoher Wandbalken links, ein waagerechter Vordachbalken, der 5,5 m aus seinem Fuß auskragt, und eine einzelne Stablinie, die vom Träger zur Wand ansteigt; das klassische Bild eines abgehängten Vordachs."
-          },
-          "retained": {
-            "en": "Wall (1 x 6.3 mm), beam with glass cover (11 x 0.36 mm) and the strut angle (36 degrees to the beam).",
-            "de": "Wand (1 x 6,3 mm), Träger mit Glasdeckung (11 x 0,36 mm) und der Stabwinkel (36 Grad zum Träger)."
-          },
-          "merged": {
-            "en": "Wall layers and anchor plates are one wall bar; steel beam and glass roof are one beam bar.",
-            "de": "Wandschichten und Ankerplatten sind ein Wandbalken; Stahlträger und Glasdach sind ein Trägerbalken."
-          },
-          "omitted": {
-            "en": "Flange lines, glass joints, clevises, pins and plate details.",
-            "de": "Flanschlinien, Glasfugen, Gabelköpfe, Bolzen und Plattendetails."
-          },
-          "thinElements": {
-            "en": "The 60 mm tube strut is a 0.13 mm pen line (65 mm real); the 0.36 mm beam bar is drawn at its true height of 0.18 m.",
-            "de": "Der 60-mm-Rohrstab ist eine Linie mit 0,13 mm Feder (65 mm real); der 0,36 mm hohe Trägerbalken ist in seiner wahren Höhe von 0,18 m gezeichnet."
-          },
-          "hatching": {
-            "en": "No hatch.",
-            "de": "Keine Schraffur."
-          },
-          "styles": {
-            "en": "Mid-grey wall, dark beam, thin strut line.",
-            "de": "Mittelgraue Wand, dunkler Träger, dünne Stablinie."
-          },
-          "overlays": {
-            "en": "Overlays colour the wall (merged layers and plates), the beam (merged steel and glass) and the strut separately; the strut line carries the tension or compression.",
-            "de": "Überlagerungen färben Wand (Schichten und Platten zusammengefasst), Träger (Stahl und Glas zusammengefasst) und Stab getrennt; die Stablinie trägt Zug oder Druck."
+            "pattern": "stipple",
+            "angleDeg": 0,
+            "spacingMm": 1,
+            "penMm": 0.1
           }
-        }
-      },
-      "200": {
-        "status": "authored",
-        "denominator": 200,
-        "validRange": {
-          "minDenominator": 150,
-          "maxDenominator": 350
-        },
-        "pens": {
-          "body": 0.18,
-          "detail": 0.1,
-          "texture": null,
-          "glazing": 0.1,
-          "ground": 0.25
-        },
-        "hatches": [],
+        ],
         "geometry": {
           "elevation": [
             {
@@ -389,29 +288,659 @@
               "tone": 0.6,
               "region": "wall-face",
               "material": "concrete",
+              "hatch": "concrete",
               "kind": "rect",
               "x": -0.5,
-              "y": -0.12,
+              "y": -2.33,
               "w": 0.3,
-              "h": 3.14
+              "h": 5.35
             },
             {
-              "id": "wall-outer",
+              "id": "wall-rebar-inner",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 1.1,
+              "filled": false,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  -2.0300000000000002
+                ],
+                [
+                  -0.45,
+                  2.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wall-rebar-outer",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 1.1,
+              "filled": false,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  -2.0300000000000002
+                ],
+                [
+                  -0.25,
+                  2.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wall-insulation",
               "bone": "canopy",
               "role": "body",
               "z": 1,
               "filled": true,
               "tone": 0.9,
-              "regions": [
-                "wall-face",
-                "wall-plate"
-              ],
+              "region": "wall-face",
               "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -2.33,
+              "w": 0.2,
+              "h": 5.35
+            },
+            {
+              "id": "wall-insulation-zigzag",
+              "bone": "canopy",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-face",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  -2.03
+                ],
+                [
+                  -0.07,
+                  -1.99185
+                ],
+                [
+                  -0.15,
+                  -1.95371
+                ],
+                [
+                  -0.07,
+                  -1.91556
+                ],
+                [
+                  -0.15,
+                  -1.87742
+                ],
+                [
+                  -0.07,
+                  -1.83927
+                ],
+                [
+                  -0.15,
+                  -1.80113
+                ],
+                [
+                  -0.07,
+                  -1.76298
+                ],
+                [
+                  -0.15,
+                  -1.72484
+                ],
+                [
+                  -0.07,
+                  -1.68669
+                ],
+                [
+                  -0.15,
+                  -1.64855
+                ],
+                [
+                  -0.07,
+                  -1.6104
+                ],
+                [
+                  -0.15,
+                  -1.57226
+                ],
+                [
+                  -0.07,
+                  -1.53411
+                ],
+                [
+                  -0.15,
+                  -1.49597
+                ],
+                [
+                  -0.07,
+                  -1.45782
+                ],
+                [
+                  -0.15,
+                  -1.41968
+                ],
+                [
+                  -0.07,
+                  -1.38153
+                ],
+                [
+                  -0.15,
+                  -1.34339
+                ],
+                [
+                  -0.07,
+                  -1.30524
+                ],
+                [
+                  -0.15,
+                  -1.2671
+                ],
+                [
+                  -0.07,
+                  -1.22895
+                ],
+                [
+                  -0.15,
+                  -1.19081
+                ],
+                [
+                  -0.07,
+                  -1.15266
+                ],
+                [
+                  -0.15,
+                  -1.11452
+                ],
+                [
+                  -0.07,
+                  -1.07637
+                ],
+                [
+                  -0.15,
+                  -1.03823
+                ],
+                [
+                  -0.07,
+                  -1.00008
+                ],
+                [
+                  -0.15,
+                  -0.96194
+                ],
+                [
+                  -0.07,
+                  -0.92379
+                ],
+                [
+                  -0.15,
+                  -0.88565
+                ],
+                [
+                  -0.07,
+                  -0.8475
+                ],
+                [
+                  -0.15,
+                  -0.80935
+                ],
+                [
+                  -0.07,
+                  -0.77121
+                ],
+                [
+                  -0.15,
+                  -0.73306
+                ],
+                [
+                  -0.07,
+                  -0.69492
+                ],
+                [
+                  -0.15,
+                  -0.65677
+                ],
+                [
+                  -0.07,
+                  -0.61863
+                ],
+                [
+                  -0.15,
+                  -0.58048
+                ],
+                [
+                  -0.07,
+                  -0.54234
+                ],
+                [
+                  -0.15,
+                  -0.50419
+                ],
+                [
+                  -0.07,
+                  -0.46605
+                ],
+                [
+                  -0.15,
+                  -0.4279
+                ],
+                [
+                  -0.07,
+                  -0.38976
+                ],
+                [
+                  -0.15,
+                  -0.35161
+                ],
+                [
+                  -0.07,
+                  -0.31347
+                ],
+                [
+                  -0.15,
+                  -0.27532
+                ],
+                [
+                  -0.07,
+                  -0.23718
+                ],
+                [
+                  -0.15,
+                  -0.19903
+                ],
+                [
+                  -0.07,
+                  -0.16089
+                ],
+                [
+                  -0.15,
+                  -0.12274
+                ],
+                [
+                  -0.07,
+                  -0.0846
+                ],
+                [
+                  -0.15,
+                  -0.04645
+                ],
+                [
+                  -0.07,
+                  -0.00831
+                ],
+                [
+                  -0.15,
+                  0.02984
+                ],
+                [
+                  -0.07,
+                  0.06798
+                ],
+                [
+                  -0.15,
+                  0.10613
+                ],
+                [
+                  -0.07,
+                  0.14427
+                ],
+                [
+                  -0.15,
+                  0.18242
+                ],
+                [
+                  -0.07,
+                  0.22056
+                ],
+                [
+                  -0.15,
+                  0.25871
+                ],
+                [
+                  -0.07,
+                  0.29685
+                ],
+                [
+                  -0.15,
+                  0.335
+                ],
+                [
+                  -0.07,
+                  0.37315
+                ],
+                [
+                  -0.15,
+                  0.41129
+                ],
+                [
+                  -0.07,
+                  0.44944
+                ],
+                [
+                  -0.15,
+                  0.48758
+                ],
+                [
+                  -0.07,
+                  0.52573
+                ],
+                [
+                  -0.15,
+                  0.56387
+                ],
+                [
+                  -0.07,
+                  0.60202
+                ],
+                [
+                  -0.15,
+                  0.64016
+                ],
+                [
+                  -0.07,
+                  0.67831
+                ],
+                [
+                  -0.15,
+                  0.71645
+                ],
+                [
+                  -0.07,
+                  0.7546
+                ],
+                [
+                  -0.15,
+                  0.79274
+                ],
+                [
+                  -0.07,
+                  0.83089
+                ],
+                [
+                  -0.15,
+                  0.86903
+                ],
+                [
+                  -0.07,
+                  0.90718
+                ],
+                [
+                  -0.15,
+                  0.94532
+                ],
+                [
+                  -0.07,
+                  0.98347
+                ],
+                [
+                  -0.15,
+                  1.02161
+                ],
+                [
+                  -0.07,
+                  1.05976
+                ],
+                [
+                  -0.15,
+                  1.0979
+                ],
+                [
+                  -0.07,
+                  1.13605
+                ],
+                [
+                  -0.15,
+                  1.17419
+                ],
+                [
+                  -0.07,
+                  1.21234
+                ],
+                [
+                  -0.15,
+                  1.25048
+                ],
+                [
+                  -0.07,
+                  1.28863
+                ],
+                [
+                  -0.15,
+                  1.32677
+                ],
+                [
+                  -0.07,
+                  1.36492
+                ],
+                [
+                  -0.15,
+                  1.40306
+                ],
+                [
+                  -0.07,
+                  1.44121
+                ],
+                [
+                  -0.15,
+                  1.47935
+                ],
+                [
+                  -0.07,
+                  1.5175
+                ],
+                [
+                  -0.15,
+                  1.55565
+                ],
+                [
+                  -0.07,
+                  1.59379
+                ],
+                [
+                  -0.15,
+                  1.63194
+                ],
+                [
+                  -0.07,
+                  1.67008
+                ],
+                [
+                  -0.15,
+                  1.70823
+                ],
+                [
+                  -0.07,
+                  1.74637
+                ],
+                [
+                  -0.15,
+                  1.78452
+                ],
+                [
+                  -0.07,
+                  1.82266
+                ],
+                [
+                  -0.15,
+                  1.86081
+                ],
+                [
+                  -0.07,
+                  1.89895
+                ],
+                [
+                  -0.15,
+                  1.9371
+                ],
+                [
+                  -0.07,
+                  1.97524
+                ],
+                [
+                  -0.15,
+                  2.01339
+                ],
+                [
+                  -0.07,
+                  2.05153
+                ],
+                [
+                  -0.15,
+                  2.08968
+                ],
+                [
+                  -0.07,
+                  2.12782
+                ],
+                [
+                  -0.15,
+                  2.16597
+                ],
+                [
+                  -0.07,
+                  2.20411
+                ],
+                [
+                  -0.15,
+                  2.24226
+                ],
+                [
+                  -0.07,
+                  2.2804
+                ],
+                [
+                  -0.15,
+                  2.31855
+                ],
+                [
+                  -0.07,
+                  2.35669
+                ],
+                [
+                  -0.15,
+                  2.39484
+                ],
+                [
+                  -0.07,
+                  2.43298
+                ],
+                [
+                  -0.15,
+                  2.47113
+                ],
+                [
+                  -0.07,
+                  2.50927
+                ],
+                [
+                  -0.15,
+                  2.54742
+                ],
+                [
+                  -0.07,
+                  2.58556
+                ],
+                [
+                  -0.15,
+                  2.62371
+                ],
+                [
+                  -0.07,
+                  2.66185
+                ],
+                [
+                  -0.15,
+                  2.7
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wall-render",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -2.33,
+              "w": 0.02,
+              "h": 5.35
+            },
+            {
+              "id": "plate-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "wall-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -0.12,
+              "w": 0.02,
+              "h": 0.24
+            },
+            {
+              "id": "pad-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wall-plate",
+              "material": "anchor-pad",
               "kind": "rect",
               "x": -0.2,
               "y": -0.12,
               "w": 0.2,
-              "h": 3.14
+              "h": 0.24
+            },
+            {
+              "id": "plate-strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "wall-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": 2.76,
+              "w": 0.02,
+              "h": 0.24
+            },
+            {
+              "id": "pad-strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wall-plate",
+              "material": "anchor-pad",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 2.76,
+              "w": 0.2,
+              "h": 0.24
             },
             {
               "id": "beam",
@@ -423,53 +952,724 @@
               "region": "canopy-steel",
               "material": "steel",
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.08,
               "w": 5.5,
               "h": 0.16
             },
             {
-              "id": "glass-roof",
+              "id": "beam-flange-top",
               "bone": "canopy",
-              "role": "glazing",
-              "z": 3.5,
+              "role": "detail",
+              "z": 3.1,
               "filled": false,
-              "tone": 0.9,
-              "region": "canopy-glass",
-              "material": "glass",
-              "penMm": 0.1,
+              "tone": 0.3,
+              "region": "canopy-steel",
               "kind": "poly",
               "points": [
                 [
-                  0.1,
-                  0.08
+                  0.02,
+                  0.0726
                 ],
                 [
-                  5.4,
-                  0.08
+                  5.5,
+                  0.0726
                 ]
               ],
               "closed": false
             },
             {
-              "id": "strut",
+              "id": "beam-flange-bottom",
               "bone": "canopy",
-              "role": "body",
-              "z": 5,
+              "role": "detail",
+              "z": 3.1,
               "filled": false,
-              "tone": 0.45,
-              "region": "rod-steel",
-              "material": "steel",
-              "penMm": 0.3,
+              "tone": 0.3,
+              "region": "canopy-steel",
               "kind": "poly",
               "points": [
                 [
-                  4.0,
-                  0.0
+                  0.02,
+                  -0.0726
                 ],
                 [
-                  0.0,
-                  2.88
+                  5.5,
+                  -0.0726
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-0",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 0.1,
+              "y": 0.08,
+              "w": 1.28,
+              "h": 0.02
+            },
+            {
+              "id": "glass-1",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 1.44,
+              "y": 0.08,
+              "w": 1.28,
+              "h": 0.02
+            },
+            {
+              "id": "glass-2",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 2.78,
+              "y": 0.08,
+              "w": 1.28,
+              "h": 0.02
+            },
+            {
+              "id": "glass-3",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 4.12,
+              "y": 0.08,
+              "w": 1.28,
+              "h": 0.02
+            },
+            {
+              "id": "strut-tube",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "capsule",
+              "x0": 4,
+              "y0": 0,
+              "x1": 0,
+              "y1": 2.88,
+              "r0": 0.03,
+              "r1": 0.03
+            },
+            {
+              "id": "strut-axis",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  3.91885,
+                  0.05843
+                ],
+                [
+                  0.08115,
+                  2.82157
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "clevis-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 3.94,
+              "y": -0.12,
+              "w": 0.12,
+              "h": 0.24,
+              "r": 0.01
+            },
+            {
+              "id": "clevis-wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.04,
+              "y": 2.76,
+              "w": 0.08,
+              "h": 0.24,
+              "r": 0.01
+            },
+            {
+              "id": "pin-beam",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "rod-steel",
+              "kind": "ellipse",
+              "cx": 4,
+              "cy": 0,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "pin-wall",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "rod-steel",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 2.88,
+              "rx": 0.012,
+              "ry": 0.012
+            }
+          ],
+          "front": [
+            {
+              "id": "wall-face",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 5.35
+            },
+            {
+              "id": "pad-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wall-plate",
+              "material": "anchor-pad",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 2.21,
+              "w": 0.2,
+              "h": 0.24
+            },
+            {
+              "id": "pad-strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wall-plate",
+              "material": "anchor-pad",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 5.09,
+              "w": 0.2,
+              "h": 0.24
+            },
+            {
+              "id": "plate-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "wall-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.08,
+              "y": 2.23,
+              "w": 0.16,
+              "h": 0.2
+            },
+            {
+              "id": "plate-strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "wall-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.08,
+              "y": 5.11,
+              "w": 0.16,
+              "h": 0.2
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "canopy-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.041,
+              "y": 2.25,
+              "w": 0.082,
+              "h": 0.16
+            },
+            {
+              "id": "glass-0",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 2.41,
+              "w": 1,
+              "h": 0.02
+            },
+            {
+              "id": "strut-tube",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 2.33,
+              "x1": 0,
+              "y1": 5.21,
+              "r0": 0.03,
+              "r1": 0.03
+            },
+            {
+              "id": "clevis-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": 2.21,
+              "w": 0.1,
+              "h": 0.24,
+              "r": 0.01
+            },
+            {
+              "id": "clevis-wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.04,
+              "y": 5.09,
+              "w": 0.08,
+              "h": 0.24,
+              "r": 0.01
+            },
+            {
+              "id": "beam-flange-top",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "canopy-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.041,
+                  2.4026
+                ],
+                [
+                  0.041,
+                  2.4026
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "beam-flange-bottom",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "canopy-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.041,
+                  2.2574
+                ],
+                [
+                  0.041,
+                  2.2574
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pin-beam",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  2.33
+                ],
+                [
+                  0.05,
+                  2.33
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pin-wall",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.04,
+                  5.21
+                ],
+                [
+                  0.04,
+                  5.21
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "strut-axis",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  2.36
+                ],
+                [
+                  0,
+                  5.18
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall-core",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "hatch": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": -0.5,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "wall-insulation",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-face",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.5,
+              "w": 0.2,
+              "h": 1
+            },
+            {
+              "id": "wall-render",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -0.5,
+              "w": 0.02,
+              "h": 1
+            },
+            {
+              "id": "glass-0",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "glass-1",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 1.44,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "glass-2",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 2.78,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "glass-3",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 4.12,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "canopy-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.041,
+              "w": 5.5,
+              "h": 0.082
+            },
+            {
+              "id": "beam-web",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "canopy-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0
+                ],
+                [
+                  5.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "strut-tube",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 4,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.03
+            },
+            {
+              "id": "strut-axis",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0
+                ],
+                [
+                  3.9,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "clevis-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 3.94,
+              "y": -0.04,
+              "w": 0.12,
+              "h": 0.08,
+              "r": 0.01
+            },
+            {
+              "id": "clevis-wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.04,
+              "w": 0.08,
+              "h": 0.08,
+              "r": 0.01
+            },
+            {
+              "id": "pin-beam",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  4,
+                  -0.04
+                ],
+                [
+                  4,
+                  0.04
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pin-wall",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.35,
+              "region": "rod-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.04
+                ],
+                [
+                  0,
+                  0.04
                 ]
               ],
               "closed": false
@@ -478,36 +1678,36 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A two-layer wall bar, a beam band with a glass line on top and a thick strut line to the wall.",
-            "de": "Ein zweischichtiger Wandbalken, ein Trägerband mit einer Glaslinie darauf und eine kräftige Stablinie zur Wand."
+            "en": "The full detail of the tied canopy: the insulated concrete wall with reinforcement, two anchor plates with separation pads, the IPE 160 beam with flange lines, a glass roof of four panels with joints, and the tube strut with clevises and pins at both ends. Front and plan: the front shows the render face, the anchor pads with steel plates, the beam end with flange lines, the glass edge, the 60 mm tube with axis line, both clevises and pins; the plan shows the wall top (concrete stipple, insulation, render), the four glass sheets, the beam with its web line seen through the glass, the tube strut with axis, clevises and the pin lines (pin axes run across the strut). The canopy hangs at door-head height, beam underside 2.25 m above the ground, so the wall rises to 5.35 m and the strut climbs 2.9 m to its anchor 5.2 m above the ground; the front shows all of it from the ground up.",
+            "de": "Das volle Detail des abgehängten Vordachs: die gedämmte Betonwand mit Bewehrung, zwei Ankerplatten mit Trennlagen, der Träger IPE 160 mit Flanschlinien, ein Glasdach aus vier Scheiben mit Fugen und der Rohrstab mit Gabelköpfen und Bolzen an beiden Enden. Vorder- und Draufsicht: Die Vorderansicht zeigt die Putzfläche, die Ankerplatten mit Stahlplatten, das Trägerende mit Flanschlinien, die Glaskante, das Rohr 60 mm mit Achslinie sowie beide Gabeln und Bolzen; die Draufsicht zeigt die Wandkrone (Betonpunktraster, Dämmung, Putz), die vier Glasscheiben, den Träger mit seiner durch das Glas sichtbaren Steglinie, den Rohrstab mit Achse, die Gabeln und die Bolzenlinien (die Bolzenachsen verlaufen quer zum Stab). Das Vordach hängt in Türsturzhöhe, Trägerunterkante 2,25 m über dem Boden, daher steigt die Wand auf 5,35 m und der Stab klettert 2,9 m zu seinem Anschluss 5,2 m über dem Boden; die Vorderansicht zeigt alles vom Boden an."
           },
           "retained": {
-            "en": "Concrete core (1.5 mm), insulation and render with the anchor plates (1 mm), beam band (0.8 mm tall), glass line, strut line.",
-            "de": "Betonkern (1,5 mm), Dämmung und Putz mit den Ankerplatten (1 mm), Trägerband (0,8 mm hoch), Glaslinie, Stablinie."
+            "en": "Wall core (6 mm) with two bars, 180 mm insulation with zigzag, render, plates and separation pads (0.4 mm plates), beam (3.2 mm tall) with two flange lines (7.4 mm flanges), four glass panels (25.6 x 0.4 mm, joints 1.2 mm), strut, clevises (2.4 x 4.8 mm), pins.",
+            "de": "Wandkern (6 mm) mit zwei Stäben, 180 mm Dämmung mit Zickzack, Putz, Platten und Trennlagen (Platten 0,4 mm), Träger (3,2 mm hoch) mit zwei Flanschlinien (Flansche 7,4 mm), vier Glasscheiben (25,6 x 0,4 mm, Fugen 1,2 mm), Stab, Gabelköpfe (2,4 x 4,8 mm), Bolzen."
           },
           "merged": {
-            "en": "Mineral wool, render and anchor plates share the outer wall shape; the glass panels are one line.",
-            "de": "Mineralwolle, Putz und Ankerplatten teilen sich die äußere Wandform; die Glasscheiben sind eine Linie."
+            "en": "The strut tube is one capsule with an axis line; the render below the beam plate is drawn together with the wool.",
+            "de": "Das Stabrohr ist eine Kapsel mit Achslinie; der Putz unter der Trägerplatte ist mit der Wolle zusammen gezeichnet."
           },
           "omitted": {
-            "en": "Flange lines, glass joints, clevises, pins and the anchor plate outlines.",
-            "de": "Flanschlinien, Glasfugen, Gabelköpfe, Bolzen und die Ankerplattenumrisse."
+            "en": "Weld seams, plate bolts, the web stiffener and the hollow-section wall of the strut.",
+            "de": "Schweißnähte, Plattenschrauben, die Stegsteife und die Wand des Rohrprofils."
           },
           "thinElements": {
-            "en": "The 20 mm glass is a 0.1 mm pen line (20 mm exact); the 60 mm strut is a 0.3 mm pen line (60 mm exact).",
-            "de": "Das 20-mm-Glas ist eine Linie mit 0,1 mm Feder (20 mm genau); der 60-mm-Stab ist eine Linie mit 0,3 mm Feder (60 mm genau)."
+            "en": "The tube wall (3.2 mm, 0.06 mm) is not resolved; the 20 mm glass is a 0.4 mm filled strip with a 0.13 mm outline, the 20 mm render a 0.4 mm strip.",
+            "de": "Die Rohrwand (3,2 mm, 0,06 mm) wird nicht aufgelöst; das 20-mm-Glas ist ein 0,4 mm hoher gefüllter Streifen mit 0,13 mm Kontur, der 20-mm-Putz ein 0,4 mm breiter Streifen."
           },
           "hatching": {
-            "en": "No hatch: tones separate concrete from insulation.",
-            "de": "Keine Schraffur: Tonwerte trennen Beton von der Dämmung."
+            "en": "Concrete stippled (1.0 mm), bars as 0.2 mm lines, insulation with the zigzag line (DIN ISO 128-50); steel is solid because the elevation is not a cut.",
+            "de": "Beton punktiert (1,0 mm), Stäbe als 0,2-mm-Linien, Dämmung mit Zickzacklinie (DIN ISO 128-50); Stahl bleibt voll, weil die Ansicht kein Schnitt ist."
           },
           "styles": {
-            "en": "Mid-grey concrete, light insulation, dark steel.",
-            "de": "Mittelgrauer Beton, helle Dämmung, dunkler Stahl."
+            "en": "Outline 0.35 mm, details 0.18 mm, glass 0.13 mm; darkest steel, lighter pads, light glass.",
+            "de": "Kontur 0,35 mm, Details 0,18 mm, Glas 0,13 mm; Stahl am dunkelsten, hellere Trennlagen, helles Glas."
           },
           "overlays": {
-            "en": "Wall core, outer wall with plates, beam, glass line and strut are separate overlay cells; the outer wall is a merged layer and plate cell.",
-            "de": "Wandkern, Außenwand mit Platten, Träger, Glaslinie und Stab sind getrennte Überlagerungszellen; die Außenwand ist eine zusammengefasste Schicht-und-Platten-Zelle."
+            "en": "Wall layers, plates with pads, beam, each glass panel and the strut with its clevises are separate overlay cells, so the cold plate bridges read against the insulated wall.",
+            "de": "Wandschichten, Platten mit Trennlagen, Träger, jede Glasscheibe und der Stab mit Gabelköpfen sind getrennte Überlagerungszellen, so heben sich die kalten Plattenbrücken von der gedämmten Wand ab."
           }
         }
       },
@@ -552,9 +1752,9 @@
               "hatch": "concrete",
               "kind": "rect",
               "x": -0.5,
-              "y": -0.12,
+              "y": -2.33,
               "w": 0.3,
-              "h": 3.14
+              "h": 5.35
             },
             {
               "id": "wall-insulation",
@@ -567,9 +1767,9 @@
               "material": "mineral-wool",
               "kind": "rect",
               "x": -0.2,
-              "y": -0.12,
+              "y": -2.33,
               "w": 0.2,
-              "h": 3.14
+              "h": 5.35
             },
             {
               "id": "wall-insulation-zigzag",
@@ -583,211 +1783,395 @@
               "points": [
                 [
                   -0.16,
-                  0.18
+                  -2.03
                 ],
                 [
                   -0.06,
-                  0.22846
+                  -1.98173
                 ],
                 [
                   -0.16,
-                  0.27692
+                  -1.93347
                 ],
                 [
                   -0.06,
-                  0.32538
+                  -1.8852
                 ],
                 [
                   -0.16,
-                  0.37385
+                  -1.83694
                 ],
                 [
                   -0.06,
-                  0.42231
+                  -1.78867
                 ],
                 [
                   -0.16,
-                  0.47077
+                  -1.74041
                 ],
                 [
                   -0.06,
-                  0.51923
+                  -1.69214
                 ],
                 [
                   -0.16,
-                  0.56769
+                  -1.64388
                 ],
                 [
                   -0.06,
-                  0.61615
+                  -1.59561
                 ],
                 [
                   -0.16,
-                  0.66462
+                  -1.54735
                 ],
                 [
                   -0.06,
-                  0.71308
+                  -1.49908
                 ],
                 [
                   -0.16,
-                  0.76154
+                  -1.45082
                 ],
                 [
                   -0.06,
-                  0.81
+                  -1.40255
                 ],
                 [
                   -0.16,
-                  0.85846
+                  -1.35429
                 ],
                 [
                   -0.06,
-                  0.90692
+                  -1.30602
                 ],
                 [
                   -0.16,
-                  0.95538
+                  -1.25776
                 ],
                 [
                   -0.06,
-                  1.00385
+                  -1.20949
                 ],
                 [
                   -0.16,
-                  1.05231
+                  -1.16122
                 ],
                 [
                   -0.06,
-                  1.10077
+                  -1.11296
                 ],
                 [
                   -0.16,
-                  1.14923
+                  -1.06469
                 ],
                 [
                   -0.06,
-                  1.19769
+                  -1.01643
                 ],
                 [
                   -0.16,
-                  1.24615
+                  -0.96816
                 ],
                 [
                   -0.06,
-                  1.29462
+                  -0.9199
                 ],
                 [
                   -0.16,
-                  1.34308
+                  -0.87163
                 ],
                 [
                   -0.06,
-                  1.39154
+                  -0.82337
                 ],
                 [
                   -0.16,
-                  1.44
+                  -0.7751
                 ],
                 [
                   -0.06,
-                  1.48846
+                  -0.72684
                 ],
                 [
                   -0.16,
-                  1.53692
+                  -0.67857
                 ],
                 [
                   -0.06,
-                  1.58538
+                  -0.63031
                 ],
                 [
                   -0.16,
-                  1.63385
+                  -0.58204
                 ],
                 [
                   -0.06,
-                  1.68231
+                  -0.53378
                 ],
                 [
                   -0.16,
-                  1.73077
+                  -0.48551
                 ],
                 [
                   -0.06,
-                  1.77923
+                  -0.43724
                 ],
                 [
                   -0.16,
-                  1.82769
+                  -0.38898
                 ],
                 [
                   -0.06,
-                  1.87615
+                  -0.34071
                 ],
                 [
                   -0.16,
-                  1.92462
+                  -0.29245
                 ],
                 [
                   -0.06,
-                  1.97308
+                  -0.24418
                 ],
                 [
                   -0.16,
-                  2.02154
+                  -0.19592
                 ],
                 [
                   -0.06,
-                  2.07
+                  -0.14765
                 ],
                 [
                   -0.16,
-                  2.11846
+                  -0.09939
                 ],
                 [
                   -0.06,
-                  2.16692
+                  -0.05112
                 ],
                 [
                   -0.16,
-                  2.21538
+                  -0.00286
                 ],
                 [
                   -0.06,
-                  2.26385
+                  0.04541
                 ],
                 [
                   -0.16,
-                  2.31231
+                  0.09367
                 ],
                 [
                   -0.06,
-                  2.36077
+                  0.14194
                 ],
                 [
                   -0.16,
-                  2.40923
+                  0.1902
                 ],
                 [
                   -0.06,
-                  2.45769
+                  0.23847
                 ],
                 [
                   -0.16,
-                  2.50615
+                  0.28673
                 ],
                 [
                   -0.06,
-                  2.55462
+                  0.335
                 ],
                 [
                   -0.16,
-                  2.60308
+                  0.38327
                 ],
                 [
                   -0.06,
-                  2.65154
+                  0.43153
+                ],
+                [
+                  -0.16,
+                  0.4798
+                ],
+                [
+                  -0.06,
+                  0.52806
+                ],
+                [
+                  -0.16,
+                  0.57633
+                ],
+                [
+                  -0.06,
+                  0.62459
+                ],
+                [
+                  -0.16,
+                  0.67286
+                ],
+                [
+                  -0.06,
+                  0.72112
+                ],
+                [
+                  -0.16,
+                  0.76939
+                ],
+                [
+                  -0.06,
+                  0.81765
+                ],
+                [
+                  -0.16,
+                  0.86592
+                ],
+                [
+                  -0.06,
+                  0.91418
+                ],
+                [
+                  -0.16,
+                  0.96245
+                ],
+                [
+                  -0.06,
+                  1.01071
+                ],
+                [
+                  -0.16,
+                  1.05898
+                ],
+                [
+                  -0.06,
+                  1.10724
+                ],
+                [
+                  -0.16,
+                  1.15551
+                ],
+                [
+                  -0.06,
+                  1.20378
+                ],
+                [
+                  -0.16,
+                  1.25204
+                ],
+                [
+                  -0.06,
+                  1.30031
+                ],
+                [
+                  -0.16,
+                  1.34857
+                ],
+                [
+                  -0.06,
+                  1.39684
+                ],
+                [
+                  -0.16,
+                  1.4451
+                ],
+                [
+                  -0.06,
+                  1.49337
+                ],
+                [
+                  -0.16,
+                  1.54163
+                ],
+                [
+                  -0.06,
+                  1.5899
+                ],
+                [
+                  -0.16,
+                  1.63816
+                ],
+                [
+                  -0.06,
+                  1.68643
+                ],
+                [
+                  -0.16,
+                  1.73469
+                ],
+                [
+                  -0.06,
+                  1.78296
+                ],
+                [
+                  -0.16,
+                  1.83122
+                ],
+                [
+                  -0.06,
+                  1.87949
+                ],
+                [
+                  -0.16,
+                  1.92776
+                ],
+                [
+                  -0.06,
+                  1.97602
+                ],
+                [
+                  -0.16,
+                  2.02429
+                ],
+                [
+                  -0.06,
+                  2.07255
+                ],
+                [
+                  -0.16,
+                  2.12082
+                ],
+                [
+                  -0.06,
+                  2.16908
+                ],
+                [
+                  -0.16,
+                  2.21735
+                ],
+                [
+                  -0.06,
+                  2.26561
+                ],
+                [
+                  -0.16,
+                  2.31388
+                ],
+                [
+                  -0.06,
+                  2.36214
+                ],
+                [
+                  -0.16,
+                  2.41041
+                ],
+                [
+                  -0.06,
+                  2.45867
+                ],
+                [
+                  -0.16,
+                  2.50694
+                ],
+                [
+                  -0.06,
+                  2.5552
+                ],
+                [
+                  -0.16,
+                  2.60347
+                ],
+                [
+                  -0.06,
+                  2.65173
                 ],
                 [
                   -0.16,
@@ -836,7 +2220,7 @@
               "region": "canopy-steel",
               "material": "steel",
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.08,
               "w": 5.5,
               "h": 0.16
@@ -972,8 +2356,8 @@
               "tone": 0.1,
               "region": "rod-steel",
               "kind": "ellipse",
-              "cx": 4.0,
-              "cy": 0.0,
+              "cx": 4,
+              "cy": 0,
               "rx": 0.015,
               "ry": 0.015
             },
@@ -986,17 +2370,284 @@
               "tone": 0.1,
               "region": "rod-steel",
               "kind": "ellipse",
-              "cx": 0.0,
+              "cx": 0,
               "cy": 2.88,
               "rx": 0.015,
               "ry": 0.015
+            }
+          ],
+          "front": [
+            {
+              "id": "wall-face",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 5.35
+            },
+            {
+              "id": "pad-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wall-plate",
+              "material": "anchor-pad",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 2.21,
+              "w": 0.2,
+              "h": 0.24
+            },
+            {
+              "id": "pad-strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1.4,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wall-plate",
+              "material": "anchor-pad",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 5.09,
+              "w": 0.2,
+              "h": 0.24
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "canopy-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.041,
+              "y": 2.25,
+              "w": 0.082,
+              "h": 0.16
+            },
+            {
+              "id": "glass-0",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 2.41,
+              "w": 1,
+              "h": 0.02
+            },
+            {
+              "id": "strut-tube",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 2.33,
+              "x1": 0,
+              "y1": 5.21,
+              "r0": 0.03,
+              "r1": 0.03
+            },
+            {
+              "id": "clevis-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": 2.21,
+              "w": 0.1,
+              "h": 0.24,
+              "r": 0.01
+            },
+            {
+              "id": "clevis-wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.04,
+              "y": 5.09,
+              "w": 0.08,
+              "h": 0.24,
+              "r": 0.01
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall-core",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "hatch": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": -0.5,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "wall-insulation",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-face",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.5,
+              "w": 0.2,
+              "h": 1
+            },
+            {
+              "id": "glass-0",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "glass-1",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 1.44,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "glass-2",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 2.78,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "glass-3",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": 4.12,
+              "y": -0.5,
+              "w": 1.28,
+              "h": 1
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "canopy-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.041,
+              "w": 5.5,
+              "h": 0.082
+            },
+            {
+              "id": "strut-tube",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 4,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.03
+            },
+            {
+              "id": "clevis-beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "rod-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 3.94,
+              "y": -0.04,
+              "w": 0.12,
+              "h": 0.08
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A hatched concrete wall with insulation, two anchor plates, a steel beam with four glass panels and a strut with two pins.",
-            "de": "Eine schraffierte Betonwand mit Dämmung, zwei Ankerplatten, ein Stahlträger mit vier Glasscheiben und ein Stab mit zwei Bolzen."
+            "en": "A hatched concrete wall with insulation, two anchor plates, a steel beam with four glass panels and a strut with two pins. Front and plan: the front adds the wall pads, the end of the beam, the 60 mm tube strut and both clevises; the plan draws the wall top with concrete stipple, the four glass sheets with their joints, the beam under them and the strut tube above them with the beam clevis. The canopy hangs at door-head height, beam underside 2.25 m above the ground, so the wall rises to 5.35 m and the strut climbs 2.9 m to its anchor 5.2 m above the ground; the front shows all of it from the ground up.",
+            "de": "Eine schraffierte Betonwand mit Dämmung, zwei Ankerplatten, ein Stahlträger mit vier Glasscheiben und ein Stab mit zwei Bolzen. Vorder- und Draufsicht: Die Vorderansicht ergänzt die Wandplatten, das Trägerende, den Rohrstab 60 mm und beide Gabeln; die Draufsicht zeichnet die Wandkrone mit Betonpunktraster, die vier Glasscheiben mit ihren Fugen, den Träger darunter und das Stabrohr darüber mit der Trägergabel. Das Vordach hängt in Türsturzhöhe, Trägerunterkante 2,25 m über dem Boden, daher steigt die Wand auf 5,35 m und der Stab klettert 2,9 m zu seinem Anschluss 5,2 m über dem Boden; die Vorderansicht zeigt alles vom Boden an."
           },
           "retained": {
             "en": "Wall core (3 mm, stipple), insulation with zigzag (1.8 mm), two anchor plates (2 x 2.4 mm), beam (1.6 mm tall), four glass panels (12.8 mm each, 0.6 mm joints), strut (0.6 mm wide), two pin dots.",
@@ -1028,33 +2679,21 @@
           }
         }
       },
-      "50": {
+      "200": {
         "status": "authored",
-        "denominator": 50,
+        "denominator": 200,
         "validRange": {
-          "minDenominator": 20,
-          "maxDenominator": 75
+          "minDenominator": 150,
+          "maxDenominator": 350
         },
         "pens": {
-          "body": 0.35,
-          "detail": 0.18,
-          "texture": 0.1,
-          "glazing": 0.13,
-          "ground": 0.5
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
         },
-        "hatches": [
-          {
-            "id": "concrete",
-            "title": {
-              "en": "Reinforced concrete",
-              "de": "Stahlbeton"
-            },
-            "pattern": "stipple",
-            "angleDeg": 0,
-            "spacingMm": 1.0,
-            "penMm": 0.1
-          }
-        ],
+        "hatches": [],
         "geometry": {
           "elevation": [
             {
@@ -1066,427 +2705,29 @@
               "tone": 0.6,
               "region": "wall-face",
               "material": "concrete",
-              "hatch": "concrete",
               "kind": "rect",
               "x": -0.5,
-              "y": -0.12,
+              "y": -2.33,
               "w": 0.3,
-              "h": 3.14
+              "h": 5.35
             },
             {
-              "id": "wall-rebar-inner",
-              "bone": "canopy",
-              "role": "detail",
-              "z": 1.1,
-              "filled": false,
-              "tone": 0.2,
-              "region": "wall-face",
-              "penMm": 0.2,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.45,
-                  0.18
-                ],
-                [
-                  -0.45,
-                  2.88
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "wall-rebar-outer",
-              "bone": "canopy",
-              "role": "detail",
-              "z": 1.1,
-              "filled": false,
-              "tone": 0.2,
-              "region": "wall-face",
-              "penMm": 0.2,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.25,
-                  0.18
-                ],
-                [
-                  -0.25,
-                  2.88
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "wall-insulation",
+              "id": "wall-outer",
               "bone": "canopy",
               "role": "body",
               "z": 1,
               "filled": true,
               "tone": 0.9,
-              "region": "wall-face",
+              "regions": [
+                "wall-face",
+                "wall-plate"
+              ],
               "material": "mineral-wool",
               "kind": "rect",
               "x": -0.2,
-              "y": -0.12,
+              "y": -2.33,
               "w": 0.2,
-              "h": 3.14
-            },
-            {
-              "id": "wall-insulation-zigzag",
-              "bone": "canopy",
-              "role": "texture",
-              "z": 1.2,
-              "filled": false,
-              "tone": 0.3,
-              "region": "wall-face",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.15,
-                  0.18
-                ],
-                [
-                  -0.07,
-                  0.21818
-                ],
-                [
-                  -0.15,
-                  0.25636
-                ],
-                [
-                  -0.07,
-                  0.29455
-                ],
-                [
-                  -0.15,
-                  0.33273
-                ],
-                [
-                  -0.07,
-                  0.37091
-                ],
-                [
-                  -0.15,
-                  0.40909
-                ],
-                [
-                  -0.07,
-                  0.44727
-                ],
-                [
-                  -0.15,
-                  0.48545
-                ],
-                [
-                  -0.07,
-                  0.52364
-                ],
-                [
-                  -0.15,
-                  0.56182
-                ],
-                [
-                  -0.07,
-                  0.6
-                ],
-                [
-                  -0.15,
-                  0.63818
-                ],
-                [
-                  -0.07,
-                  0.67636
-                ],
-                [
-                  -0.15,
-                  0.71455
-                ],
-                [
-                  -0.07,
-                  0.75273
-                ],
-                [
-                  -0.15,
-                  0.79091
-                ],
-                [
-                  -0.07,
-                  0.82909
-                ],
-                [
-                  -0.15,
-                  0.86727
-                ],
-                [
-                  -0.07,
-                  0.90545
-                ],
-                [
-                  -0.15,
-                  0.94364
-                ],
-                [
-                  -0.07,
-                  0.98182
-                ],
-                [
-                  -0.15,
-                  1.02
-                ],
-                [
-                  -0.07,
-                  1.05818
-                ],
-                [
-                  -0.15,
-                  1.09636
-                ],
-                [
-                  -0.07,
-                  1.13455
-                ],
-                [
-                  -0.15,
-                  1.17273
-                ],
-                [
-                  -0.07,
-                  1.21091
-                ],
-                [
-                  -0.15,
-                  1.24909
-                ],
-                [
-                  -0.07,
-                  1.28727
-                ],
-                [
-                  -0.15,
-                  1.32545
-                ],
-                [
-                  -0.07,
-                  1.36364
-                ],
-                [
-                  -0.15,
-                  1.40182
-                ],
-                [
-                  -0.07,
-                  1.44
-                ],
-                [
-                  -0.15,
-                  1.47818
-                ],
-                [
-                  -0.07,
-                  1.51636
-                ],
-                [
-                  -0.15,
-                  1.55455
-                ],
-                [
-                  -0.07,
-                  1.59273
-                ],
-                [
-                  -0.15,
-                  1.63091
-                ],
-                [
-                  -0.07,
-                  1.66909
-                ],
-                [
-                  -0.15,
-                  1.70727
-                ],
-                [
-                  -0.07,
-                  1.74545
-                ],
-                [
-                  -0.15,
-                  1.78364
-                ],
-                [
-                  -0.07,
-                  1.82182
-                ],
-                [
-                  -0.15,
-                  1.86
-                ],
-                [
-                  -0.07,
-                  1.89818
-                ],
-                [
-                  -0.15,
-                  1.93636
-                ],
-                [
-                  -0.07,
-                  1.97455
-                ],
-                [
-                  -0.15,
-                  2.01273
-                ],
-                [
-                  -0.07,
-                  2.05091
-                ],
-                [
-                  -0.15,
-                  2.08909
-                ],
-                [
-                  -0.07,
-                  2.12727
-                ],
-                [
-                  -0.15,
-                  2.16545
-                ],
-                [
-                  -0.07,
-                  2.20364
-                ],
-                [
-                  -0.15,
-                  2.24182
-                ],
-                [
-                  -0.07,
-                  2.28
-                ],
-                [
-                  -0.15,
-                  2.31818
-                ],
-                [
-                  -0.07,
-                  2.35636
-                ],
-                [
-                  -0.15,
-                  2.39455
-                ],
-                [
-                  -0.07,
-                  2.43273
-                ],
-                [
-                  -0.15,
-                  2.47091
-                ],
-                [
-                  -0.07,
-                  2.50909
-                ],
-                [
-                  -0.15,
-                  2.54727
-                ],
-                [
-                  -0.07,
-                  2.58545
-                ],
-                [
-                  -0.15,
-                  2.62364
-                ],
-                [
-                  -0.07,
-                  2.66182
-                ],
-                [
-                  -0.15,
-                  2.7
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "wall-render",
-              "bone": "canopy",
-              "role": "body",
-              "z": 1.05,
-              "filled": true,
-              "tone": 0.55,
-              "region": "wall-face",
-              "material": "render",
-              "kind": "rect",
-              "x": -0.02,
-              "y": -0.12,
-              "w": 0.02,
-              "h": 3.14
-            },
-            {
-              "id": "plate-beam",
-              "bone": "canopy",
-              "role": "body",
-              "z": 1.5,
-              "filled": true,
-              "tone": 0.3,
-              "region": "wall-plate",
-              "material": "steel",
-              "kind": "rect",
-              "x": -0.02,
-              "y": -0.12,
-              "w": 0.02,
-              "h": 0.24
-            },
-            {
-              "id": "pad-beam",
-              "bone": "canopy",
-              "role": "body",
-              "z": 1.4,
-              "filled": true,
-              "tone": 0.7,
-              "region": "wall-plate",
-              "material": "anchor-pad",
-              "kind": "rect",
-              "x": -0.2,
-              "y": -0.12,
-              "w": 0.2,
-              "h": 0.24
-            },
-            {
-              "id": "plate-strut",
-              "bone": "canopy",
-              "role": "body",
-              "z": 1.5,
-              "filled": true,
-              "tone": 0.3,
-              "region": "wall-plate",
-              "material": "steel",
-              "kind": "rect",
-              "x": -0.02,
-              "y": 2.76,
-              "w": 0.02,
-              "h": 0.24
-            },
-            {
-              "id": "pad-strut",
-              "bone": "canopy",
-              "role": "body",
-              "z": 1.4,
-              "filled": true,
-              "tone": 0.7,
-              "region": "wall-plate",
-              "material": "anchor-pad",
-              "kind": "rect",
-              "x": -0.2,
-              "y": 2.76,
-              "w": 0.2,
-              "h": 0.24
+              "h": 5.35
             },
             {
               "id": "beam",
@@ -1498,245 +2739,534 @@
               "region": "canopy-steel",
               "material": "steel",
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.08,
               "w": 5.5,
               "h": 0.16
             },
             {
-              "id": "beam-flange-top",
+              "id": "glass-roof",
               "bone": "canopy",
-              "role": "detail",
-              "z": 3.1,
+              "role": "glazing",
+              "z": 3.5,
               "filled": false,
-              "tone": 0.3,
-              "region": "canopy-steel",
+              "tone": 0.9,
+              "region": "canopy-glass",
+              "material": "glass",
+              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
-                  0.02,
-                  0.0726
+                  0.1,
+                  0.08
                 ],
                 [
-                  5.5,
-                  0.0726
+                  5.4,
+                  0.08
                 ]
               ],
               "closed": false
             },
             {
-              "id": "beam-flange-bottom",
-              "bone": "canopy",
-              "role": "detail",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "region": "canopy-steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.02,
-                  -0.0726
-                ],
-                [
-                  5.5,
-                  -0.0726
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "glass-0",
-              "bone": "canopy",
-              "role": "glazing",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.92,
-              "region": "canopy-glass",
-              "material": "glass",
-              "kind": "rect",
-              "x": 0.1,
-              "y": 0.08,
-              "w": 1.28,
-              "h": 0.02
-            },
-            {
-              "id": "glass-1",
-              "bone": "canopy",
-              "role": "glazing",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.92,
-              "region": "canopy-glass",
-              "material": "glass",
-              "kind": "rect",
-              "x": 1.44,
-              "y": 0.08,
-              "w": 1.28,
-              "h": 0.02
-            },
-            {
-              "id": "glass-2",
-              "bone": "canopy",
-              "role": "glazing",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.92,
-              "region": "canopy-glass",
-              "material": "glass",
-              "kind": "rect",
-              "x": 2.78,
-              "y": 0.08,
-              "w": 1.28,
-              "h": 0.02
-            },
-            {
-              "id": "glass-3",
-              "bone": "canopy",
-              "role": "glazing",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.92,
-              "region": "canopy-glass",
-              "material": "glass",
-              "kind": "rect",
-              "x": 4.12,
-              "y": 0.08,
-              "w": 1.28,
-              "h": 0.02
-            },
-            {
-              "id": "strut-tube",
+              "id": "strut",
               "bone": "canopy",
               "role": "body",
               "z": 5,
-              "filled": true,
+              "filled": false,
               "tone": 0.45,
               "region": "rod-steel",
               "material": "steel",
-              "kind": "capsule",
-              "x0": 4.0,
-              "y0": 0.0,
-              "x1": 0.0,
-              "y1": 2.88,
-              "r0": 0.03,
-              "r1": 0.03
-            },
-            {
-              "id": "strut-axis",
-              "bone": "canopy",
-              "role": "detail",
-              "z": 5.1,
-              "filled": false,
-              "tone": 0.3,
-              "region": "rod-steel",
+              "penMm": 0.3,
               "kind": "poly",
               "points": [
                 [
-                  3.91885,
-                  0.05843
+                  4,
+                  0
                 ],
                 [
-                  0.08115,
-                  2.82157
+                  0,
+                  2.88
                 ]
               ],
               "closed": false
-            },
+            }
+          ],
+          "front": [
             {
-              "id": "clevis-beam",
+              "id": "wall-core",
               "bone": "canopy",
               "role": "body",
-              "z": 5.2,
+              "z": 1,
               "filled": true,
-              "tone": 0.3,
-              "region": "rod-steel",
-              "material": "steel",
+              "tone": 0.6,
+              "regions": [
+                "wall-face",
+                "wall-plate"
+              ],
+              "material": "concrete",
               "kind": "rect",
-              "x": 3.94,
-              "y": -0.12,
-              "w": 0.12,
-              "h": 0.24,
-              "r": 0.01
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 5.35
             },
             {
-              "id": "clevis-wall",
+              "id": "beam",
               "bone": "canopy",
               "role": "body",
-              "z": 5.2,
+              "z": 3,
               "filled": true,
-              "tone": 0.3,
-              "region": "rod-steel",
+              "tone": 0.4,
+              "region": "canopy-steel",
               "material": "steel",
               "kind": "rect",
-              "x": -0.04,
-              "y": 2.76,
-              "w": 0.08,
-              "h": 0.24,
-              "r": 0.01
+              "x": -0.041,
+              "y": 2.25,
+              "w": 0.082,
+              "h": 0.16
             },
             {
-              "id": "pin-beam",
+              "id": "glass-roof",
               "bone": "canopy",
-              "role": "detail",
-              "z": 5.3,
+              "role": "glazing",
+              "z": 3.5,
               "filled": true,
-              "tone": 0.1,
-              "region": "rod-steel",
-              "kind": "ellipse",
-              "cx": 4.0,
-              "cy": 0.0,
-              "rx": 0.012,
-              "ry": 0.012
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 2.41,
+              "w": 1,
+              "h": 0.02
             },
             {
-              "id": "pin-wall",
+              "id": "strut",
               "bone": "canopy",
-              "role": "detail",
-              "z": 5.3,
-              "filled": true,
-              "tone": 0.1,
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
               "region": "rod-steel",
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 2.88,
-              "rx": 0.012,
-              "ry": 0.012
+              "material": "steel",
+              "penMm": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  2.33
+                ],
+                [
+                  0,
+                  5.21
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall-core",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": -0.5,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "wall-outer",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "regions": [
+                "wall-face",
+                "wall-plate"
+              ],
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.5,
+              "w": 0.2,
+              "h": 1
+            },
+            {
+              "id": "glass-roof",
+              "bone": "canopy",
+              "role": "glazing",
+              "z": 2,
+              "filled": true,
+              "tone": 0.92,
+              "region": "canopy-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.5,
+              "w": 5.3,
+              "h": 1
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "canopy-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.041,
+              "w": 5.5,
+              "h": 0.082
+            },
+            {
+              "id": "strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "penMm": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  4,
+                  0
+                ]
+              ],
+              "closed": false
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "The full detail of the tied canopy: the insulated concrete wall with reinforcement, two anchor plates with separation pads, the IPE 160 beam with flange lines, a glass roof of four panels with joints, and the tube strut with clevises and pins at both ends.",
-            "de": "Das volle Detail des abgehängten Vordachs: die gedämmte Betonwand mit Bewehrung, zwei Ankerplatten mit Trennlagen, der Träger IPE 160 mit Flanschlinien, ein Glasdach aus vier Scheiben mit Fugen und der Rohrstab mit Gabelköpfen und Bolzen an beiden Enden."
+            "en": "A two-layer wall bar, a beam band with a glass line on top and a thick strut line to the wall. Front and plan: the front shows the wall face, the beam end (IPE 160), the roof as an edge-on glass strip and the strut as a line; the plan shows the wall (concrete and insulation), the glass roof, the beam seen through it and the strut line. The canopy hangs at door-head height, beam underside 2.25 m above the ground, so the wall rises to 5.35 m and the strut climbs 2.9 m to its anchor 5.2 m above the ground; the front shows all of it from the ground up.",
+            "de": "Ein zweischichtiger Wandbalken, ein Trägerband mit einer Glaslinie darauf und eine kräftige Stablinie zur Wand. Vorder- und Draufsicht: Die Vorderansicht zeigt die Wandfläche, das Trägerende (IPE 160), das Dach als Glasstreifen in Kantenansicht und den Stab als Linie; die Draufsicht zeigt die Wand (Beton und Dämmung), das Glasdach, den hindurch sichtbaren Träger und die Stablinie. Das Vordach hängt in Türsturzhöhe, Trägerunterkante 2,25 m über dem Boden, daher steigt die Wand auf 5,35 m und der Stab klettert 2,9 m zu seinem Anschluss 5,2 m über dem Boden; die Vorderansicht zeigt alles vom Boden an."
           },
           "retained": {
-            "en": "Wall core (6 mm) with two bars, 180 mm insulation with zigzag, render, plates and separation pads (0.4 mm plates), beam (3.2 mm tall) with two flange lines (7.4 mm flanges), four glass panels (25.6 x 0.4 mm, joints 1.2 mm), strut, clevises (2.4 x 4.8 mm), pins.",
-            "de": "Wandkern (6 mm) mit zwei Stäben, 180 mm Dämmung mit Zickzack, Putz, Platten und Trennlagen (Platten 0,4 mm), Träger (3,2 mm hoch) mit zwei Flanschlinien (Flansche 7,4 mm), vier Glasscheiben (25,6 x 0,4 mm, Fugen 1,2 mm), Stab, Gabelköpfe (2,4 x 4,8 mm), Bolzen."
+            "en": "Concrete core (1.5 mm), insulation and render with the anchor plates (1 mm), beam band (0.8 mm tall), glass line, strut line.",
+            "de": "Betonkern (1,5 mm), Dämmung und Putz mit den Ankerplatten (1 mm), Trägerband (0,8 mm hoch), Glaslinie, Stablinie."
           },
           "merged": {
-            "en": "The strut tube is one capsule with an axis line; the render below the beam plate is drawn together with the wool.",
-            "de": "Das Stabrohr ist eine Kapsel mit Achslinie; der Putz unter der Trägerplatte ist mit der Wolle zusammen gezeichnet."
+            "en": "Mineral wool, render and anchor plates share the outer wall shape; the glass panels are one line.",
+            "de": "Mineralwolle, Putz und Ankerplatten teilen sich die äußere Wandform; die Glasscheiben sind eine Linie."
           },
           "omitted": {
-            "en": "Weld seams, plate bolts, the web stiffener and the hollow-section wall of the strut.",
-            "de": "Schweißnähte, Plattenschrauben, die Stegsteife und die Wand des Rohrprofils."
+            "en": "Flange lines, glass joints, clevises, pins and the anchor plate outlines.",
+            "de": "Flanschlinien, Glasfugen, Gabelköpfe, Bolzen und die Ankerplattenumrisse."
           },
           "thinElements": {
-            "en": "The tube wall (3.2 mm, 0.06 mm) is not resolved; the 20 mm glass is a 0.4 mm filled strip with a 0.13 mm outline, the 20 mm render a 0.4 mm strip.",
-            "de": "Die Rohrwand (3,2 mm, 0,06 mm) wird nicht aufgelöst; das 20-mm-Glas ist ein 0,4 mm hoher gefüllter Streifen mit 0,13 mm Kontur, der 20-mm-Putz ein 0,4 mm breiter Streifen."
+            "en": "The 20 mm glass is a 0.1 mm pen line (20 mm exact); the 60 mm strut is a 0.3 mm pen line (60 mm exact).",
+            "de": "Das 20-mm-Glas ist eine Linie mit 0,1 mm Feder (20 mm genau); der 60-mm-Stab ist eine Linie mit 0,3 mm Feder (60 mm genau)."
           },
           "hatching": {
-            "en": "Concrete stippled (1.0 mm), bars as 0.2 mm lines, insulation with the zigzag line (DIN ISO 128-50); steel is solid because the elevation is not a cut.",
-            "de": "Beton punktiert (1,0 mm), Stäbe als 0,2-mm-Linien, Dämmung mit Zickzacklinie (DIN ISO 128-50); Stahl bleibt voll, weil die Ansicht kein Schnitt ist."
+            "en": "No hatch: tones separate concrete from insulation.",
+            "de": "Keine Schraffur: Tonwerte trennen Beton von der Dämmung."
           },
           "styles": {
-            "en": "Outline 0.35 mm, details 0.18 mm, glass 0.13 mm; darkest steel, lighter pads, light glass.",
-            "de": "Kontur 0,35 mm, Details 0,18 mm, Glas 0,13 mm; Stahl am dunkelsten, hellere Trennlagen, helles Glas."
+            "en": "Mid-grey concrete, light insulation, dark steel.",
+            "de": "Mittelgrauer Beton, helle Dämmung, dunkler Stahl."
           },
           "overlays": {
-            "en": "Wall layers, plates with pads, beam, each glass panel and the strut with its clevises are separate overlay cells, so the cold plate bridges read against the insulated wall.",
-            "de": "Wandschichten, Platten mit Trennlagen, Träger, jede Glasscheibe und der Stab mit Gabelköpfen sind getrennte Überlagerungszellen, so heben sich die kalten Plattenbrücken von der gedämmten Wand ab."
+            "en": "Wall core, outer wall with plates, beam, glass line and strut are separate overlay cells; the outer wall is a merged layer and plate cell.",
+            "de": "Wandkern, Außenwand mit Platten, Träger, Glaslinie und Stab sind getrennte Überlagerungszellen; die Außenwand ist eine zusammengefasste Schicht-und-Platten-Zelle."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "wall-face",
+                "wall-plate"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": -2.33,
+              "w": 0.5,
+              "h": 5.35
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "canopy-steel",
+                "canopy-glass"
+              ],
+              "material": "steel",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.08,
+              "w": 5.5,
+              "h": 0.18
+            },
+            {
+              "id": "strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  2.88
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "wall-face",
+                "wall-plate"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 5.35
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "canopy-steel",
+                "canopy-glass"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.5,
+                  2.41
+                ],
+                [
+                  -0.041,
+                  2.41
+                ],
+                [
+                  -0.041,
+                  2.25
+                ],
+                [
+                  0.041,
+                  2.25
+                ],
+                [
+                  0.041,
+                  2.41
+                ],
+                [
+                  0.5,
+                  2.41
+                ],
+                [
+                  0.5,
+                  2.43
+                ],
+                [
+                  -0.5,
+                  2.43
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  2.41
+                ],
+                [
+                  0,
+                  5.21
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall",
+              "bone": "canopy",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "wall-face",
+                "wall-plate"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": -0.5,
+              "w": 0.5,
+              "h": 1
+            },
+            {
+              "id": "roof",
+              "bone": "canopy",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "canopy-glass"
+              ],
+              "material": "glass",
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.5,
+              "w": 5.3,
+              "h": 1
+            },
+            {
+              "id": "beam",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "canopy-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.041,
+              "w": 5.5,
+              "h": 0.082
+            },
+            {
+              "id": "strut",
+              "bone": "canopy",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "rod-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  4,
+                  0
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A tall wall bar on the left, a horizontal canopy bar projecting 5.5 m from its foot and a single strut line rising from the beam to the wall; a classic tied canopy diagram. Front and plan: the front is the wall seen from the open side with the canopy as a T (beam under the roof strip) and the strut as a line; the plan is the wall top, the glass roof, the beam seen through it and the strut line, from the wall to the beam. The canopy hangs at door-head height, beam underside 2.25 m above the ground, so the wall rises to 5.35 m and the strut climbs 2.9 m to its anchor 5.2 m above the ground; the front shows all of it from the ground up.",
+            "de": "Ein hoher Wandbalken links, ein waagerechter Vordachbalken, der 5,5 m aus seinem Fuß auskragt, und eine einzelne Stablinie, die vom Träger zur Wand ansteigt; das klassische Bild eines abgehängten Vordachs. Vorder- und Draufsicht: Die Vorderansicht ist die Wand von der offenen Seite mit dem Vordach als T (Träger unter dem Dachstreifen) und dem Stab als Linie; die Draufsicht ist die Wandkrone, das Glasdach, der hindurch sichtbare Träger und die Stablinie von der Wand zum Träger. Das Vordach hängt in Türsturzhöhe, Trägerunterkante 2,25 m über dem Boden, daher steigt die Wand auf 5,35 m und der Stab klettert 2,9 m zu seinem Anschluss 5,2 m über dem Boden; die Vorderansicht zeigt alles vom Boden an."
+          },
+          "retained": {
+            "en": "Wall (1 x 6.3 mm), beam with glass cover (11 x 0.36 mm) and the strut angle (36 degrees to the beam).",
+            "de": "Wand (1 x 6,3 mm), Träger mit Glasdeckung (11 x 0,36 mm) und der Stabwinkel (36 Grad zum Träger)."
+          },
+          "merged": {
+            "en": "Wall layers and anchor plates are one wall bar; steel beam and glass roof are one beam bar.",
+            "de": "Wandschichten und Ankerplatten sind ein Wandbalken; Stahlträger und Glasdach sind ein Trägerbalken."
+          },
+          "omitted": {
+            "en": "Flange lines, glass joints, clevises, pins and plate details.",
+            "de": "Flanschlinien, Glasfugen, Gabelköpfe, Bolzen und Plattendetails."
+          },
+          "thinElements": {
+            "en": "The 60 mm tube strut is a 0.13 mm pen line (65 mm real); the 0.36 mm beam bar is drawn at its true height of 0.18 m.",
+            "de": "Der 60-mm-Rohrstab ist eine Linie mit 0,13 mm Feder (65 mm real); der 0,36 mm hohe Trägerbalken ist in seiner wahren Höhe von 0,18 m gezeichnet."
+          },
+          "hatching": {
+            "en": "No hatch.",
+            "de": "Keine Schraffur."
+          },
+          "styles": {
+            "en": "Mid-grey wall, dark beam, thin strut line.",
+            "de": "Mittelgraue Wand, dunkler Träger, dünne Stablinie."
+          },
+          "overlays": {
+            "en": "Overlays colour the wall (merged layers and plates), the beam (merged steel and glass) and the strut separately; the strut line carries the tension or compression.",
+            "de": "Überlagerungen färben Wand (Schichten und Platten zusammengefasst), Träger (Stahl und Glas zusammengefasst) und Stab getrennt; die Stablinie trägt Zug oder Druck."
           }
         }
       }
@@ -1764,7 +3294,7 @@
             },
             "canopy-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "rod-steel": {
               "exposedFraction": 1,
@@ -1804,7 +3334,7 @@
             },
             "canopy-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "rod-steel": {
               "exposedFraction": 1,
@@ -1864,7 +3394,7 @@
             },
             "canopy-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "rod-steel": {
               "exposedFraction": 1,
@@ -2001,7 +3531,7 @@
         ],
         "events": [
           {
-            "t": 2.0,
+            "t": 2,
             "kind": "motion",
             "title": {
               "en": "Strut switches to compression",
@@ -2009,7 +3539,7 @@
             }
           },
           {
-            "t": 2.0,
+            "t": 2,
             "kind": "motion",
             "title": {
               "en": "Strut switches to compression",
@@ -2017,7 +3547,7 @@
             }
           },
           {
-            "t": 2.0,
+            "t": 2,
             "kind": "motion",
             "title": {
               "en": "Strut switches to compression",
@@ -2025,7 +3555,7 @@
             }
           },
           {
-            "t": 2.0,
+            "t": 2,
             "kind": "motion",
             "title": {
               "en": "Strut switches to compression",
@@ -2033,7 +3563,7 @@
             }
           },
           {
-            "t": 2.0,
+            "t": 2,
             "kind": "motion",
             "title": {
               "en": "Strut switches to compression",
@@ -2108,7 +3638,7 @@
           "areaM2": 5.3,
           "characteristicLengthM": 0.3,
           "geometry": "horizontal-plate-up",
-          "skyViewFactor": 1.0,
+          "skyViewFactor": 1,
           "layers": [],
           "heatCapacityJM2K": 24000,
           "source": "authored-estimate",
@@ -2141,7 +3671,7 @@
           "kind": "wall",
           "model": "conditioned",
           "material": "render",
-          "areaM2": 2.66,
+          "areaM2": 4.87,
           "characteristicLengthM": 2.66,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -2310,9 +3840,6 @@
     "presentation": {
       "defaultPose": "snow-load",
       "defaultClip": "loading-ramp",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

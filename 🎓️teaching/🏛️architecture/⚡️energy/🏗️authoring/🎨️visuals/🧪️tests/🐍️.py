@@ -1,4 +1,4 @@
-"""🧪 Architectural silhouettes and dimensions against Manim geometry."""
+"""🧪 Architectural section drawings and dimensions against Manim geometry."""
 
 from __future__ import annotations
 
@@ -14,32 +14,6 @@ CASES = json.loads(Path(__file__).with_name("🔣️.cases.json").read_text(enco
 
 
 class ArchitectureTest(unittest.TestCase):
-    def test_standing_person_is_one_opaque_closed_silhouette(self):
-        from manim import Rectangle
-
-        case = CASES["standing"]
-        figure = VISUALS.person_glyph([0, 0, 0], scale=case["scale"])
-        contours = [part for part in figure.get_family() if len(getattr(part, "points", []))]
-        self.assertEqual(len(contours), case["contours"])
-        self.assertTrue(contours[0].is_closed())
-        self.assertEqual(contours[0].get_fill_opacity(), case["opacity"])
-        oracle = Rectangle(height=case["height"] * case["scale"])
-        self.assertAlmostEqual(figure.height, oracle.height)
-
-    def test_seated_person_is_one_solid_body_and_anchored_at_floor(self):
-        from manim import Rectangle
-
-        case = CASES["seated"]
-        seated = VISUALS.seated_person_glyph([1.2, -0.8, 0], scale=case["scale"])
-        contours = [part for part in seated["figure"].get_family() if len(getattr(part, "points", []))]
-        self.assertEqual(len(contours), case["contours"])
-        self.assertTrue(contours[0].is_closed())
-        self.assertEqual(contours[0].get_fill_opacity(), case["opacity"])
-        oracle = Rectangle(height=case["height"] * case["scale"])
-        self.assertAlmostEqual(seated["figure"].height, oracle.height)
-        self.assertAlmostEqual(seated["figure"].get_bottom()[1], -0.8)
-        self.assertLess(seated["chest"][1], seated["mouth"][1])
-
     def test_house_material_has_real_wall_thickness_and_closed_fills(self):
         case = CASES["house"]
         house = VISUALS.house_section()
@@ -84,15 +58,6 @@ class ArchitectureTest(unittest.TestCase):
                     column = int(round((x / 4.8 + 0.5) * 1200))
                     row = int(round((0.5 - (y - 0.5) / 4.8) * 1200))
                     self.assertTrue(mask[row, column], f"Air gap at roof-wall joint {(x, y)}")
-
-    def test_radiator_and_person_share_a_plausible_building_scale(self):
-        case = CASES["radiator"]
-        radiator = VISUALS.radiator([0, 0, 0])
-        self.assertAlmostEqual(radiator.width, case["width"])
-        self.assertAlmostEqual(radiator.height, case["height"])
-        ratio = radiator.height / VISUALS.person_glyph([0, 0, 0]).height
-        self.assertTrue(case["height_to_person"][0] <= ratio <= case["height_to_person"][1])
-        self.assertGreater(radiator[0].get_fill_opacity(), 0.5)
 
     def test_room_material_meets_at_corners_without_gaps(self):
         case = CASES["room"]
@@ -145,39 +110,6 @@ class ArchitectureTest(unittest.TestCase):
             self.assertAlmostEqual(side[0].get_top()[1], room["win_lo"])
             self.assertAlmostEqual(side[1].get_bottom()[1], room["win_hi"])
 
-    def test_pendant_lamp_has_solid_shade_and_connected_bulb(self):
-        case = CASES["lamp"]
-        lamp = VISUALS.lamp_glyph([0, 1, 0])
-        self.assertTrue(lamp["shade"].is_closed())
-        self.assertGreater(lamp["shade"].get_fill_opacity(), case["minimum_fill_opacity"])
-        self.assertGreater(lamp["bulb"].get_fill_opacity(), case["minimum_fill_opacity"])
-        self.assertGreater(lamp["bulb"].get_top()[1], lamp["shade"].get_bottom()[1])
-        self.assertAlmostEqual(lamp["cable"].get_end()[1], lamp["shade"].get_top()[1])
-
-    def test_silhouette_rasters_match_independent_component_oracle(self):
-        from manim import Camera
-        from scipy.ndimage import label
-
-        for figure in (VISUALS.person_glyph([0, 0, 0], scale=5),
-                       VISUALS.seated_person_glyph([0, 0, 0], scale=5)["figure"]):
-            camera = Camera(pixel_width=384, pixel_height=384, frame_height=4,
-                            frame_center=figure.get_center(), background_color=VISUALS.P_DEEP_DARK)
-            camera.capture_mobjects([figure])
-            mask = np.asarray(camera.get_image())[:, :, 0] > 100
-            _, oracle = label(mask)
-            remaining = set(map(tuple, np.argwhere(mask)))
-            components = 0
-            while remaining:
-                components += 1
-                pending = [remaining.pop()]
-                while pending:
-                    y, x = pending.pop()
-                    for candidate in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
-                        if candidate in remaining:
-                            remaining.remove(candidate)
-                            pending.append(candidate)
-            self.assertEqual(components, oracle)
-            self.assertEqual(components, CASES["raster"]["connected_components"])
 
 
 if __name__ == "__main__":

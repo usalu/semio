@@ -21,7 +21,7 @@ import type { ExportCapabilities, ExportResult } from "../../🔨️modules/📤
 const walker = walkerDocument as unknown as Asset;
 
 const catalog = new CatalogStore({ manifest: async () => { throw new Error("unused"); }, category: async () => null });
-const row = { entry: { id: walker.id, category: "humans", title: walker.title, heightM: 1.73, widthM: 0.37, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: [], viewpoints: [], exports: [], distinction: walker.summary, completion: "authored" }, status: "ready", asset: walker } as const;
+const row = { entry: { id: walker.id, category: "humans", title: walker.title, heightM: 1.73, widthM: 0.37, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: [], exports: [], distinction: walker.summary, completion: "authored" }, status: "ready", asset: walker } as const;
 
 function wrap(node: ReactElement, language: Language = "en"): ReactElement {
   return <ArchiveProvider language={language} t={translator(language)} catalog={catalog} store={new ArchiveStore(memoryStorage(), ["dark-line"])}>{node}</ArchiveProvider>;
@@ -85,7 +85,7 @@ describe("🏷️ source tags and provenance", () => {
 
 describe("📤️ export panel", () => {
   const capabilities: ExportCapabilities = { svg: { available: true }, pdf: { available: true }, dxf: { available: true }, dwg: { available: false, reason: { en: "The DWG writer (Rust, WebAssembly) is not available in this build.", de: "Der DWG-Schreiber fehlt." } }, "png-sequence": { available: true }, mp4: { available: true, codec: "video/mp4" }, webm: { available: false, reason: { en: "This browser's MediaRecorder cannot produce WebM.", de: "Der MediaRecorder kann kein WebM." } } };
-  const request = { view: "dark-line", scale: { denominator: 100 }, language: "en" } as const;
+  const request = { view: "dark-line", viewpoint: "elevation", scale: { denominator: 100 }, language: "en" } as const;
   const query = { kind: "clip", clip: "walk", timeS: 0 } as const;
   it("shows DWG as unavailable, WebM as unsupported and SVG as available", () => {
     render(wrap(<ExportPanel asset={walker} query={query} request={request} language="en" capabilities={capabilities} />));

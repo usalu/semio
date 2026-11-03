@@ -1,0 +1,9 @@
+{
+  "icons": ["sun", "moon", "flame", "microbe", "factory"],
+  "celestial": ["sun", "moon"],
+  "watt_languages": ["en", "de"],
+  "backdrop_fade": {
+    "duration": 0.2,
+    "components": "constant"
+  }
+}

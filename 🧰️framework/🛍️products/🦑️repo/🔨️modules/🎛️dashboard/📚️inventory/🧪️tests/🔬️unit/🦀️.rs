@@ -126,16 +126,23 @@ fn the_job_publishes_the_known_commands_first_then_the_result_of_the_walk_and_fi
     let snapshot = root.join(".snapshot/commands.json");
     let job = start_at(root.clone(), snapshot.clone(), false);
     let mut phases = Vec::new();
+    let mut known: Vec<String> = Vec::new();
     let mut finished = false;
     while let Ok(update) = job.receiver.recv_timeout(Duration::from_secs(30)) {
         match update {
-            Update::Ready(rows, phase) => { assert!(!rows.is_empty()); phases.push(phase); }
+            Update::Ready(rows, phase) => {
+                assert!(!rows.is_empty());
+                if phase == "known" && known.is_empty() { known = rows.iter().map(|row| row.leaf.id.clone()).collect(); }
+                phases.push(phase);
+            }
             Update::Finished => { finished = true; break; }
             Update::Failed(error) => panic!("{error}"),
         }
     }
     assert!(finished);
-    assert_eq!((phases.first().map(String::as_str), phases.last().map(String::as_str)), (Some("known"), Some("complete")));
+        assert_eq!((phases.first().map(String::as_str), phases.last().map(String::as_str)), (Some("known"), Some("complete")));
+    for id in ["workspace:dev", "workspace:build"] { assert!(known.iter().any(|row| row == id), "{id} is dispatchable before the walk: {known:?}"); }
+    assert!(!known.iter().any(|row| row == "hub:dev"), "a child command waits for the walk");
     assert_eq!(job.progress.phase(), Phase::Complete);
     assert!(job.registry().is_some_and(|registry| registry.find("hub:dev").is_some()));
     assert!(snapshot.exists());

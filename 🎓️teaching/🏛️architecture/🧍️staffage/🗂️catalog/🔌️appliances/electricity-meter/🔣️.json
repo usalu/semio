@@ -1,0 +1,2057 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "electricity-meter",
+    "category": "appliances",
+    "title": {
+      "en": "Electromechanical Electricity Meter with Rotor Disc",
+      "de": "Elektromechanischer Stromzähler mit Läuferscheibe"
+    },
+    "summary": {
+      "en": "A 0.17 m by 0.285 m electricity meter of the Ferraris type seen from the room: a white housing with a six-digit counter, a window onto the aluminium rotor disc that turns with the load, a rating plate and a terminal cover.",
+      "de": "Ein Stromzähler der Bauart Ferraris von 0,17 m mal 0,285 m, vom Raum aus gesehen: ein weißes Gehäuse mit sechsstelligem Zählwerk, ein Fenster auf die Läuferscheibe aus Aluminium, die sich mit der Last dreht, ein Leistungsschild und eine Klemmenabdeckung."
+    },
+    "tags": [
+      "meter",
+      "electricity-meter",
+      "ferraris",
+      "final-energy",
+      "billing",
+      "wall-mounted",
+      "appliance",
+      "electrical",
+      "rotating"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G4)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-62053-11-2003",
+          "citation": "IEC 62053-11:2003 (DIN EN 62053-11) Electricity metering equipment (a.c.) - Particular requirements - Electromechanical meters for active energy (classes 0,5, 1 and 2): housing, display and the limits of the own consumption of the voltage and current circuits."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A single-phase electromechanical (Ferraris) meter of class 2 seen face-on, 0.17 m by 0.285 m and 0.13 m deep with a mass of 0.87 kg (rounded from this product class, authored estimate). From the top: a hanging eye, a six-digit roller counter window (five whole kilowatt hours and the dimmer tenth), a round window onto the 84 mm aluminium disc with its dark mark, the rating plate and the sealed terminal cover. The origin is the centre of the housing front. The disc is the rotor bone; the clip shows the real turning rate of about 60 degrees per second at 1 kW slowed to 90 and 180 degrees per second. The own consumption of a meter of this class is below 2 W in the voltage circuit and about 1 W in the current circuit at full load; the model releases 2.4 W at level 1 into the plate over the measuring system.",
+        "de": "Ein einphasiger elektromechanischer Zähler (Ferraris) der Klasse 2, frontal gesehen, 0,17 m mal 0,285 m und 0,13 m tief mit einer Masse von 0,87 kg (aus dieser Produktklasse gerundet, Schätzwert). Von oben: ein Aufhängeauge, ein Rollenzählwerk mit sechs Ziffern (fünf ganze Kilowattstunden und die mattere Zehntelstelle), ein rundes Fenster auf die 84 mm große Aluminiumscheibe mit ihrer dunklen Markierung, das Leistungsschild und die plombierte Klemmenabdeckung. Der Ursprung ist die Mitte der Gehäusefront. Die Scheibe ist der Rotorknochen; der Clip zeigt die echte Drehrate von etwa 60 Grad je Sekunde bei 1 kW verlangsamt auf 90 und 180 Grad je Sekunde. Der Eigenverbrauch eines Zählers dieser Klasse liegt unter 2 W im Spannungspfad und bei etwa 1 W im Strompfad bei voller Last; das Modell setzt auf Stufe 1 2,4 W in das Schild über dem Messwerk frei."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.285,
+      "widthM": 0.17,
+      "depthM": 0.13,
+      "massKg": 0.865
+    },
+    "materials": [
+      {
+        "id": "abs-plastic",
+        "title": {
+          "en": "White ABS plastic",
+          "de": "Weißer ABS-Kunststoff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "polycarbonate",
+        "title": {
+          "en": "Clear polycarbonate",
+          "de": "Klares Polycarbonat"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "aluminium-disc",
+        "title": {
+          "en": "Aluminium sheet",
+          "de": "Aluminiumblech"
+        },
+        "emissivity": 0.1,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 237,
+        "specificHeatJKgK": 900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "body",
+      "bones": [
+        {
+          "id": "body",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Meter housing",
+            "de": "Zählergehäuse"
+          },
+          "lengthM": 0.285,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.85,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "disc",
+          "parent": "body",
+          "x": 0,
+          "y": 0.01,
+          "angleDeg": 0,
+          "title": {
+            "en": "Aluminium rotor disc with mark",
+            "de": "Aluminium-Läuferscheibe mit Markierung"
+          },
+          "lengthM": 0.042,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 0.015,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-screw-top",
+        "bone": "body",
+        "x": 0,
+        "y": 0.123,
+        "kind": "support",
+        "title": {
+          "en": "Upper screw in the hanging eye",
+          "de": "Obere Schraube im Aufhängeauge"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016
+      },
+      {
+        "id": "wall-screw-bottom",
+        "bone": "body",
+        "x": 0,
+        "y": -0.121,
+        "kind": "support",
+        "title": {
+          "en": "Lower screw under the terminal cover",
+          "de": "Untere Schraube unter der Klemmenabdeckung"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016,
+        "frictionCoefficient": 0.4
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.085,
+              "y": -0.1425,
+              "w": 0.17,
+              "h": 0.285,
+              "r": 0.012,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "eye",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.123,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.045,
+              "y": 0.078,
+              "w": 0.09,
+              "h": 0.026,
+              "r": 0.003,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "digit-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.0425,
+              "y": 0.082,
+              "w": 0.011,
+              "h": 0.018,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "digit-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.028,
+              "y": 0.082,
+              "w": 0.011,
+              "h": 0.018,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "digit-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.0135,
+              "y": 0.082,
+              "w": 0.011,
+              "h": 0.018,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "digit-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0.082,
+              "w": 0.011,
+              "h": 0.018,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "digit-5",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": 0.0155,
+              "y": 0.082,
+              "w": 0.011,
+              "h": 0.018,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "digit-6",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0.082,
+              "w": 0.011,
+              "h": 0.018,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.01,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "disc",
+              "bone": "disc",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.042,
+              "ry": 0.042,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "hub",
+              "bone": "disc",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "mark",
+              "bone": "disc",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.02,
+              "y": -0.005,
+              "w": 0.02,
+              "h": 0.01,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.085,
+              "w": 0.13,
+              "h": 0.04,
+              "r": 0.003,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-line-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  -0.055
+                ],
+                [
+                  0.052,
+                  -0.055
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-line-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  -0.065
+                ],
+                [
+                  0.052,
+                  -0.065
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-line-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  -0.075
+                ],
+                [
+                  0.052,
+                  -0.075
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "terminals",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.072,
+              "y": -0.1425,
+              "w": 0.144,
+              "h": 0.0425,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-left",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.058,
+              "cy": -0.121,
+              "rx": 0.005,
+              "ry": 0.005,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-right",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.058,
+              "cy": -0.121,
+              "rx": 0.005,
+              "ry": 0.005,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "back-plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.035,
+              "w": 0.17,
+              "h": 0.03,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.085,
+              "y": -0.058,
+              "w": 0.17,
+              "h": 0.093,
+              "r": 0.012,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "seal-seam",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.085,
+                  0.035
+                ],
+                [
+                  0.085,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.065,
+              "w": 0.1,
+              "h": 0.007,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.065,
+              "w": 0.09,
+              "h": 0.007,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "eye",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.008,
+              "y": -0.062,
+              "w": 0.016,
+              "h": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-edge",
+              "bone": "body",
+              "role": "body",
+              "z": 3.12,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.065,
+              "w": 0.13,
+              "h": 0.007,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-left",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  -0.058
+                ],
+                [
+                  -0.07,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-right",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.07,
+                  -0.058
+                ],
+                [
+                  0.07,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "back-plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 0.035,
+              "y": -0.1425,
+              "w": 0.03,
+              "h": 0.285,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.058,
+              "y": -0.1,
+              "w": 0.093,
+              "h": 0.2425,
+              "r": 0.012,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "terminals",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.058,
+              "y": -0.1425,
+              "w": 0.093,
+              "h": 0.0425,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "seal-seam",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  -0.1
+                ],
+                [
+                  0.035,
+                  0.1425
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.04,
+              "w": 0.007,
+              "h": 0.1,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0.078,
+              "w": 0.007,
+              "h": 0.026,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "eye",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.062,
+              "y": 0.115,
+              "w": 0.004,
+              "h": 0.016,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-edge",
+              "bone": "body",
+              "role": "body",
+              "z": 3.12,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.085,
+              "w": 0.007,
+              "h": 0.04,
+              "region": "plate",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.17 m by 0.285 m electricity meter, 3.4 mm by 5.7 mm on paper: a white housing with a six-digit counter window on top, a round disc window with a turning aluminium disc below it, a rating plate and a dark terminal cover at the foot. Front, 2.6 mm by 5.7 mm on paper: the meter side-on with the flat back plate against the wall, the rounded cover in front of it, the dark terminal cover at the foot and the two window domes, the long one of the disc and the short one of the counter, standing out of the cover; a small optical eye sits above. Plan, 3.4 mm by 2.6 mm: back plate and cover with the seal seam, the two window domes and the optical eye at the front, and the two sealing screws. Front, 2.6 mm by 5.7 mm on paper: the meter side-on with the flat back plate against the wall, the rounded cover in front of it, the dark terminal cover at the foot and the two window domes, the long one of the disc and the short one of the counter, standing out of the cover; a small optical eye sits above. Plan, 3.4 mm by 2.6 mm: back plate and cover with the seal seam, the two window domes and the optical eye at the front, and the two sealing screws.",
+            "de": "Ein Stromzähler von 0,17 m mal 0,285 m, auf Papier 3,4 mm mal 5,7 mm: ein weißes Gehäuse mit einem sechsstelligen Zählwerksfenster oben, darunter ein rundes Scheibenfenster mit einer sich drehenden Aluminiumscheibe, ein Leistungsschild und eine dunkle Klemmenabdeckung am Fuß. Vorderansicht, 2,6 mm auf 5,7 mm: der Zähler von der Seite mit der flachen Rückplatte an der Wand, davor der gerundete Deckel, am Fuß die dunkle Klemmenabdeckung und die beiden Fensterwölbungen, die lange der Scheibe und die kurze des Zählwerks, die aus dem Deckel treten; darüber sitzt das kleine optische Auge. Grundriss, 3,4 mm auf 2,6 mm: Rückplatte und Deckel mit der Plombenfuge, vorn die beiden Fensterwölbungen und das optische Auge sowie die beiden Plombierschrauben. Vorderansicht, 2,6 mm auf 5,7 mm: der Zähler von der Seite mit der flachen Rückplatte an der Wand, davor der gerundete Deckel, am Fuß die dunkle Klemmenabdeckung und die beiden Fensterwölbungen, die lange der Scheibe und die kurze des Zählwerks, die aus dem Deckel treten; darüber sitzt das kleine optische Auge. Grundriss, 3,4 mm auf 2,6 mm: Rückplatte und Deckel mit der Plombenfuge, vorn die beiden Fensterwölbungen und das optische Auge sowie die beiden Plombierschrauben."
+          },
+          "retained": {
+            "en": "Housing, hanging eye, counter window with its six digits (the last one dimmer for the tenths), the 100 mm window rim, the 84 mm disc with hub and the dark radial mark that shows the turning, rating plate with three text lines, terminal cover with two sealing screws.",
+            "de": "Gehäuse, Aufhängeauge, Zählwerksfenster mit seinen sechs Ziffern (die letzte matter für die Zehntel), der 100 mm große Fensterrand, die 84 mm große Scheibe mit Nabe und der dunklen radialen Markierung, die das Drehen zeigt, Leistungsschild mit drei Textzeilen, Klemmenabdeckung mit zwei Plombierschrauben."
+          },
+          "merged": {
+            "en": "The meter cover and the housing are one white form; the glass of both windows is one polycarbonate region.",
+            "de": "Zählerhaube und Gehäuse sind eine weiße Form; das Glas beider Fenster ist eine Polycarbonat-Region."
+          },
+          "omitted": {
+            "en": "The calibration screw, the optical pulse diode, the sealing wire, the printed scale and the brake magnet. Digits, disc, hub and rating-plate lines are not seen from the side or from above; the plate shows only as an edge. Digits, disc, hub and rating-plate lines are not seen from the side or from above; the rating plate shows as a 7 mm raised strip: in front as its edge, from above as two stubs left and right of the window dome, so that its thermal region reads in every view.",
+            "de": "Die Justierschraube, die optische Impulsdiode, der Plombierdraht, die aufgedruckte Skala und der Bremsmagnet. Ziffern, Scheibe, Nabe und Typenschildlinien sind von der Seite und von oben nicht zu sehen; das Schild zeigt sich nur als Kante. Ziffern, Scheibe, Nabe und Typenschildlinien sind von der Seite und von oben nicht zu sehen; das Typenschild zeigt sich als 7 mm hoher Streifen: vorn als Kante, von oben als zwei Stummel links und rechts der Fensterwölbung, sodass sein thermischer Bereich in jeder Ansicht lesbar ist."
+          },
+          "thinElements": {
+            "en": "The disc mark is 20 mm by 10 mm (0.4 mm by 0.2 mm); digits are 11 mm wide (0.22 mm); the text lines are 0.13 mm detail pens.",
+            "de": "Die Scheibenmarkierung ist 20 mm mal 10 mm (0,4 mm mal 0,2 mm); die Ziffern sind 11 mm breit (0,22 mm); die Textzeilen sind Linien mit dem 0,13-mm-Detailstift."
+          },
+          "hatching": {
+            "en": "None; windows are dark tones.",
+            "de": "Keine; die Fenster sind dunkle Töne."
+          },
+          "styles": {
+            "en": "Housing 0.88, rim 0.25, disc 0.86, mark 0.1, counter 0.1 with digits 0.92 and 0.55, plate 0.78, terminal cover 0.55; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Gehäuse 0,88, Rand 0,25, Scheibe 0,86, Markierung 0,1, Zählwerk 0,1 mit Ziffern 0,92 und 0,55, Schild 0,78, Klemmenabdeckung 0,55; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Casing, window, disc and rating plate are four regions: in the thermal view the plate (measuring system behind it) warms slightly with the load, and the disc turns with the rotor bone.",
+            "de": "Gehäuse, Fenster, Scheibe und Leistungsschild sind vier Regionen: in der Thermalansicht erwärmt sich das Schild (das Messwerk dahinter) mit der Last leicht, und die Scheibe dreht sich mit dem Rotorknochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.085,
+              "y": -0.1425,
+              "w": 0.17,
+              "h": 0.285,
+              "r": 0.012,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.045,
+              "y": 0.076,
+              "w": 0.09,
+              "h": 0.03,
+              "r": 0.003,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.01,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "disc",
+              "bone": "disc",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.042,
+              "ry": 0.042,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "mark",
+              "bone": "disc",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.012,
+              "y": -0.01,
+              "w": 0.03,
+              "h": 0.02,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.085,
+              "w": 0.13,
+              "h": 0.04,
+              "r": 0.003,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "terminals",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.072,
+              "y": -0.1425,
+              "w": 0.144,
+              "h": 0.0425,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "back-plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.035,
+              "w": 0.17,
+              "h": 0.03,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.085,
+              "y": -0.058,
+              "w": 0.17,
+              "h": 0.093,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-edge",
+              "bone": "body",
+              "role": "body",
+              "z": 3.12,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.065,
+              "w": 0.13,
+              "h": 0.007,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.065,
+              "w": 0.1,
+              "h": 0.007,
+              "region": "window",
+              "material": "polycarbonate"
+            }
+          ],
+          "front": [
+            {
+              "id": "back-plate",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": 0.035,
+              "y": -0.1425,
+              "w": 0.03,
+              "h": 0.285,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.058,
+              "y": -0.1,
+              "w": 0.093,
+              "h": 0.2425,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "terminals",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.058,
+              "y": -0.1425,
+              "w": 0.093,
+              "h": 0.0425,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "plate-edge",
+              "bone": "body",
+              "role": "body",
+              "z": 3.12,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.085,
+              "w": 0.007,
+              "h": 0.04,
+              "region": "plate",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.04,
+              "w": 0.007,
+              "h": 0.1,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0.076,
+              "w": 0.007,
+              "h": 0.03,
+              "region": "window",
+              "material": "polycarbonate"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.7 mm by 2.85 mm meter: a white housing with a dark counter strip, a round window with a light disc and a dark radial mark, a plate and a terminal cover. Front, 1.3 mm by 2.85 mm: back plate, cover, terminal cover and the two window domes. Plan, 1.7 mm by 1.3 mm: back plate, cover and the window dome. Front, 1.3 mm by 2.85 mm: back plate, cover, terminal cover and the two window domes. Plan, 1.7 mm by 1.3 mm: back plate, cover, the raised rating plate and the window dome.",
+            "de": "Ein Zähler von 1,7 mm mal 2,85 mm: ein weißes Gehäuse mit einem dunklen Zählwerksstreifen, ein rundes Fenster mit heller Scheibe und dunkler radialer Markierung, ein Schild und eine Klemmenabdeckung. Vorderansicht, 1,3 mm auf 2,85 mm: Rückplatte, Deckel, Klemmenabdeckung und die beiden Fensterwölbungen. Grundriss, 1,7 mm auf 1,3 mm: Rückplatte, Deckel und die Fensterwölbung. Vorderansicht, 1,3 mm auf 2,85 mm: Rückplatte, Deckel, Klemmenabdeckung und die beiden Fensterwölbungen. Grundriss, 1,7 mm auf 1,3 mm: Rückplatte, Deckel, das erhabene Typenschild und die Fensterwölbung."
+          },
+          "retained": {
+            "en": "Housing, counter window, disc window with disc and mark, rating plate, terminal cover.",
+            "de": "Gehäuse, Zählwerksfenster, Scheibenfenster mit Scheibe und Markierung, Leistungsschild, Klemmenabdeckung."
+          },
+          "merged": {
+            "en": "The six digits join the dark counter strip; the hub joins the disc.",
+            "de": "Die sechs Ziffern gehen im dunklen Zählwerksstreifen auf; die Nabe geht in der Scheibe auf."
+          },
+          "omitted": {
+            "en": "Hanging eye, digits, hub, text lines and sealing screws. Seal seam, optical eye, screws and plate edge. Seal seam, optical eye and screws.",
+            "de": "Aufhängeauge, Ziffern, Nabe, Textzeilen und Plombierschrauben. Plombenfuge, optisches Auge, Schrauben und Schildkante. Plombenfuge, optisches Auge und Schrauben."
+          },
+          "thinElements": {
+            "en": "The disc mark is widened to 30 mm by 20 mm (0.3 mm by 0.2 mm) so that it prints as a filled shape and shows the turn.",
+            "de": "Die Scheibenmarkierung ist auf 30 mm mal 20 mm (0,3 mm mal 0,2 mm) verbreitert, damit sie als Fläche druckt und das Drehen zeigt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Same tones as 1:50 without digits; one body pen of 0.18 mm.",
+            "de": "Gleiche Töne wie bei 1:50 ohne Ziffern; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Casing, window, disc and plate stay four regions, the disc turns with the rotor.",
+            "de": "Gehäuse, Fenster, Scheibe und Schild bleiben vier Regionen, die Scheibe dreht sich mit dem Rotor."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.085,
+              "y": -0.1425,
+              "w": 0.17,
+              "h": 0.285,
+              "r": 0.012,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "counter",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.045,
+              "y": 0.07,
+              "w": 0.09,
+              "h": 0.04,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "rim",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.01,
+              "rx": 0.052,
+              "ry": 0.052,
+              "region": "window",
+              "material": "polycarbonate"
+            },
+            {
+              "id": "disc",
+              "bone": "disc",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.042,
+              "ry": 0.042,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "mark",
+              "bone": "disc",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.008,
+              "y": -0.02,
+              "w": 0.036,
+              "h": 0.04,
+              "region": "disc",
+              "material": "aluminium-disc"
+            },
+            {
+              "id": "terminals",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.072,
+              "y": -0.1425,
+              "w": 0.144,
+              "h": 0.0425,
+              "regions": [
+                "casing",
+                "plate"
+              ],
+              "material": "abs-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.085,
+              "y": -0.045,
+              "w": 0.17,
+              "h": 0.11,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dome",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.052,
+              "y": -0.065,
+              "w": 0.104,
+              "h": 0.02,
+              "regions": [
+                "window",
+                "plate"
+              ],
+              "material": "polycarbonate"
+            }
+          ],
+          "front": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.1425,
+              "w": 0.11,
+              "h": 0.285,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "terminals",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.058,
+              "y": -0.1425,
+              "w": 0.093,
+              "h": 0.0425,
+              "regions": [
+                "casing",
+                "plate"
+              ],
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dome",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.065,
+              "y": -0.042,
+              "w": 0.02,
+              "h": 0.104,
+              "region": "window",
+              "material": "polycarbonate"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.85 mm by 1.4 mm meter: a white rectangle with a dark counter bar, a round window with a disc, and a grey foot. Front, 0.65 mm by 1.4 mm: one body with the dark terminal cover and the window dome. Plan, 0.85 mm by 0.65 mm: one body and the dome. Front, 0.65 mm by 1.4 mm: one body with the dark terminal cover and the window dome. Plan, 0.85 mm by 0.65 mm: one body and the dome, which carries the window and the rating plate as one face layer.",
+            "de": "Ein Zähler von 0,85 mm mal 1,4 mm: ein weißes Rechteck mit einem dunklen Zählwerksbalken, ein rundes Fenster mit einer Scheibe und ein grauer Fuß. Vorderansicht, 0,65 mm auf 1,4 mm: ein Körper mit der dunklen Klemmenabdeckung und der Fensterwölbung. Grundriss, 0,85 mm auf 0,65 mm: ein Körper und die Wölbung. Vorderansicht, 0,65 mm auf 1,4 mm: ein Körper mit der dunklen Klemmenabdeckung und der Fensterwölbung. Grundriss, 0,85 mm auf 0,65 mm: ein Körper und die Wölbung, die Fenster und Typenschild als eine Frontschicht trägt."
+          },
+          "retained": {
+            "en": "Housing, counter bar, disc window with disc and a broad mark, terminal cover.",
+            "de": "Gehäuse, Zählwerksbalken, Scheibenfenster mit Scheibe und einer breiten Markierung, Klemmenabdeckung."
+          },
+          "merged": {
+            "en": "The rating plate merges into the terminal cover (it carries the plate region).",
+            "de": "Das Leistungsschild geht in der Klemmenabdeckung auf (sie trägt die Schildregion)."
+          },
+          "omitted": {
+            "en": "Digits, hub, text lines, screws and eye. Counter dome, back plate and cover are one mass; the window dome is drawn 0.02 m deep. Counter dome, back plate and cover are one mass; the window dome is drawn 0.02 m deep.",
+            "de": "Ziffern, Nabe, Textzeilen, Schrauben und Auge. Zählwerkwölbung, Rückplatte und Deckel sind eine Masse; die Fensterwölbung ist 0,02 m tief gezeichnet. Zählwerkwölbung, Rückplatte und Deckel sind eine Masse; die Fensterwölbung ist 0,02 m tief gezeichnet."
+          },
+          "thinElements": {
+            "en": "The counter bar is 40 mm high (0.2 mm); the mark is a 36 mm wide wedge of the disc so that it survives printing.",
+            "de": "Der Zählwerksbalken ist 40 mm hoch (0,2 mm); die Markierung ist ein 36 mm breiter Keil der Scheibe, damit sie den Druck übersteht."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Housing 0.88, rim 0.25, disc 0.86, mark 0.1, terminal cover 0.55; one body pen of 0.13 mm.",
+            "de": "Gehäuse 0,88, Rand 0,25, Scheibe 0,86, Markierung 0,1, Klemmenabdeckung 0,55; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "The terminal cover carries the casing and plate regions; the disc still turns.",
+            "de": "Die Klemmenabdeckung trägt Gehäuse- und Schildregion; die Scheibe dreht sich weiter."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the meter is 0.34 mm by 0.57 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the register digits of 11 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist der Zähler 0,34 mm mal 0,57 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, die Zählwerkziffern von 11 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Register digits of 11 mm",
+          "de": "Zählwerkziffern von 11 mm"
+        },
+        "limitingSizeM": 0.011,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "idle",
+        "title": {
+          "en": "No load",
+          "de": "Ohne Last"
+        },
+        "description": {
+          "en": "No consumer draws current: the disc stands still and the coils stay cold.",
+          "de": "Kein Verbraucher zieht Strom: die Scheibe steht still und die Spulen bleiben kalt."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "disc": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "load": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "half-load",
+        "title": {
+          "en": "Half load",
+          "de": "Halbe Last"
+        },
+        "description": {
+          "en": "The disc turns at half the speed of the full load; the current coils warm the plate.",
+          "de": "Die Scheibe dreht mit halber Drehzahl der vollen Last; die Stromspulen erwärmen das Schild."
+        },
+        "bones": {
+          "disc": {
+            "angleDeg": 18
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "disc": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "load": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "full-load",
+        "title": {
+          "en": "Full load",
+          "de": "Volllast"
+        },
+        "description": {
+          "en": "The disc turns at full speed and the plate takes the full 2.4 W of the measuring system.",
+          "de": "Die Scheibe dreht mit voller Drehzahl und das Schild nimmt die vollen 2,4 W des Messwerks auf."
+        },
+        "bones": {
+          "disc": {
+            "angleDeg": 36
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "window": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "disc": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "load": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "run",
+        "title": {
+          "en": "Load steps up",
+          "de": "Last steigt an"
+        },
+        "description": {
+          "en": "The disc rests, starts at half load after one second and runs at full load after four; the shown turning rate is slowed to 90 and 180 degrees per second so that the mark stays readable (a real meter turns about 60 degrees per second at 1 kW).",
+          "de": "Die Scheibe ruht, läuft nach einer Sekunde mit halber Last an und nach vier Sekunden mit voller Last; die gezeigte Drehrate ist auf 90 und 180 Grad je Sekunde verlangsamt, damit die Markierung lesbar bleibt (ein echter Zähler dreht bei 1 kW etwa 60 Grad je Sekunde)."
+        },
+        "durationS": 6,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle",
+            "ease": "in"
+          },
+          {
+            "t": 1,
+            "pose": "half-load",
+            "ease": "linear",
+            "bones": {
+              "disc": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "half-load",
+            "ease": "in",
+            "bones": {
+              "disc": {
+                "angleDeg": 270
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "full-load",
+            "ease": "linear",
+            "bones": {
+              "disc": {
+                "angleDeg": 630
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "rest",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "At rest",
+              "de": "In Ruhe"
+            }
+          },
+          {
+            "id": "half",
+            "fromS": 1,
+            "toS": 4,
+            "title": {
+              "en": "Half load",
+              "de": "Halbe Last"
+            }
+          },
+          {
+            "id": "full",
+            "fromS": 4,
+            "toS": 6,
+            "title": {
+              "en": "Full load",
+              "de": "Volllast"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "operating",
+            "title": {
+              "en": "Consumers switched on",
+              "de": "Verbraucher eingeschaltet"
+            },
+            "target": "load"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:load",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.5
+              },
+              {
+                "t": 4,
+                "v": 0.5
+              },
+              {
+                "t": 4.5,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "daily-load",
+        "title": {
+          "en": "Evening peak and night",
+          "de": "Abendspitze und Nacht"
+        },
+        "description": {
+          "en": "The meter carries a base load, a full evening peak after one minute, and falls back to idle after three; the measuring system warms and cools.",
+          "de": "Der Zähler trägt eine Grundlast, nach einer Minute die volle Abendspitze und fällt nach drei Minuten in den Leerlauf zurück; das Messwerk erwärmt sich und kühlt ab."
+        },
+        "durationS": 360,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "half-load",
+            "ease": "step"
+          },
+          {
+            "t": 65,
+            "pose": "full-load",
+            "ease": "step"
+          },
+          {
+            "t": 185,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 360,
+            "pose": "idle",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 360
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 360
+          }
+        ],
+        "phases": [
+          {
+            "id": "idle",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "No load",
+              "de": "Ohne Last"
+            }
+          },
+          {
+            "id": "base",
+            "fromS": 5,
+            "toS": 65,
+            "title": {
+              "en": "Base load",
+              "de": "Grundlast"
+            }
+          },
+          {
+            "id": "peak",
+            "fromS": 65,
+            "toS": 185,
+            "title": {
+              "en": "Evening peak",
+              "de": "Abendspitze"
+            }
+          },
+          {
+            "id": "night",
+            "fromS": 185,
+            "toS": 360,
+            "title": {
+              "en": "Night, cooling",
+              "de": "Nacht, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 185,
+            "kind": "shutdown",
+            "title": {
+              "en": "Consumers switched off",
+              "de": "Verbraucher ausgeschaltet"
+            },
+            "target": "load"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:load",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.5
+              },
+              {
+                "t": 65,
+                "v": 1
+              },
+              {
+                "t": 185,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "load",
+          "title": {
+            "en": "Electrical load",
+            "de": "Elektrische Last"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "No load",
+                "de": "Ohne Last"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Half load (disc at half speed)",
+                "de": "Halbe Last (Scheibe mit halber Drehzahl)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full load (2.4 W own heat)",
+                "de": "Volle Last (2,4 W Eigenwärme)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Housing and terminal cover",
+            "de": "Gehäuse und Klemmenabdeckung"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-plastic",
+          "areaM2": 0.17,
+          "characteristicLengthM": 0.285,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "ABS shell 2 mm",
+                "de": "ABS-Schale 2 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "window",
+          "title": {
+            "en": "Counter and disc windows",
+            "de": "Zählwerks- und Scheibenfenster"
+          },
+          "kind": "glazing",
+          "model": "passive",
+          "material": "polycarbonate",
+          "areaM2": 0.011,
+          "characteristicLengthM": 0.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "pane",
+              "title": {
+                "en": "Polycarbonate pane 2 mm",
+                "de": "Polycarbonatscheibe 2 mm"
+              },
+              "kind": "polymer",
+              "material": "polycarbonate",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "disc",
+          "title": {
+            "en": "Aluminium disc",
+            "de": "Aluminiumscheibe"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "aluminium-disc",
+          "areaM2": 0.0055,
+          "characteristicLengthM": 0.084,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Aluminium sheet 1 mm",
+                "de": "Aluminiumblech 1 mm"
+              },
+              "kind": "metal",
+              "material": "aluminium-disc",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.000005,
+              "heatCapacityJM2K": 2700,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2700,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "plate",
+          "title": {
+            "en": "Rating plate over the measuring system",
+            "de": "Leistungsschild über dem Messwerk"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "abs-plastic",
+          "areaM2": 0.0052,
+          "characteristicLengthM": 0.13,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "plate",
+              "title": {
+                "en": "ABS plate 2 mm over coils and magnet",
+                "de": "ABS-Schild 2 mm über Spulen und Magnet"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "operating": {
+            "key": "load",
+            "heatW": 2.4
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The own consumption is lumped in the plate over the measuring system and scales with the load level; the real voltage coil also draws about 1.4 W at no load, which the linear model leaves out.",
+          "de": "Der Eigenverbrauch ist im Schild über dem Messwerk zusammengefasst und skaliert mit der Laststufe; die echte Spannungsspule nimmt auch ohne Last etwa 1,4 W auf, was das lineare Modell auslässt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-screw-top",
+        "wall-screw-bottom"
+      ],
+      "assumptions": [
+        {
+          "en": "The 0.87 kg meter hangs on the upper screw in the hanging eye (pin) and leans against the board at the lower screw (roller).",
+          "de": "Der 0,87 kg schwere Zähler hängt an der oberen Schraube im Aufhängeauge (Festlager) und lehnt an der unteren Schraube an der Tafel (Rollenlager)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "full-load",
+      "defaultClip": "run",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

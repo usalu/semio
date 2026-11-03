@@ -1,6 +1,6 @@
 /** 🎞️ Deterministic clip sampling: eases, time wrapping, key interpolation, scalar tracks, contacts, phases, thermal bindings, load scales, transitions and planted root motion.
  *
- * Sampling is a pure function of (asset, clip, time) on the absolute timeline: the pose wraps at the clip duration, {@link cycleOf} counts the loops and the planted root advance accumulates over cycles without ever resetting. A key's `ease` shapes the way to the next key: `linear`, `in`, `out`, `step` blend the two key states by the eased weight (angles linearly in degrees, translations linearly); `smooth` is a cubic Hermite (Catmull-Rom) segment through the neighbouring keys, so offsets, root and scalar tracks have continuous velocity across keys (zero end tangents for non-looping clips, wrap-around tangents for looping ones). Thermal bindings and loads blend by the smoothstep weight.
+ * Sampling is a pure function of (asset, clip, time) on the absolute timeline: the pose wraps at the clip duration, {@link cycleOf} counts the loops and the planted root advance accumulates over cycles without ever resetting. A key's `ease` shapes the way to the next key: `linear`, `in`, `out`, `step` blend the two key states by the eased weight (angles linearly in degrees, translations linearly); `smooth` is a cubic Hermite (Catmull-Rom) segment through the neighbouring keys, so offsets, root and scalar tracks have continuous velocity across keys (zero end tangents for non-looping clips, wrap-around tangents for looping ones). Thermal bindings and loads blend by the smoothstep weight. Track values are clamped to their domain: a `load:` scale is never negative, so spline overshoot of a rising load cannot reverse it.
  * looping clips wrap past the last key towards the first (at `first.t + duration`) unless they end with a closing key at the duration, which is the end of the last segment and may differ from the first key by whole turns of an unlimited revolute joint (each cycle then adds that difference, so wheels keep spinning); others clamp. Root motion `plant` integrates at {@link PLANT_HZ} from t = 0 over the span boundaries:
  * the earliest-planted active contact anchor is held at the world x it had when its span began, and the root x follows; when a later-planted span outlasts it, the root crossfades (smoothstep over the overlap) to the new anchor, so x and its velocity stay continuous at handovers; free spans continue with the last velocity. Looping clips advance
  * by `advanceM` per cycle. `ground: "auto"` puts the lowest active contact anchor on y = 0.
@@ -9,19 +9,21 @@
  * @see ../🔗️contracts/🟦️.ts — `ThermalInputs`
  * @see https://en.wikipedia.org/wiki/Smoothstep — the `smooth` ease
  */
-import type { Anchor, AppliedLoad, Asset, BoneOffset, Clip, ContactSpan, Ease, Pose, RegionBinding, Slug, ThermalBinding } from "../../🧬️schema/🟦️.ts";
+import { type Anchor, type AppliedLoad, type Asset, type BoneOffset, type Clip, type ContactSpan, type Ease, type Pose, type RegionBinding, type Slug, type ThermalBinding, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
 import type { Affine, ThermalInputs } from "../🔗️contracts/🟦️.ts";
-import { apply, solveRig } from "../🦴️rig/🟦️.ts";
+import { apply, solveChain } from "../🦴️rig/🟦️.ts";
+import type { SolvedFrame } from "../🦴️rig/🟦️.ts";
 
 /** ⏱️ The fixed integration rate of planted root motion, in hertz. */
 export const PLANT_HZ = 240;
 
 /** 🧾️ One bone offset with all components present. */
-export type FullOffset = { readonly angleDeg: number; readonly dx: number; readonly dy: number };
+export type FullOffset = { readonly angleDeg: number; readonly abductionDeg: number; readonly twistDeg: number; readonly dx: number; readonly dy: number };
 
-/** 🎬️ Everything a clip or pose defines at one instant. `timeS` is the wrapped or clamped clip time; `loads` are blended but not yet multiplied by `loadScales`. */
+/** 🎬️ Everything a clip or pose defines at one instant. `timeS` is the absolute query time (never wrapped), `clipTimeS` the wrapped or clamped clip phase; `loads` are blended but not yet multiplied by `loadScales`. */
 export type Sample = {
   readonly timeS: number;
+  readonly clipTimeS: number;
   readonly frame: number;
   readonly offsets: Readonly<Record<Slug, FullOffset>>;
   readonly root: { readonly x: number; readonly y: number; readonly angleDeg: number };
@@ -56,9 +58,22 @@ export function cycleOf(timeS: number, durationS: number, loop: boolean): number
   return loop ? Math.floor(timeS / durationS) : 0;
 }
 
-/** 🎞️ The frame at a time: `floor(t · fps + 1e-9)`. */
+/** 🖼️ The frame at a time: `floor(t · fps + 1e-9)`. */
 export function frameAt(timeS: number, fps: number): number {
   return Math.floor(timeS * fps + 1e-9);
+}
+
+/** 🎬️ How a rendered cast maps cast time to a frame: `count` frames at `fps` over `durationS` seconds; a loop wraps at `durationS`, anything else holds the last frame. */
+export type Playback = { readonly fps: number; readonly count: number; readonly durationS: number; readonly loop: boolean };
+
+/** 🎬️ The frame of a rendered cast at cast time `timeS`: one pure function of the time, shared by live playback, seeking, preview and export (export frame `n` is sampled at `n / fps`, so it comes back as `n`). A loop wraps in whole frames (`round(durationS · fps)` per period, `count` for an exported loop and one less for a clip repeated although it does not loop), after the floor, so an accumulated clock that lands a rounding error short of a period boundary still shows the first frame of the next period and the seam never lags. */
+export function playbackFrame(timeS: number, playback: Playback): number {
+  const { fps, count, durationS, loop } = playback;
+  if (count <= 1 || !(durationS > 0)) return 0;
+  const step = frameAt(timeS, fps);
+  if (!loop) return Math.min(count - 1, Math.max(step, 0));
+  const period = Math.max(1, Math.round(durationS * fps));
+  return ((step % period) + period) % period;
 }
 
 /** 🔎️ The pose with the id, or an error naming the asset and the poses it has. */
@@ -68,7 +83,7 @@ export function poseOf(asset: Asset, id: Slug): Pose {
   return pose;
 }
 
-/** 🔎️ The clip with the id, or an error naming the asset and the clips it has. */
+/** 🎥️ The clip with the id, or an error naming the asset and the clips it has. */
 export function clipOf(asset: Asset, id: Slug): Clip {
   const clip = asset.clips.find((candidate) => candidate.id === id);
   if (clip === undefined) throw new Error(`asset "${asset.id}" has no clip "${id}"; clips: ${asset.clips.map((c) => c.id).join(", ")}`);
@@ -83,7 +98,7 @@ export function effectiveKeys<T extends { readonly t: number }>(keys: readonly T
 /** 📍️ A key segment: the indices `a`, `b`, the linear fraction `w` and the times `ta`, `tb` of the two keys (shifted by one duration across the loop seam). */
 export type Segment = { readonly a: number; readonly b: number; readonly w: number; readonly ta: number; readonly tb: number };
 
-/** 📍️ Where a time falls among ascending key times. Looping lists continue from the last key to the first one cycle later. */
+/** 🕓️ Where a time falls among ascending key times. Looping lists continue from the last key to the first one cycle later. */
 export function locate(times: readonly number[], timeS: number, loop: boolean, durationS: number): Segment {
   const n = times.length;
   const last = n - 1;
@@ -114,7 +129,7 @@ export function hasClosingKey(times: readonly number[], loop: boolean, durationS
 /** 🧭️ A neighbouring key for tangents: its index, its time shifted consistently across the loop seam and the number of cycles (`wrap`, −1, 0 or 1) whose closing-key difference its value carries; absent at the ends of a non-looping clip. */
 export type Neighbour = { readonly i: number; readonly t: number; readonly wrap: -1 | 0 | 1 };
 
-/** 🧭️ The keys before and after a segment. With a closing key the neighbour across the seam is the key before the closing one (wrap −1) or the second key (wrap +1), so tangents are continuous through the seam including whole turns. */
+/** ↔️ The keys before and after a segment. With a closing key the neighbour across the seam is the key before the closing one (wrap −1) or the second key (wrap +1), so tangents are continuous through the seam including whole turns. */
 export function neighbours(times: readonly number[], segment: Segment, loop: boolean, durationS: number): { readonly prev: Neighbour | null; readonly next: Neighbour | null } {
   const n = times.length;
   const closing = hasClosingKey(times, loop, durationS);
@@ -154,27 +169,27 @@ export function spanActive(span: ContactSpan, timeS: number, durationS: number):
   return timeS >= span.fromS && (timeS < span.toS || (timeS >= durationS && span.toS >= durationS));
 }
 
-/** 🦶️ The anchors in contact at a clip time, in declaration order without repeats. */
+/** 👣️ The anchors in contact at a clip time, in declaration order without repeats. */
 export function contactsAt(clip: Clip, timeS: number): readonly Slug[] {
   const ids: Slug[] = [];
   for (const span of clip.contacts) if (spanActive(span, timeS, clip.durationS) && !ids.includes(span.anchor)) ids.push(span.anchor);
   return ids;
 }
 
-/** 🎬️ The id of the first phase containing the clip time, or `null`. */
+/** 🏁️ The id of the first phase containing the clip time, or `null`. */
 export function phaseAt(clip: Clip, timeS: number): Slug | null {
   for (const phase of clip.phases) if (timeS >= phase.fromS && (timeS < phase.toS || (timeS >= clip.durationS && phase.toS >= clip.durationS))) return phase.id;
   return null;
 }
 
-const ZERO_OFFSET: FullOffset = { angleDeg: 0, dx: 0, dy: 0 };
+const ZERO_OFFSET: FullOffset = { angleDeg: 0, abductionDeg: 0, twistDeg: 0, dx: 0, dy: 0 };
 
 function lerp(a: number, b: number, w: number): number {
   return a + (b - a) * w;
 }
 
 function fullOffset(offset: BoneOffset | undefined): FullOffset {
-  return offset === undefined ? ZERO_OFFSET : { angleDeg: offset.angleDeg ?? 0, dx: offset.dx ?? 0, dy: offset.dy ?? 0 };
+  return offset === undefined ? ZERO_OFFSET : { angleDeg: offset.angleDeg ?? 0, abductionDeg: offset.abductionDeg ?? 0, twistDeg: offset.twistDeg ?? 0, dx: offset.dx ?? 0, dy: offset.dy ?? 0 };
 }
 
 function keyOffsets(asset: Asset, pose: Pose, overrides: Readonly<Record<Slug, BoneOffset>> | undefined): Record<Slug, FullOffset> {
@@ -192,7 +207,7 @@ function blendOffsets(a: Readonly<Record<Slug, FullOffset>>, b: Readonly<Record<
   for (const id of Object.keys(a)) {
     const x = a[id]!;
     const y = b[id]!;
-    result[id] = { angleDeg: lerp(x.angleDeg, y.angleDeg, w), dx: lerp(x.dx, y.dx, w), dy: lerp(x.dy, y.dy, w) };
+    result[id] = { angleDeg: lerp(x.angleDeg, y.angleDeg, w), abductionDeg: lerp(x.abductionDeg, y.abductionDeg, w), twistDeg: lerp(x.twistDeg, y.twistDeg, w), dx: lerp(x.dx, y.dx, w), dy: lerp(x.dy, y.dy, w) };
   }
   return result;
 }
@@ -230,7 +245,10 @@ function blendRegion(a: RegionBinding | undefined, b: RegionBinding | undefined,
 /** 🌡️ The thermal inputs of two bindings blended by weight `w`: scalars interpolate; absent operating levels and emitter strengths count as 0, absent exposure as 1, absent sunlit fraction as 0; a contact present in one binding fades with its fraction; the breathing pattern holds the first binding's pattern until the weight passes 1/2 (patterns are discrete). Every declared region, non-respiratory emitter and operating key is present. */
 export function blendThermal(asset: Asset, a: ThermalBinding, b: ThermalBinding, w: number): ThermalInputs {
   const operatingKeys = new Set<Slug>([...asset.thermal.operating.map((key) => key.id), ...Object.keys(a.operating ?? {}), ...Object.keys(b.operating ?? {})]);
-  for (const region of asset.thermal.regions) if (region.operating !== undefined) operatingKeys.add(region.operating.key);
+  for (const region of asset.thermal.regions) {
+    const key = operatingKeyOf(region);
+    if (key !== null) operatingKeys.add(key);
+  }
   const breathEmitters = new Set(asset.thermal.emitters.filter((emitter) => emitter.kind === "breath").map((emitter) => emitter.id));
   const emitterKeys = new Set<Slug>(asset.thermal.emitters.filter((emitter) => emitter.kind !== "breath").map((emitter) => emitter.id));
   for (const id of [...Object.keys(a.emitters ?? {}), ...Object.keys(b.emitters ?? {})]) if (!breathEmitters.has(id)) emitterKeys.add(id);
@@ -276,7 +294,7 @@ function applyTracks(asset: Asset, clip: Clip, timeS: number, thermal: ThermalIn
     else if (track.target === "breathing") breathing = asset.thermal.respiration?.patterns[Math.min(Math.max(Math.round(value), 0), asset.thermal.respiration.patterns.length - 1)]?.id ?? breathing;
     else if (kind === "emitter" && id !== undefined) emitters[id] = Math.max(0, value);
     else if (kind === "operating" && id !== undefined) operating[id] = Math.min(1, Math.max(0, value));
-    else if (kind === "load" && id !== undefined) loadScales[id] = value;
+    else if (kind === "load" && id !== undefined) loadScales[id] = Math.max(0, value);
     else if (kind === "region" && id !== undefined && field !== undefined && (REGION_TRACK_FIELDS as readonly string[]).includes(field)) {
       const region = (regions[id] ??= { exposedFraction: 1, sunlitFraction: 0 });
       region[field as (typeof REGION_TRACK_FIELDS)[number]] = Math.min(1, Math.max(0, value));
@@ -285,19 +303,28 @@ function applyTracks(asset: Asset, clip: Clip, timeS: number, thermal: ThermalIn
   return { thermal: { activityMet, externalWorkW, operating, regions, emitters, breathing, passengers: thermal.passengers }, loadScales };
 }
 
+const LOAD_COMPONENTS = ["fzN", "momentXNm", "momentYNm", "momentNm"] as const;
+
 function scaleLoad(load: AppliedLoad, k: number): AppliedLoad {
-  const distributed = load.distributed === undefined ? {} : { distributed: { ...load.distributed, wxNPerM: load.distributed.wxNPerM * k, wyNPerM: load.distributed.wyNPerM * k } };
-  return { ...load, fxN: load.fxN * k, fyN: load.fyN * k, ...(load.momentNm === undefined ? {} : { momentNm: load.momentNm * k }), ...distributed };
+  const distributed = load.distributed === undefined ? {} : { distributed: { ...load.distributed, wxNPerM: load.distributed.wxNPerM * k, wyNPerM: load.distributed.wyNPerM * k, ...(load.distributed.wzNPerM === undefined ? {} : { wzNPerM: load.distributed.wzNPerM * k }) } };
+  const optional = Object.fromEntries(LOAD_COMPONENTS.filter((key) => load[key] !== undefined).map((key) => [key, load[key]! * k]));
+  return { ...load, fxN: load.fxN * k, fyN: load.fyN * k, ...optional, ...distributed };
 }
 
 function mixLoad(a: AppliedLoad, b: AppliedLoad, w: number): AppliedLoad {
+  const wz = blendOptional(a.distributed?.wzNPerM, b.distributed?.wzNPerM, w);
   const distributed = a.distributed !== undefined && b.distributed !== undefined
-    ? { distributed: { bone: a.distributed.bone, fromM: lerp(a.distributed.fromM, b.distributed.fromM, w), toM: lerp(a.distributed.toM, b.distributed.toM, w), wxNPerM: lerp(a.distributed.wxNPerM, b.distributed.wxNPerM, w), wyNPerM: lerp(a.distributed.wyNPerM, b.distributed.wyNPerM, w) } }
+    ? { distributed: { bone: a.distributed.bone, fromM: lerp(a.distributed.fromM, b.distributed.fromM, w), toM: lerp(a.distributed.toM, b.distributed.toM, w), wxNPerM: lerp(a.distributed.wxNPerM, b.distributed.wxNPerM, w), wyNPerM: lerp(a.distributed.wyNPerM, b.distributed.wyNPerM, w), ...(wz === undefined ? {} : { wzNPerM: wz }) } }
     : a.distributed === undefined ? {} : { distributed: a.distributed };
-  const x = blendOptional(a.x, b.x, w);
-  const y = blendOptional(a.y, b.y, w);
-  const moment = blendOptional(a.momentNm, b.momentNm, w);
-  return { ...a, fxN: lerp(a.fxN, b.fxN, w), fyN: lerp(a.fyN, b.fyN, w), ...(x === undefined ? {} : { x }), ...(y === undefined ? {} : { y }), ...(moment === undefined ? {} : { momentNm: moment }), ...distributed };
+  const positions = Object.fromEntries((["x", "y", "z"] as const).flatMap((key) => {
+    const value = blendOptional(a[key], b[key], w);
+    return value === undefined ? [] : [[key, value]];
+  }));
+  const components = Object.fromEntries(LOAD_COMPONENTS.flatMap((key) => {
+    const value = blendOptional(a[key], b[key], w);
+    return value === undefined ? [] : [[key, value]];
+  }));
+  return { ...a, fxN: lerp(a.fxN, b.fxN, w), fyN: lerp(a.fyN, b.fyN, w), ...positions, ...components, ...distributed };
 }
 
 /** 🧲️ Loads of two poses blended by weight `w`: loads in both interpolate, loads in one fade in or out by their weight. */
@@ -365,7 +392,7 @@ function core(asset: Asset, clip: Clip, timeS: number, cycle = 0): Core {
     offsets = {};
     for (const bone of asset.rig.bones) {
       const id = bone.id;
-      offsets[id] = { angleDeg: mix((d) => d.offsets[id]!.angleDeg), dx: mix((d) => d.offsets[id]!.dx), dy: mix((d) => d.offsets[id]!.dy) };
+      offsets[id] = { angleDeg: mix((d) => d.offsets[id]!.angleDeg), abductionDeg: mix((d) => d.offsets[id]!.abductionDeg), twistDeg: mix((d) => d.offsets[id]!.twistDeg), dx: mix((d) => d.offsets[id]!.dx), dy: mix((d) => d.offsets[id]!.dy) };
     }
     root = { x: mix((d) => d.root.x), y: mix((d) => d.root.y), angleDeg: mix((d) => d.root.angleDeg) };
   }
@@ -374,7 +401,7 @@ function core(asset: Asset, clip: Clip, timeS: number, cycle = 0): Core {
     for (const bone of asset.rig.bones) {
       const id = bone.id;
       const o = offsets[id]!;
-      turned[id] = { angleDeg: o.angleDeg + cycle * turn((d) => d.offsets[id]!.angleDeg), dx: o.dx + cycle * turn((d) => d.offsets[id]!.dx), dy: o.dy + cycle * turn((d) => d.offsets[id]!.dy) };
+      turned[id] = { angleDeg: o.angleDeg + cycle * turn((d) => d.offsets[id]!.angleDeg), abductionDeg: o.abductionDeg, twistDeg: o.twistDeg, dx: o.dx + cycle * turn((d) => d.offsets[id]!.dx), dy: o.dy + cycle * turn((d) => d.offsets[id]!.dy) };
     }
     offsets = turned;
     root = { x: root.x + cycle * turn((d) => d.root.x), y: root.y + cycle * turn((d) => d.root.y), angleDeg: root.angleDeg + cycle * turn((d) => d.root.angleDeg) };
@@ -388,11 +415,13 @@ function anchorOf(asset: Asset, id: Slug): Anchor {
   return anchor;
 }
 
-function anchorLocal(asset: Asset, world: Readonly<Record<Slug, Affine>>, id: Slug): { readonly x: number; readonly y: number } {
+function anchorLocal(asset: Asset, world: Readonly<Record<Slug, SolvedFrame>>, id: Slug): { readonly x: number; readonly y: number } {
   const anchor = anchorOf(asset, id);
-  const matrix = world[anchor.bone];
-  if (matrix === undefined) throw new Error(`anchor "${id}" of asset "${asset.id}" sits on unknown bone "${anchor.bone}"`);
-  return apply(matrix, anchor.x, anchor.y);
+  const solved = world[anchor.bone];
+  if (solved === undefined) throw new Error(`anchor "${id}" of asset "${asset.id}" sits on unknown bone "${anchor.bone}"`);
+  const flat = apply(solved.affine, anchor.x, anchor.y);
+  const side = anchor.z ?? 0;
+  return side === 0 ? flat : { x: flat.x + side * solved.frame.w[0], y: flat.y + side * solved.frame.w[1] };
 }
 
 type PlantTable = {
@@ -404,11 +433,11 @@ type PlantTable = {
 const TABLES = new WeakMap<Clip, WeakMap<Asset, PlantTable>>();
 
 function relativeXAt(asset: Asset, clip: Clip, timeS: number): (anchor: Slug) => number {
-  let world: Record<Slug, Affine> | undefined;
+  let world: Record<Slug, SolvedFrame> | undefined;
   return (anchor) => {
     if (world === undefined) {
       const c = core(asset, clip, timeS);
-      world = solveRig(asset.rig, c.offsets, { x: 0, y: 0, angleDeg: c.authoredRoot.angleDeg });
+      world = solveChain(asset.rig, c.offsets, { x: 0, y: 0, angleDeg: c.authoredRoot.angleDeg });
     }
     return anchorLocal(asset, world, anchor).x;
   };
@@ -482,13 +511,13 @@ function plantedX(asset: Asset, clip: Clip, timeS: number): number {
 
 function groundedY(asset: Asset, offsets: Record<Slug, FullOffset>, angleDeg: number, contacts: readonly Slug[], authoredY: number): number {
   if (contacts.length === 0) return authoredY;
-  const world = solveRig(asset.rig, offsets, { x: 0, y: 0, angleDeg });
+  const world = solveChain(asset.rig, offsets, { x: 0, y: 0, angleDeg });
   let lowest = Number.POSITIVE_INFINITY;
   for (const id of contacts) lowest = Math.min(lowest, anchorLocal(asset, world, id).y);
   return -lowest;
 }
 
-/** 🎬️ The full sample of a clip at a time: blended offsets and thermal state, tracks, contacts, phase, loads, load scales, and the root with planted motion and automatic ground applied. */
+/** 📽️ The full sample of a clip at a time: blended offsets and thermal state, tracks, contacts, phase, loads, load scales, and the root with planted motion and automatic ground applied. */
 export function sampleClip(asset: Asset, clip: Clip, timeS: number): Sample {
   const t = wrapTime(timeS, clip.durationS, clip.loop);
   const c = core(asset, clip, t, cycleOf(timeS, clip.durationS, clip.loop));
@@ -499,7 +528,7 @@ export function sampleClip(asset: Asset, clip: Clip, timeS: number): Sample {
   const advance = clip.rootMotion === "plant" && clip.loop ? cycleOf(timeS, clip.durationS, clip.loop) * (clip.advanceM ?? 0) : 0;
   const x = clip.rootMotion === "plant" ? plantedX(asset, clip, t) + advance : c.authoredRoot.x;
   const y = auto ? groundedY(asset, c.offsets, c.authoredRoot.angleDeg, contacts, c.authoredRoot.y) : c.authoredRoot.y;
-  return { timeS: t, frame: frameAt(t, clip.fps), offsets: c.offsets, root: { x, y, angleDeg: c.authoredRoot.angleDeg }, contacts, thermal, loadScales, loads: blendLoads(c.from.loads, c.to.loads, c.weight), phase: phaseAt(clip, t) };
+  return { timeS, clipTimeS: t, frame: frameAt(t, clip.fps), offsets: c.offsets, root: { x, y, angleDeg: c.authoredRoot.angleDeg }, contacts, thermal, loadScales, loads: blendLoads(c.from.loads, c.to.loads, c.weight), phase: phaseAt(clip, t) };
 }
 
 /** 🧍️ The sample of a static pose: its offsets, authored root (ground `auto` puts the lowest listed contact on y = 0), thermal binding, loads and contacts. */
@@ -507,7 +536,7 @@ export function samplePose(asset: Asset, pose: Pose): Sample {
   const offsets = keyOffsets(asset, pose, undefined);
   const root = authoredRoot(pose);
   const y = pose.ground === "auto" ? groundedY(asset, offsets, root.angleDeg, pose.contacts, root.y) : root.y;
-  return { timeS: 0, frame: 0, offsets, root: { x: root.x, y, angleDeg: root.angleDeg }, contacts: pose.contacts, thermal: blendThermal(asset, pose.thermal, pose.thermal, 0), loadScales: {}, loads: pose.loads, phase: null };
+  return { timeS: 0, clipTimeS: 0, frame: 0, offsets, root: { x: root.x, y, angleDeg: root.angleDeg }, contacts: pose.contacts, thermal: blendThermal(asset, pose.thermal, pose.thermal, 0), loadScales: {}, loads: pose.loads, phase: null };
 }
 
 /** 🔀️ A synthetic non-looping two-key clip from pose `from` to pose `to` over `durationS` with smooth easing; contacts held by both poses last the whole time, those of one pose half of it. */

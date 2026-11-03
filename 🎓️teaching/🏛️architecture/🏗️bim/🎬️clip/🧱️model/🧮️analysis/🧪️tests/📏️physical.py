@@ -77,7 +77,7 @@ def _regional_analysis_fixture():
     layers["layers"] = [{"id":"structural","name":{"en":"Composite structure","de":"Verbundtragwerk"},"material":"MAT-RC","thickness":q(.17),"zones":["roof","solarium"]},
                          {"id":"paving","name":{"en":"Weathering reserve","de":"Witterungsreserve"},"material":"MAT-PAVING","thickness":q(.09),"zones":["roof","solarium"]}]
     core._find(source, "MAT-PAVING")["density"]["value"] = 20
-    source["loads"]["imposed"]["roof"] = {"value":1,"unit":"kN/m²","basis":"assumed"}
+    source["loads"]["imposed"]["roof"] = {"value":1,"unit":"kN/m²","basis":"assumed","category":"h-roofs"}
     columns = []
     for level, base, top in (("ground",0,2.91),("first",3.17,6.34)):
         for i, x in enumerate((1,7)):

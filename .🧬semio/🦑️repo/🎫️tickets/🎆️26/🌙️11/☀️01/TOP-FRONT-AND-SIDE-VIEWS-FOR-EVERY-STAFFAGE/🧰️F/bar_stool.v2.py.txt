@@ -1,0 +1,138 @@
+from lib import *
+
+SEAT_Y = 0.698
+PAD_Y = 0.72
+
+
+def build(s, sc):
+    F, P = 'front', 'plan'
+    if sc == '500':
+        s.poly(F, 'seat', [(-0.18, 0.65), (0.18, 0.65), (0.18, 0.75), (0.055, 0.75), (0.055, 0.87), (-0.055, 0.87), (-0.055, 0.75), (-0.18, 0.75)], like='seat')
+        s.poly(F, 'leg-l', [(0.14, 0.66), (0.21, 0.0)], like='leg-l', closed=False)
+        s.poly(F, 'leg-r', [(-0.14, 0.66), (-0.21, 0.0)], like='leg-r', closed=False)
+        s.poly(F, 'ring', [(-0.195, 0.27), (0.195, 0.27)], like='ring', closed=False)
+        s.ell(P, 'seat', 0, 0, 0.18, 0.18, like='seat', z=6)
+        s.rect(P, 'back', -0.18, -0.055, 0.11, 0.11, like='seat', z=7)
+        s.poly(P, 'leg-x', [(-0.205, 0.0), (0.205, 0.0)], like='leg-l', closed=False, z=2)
+        s.poly(P, 'leg-y', [(0.0, -0.205), (0.0, 0.205)], like='leg-r', closed=False, z=2)
+        return ('Front view: seat and backrest as one outline, the backrest on the left edge; the two outer legs and the ring as lines. Plan: the seat disc covers the four legs, only their feet stick out as short stubs along both axes.',
+                'Vorderansicht: Sitz und Lehne als eine Kontur, die Lehne am linken Rand; die beiden äußeren Beine und der Ring als Linien. Grundriss: Die Sitzscheibe verdeckt die vier Beine, nur ihre Füße ragen als kurze Stummel entlang beider Achsen heraus.')
+    if sc == '200':
+        s.rect(F, 'seat', -0.18, SEAT_Y, 0.36, 0.052, like='seat')
+        s.poly(F, 'back', [(-0.015, 0.69), (0.015, 0.69), (0.015, 0.8), (0.05, 0.8), (0.05, 0.87), (-0.05, 0.87), (-0.05, 0.8), (-0.015, 0.8)], like='back')
+        s.poly(F, 'leg-l', [(0.14, 0.7), (0.21, 0.0)], like='leg-l', closed=False)
+        s.poly(F, 'leg-r', [(-0.14, 0.7), (-0.21, 0.0)], like='leg-r', closed=False)
+        s.poly(F, 'ring', [(-0.195, 0.27), (0.195, 0.27)], like='ring', closed=False)
+        s.ell(P, 'seat', 0, 0, 0.18, 0.18, like='seat')
+        s.rect(P, 'back', -0.16, -0.05, 0.05, 0.1, like='back', z=7)
+        s.poly(P, 'leg-x', [(-0.205, 0.0), (0.205, 0.0)], like='leg-l', closed=False)
+        s.poly(P, 'leg-y', [(0.0, -0.205), (0.0, 0.205)], like='leg-r', closed=False)
+        return ('Front view: seat bar, the lean backrest as a narrow post on the left and the two outer legs with the ring. Plan: the seat disc, the backrest as a short bar on the left half and four leg stubs that stick out beyond the disc.',
+                'Vorderansicht: Sitzbalken, die schmale Lehne als Pfosten links sowie die zwei äußeren Beine mit dem Ring. Grundriss: die Sitzscheibe, die Lehne als kurzer Balken in der linken Hälfte und vier Beinstummel, die über die Scheibe hinausragen.')
+    if sc == '100':
+        s.rect(F, 'plate', -0.18, PAD_Y - 0.04, 0.36, 0.04, like='plate')
+        s.path(F, 'pad', 'M -0.18 0.71 L -0.18 0.738 Q -0.18 0.75 -0.168 0.75 L 0.168 0.75 Q 0.18 0.75 0.18 0.738 L 0.18 0.71 Z', like='pad')
+        s.rect(F, 'back-post', -0.015, PAD_Y, 0.03, 0.09, like='back-post')
+        s.path(F, 'back-pad', 'M -0.05 0.81 L -0.05 0.85 Q -0.05 0.87 -0.03 0.87 L 0.03 0.87 Q 0.05 0.87 0.05 0.85 L 0.05 0.81 Z', like='back-pad')
+        s.cap(F, 'leg-l', 0.14, 0.712, 0.1975, 0.0125, 0.0125, like='leg-l')
+        s.cap(F, 'leg-r', -0.14, 0.712, -0.1975, 0.0125, 0.0125, like='leg-r')
+        s.cap(F, 'leg-m', 0.0, 0.712, 0.0, 0.0125, 0.0125, like='leg-m')
+        s.cap(F, 'ring', -0.19, 0.27, 0.19, 0.27, 0.0125, like='ring')
+        s.ell(P, 'plate', 0, 0, 0.18, 0.18, like='plate')
+        s.ell(P, 'pad', 0, 0, 0.17, 0.17, like='pad')
+        s.cap(P, 'back-pad', -0.14, -0.03, -0.14, 0.03, 0.02, like='back-pad', z=8)
+        for n, (a, b, c, d) in {'leg-xp': (0.14, 0, 0.1975, 0), 'leg-xn': (-0.14, 0, -0.1975, 0), 'leg-yp': (0, 0.14, 0, 0.1975), 'leg-yn': (0, -0.14, 0, -0.1975)}.items():
+            s.cap(P, n, a, b, c, d, 0.0125, like='leg-l')
+        return ('Front view: seat plate and pad, the backrest as a narrow post and pad at the left edge, three legs and the ring as tubes. Plan: plate and pad as two concentric discs, the backrest pad as a bar on the left half and the four leg tubes whose feet reach out past the seat.',
+                'Vorderansicht: Sitzplatte und Polster, die Lehne als schmaler Pfosten mit Polster am linken Rand, drei Beine und der Ring als Rohre. Grundriss: Platte und Polster als zwei konzentrische Scheiben, das Lehnenpolster als Balken in der linken Hälfte und die vier Beinrohre, deren Füße über den Sitz hinausragen.')
+    s.poly(F, 'plate', [(-0.174, 0.68), (0.174, 0.68), (0.18, 0.688), (0.18, 0.722), (-0.18, 0.722), (-0.18, 0.688)], like='plate')
+    s.path(F, 'pad', 'M -0.18 0.71 L -0.18 0.732 Q -0.18 0.75 -0.162 0.75 L 0.162 0.75 Q 0.18 0.75 0.18 0.732 L 0.18 0.71 Z', like='pad')
+    s.rect(F, 'back-post', -0.015, PAD_Y, 0.03, 0.09, like='back-post')
+    s.path(F, 'back-pad', 'M -0.05 0.81 L -0.05 0.842 Q -0.05 0.87 -0.022 0.87 L 0.022 0.87 Q 0.05 0.87 0.05 0.842 L 0.05 0.81 Z', like='back-pad')
+    s.cap(F, 'leg-l', 0.14, 0.712, 0.1975, 0.0125, 0.0125, like='leg-l')
+    s.cap(F, 'leg-r', -0.14, 0.712, -0.1975, 0.0125, 0.0125, like='leg-r')
+    s.cap(F, 'leg-m', 0.0, 0.712, 0.0, 0.0125, 0.0125, like='leg-m')
+    s.cap(F, 'ring', -0.19, 0.27, 0.19, 0.27, 0.0125, like='ring')
+    s.rect(F, 'ferrule-l', 0.1825, 0.0, 0.03, 0.022, like='ferrule-l')
+    s.rect(F, 'ferrule-r', -0.2125, 0.0, 0.03, 0.022, like='ferrule-r')
+    s.rect(F, 'ferrule-m', -0.015, 0.0, 0.03, 0.022, like='ferrule-m')
+    s.ell(P, 'ring', 0, 0, 0.195, 0.195, like='ring', filled=False, z=1)
+    s.ell(P, 'plate', 0, 0, 0.18, 0.18, like='plate')
+    s.ell(P, 'pad', 0, 0, 0.17, 0.17, like='pad')
+    s.cap(P, 'back-pad', -0.14, -0.03, -0.14, 0.03, 0.02, like='back-pad', z=8)
+    s.ell(P, 'back-post', -0.14, 0, 0.015, 0.015, like='back-post', z=7)
+    for n, (a, b, c, d) in {'leg-xp': (0.14, 0, 0.1975, 0), 'leg-xn': (-0.14, 0, -0.1975, 0), 'leg-yp': (0, 0.14, 0, 0.1975), 'leg-yn': (0, -0.14, 0, -0.1975)}.items():
+        s.cap(P, n, a, b, c, d, 0.0125, like='leg-l')
+    for n, (a, b) in {'ferrule-xp': (0.1975, 0), 'ferrule-xn': (-0.1975, 0), 'ferrule-yp': (0, 0.1975), 'ferrule-yn': (0, -0.1975)}.items():
+        s.ell(P, n, a, b, 0.015, 0.015, like='ferrule-l')
+    return ('Front view: plate with pad, backrest post and pad at the left edge, three tube legs with their ferrules and the footrest ring. Plan: footrest ring, plate and pad as concentric discs, the backrest pad and post, and four leg tubes that end in ferrule dots outside the seat; the seat covers the tops of the legs.',
+            'Vorderansicht: Platte mit Polster, Lehnenpfosten und Lehnenpolster am linken Rand, drei Rohrbeine mit Fußkappen und der Fußring. Grundriss: Fußring, Platte und Polster als konzentrische Scheiben, Lehnenpolster und Pfosten sowie vier Beinrohre, die außerhalb des Sitzes in Fußkappenpunkten enden; der Sitz verdeckt die Beinköpfe.')
+
+
+NOTES = {
+    '500': ('Front view: seat and backrest as one outline, the backrest block centred above the seat; the two outer legs and the ring as lines. Plan: the seat disc with the backrest block at the rear edge, only the leg feet stick out as short stubs along both axes.',
+            'Vorderansicht: Sitz und Lehne als eine Kontur, der Lehnenblock mittig über dem Sitz; die beiden äußeren Beine und der Ring als Linien. Grundriss: die Sitzscheibe mit dem Lehnenblock am hinteren Rand, nur die Füße der Beine ragen als kurze Stummel entlang beider Achsen heraus.'),
+    '200': ('Front view: seat bar, the backrest as a T above it, centred, and the two outer legs with the ring. Plan: the seat disc, the backrest as a short bar on the rear edge that swivels round the seat circle, and four leg stubs that stick out beyond the disc.',
+            'Vorderansicht: Sitzbalken, die Lehne als T darüber, mittig, sowie die zwei äußeren Beine mit dem Ring. Grundriss: die Sitzscheibe, die Lehne als kurzer Balken am hinteren Rand, der auf dem Sitzkreis schwenkt, und vier Beinstummel, die über die Scheibe hinausragen.'),
+    '100': ('Front view: seat plate and pad, the backrest post and pad centred above them, three legs and the ring as tubes. Plan: plate and pad as two concentric discs, the backrest pad as a bar at the rear edge that swivels round the seat circle and the four leg tubes whose feet reach out past the seat.',
+            'Vorderansicht: Sitzplatte und Polster, darüber mittig Lehnenpfosten und Lehnenpolster, drei Beine und der Ring als Rohre. Grundriss: Platte und Polster als zwei konzentrische Scheiben, das Lehnenpolster als Balken am hinteren Rand, der auf dem Sitzkreis schwenkt, und die vier Beinrohre, deren Füße über den Sitz hinausragen.'),
+    '50': ('Front view: plate with pad, backrest post and pad centred above them, three tube legs with their ferrules and the footrest ring. Plan: footrest ring, plate and pad as concentric discs, the backrest pad and post at the rear edge that swivel round the seat circle, and four leg tubes that end in ferrule dots outside the seat; the seat covers the tops of the legs.',
+           'Vorderansicht: Platte mit Polster, darüber mittig Lehnenpfosten und Lehnenpolster, drei Rohrbeine mit Fußkappen und der Fußring. Grundriss: Fußring, Platte und Polster als konzentrische Scheiben, Lehnenpolster und Pfosten am hinteren Rand, die auf dem Sitzkreis schwenken, und vier Beinrohre, die außerhalb des Sitzes in Fußkappenpunkten enden; der Sitz verdeckt die Beinköpfe.'),
+}
+RADIUS = 0.14
+
+
+def pre(a):
+    bones = {b['id']: b for b in a['rig']['bones']}
+    seat = bones['seat']
+    seat.update(angleDeg=90, lengthM=0.15, joint={'type': 'revolute', 'minDeg': 0, 'maxDeg': 0})
+    seat['title'] = {'en': 'Swivel seat plate (turns about the vertical seat axis)', 'de': 'Drehbare Sitzplatte (dreht um die senkrechte Sitzachse)'}
+    seat['mass'].update(comX=0.01, comY=0.0)
+    pad = bones['pad']
+    pad.update(parent='frame', x=0, y=0.72)
+    b = bones['backrest']
+    b.update(x=0.022, y=RADIUS, angleDeg=0, lengthM=0.15, joint={'type': 'fixed'})
+    b['title'] = {'en': 'Low backrest on the swivel seat (radius 0.14 m)', 'de': 'Niedrige Lehne am Drehsitz (Radius 0,14 m)'}
+    b['mass'].update(comX=0.1, comY=0.0)
+    for sc in ('500', '200', '100', '50'):
+        for sh in a['representations'][sc]['geometry']['elevation']:
+            if sc != '500' and sh['bone'] == 'backrest':
+                if sh['id'] == 'back':
+                    sh.pop('points', None)
+                    sh['points'] = [[-0.025, -0.03], [0.025, -0.03], [0.025, 0.15], [-0.025, 0.15]]
+                if sh['id'] == 'back-pad':
+                    sh['d'] = 'M -0.02 0.09 L -0.02 0.135 Q -0.02 0.15 -0.005 0.15 L 0.005 0.15 Q 0.02 0.15 0.02 0.135 L 0.02 0.09 Z'
+                turn_shape(sh, 0)
+            elif sh['bone'] == 'seat':
+                if sc == '500':
+                    sh['d'] = 'M -0.18 -0.048 L 0.18 -0.048 L 0.18 0.052 L -0.07 0.052 L -0.07 0.172 L -0.18 0.172 Z'
+                move_shape(sh, 0, 0.698)
+                sh['bone'] = 'frame'
+    for p in a['poses']:
+        if 'backrest' in p['bones']:
+            sign = -1 if p['bones']['backrest']['dx'] < 0 else 1
+            del p['bones']['backrest']
+            p['bones']['seat'] = {'twistDeg': 90 * sign}
+    texts = {
+        'turned-90': ('Unoccupied seat turned a quarter turn: the backrest swings round the seat circle from the rear to the side.', 'Unbesetzter Sitz um eine Vierteldrehung gedreht: die Lehne wandert auf dem Sitzkreis vom Heck zur Seite.'),
+        'turned-270-key': ('Backrest on the opposite side of the seat circle.', 'Lehne auf der Gegenseite des Sitzkreises.'),
+    }
+    for p in a['poses']:
+        if p['id'] in texts:
+            p['description'] = {'en': texts[p['id']][0], 'de': texts[p['id']][1]}
+    for c in a['clips']:
+        if c['id'] == 'swivel-turn':
+            c['title'] = {'en': 'Swivel to both sides', 'de': 'Drehung nach beiden Seiten'}
+            c['description'] = {'en': 'The unoccupied seat swings a quarter turn to each side and back in 6 s; the backrest runs round the seat circle.', 'de': 'Der unbesetzte Sitz schwenkt in 6 s eine Vierteldrehung zu jeder Seite und zurück; die Lehne läuft auf dem Sitzkreis.'}
+    ass = a['structure']['assumptions']
+    ass[0] = {'en': 'The stool is a rigid steel frame on three foot contacts in elevation (the front and rear legs coincide); the seat is a body, the pad sits on a prismatic joint and the backrest turns on a revolute swivel.', 'de': 'Der Hocker ist ein starres Stahlgestell auf drei Fußkontakten in der Ansicht (vordere und hintere Beine fallen zusammen); der Sitz ist ein Körper, das Polster sitzt auf einem Schiebegelenk und die Lehne dreht auf einem Drehgelenk.'}
+    ass[1] = {'en': 'The swivel is a rotation about the vertical axis; the round seat plate and pad look the same at every azimuth, so they are drawn on the frame and only the backrest rides on the twisting seat bone (axial twist of the vertical seat bone). It sits at radius 0.14 m and its 0.10 m wide pad turns with it in the front and top view.', 'de': 'Die Drehung ist eine Rotation um die Hochachse; die runde Sitzplatte und das Polster sehen bei jedem Winkel gleich aus, deshalb sind sie am Gestell gezeichnet und nur die Lehne sitzt auf dem sich verdrehenden Sitzknochen (axiale Verdrehung des senkrechten Sitzknochens). Sie sitzt auf dem Radius 0,14 m und ihr 0,10 m breites Polster dreht in Vorder- und Draufsicht mit.'}
+
+
+def noted(s, sc):
+    build(s, sc)
+    return NOTES[sc]
+
+
+if __name__ == '__main__':
+    run('bar-stool', noted, pre)

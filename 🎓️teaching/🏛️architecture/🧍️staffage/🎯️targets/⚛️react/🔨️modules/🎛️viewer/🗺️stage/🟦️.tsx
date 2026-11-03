@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactElement } from "react";
 import { CSS_PX_PER_MM } from "@teaching/staffage";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScene, EvaluatedState, StructuralResult, ThermalField, EvaluationQuery, ForceQuantity, ItemValue, Language, ThermalQuantity, View, Environment } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScene, EvaluatedState, StructuralResult, ThermalField, EvaluationQuery, ForceQuantity, ItemValue, Language, ThermalQuantity, View, Viewpoint, Environment } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🟦️.ts";
 import { StaffageFigure } from "../../🧍️figure/🟦️.tsx";
 import { useSize } from "../../🥞️levels/🟦️.tsx";
@@ -27,6 +27,7 @@ export type StageProps = {
   readonly query: EvaluationQuery;
   readonly clock: StaffageClock;
   readonly view: View;
+  readonly viewpoint: Viewpoint;
   readonly scale: number;
   readonly language: Language;
   readonly theme: "light" | "dark";
@@ -49,6 +50,7 @@ export type StageProps = {
   readonly onEvaluated: (frame: { state: EvaluatedState; thermal: ThermalField; structure: StructuralResult; scene: DrawingScene }) => void;
   readonly onInspect: (value: ItemValue | null, item: { bone?: string; region?: string } | null) => void;
   readonly onFit?: (zoom: number) => void;
+  readonly sheet?: { readonly widthMm: number; readonly heightMm: number; readonly render: (zoom: number) => ReactElement };
   readonly className?: string;
 };
 
@@ -63,12 +65,12 @@ export function Stage(props: StageProps): ReactElement {
   const [drag, setDrag] = useState<{ readonly xMm: number; readonly yMm: number } | null>(null);
   const start = useRef<{ x: number; y: number; pan: { xMm: number; yMm: number } } | null>(null);
   const element = useRef<HTMLDivElement | null>(null);
-  const widthMm = frame === undefined ? 100 : frame.maxX - frame.minX;
-  const heightMm = frame === undefined ? 100 : frame.maxY - frame.minY;
+  const widthMm = props.sheet?.widthMm ?? (frame === undefined ? 100 : frame.maxX - frame.minX);
+  const heightMm = props.sheet?.heightMm ?? (frame === undefined ? 100 : frame.maxY - frame.minY);
   const fit = Math.max(MIN_ZOOM, Math.min((size.width - 24) / (widthMm * CSS_PX_PER_MM), (size.height - 24) / (heightMm * CSS_PX_PER_MM), MAX_ZOOM));
   const effective = zoom === "fit" ? fit : zoom;
   const centre = (box: SceneFrame | undefined): { readonly x: number; readonly y: number } => (box === undefined ? { x: 0, y: 0 } : { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 });
-  const shift = zoom === "fit" ? { x: 0, y: 0 } : { x: centre(frame).x - centre(props.anchor).x, y: centre(frame).y - centre(props.anchor).y };
+  const shift = zoom === "fit" || props.sheet !== undefined ? { x: 0, y: 0 } : { x: centre(frame).x - centre(props.anchor).x, y: centre(frame).y - centre(props.anchor).y };
   const shown = drag ?? pan;
   const px = CSS_PX_PER_MM * effective;
   const latest = useRef({ effective, onZoom });
@@ -142,12 +144,13 @@ export function Stage(props: StageProps): ReactElement {
         {props.help}
       </span>
       <div className="absolute left-1/2 top-1/2" style={{ transform: `translate(-50%, -50%) translate(${(shown.xMm + shift.x) * px}px, ${(shown.yMm + shift.y) * px}px)` }}>
-        <FigureBoundary resetKey={props.asset} fallback={(message) => <Notice kind="error" title={props.asset.title[props.language]}>{message}</Notice>}>
+        {props.sheet !== undefined ? props.sheet.render(effective) : <FigureBoundary resetKey={props.asset} fallback={(message) => <Notice kind="error" title={props.asset.title[props.language]}>{message}</Notice>}>
           <StaffageFigure
             asset={props.asset}
             query={props.query}
             clock={props.clock}
             view={props.view}
+            viewpoint={props.viewpoint}
             scale={{ denominator: props.scale }}
             language={props.language}
             theme={props.theme}
@@ -165,7 +168,7 @@ export function Stage(props: StageProps): ReactElement {
             onEvaluated={props.onEvaluated}
             onInspect={props.onInspect}
           />
-        </FigureBoundary>
+        </FigureBoundary>}
       </div>
     </div>
   );

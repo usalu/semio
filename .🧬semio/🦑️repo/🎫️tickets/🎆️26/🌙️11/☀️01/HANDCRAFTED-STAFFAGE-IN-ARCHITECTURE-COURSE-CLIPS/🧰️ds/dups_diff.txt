@@ -1,0 +1,21 @@
+⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py 🖥️ dupcount 2 inDiff 2
+⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py 🌀 dupcount 2 inDiff 2
+⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py 🔄 dupcount 2 inDiff 2
+⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py 🧍 dupcount 2 inDiff 2
+⚡️energy/🏗️authoring/🎨️visuals/🐍️.py 📐 dupcount 5 inDiff 1
+⚡️energy/🏗️authoring/🎨️visuals/🐍️.py 🌡️ dupcount 2 inDiff 1
+⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py 🔥 dupcount 2 inDiff 1
+⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py ♨️ dupcount 2 inDiff 1
+⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py 📏 dupcount 2 inDiff 1
+⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py 🎯 dupcount 2 inDiff 1
+⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py 🪟 dupcount 4 inDiff 1
+⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py 💡 dupcount 2 inDiff 1
+⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py 🏠 dupcount 3 inDiff 1
+⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py 📏 dupcount 2 inDiff 1
+⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py ♨️ dupcount 2 inDiff 1
+⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py 🧹 dupcount 2 inDiff 1
+🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py 💡 dupcount 3 inDiff 2
+🏗️bim/🎬️clip/🔗️consistency/🐍️.py 🧑 dupcount 2 inDiff 1
+📊️excel/🎬️clip/📋️program/🐍️.py 🧍 dupcount 2 inDiff 2
+⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️staffage_only.py 🌡️ dupcount 2 inDiff 2
+TOTAL in-diff dup members 27

@@ -215,7 +215,7 @@
           "parent": "arm-front",
           "title": {
             "en": "Front castor",
-            "de": "Vorderer Rollen"
+            "de": "Vordere Rolle"
           },
           "x": 0.3,
           "y": 0,
@@ -281,7 +281,7 @@
           "parent": "arm-back-a",
           "title": {
             "en": "Back castor A",
-            "de": "Hinterer Rollen A"
+            "de": "Hintere Rolle A"
           },
           "x": 0.243,
           "y": 0,
@@ -303,7 +303,7 @@
           "parent": "arm-back-b",
           "title": {
             "en": "Back castor B",
-            "de": "Hinterer Rollen B"
+            "de": "Hintere Rolle B"
           },
           "x": 0.243,
           "y": 0,
@@ -369,10 +369,12 @@
           },
           "x": 0.42,
           "y": 0,
-          "angleDeg": -90,
+          "angleDeg": 0,
           "lengthM": 0.46,
           "joint": {
-            "type": "fixed"
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 0
           },
           "mass": {
             "kg": 4.5,
@@ -389,9 +391,9 @@
             "en": "Backrest",
             "de": "Rückenlehne"
           },
-          "x": -0.23,
-          "y": 0,
-          "angleDeg": 90,
+          "x": 0,
+          "y": 0.23,
+          "angleDeg": 0,
           "lengthM": 0.62,
           "joint": {
             "type": "revolute",
@@ -465,7 +467,7 @@
         "kind": "contact",
         "title": {
           "en": "Back castor A contact",
-          "de": "Kontakt Hinterer Rolle A"
+          "de": "Kontakt Hintere Rolle A"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -481,7 +483,7 @@
         "kind": "contact",
         "title": {
           "en": "Back castor B contact",
-          "de": "Kontakt Hinterer Rolle B"
+          "de": "Kontakt Hintere Rolle B"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -536,10 +538,9 @@
               "rx": 0.028,
               "ry": 0.028,
               "region": "castor-rubber",
-              "material": "rubber"
-            ,
+              "material": "rubber",
               "penMm": 0.321
-             },
+            },
             {
               "id": "castor-side-a",
               "bone": "castor-side-a",
@@ -553,10 +554,9 @@
               "rx": 0.028,
               "ry": 0.028,
               "region": "castor-rubber",
-              "material": "rubber"
-            ,
+              "material": "rubber",
               "penMm": 0.372
-             },
+            },
             {
               "id": "castor-back-a",
               "bone": "castor-back-a",
@@ -592,10 +592,9 @@
               ],
               "closed": false,
               "region": "chair-steel",
-              "material": "steel-painted"
-            ,
+              "material": "steel-painted",
               "penMm": 0.23
-             },
+            },
             {
               "id": "seat-band",
               "bone": "seat",
@@ -604,41 +603,418 @@
               "filled": true,
               "tone": 0.62,
               "kind": "rect",
-              "x": -0.24,
-              "y": -0.055,
-              "w": 0.472,
-              "h": 0.1,
+              "x": -0.055,
+              "y": -0.232,
+              "w": 0.1,
+              "h": 0.472,
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
             },
             {
               "id": "backrest",
               "bone": "backrest",
               "role": "body",
               "z": 4,
-              "filled": false,
+              "filled": true,
               "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05,
+              "w": 0.635,
+              "h": 0.1,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            }
+          ],
+          "front": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.015,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.05,
+              "r": 0.0075,
+              "penMm": 0.321
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.27,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.05,
+              "r": 0.0075,
+              "penMm": 0.372
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.05,
+              "r": 0.0075,
+              "penMm": 0.372
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.161,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.05,
+              "r": 0.0075
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.191,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.05,
+              "r": 0.0075
+            },
+            {
+              "id": "base-bar",
+              "bone": "base",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.285,
+              "y": 0.02,
+              "w": 0.57,
+              "h": 0.03
+            },
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "chair-steel",
+              "material": "steel-painted",
               "kind": "poly",
               "points": [
                 [
-                  0.06,
-                  0.0
+                  0,
+                  0.05
                 ],
                 [
-                  0.635,
-                  0.0
+                  0,
+                  0.445
                 ]
               ],
               "closed": false,
+              "penMm": 0.23,
+              "followTip": true
+            },
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.055,
+              "y": -0.232,
+              "w": 0.1,
+              "h": 0.472,
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "backrest",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.05,
+              "w": 0.635,
+              "h": 0.1,
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.3,
+              "cy": 0,
+              "rx": 0.028,
+              "ry": 0.028,
+              "penMm": 0.321
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.3,
+              "y1": 0,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": 0.272,
+              "rx": 0.028,
+              "ry": 0.028,
+              "penMm": 0.372
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": 0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": -0.272,
+              "rx": 0.028,
+              "ry": 0.028,
+              "penMm": 0.372
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": -0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": 0.176,
+              "rx": 0.028,
+              "ry": 0.028
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": 0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": -0.176,
+              "rx": 0.028,
+              "ry": 0.028
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": -0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "seat-band",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.055,
+              "y": -0.232,
+              "w": 0.1,
+              "h": 0.472,
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "backrest",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.05,
+              "w": 0.635,
+              "h": 0.1,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Composed chair sign 1.2 x 2.2 mm: a base bar spanning the star, a column line, a seat bar and a backrest line rising to the full 1.08 m.",
-            "de": "Zusammengesetztes Stuhlzeichen 1,2 x 2,2 mm: ein Fußbalken über die Sternbreite, eine Säulenlinie, ein Sitzbalken und eine bis zur vollen Höhe 1,08 m reichende Lehnenlinie."
+            "en": "Composed chair sign 1.2 x 2.2 mm: a base bar spanning the star, a column line, a seat bar and a backrest line rising to the full 1.08 m. Front view: the base bar with the five castors, the column as a line, the seat band and the backrest as a panel that tilts back. Plan: the seat as a rounded plate, the backrest behind it as the extruded profile that leans back when it reclines, and the five star arms with their castors, which reach out past the seat. Seat, mechanism, armrests and the backrest shell are extruded solids shared by all three views, so the swivel turns them about the column axis in side view, front view and plan.",
+            "de": "Zusammengesetztes Stuhlzeichen 1,2 x 2,2 mm: ein Fußbalken über die Sternbreite, eine Säulenlinie, ein Sitzbalken und eine bis zur vollen Höhe 1,08 m reichende Lehnenlinie. Vorderansicht: der Fußstern mit den fünf Rollen, die Säule als Linie, das Sitzband und die Rückenlehne als eine Fläche. Grundriss: der Sitz als gerundete Platte, die Rückenlehne dahinter als gezogenes Profil, das sich beim Zurücklehnen nach hinten neigt, und die fünf Sternarme mit ihren Rollen, die über den Sitz hinausreichen. Sitz, Mechanik, Armlehnen und Rückenschale sind gezogene Körper für alle drei Ansichten, damit die Drehung sie in Seitenansicht, Vorderansicht und Grundriss um die Säulenachse dreht."
           },
           "retained": {
             "en": "Overall width of the star (0.59 m), seat height, seat width, backrest height and its position behind the column.",
@@ -749,8 +1125,8 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.025,
               "ry": 0.025,
               "region": "castor-rubber",
@@ -764,8 +1140,8 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.025,
               "ry": 0.025,
               "region": "castor-rubber",
@@ -779,8 +1155,8 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.025,
               "ry": 0.025,
               "region": "castor-rubber",
@@ -827,11 +1203,11 @@
               "points": [
                 [
                   0.285,
-                  0.0
+                  0
                 ],
                 [
                   0.425,
-                  0.0
+                  0
                 ]
               ],
               "closed": false,
@@ -846,9 +1222,14 @@
               "filled": true,
               "tone": 0.62,
               "kind": "path",
-              "d": "M -0.23 0 L -0.23 0.035 L 0.232 0.035 L 0.232 0 Z",
+              "d": "M 0 0.23 L 0.035 0.23 L 0.035 -0.232 L 0 -0.232 Z",
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
             },
             {
               "id": "backrest-shell",
@@ -860,7 +1241,12 @@
               "kind": "path",
               "d": "M 0.07 -0.03 C 0.2 -0.046 0.4 -0.035 0.62 -0.014 L 0.63 0.03 C 0.4 0.04 0.22 0.044 0.08 0.04 Z",
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
             },
             {
               "id": "backrest-strut",
@@ -872,7 +1258,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.012
                 ],
                 [
@@ -882,10 +1268,15 @@
               ],
               "closed": false,
               "region": "chair-steel",
-              "material": "steel-painted"
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
             },
             {
-              "id": "armrest",
+              "id": "armrest-1",
               "bone": "seat",
               "role": "detail",
               "z": 3.1,
@@ -894,28 +1285,698 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.035,
-                  0.04
+                  0.04,
+                  0.035
                 ],
                 [
-                  -0.035,
-                  0.215
+                  0.215,
+                  0.035
                 ],
                 [
-                  0.1,
-                  0.215
+                  0.215,
+                  -0.1
                 ]
               ],
               "closed": false,
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
+            },
+            {
+              "id": "armrest--1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.035
+                ],
+                [
+                  0.215,
+                  0.035
+                ],
+                [
+                  0.215,
+                  -0.1
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            }
+          ],
+          "front": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.2725,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.059
+                ],
+                [
+                  0.273,
+                  0.047
+                ],
+                [
+                  0.273,
+                  0.022
+                ],
+                [
+                  0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.2975,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.059
+                ],
+                [
+                  -0.273,
+                  0.047
+                ],
+                [
+                  -0.273,
+                  0.022
+                ],
+                [
+                  -0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.1635,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.059
+                ],
+                [
+                  0.164,
+                  0.047
+                ],
+                [
+                  0.164,
+                  0.022
+                ],
+                [
+                  0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.1885,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.059
+                ],
+                [
+                  -0.164,
+                  0.047
+                ],
+                [
+                  -0.164,
+                  0.022
+                ],
+                [
+                  -0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "hub",
+              "bone": "base",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.005,
+              "w": 0.11,
+              "h": 0.062,
+              "r": 0.01
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.022,
+              "w": 0.06,
+              "h": 0.037
+            },
+            {
+              "id": "column-sleeve",
+              "bone": "column-sleeve",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.25,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.025,
+              "w": 0.06,
+              "h": 0.3,
+              "r": 0.004,
+              "followTip": true
+            },
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.225,
+              "w": 0.025,
+              "h": 0.23,
+              "followTip": true
+            },
+            {
+              "id": "backrest-strut",
+              "bone": "backrest",
+              "role": "body",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.22,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.012
+                ],
+                [
+                  0.1,
+                  0.016
+                ]
+              ],
+              "closed": false,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
+            },
+            {
+              "id": "armrest-1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.035
+                ],
+                [
+                  0.215,
+                  0.035
+                ],
+                [
+                  0.215,
+                  -0.1
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
+            },
+            {
+              "id": "armrest--1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.035
+                ],
+                [
+                  0.215,
+                  0.035
+                ],
+                [
+                  0.215,
+                  -0.1
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            },
+            {
+              "id": "seat-cushion",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0 0.23 L 0.035 0.23 L 0.035 -0.232 L 0 -0.232 Z",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "backrest-shell",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.07 -0.03 C 0.2 -0.046 0.4 -0.035 0.62 -0.014 L 0.63 0.03 C 0.4 0.04 0.22 0.044 0.08 0.04 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.3,
+              "cy": 0,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.3,
+              "y1": 0,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": 0.275,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": 0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": -0.275,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": -0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": 0.176,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": 0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": -0.176,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": -0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "armrest-1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.27
+                ],
+                [
+                  0.115,
+                  0.27
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "armrest--1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  -0.27
+                ],
+                [
+                  0.115,
+                  -0.27
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-cushion",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0 0.23 L 0.035 0.23 L 0.035 -0.232 L 0 -0.232 Z",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "backrest-shell",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.07 -0.03 C 0.2 -0.046 0.4 -0.035 0.62 -0.014 L 0.63 0.03 C 0.4 0.04 0.22 0.044 0.08 0.04 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 3.0 x 5.5 mm: a base with three castor feet, a hairline-thin column, a seat band, a curved backrest shell and a single armrest stroke.",
-            "de": "Seitenansicht 3,0 x 5,5 mm: ein Fuß mit drei Rollenfüßen, eine feine Säule, ein Sitzband, eine gebogene Lehnenschale und ein einzelner Armlehnenstrich."
+            "en": "Side elevation 3.0 x 5.5 mm: a base with three castor feet, a hairline-thin column, a seat band, a curved backrest shell and a single armrest stroke. Front view: the star arms with the hub, the five castors, sleeve and rod of the column, the seat cushion, the two armrest lines and the backrest shell on its strut; column, seat and backrest ride up and lean with their bones. Plan: the rounded seat, the armrests as two lines at its sides, the backrest as the extruded shell profile that leans back when it reclines and the five star arms with their castors. Seat, mechanism, armrests and the backrest shell are extruded solids shared by all three views, so the swivel turns them about the column axis in side view, front view and plan.",
+            "de": "Seitenansicht 3,0 x 5,5 mm: ein Fuß mit drei Rollenfüßen, eine feine Säule, ein Sitzband, eine gebogene Lehnenschale und ein einzelner Armlehnenstrich. Vorderansicht: die Sternarme mit der Nabe, die fünf Rollen, Hülse und Stange der Säule, das Sitzpolster, die beiden Armlehnenlinien und die Rückenschale auf ihrer Strebe; Säule, Sitz und Lehne fahren mit ihren Knochen hoch und neigen sich. Grundriss: der gerundete Sitz, die Armlehnen als zwei Linien an seinen Seiten, die Rückenlehne als gezogenes Schalenprofil, das sich beim Zurücklehnen nach hinten neigt, und die fünf Sternarme mit ihren Rollen. Sitz, Mechanik, Armlehnen und Rückenschale sind gezogene Körper für alle drei Ansichten, damit die Drehung sie in Seitenansicht, Vorderansicht und Grundriss um die Säulenachse dreht."
           },
           "retained": {
             "en": "Overall size, the dome of the base with its three castor positions, column, seat height, backrest curve, armrest height.",
@@ -1042,8 +2103,8 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.025,
               "ry": 0.025,
               "region": "castor-rubber",
@@ -1057,8 +2118,8 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.025,
               "ry": 0.025,
               "region": "castor-rubber",
@@ -1072,8 +2133,8 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.025,
               "ry": 0.025,
               "region": "castor-rubber",
@@ -1089,11 +2150,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.028
                 ],
                 [
-                  0.0,
+                  0,
                   -0.028
                 ],
                 [
@@ -1107,10 +2168,9 @@
               ],
               "closed": true,
               "region": "chair-steel",
-              "material": "steel-painted"
-            ,
+              "material": "steel-painted",
               "penMm": 0.406
-             },
+            },
             {
               "id": "column-rod",
               "bone": "column",
@@ -1121,10 +2181,9 @@
               "kind": "path",
               "d": "M 0.3 0.0125 L 0.3 -0.0125 L 0.375 -0.0125 L 0.435 -0.032 L 0.435 0.032 L 0.375 0.0125 Z",
               "region": "chair-steel",
-              "material": "steel-painted"
-            ,
+              "material": "steel-painted",
               "penMm": 0.406
-             },
+            },
             {
               "id": "seat-cushion",
               "bone": "seat",
@@ -1133,12 +2192,16 @@
               "filled": true,
               "tone": 0.62,
               "kind": "path",
-              "d": "M -0.2 -0.016 C -0.23 -0.014 -0.24 0.004 -0.23 0.02 C -0.22 0.036 -0.21 0.04 -0.19 0.04 L 0.17 0.04 C 0.21 0.04 0.232 0.03 0.232 0.01 C 0.232 -0.008 0.22 -0.022 0.19 -0.022 L -0.18 -0.022 Z",
+              "d": "M -0.016 0.2 C -0.014 0.23 0.004 0.24 0.02 0.23 C 0.036 0.22 0.04 0.21 0.04 0.19 L 0.04 -0.17 C 0.04 -0.21 0.03 -0.232 0.01 -0.232 C -0.008 -0.232 -0.022 -0.22 -0.022 -0.19 L -0.022 0.18 Z",
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
-            ,
-              "penMm": 0.427
-             },
+              "material": "fabric-upholstery",
+              "penMm": 0.427,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
             {
               "id": "seat-mechanism",
               "bone": "seat",
@@ -1147,13 +2210,18 @@
               "filled": true,
               "tone": 0.22,
               "kind": "rect",
-              "x": -0.1,
-              "y": -0.062,
-              "w": 0.2,
-              "h": 0.042,
+              "x": -0.062,
+              "y": -0.1,
+              "w": 0.042,
+              "h": 0.2,
               "r": 0.006,
               "region": "chair-steel",
-              "material": "steel-painted"
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.1,
+                "z1": 0.1
+              }
             },
             {
               "id": "backrest-shell",
@@ -1165,10 +2233,14 @@
               "kind": "path",
               "d": "M 0.07 -0.012 C 0.2 -0.046 0.36 -0.03 0.6 -0.014 C 0.635 -0.01 0.65 0.01 0.62 0.028 C 0.4 0.038 0.22 0.044 0.08 0.04 C 0.06 0.036 0.06 0 0.07 -0.012 Z",
               "region": "chair-plastic",
-              "material": "pa-plastic"
-            ,
-              "penMm": 0.428
-             },
+              "material": "pa-plastic",
+              "penMm": 0.428,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            },
             {
               "id": "backrest-strut",
               "bone": "backrest",
@@ -1179,7 +2251,7 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.012
                 ],
                 [
@@ -1189,10 +2261,15 @@
               ],
               "closed": false,
               "region": "chair-steel",
-              "material": "steel-painted"
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
             },
             {
-              "id": "armrest-post",
+              "id": "armrest-post-1",
               "bone": "seat",
               "role": "detail",
               "z": 3,
@@ -1201,41 +2278,818 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.035,
-                  0.04
+                  0.04,
+                  0.035
                 ],
                 [
-                  -0.035,
-                  0.2
+                  0.2,
+                  0.035
                 ]
               ],
               "closed": false,
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
             },
             {
-              "id": "armrest-pad",
+              "id": "armrest-post--1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.035
+                ],
+                [
+                  0.2,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            },
+            {
+              "id": "armrest-pad-1",
               "bone": "seat",
               "role": "body",
               "z": 3.1,
               "filled": true,
               "tone": 0.4,
               "kind": "capsule",
-              "x0": -0.19,
-              "y0": 0.215,
-              "x1": 0.115,
-              "y1": 0.215,
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
               "r0": 0.014,
               "r1": 0.018,
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.25,
+                "z1": 0.29000000000000004
+              }
+            },
+            {
+              "id": "armrest-pad--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.29000000000000004,
+                "z1": -0.25
+              }
+            }
+          ],
+          "front": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.2725,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.059
+                ],
+                [
+                  0.273,
+                  0.047
+                ],
+                [
+                  0.273,
+                  0.022
+                ],
+                [
+                  0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.2975,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.059
+                ],
+                [
+                  -0.273,
+                  0.047
+                ],
+                [
+                  -0.273,
+                  0.022
+                ],
+                [
+                  -0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.1635,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.059
+                ],
+                [
+                  0.164,
+                  0.047
+                ],
+                [
+                  0.164,
+                  0.022
+                ],
+                [
+                  0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.1885,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.059
+                ],
+                [
+                  -0.164,
+                  0.047
+                ],
+                [
+                  -0.164,
+                  0.022
+                ],
+                [
+                  -0.03,
+                  0.027
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "hub",
+              "bone": "base",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.005,
+              "w": 0.11,
+              "h": 0.062,
+              "r": 0.01
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.022,
+              "w": 0.06,
+              "h": 0.037
+            },
+            {
+              "id": "column-sleeve",
+              "bone": "column-sleeve",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.25,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.025,
+              "w": 0.06,
+              "h": 0.3,
+              "r": 0.004,
+              "penMm": 0.406,
+              "followTip": true
+            },
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.225,
+              "w": 0.025,
+              "h": 0.23,
+              "penMm": 0.406,
+              "followTip": true
+            },
+            {
+              "id": "backrest-strut",
+              "bone": "backrest",
+              "role": "body",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.22,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.012
+                ],
+                [
+                  0.24,
+                  0.026
+                ]
+              ],
+              "closed": false,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
+            },
+            {
+              "id": "armrest-post-1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.035
+                ],
+                [
+                  0.2,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
+            },
+            {
+              "id": "armrest-post--1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.035
+                ],
+                [
+                  0.2,
+                  0.035
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            },
+            {
+              "id": "seat-cushion",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.016 0.2 C -0.014 0.23 0.004 0.24 0.02 0.23 C 0.036 0.22 0.04 0.21 0.04 0.19 L 0.04 -0.17 C 0.04 -0.21 0.03 -0.232 0.01 -0.232 C -0.008 -0.232 -0.022 -0.22 -0.022 -0.19 L -0.022 0.18 Z",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "penMm": 0.427,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "seat-mechanism",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.22,
+              "kind": "rect",
+              "x": -0.062,
+              "y": -0.1,
+              "w": 0.042,
+              "h": 0.2,
+              "r": 0.006,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.1,
+                "z1": 0.1
+              }
+            },
+            {
+              "id": "backrest-shell",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.07 -0.012 C 0.2 -0.046 0.36 -0.03 0.6 -0.014 C 0.635 -0.01 0.65 0.01 0.62 0.028 C 0.4 0.038 0.22 0.044 0.08 0.04 C 0.06 0.036 0.06 0 0.07 -0.012 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.428,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            },
+            {
+              "id": "armrest-pad-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.25,
+                "z1": 0.29
+              }
+            },
+            {
+              "id": "armrest-pad--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.29,
+                "z1": -0.25
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.3,
+              "cy": 0,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.3,
+              "y1": 0,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": 0.275,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": 0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": -0.275,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": -0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": 0.176,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": 0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": -0.176,
+              "rx": 0.025,
+              "ry": 0.025
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": -0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "seat-cushion",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.016 0.2 C -0.014 0.23 0.004 0.24 0.02 0.23 C 0.036 0.22 0.04 0.21 0.04 0.19 L 0.04 -0.17 C 0.04 -0.21 0.03 -0.232 0.01 -0.232 C -0.008 -0.232 -0.022 -0.22 -0.022 -0.19 L -0.022 0.18 Z",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "penMm": 0.427,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "seat-mechanism",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.22,
+              "kind": "rect",
+              "x": -0.062,
+              "y": -0.1,
+              "w": 0.042,
+              "h": 0.2,
+              "r": 0.006,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.1,
+                "z1": 0.1
+              }
+            },
+            {
+              "id": "backrest-shell",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.07 -0.012 C 0.2 -0.046 0.36 -0.03 0.6 -0.014 C 0.635 -0.01 0.65 0.01 0.62 0.028 C 0.4 0.038 0.22 0.044 0.08 0.04 C 0.06 0.036 0.06 0 0.07 -0.012 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.428,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            },
+            {
+              "id": "armrest-pad-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.25,
+                "z1": 0.29
+              }
+            },
+            {
+              "id": "armrest-pad--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.29,
+                "z1": -0.25
+              }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 5.9 x 11.0 mm: one base silhouette with three castor dots, a gas-lift column with a visible rod, an upholstered seat, a curved backrest on a stroke strut, an armrest.",
-            "de": "Seitenansicht 5,9 x 11,0 mm: eine Fußsilhouette mit drei Rollenpunkten, eine Gasfedersäule mit sichtbarer Stange, ein gepolsterter Sitz, eine gebogene Lehne auf einem Strebenstrich, eine Armlehne."
+            "en": "Side elevation 5.9 x 11.0 mm: one base silhouette with three castor dots, a gas-lift column with a visible rod, an upholstered seat, a curved backrest on a stroke strut, an armrest. Front view: the star with hub, arms and five castors, the column sleeve and rod, the seat mechanism, the cushion, the two armrests on their posts and the backrest shell on its strut. Plan: the rounded seat, the two armrest pads, the backrest as the extruded shell profile that leans back when it reclines and the five star arms with castors. Seat, mechanism, armrests and the backrest shell are extruded solids shared by all three views, so the swivel turns them about the column axis in side view, front view and plan.",
+            "de": "Seitenansicht 5,9 x 11,0 mm: eine Fußsilhouette mit drei Rollenpunkten, eine Gasfedersäule mit sichtbarer Stange, ein gepolsterter Sitz, eine gebogene Lehne auf einem Strebenstrich, eine Armlehne. Vorderansicht: der Stern mit Nabe, Armen und fünf Rollen, Säulenhülse und -stange, die Sitzmechanik, das Polster, die beiden Armlehnen auf ihren Stützen und die Rückenschale auf ihrer Strebe. Grundriss: der gerundete Sitz, die zwei Armlehnenpolster, die Rückenlehne als gezogenes Schalenprofil, das sich beim Zurücklehnen nach hinten neigt, und die fünf Sternarme mit Rollen. Sitz, Mechanik, Armlehnen und Rückenschale sind gezogene Körper für alle drei Ansichten, damit die Drehung sie in Seitenansicht, Vorderansicht und Grundriss um die Säulenachse dreht."
           },
           "retained": {
             "en": "Hub, front arm and near back arm as one star silhouette, three castor tyres, sleeve, rod with cone, cushion, mechanism, backrest shell, strut, armrest post and pad.",
@@ -1629,7 +3483,7 @@
               "id": "column",
               "bone": "column",
               "role": "body",
-              "z": 3.0,
+              "z": 3,
               "filled": true,
               "tone": 0.7,
               "kind": "capsule",
@@ -1686,10 +3540,15 @@
               "filled": true,
               "tone": 0.62,
               "kind": "path",
-              "d": "M -0.20 -0.016 C -0.23 -0.014 -0.24 0.004 -0.23 0.02 C -0.22 0.036 -0.21 0.04 -0.19 0.04 L 0.17 0.04 C 0.21 0.04 0.232 0.03 0.232 0.01 C 0.232 -0.008 0.22 -0.022 0.19 -0.022 L -0.18 -0.022 Z",
+              "d": "M -0.016 0.2 C -0.014 0.23 0.004 0.24 0.02 0.23 C 0.036 0.22 0.04 0.21 0.04 0.19 L 0.04 -0.17 C 0.04 -0.21 0.03 -0.232 0.01 -0.232 C -0.008 -0.232 -0.022 -0.22 -0.022 -0.19 L -0.022 0.18 Z",
               "region": "chair-fabric",
               "material": "fabric-upholstery",
-              "penMm": 0.566
+              "penMm": 0.566,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
             },
             {
               "id": "seat-shell",
@@ -1699,12 +3558,16 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.20 -0.014 C -0.1 -0.03 0.1 -0.03 0.19 -0.02",
+              "d": "M -0.014 0.2 C -0.03 0.1 -0.03 -0.1 -0.02 -0.19",
               "region": "chair-plastic",
-              "material": "pa-plastic"
-            ,
-              "penMm": 0.4
-             },
+              "material": "pa-plastic",
+              "penMm": 0.4,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.23,
+                "z1": 0.23
+              }
+            },
             {
               "id": "seat-piping",
               "bone": "seat",
@@ -1713,9 +3576,14 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.17 0.03 L 0.15 0.03",
+              "d": "M 0.03 0.17 L 0.03 -0.15",
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.17,
+                "z1": 0.17
+              }
             },
             {
               "id": "seat-fabric-fold",
@@ -1725,9 +3593,14 @@
               "filled": false,
               "tone": 0.3,
               "kind": "path",
-              "d": "M -0.10 0.012 C -0.05 0.016 0.02 0.008 0.09 0.014",
+              "d": "M 0.012 0.1 C 0.016 0.05 0.008 -0.02 0.014 -0.09",
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
             },
             {
               "id": "seat-mechanism",
@@ -1737,14 +3610,19 @@
               "filled": true,
               "tone": 0.22,
               "kind": "rect",
-              "x": -0.1,
-              "y": -0.062,
-              "w": 0.2,
-              "h": 0.042,
+              "x": -0.062,
+              "y": -0.1,
+              "w": 0.042,
+              "h": 0.2,
               "r": 0.006,
               "region": "chair-steel",
               "material": "steel-painted",
-              "penMm": 0.35
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.1,
+                "z1": 0.1
+              }
             },
             {
               "id": "seat-lever",
@@ -1754,45 +3632,100 @@
               "filled": true,
               "tone": 0.2,
               "kind": "path",
-              "d": "M 0.10 -0.045 L 0.17 -0.05 L 0.17 -0.044 L 0.10 -0.04",
+              "d": "M -0.045 -0.1 L -0.05 -0.17 L -0.044 -0.17 L -0.04 -0.1",
               "region": "chair-steel",
-              "material": "steel-painted"
-            ,
-              "penMm": 0.466
-             },
+              "material": "steel-painted",
+              "penMm": 0.466,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.14,
+                "z1": -0.12
+              }
+            },
             {
-              "id": "armrest-post",
+              "id": "armrest-post-1",
               "bone": "seat",
               "role": "body",
-              "z": 3.0,
+              "z": 3,
               "filled": true,
               "tone": 0.35,
               "kind": "path",
-              "d": "M -0.05 0.04 L -0.02 0.04 L -0.025 0.20 L -0.045 0.20 Z",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
               "region": "chair-plastic",
               "material": "pa-plastic",
-              "penMm": 0.35
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
             },
             {
-              "id": "armrest-pad",
+              "id": "armrest-post--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            },
+            {
+              "id": "armrest-pad-1",
               "bone": "seat",
               "role": "body",
               "z": 3.1,
               "filled": true,
               "tone": 0.4,
               "kind": "capsule",
-              "x0": -0.19,
-              "y0": 0.215,
-              "x1": 0.115,
-              "y1": 0.215,
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
               "r0": 0.014,
               "r1": 0.018,
               "region": "chair-plastic",
               "material": "pa-plastic",
-              "penMm": 0.35
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.25,
+                "z1": 0.29000000000000004
+              }
             },
             {
-              "id": "armrest-line",
+              "id": "armrest-pad--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.29000000000000004,
+                "z1": -0.25
+              }
+            },
+            {
+              "id": "armrest-line-1",
               "bone": "seat",
               "role": "detail",
               "z": 3.2,
@@ -1801,17 +3734,49 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.18,
-                  0.222
+                  0.222,
+                  0.18
                 ],
                 [
-                  0.1,
-                  0.224
+                  0.224,
+                  -0.1
                 ]
               ],
               "closed": false,
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.265,
+                "z1": 0.275
+              }
+            },
+            {
+              "id": "armrest-line--1",
+              "bone": "seat",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.222,
+                  0.18
+                ],
+                [
+                  0.224,
+                  -0.1
+                ]
+              ],
+              "closed": false,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.275,
+                "z1": -0.265
+              }
             },
             {
               "id": "backrest-strut",
@@ -1821,7 +3786,7 @@
               "filled": true,
               "tone": 0.22,
               "kind": "capsule",
-              "x0": 0.0,
+              "x0": 0,
               "y0": 0.012,
               "x1": 0.24,
               "y1": 0.026,
@@ -1829,7 +3794,12 @@
               "r1": 0.009,
               "region": "chair-steel",
               "material": "steel-painted",
-              "penMm": 0.35
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
             },
             {
               "id": "backrest-shell",
@@ -1842,7 +3812,12 @@
               "d": "M 0.07 -0.012 C 0.20 -0.046 0.36 -0.030 0.60 -0.014 C 0.635 -0.010 0.65 0.010 0.62 0.028 C 0.40 0.038 0.22 0.044 0.08 0.040 C 0.06 0.036 0.06 0.0 0.07 -0.012 Z",
               "region": "chair-plastic",
               "material": "pa-plastic",
-              "penMm": 0.35
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
             },
             {
               "id": "backrest-pad",
@@ -1854,7 +3829,12 @@
               "kind": "path",
               "d": "M 0.12 -0.020 C 0.24 -0.040 0.36 -0.028 0.56 -0.012",
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
             },
             {
               "id": "backrest-rim",
@@ -1866,7 +3846,12 @@
               "kind": "path",
               "d": "M 0.10 0.028 C 0.30 0.032 0.45 0.030 0.60 0.020",
               "region": "chair-plastic",
-              "material": "pa-plastic"
+              "material": "pa-plastic",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
             },
             {
               "id": "backrest-texture",
@@ -1878,14 +3863,1031 @@
               "kind": "path",
               "d": "M 0.2 0.0 C 0.3 0.004 0.4 -0.004 0.52 0.002",
               "region": "chair-fabric",
-              "material": "fabric-upholstery"
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ],
+          "front": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-front-hub",
+              "bone": "castor-front",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.004,
+              "y": 0.017,
+              "w": 0.008,
+              "h": 0.016
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.2725,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-side-a-hub",
+              "bone": "castor-side-a",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.281,
+              "y": 0.017,
+              "w": 0.008,
+              "h": 0.016
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.059
+                ],
+                [
+                  0.273,
+                  0.047
+                ],
+                [
+                  0.273,
+                  0.022
+                ],
+                [
+                  0.03,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.35
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.2975,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-side-b-hub",
+              "bone": "castor-side-b",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.289,
+              "y": 0.017,
+              "w": 0.008,
+              "h": 0.016
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.059
+                ],
+                [
+                  -0.273,
+                  0.047
+                ],
+                [
+                  -0.273,
+                  0.022
+                ],
+                [
+                  -0.03,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.35
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.1635,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-back-a-hub",
+              "bone": "castor-back-a",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": 0.172,
+              "y": 0.017,
+              "w": 0.008,
+              "h": 0.016
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.059
+                ],
+                [
+                  0.164,
+                  0.047
+                ],
+                [
+                  0.164,
+                  0.022
+                ],
+                [
+                  0.03,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.35
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.1885,
+              "y": 0,
+              "w": 0.025,
+              "h": 0.05,
+              "r": 0.0063,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-back-b-hub",
+              "bone": "castor-back-b",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "rect",
+              "x": -0.18,
+              "y": 0.017,
+              "w": 0.008,
+              "h": 0.016
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.059
+                ],
+                [
+                  -0.164,
+                  0.047
+                ],
+                [
+                  -0.164,
+                  0.022
+                ],
+                [
+                  -0.03,
+                  0.027
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.35
+            },
+            {
+              "id": "hub",
+              "bone": "base",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.055,
+              "y": 0.005,
+              "w": 0.11,
+              "h": 0.062,
+              "r": 0.01
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.022,
+              "w": 0.06,
+              "h": 0.037
+            },
+            {
+              "id": "column-sleeve",
+              "bone": "column-sleeve",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.25,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.025,
+              "w": 0.06,
+              "h": 0.3,
+              "r": 0.004,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.0125,
+              "y": 0.225,
+              "w": 0.025,
+              "h": 0.23,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "seat-piping-ring",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.03 0.17 L 0.03 -0.15",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.17,
+                "z1": 0.17
+              }
+            },
+            {
+              "id": "column-collar",
+              "bone": "column-sleeve",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.15,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "kind": "rect",
+              "x": -0.036,
+              "y": 0.31,
+              "w": 0.072,
+              "h": 0.02,
+              "r": 0.003
+            },
+            {
+              "id": "seat-cushion",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.016 0.2 C -0.014 0.23 0.004 0.24 0.02 0.23 C 0.036 0.22 0.04 0.21 0.04 0.19 L 0.04 -0.17 C 0.04 -0.21 0.03 -0.232 0.01 -0.232 C -0.008 -0.232 -0.022 -0.22 -0.022 -0.19 L -0.022 0.18 Z",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "penMm": 0.566,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "seat-mechanism",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.22,
+              "kind": "rect",
+              "x": -0.062,
+              "y": -0.1,
+              "w": 0.042,
+              "h": 0.2,
+              "r": 0.006,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.1,
+                "z1": 0.1
+              }
+            },
+            {
+              "id": "backrest-shell",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.07 -0.012 C 0.20 -0.046 0.36 -0.030 0.60 -0.014 C 0.635 -0.010 0.65 0.010 0.62 0.028 C 0.40 0.038 0.22 0.044 0.08 0.040 C 0.06 0.036 0.06 0.0 0.07 -0.012 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            },
+            {
+              "id": "backrest-strut",
+              "bone": "backrest",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.22,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.012,
+              "x1": 0.24,
+              "y1": 0.026,
+              "r0": 0.011,
+              "r1": 0.009,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
+            },
+            {
+              "id": "armrest-post-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
+            },
+            {
+              "id": "armrest-post--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            },
+            {
+              "id": "armrest-pad-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.25,
+                "z1": 0.29
+              }
+            },
+            {
+              "id": "armrest-pad--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.29,
+                "z1": -0.25
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "castor-front-wheel",
+              "bone": "castor-front",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.3,
+              "cy": 0,
+              "rx": 0.025,
+              "ry": 0.025,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-front-hub",
+              "bone": "castor-front",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.3,
+              "cy": 0,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "arm-front",
+              "bone": "arm-front",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.3,
+              "y1": 0,
+              "r0": 0.02,
+              "r1": 0.016,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-a-wheel",
+              "bone": "castor-side-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": 0.275,
+              "rx": 0.025,
+              "ry": 0.025,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-side-a-hub",
+              "bone": "castor-side-a",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": 0.285,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "arm-side-a",
+              "bone": "arm-side-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": 0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "castor-side-b-wheel",
+              "bone": "castor-side-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": -0.275,
+              "rx": 0.025,
+              "ry": 0.025,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-side-b-hub",
+              "bone": "castor-side-b",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": 0.093,
+              "cy": -0.285,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "arm-side-b",
+              "bone": "arm-side-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.093,
+              "y1": -0.284,
+              "r0": 0.02,
+              "r1": 0.016,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-a-wheel",
+              "bone": "castor-back-a",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": 0.176,
+              "rx": 0.025,
+              "ry": 0.025,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-back-a-hub",
+              "bone": "castor-back-a",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": 0.176,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "arm-back-a",
+              "bone": "arm-back-a",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": 0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "castor-back-b-wheel",
+              "bone": "castor-back-b",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": -0.176,
+              "rx": 0.025,
+              "ry": 0.025,
+              "penMm": 0.3
+            },
+            {
+              "id": "castor-back-b-hub",
+              "bone": "castor-back-b",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "castor-rubber",
+              "material": "rubber",
+              "kind": "ellipse",
+              "cx": -0.243,
+              "cy": -0.176,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "arm-back-b",
+              "bone": "arm-back-b",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": -0.243,
+              "y1": -0.176,
+              "r0": 0.02,
+              "r1": 0.016,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "seat-piping-ring",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  -0.2
+                ],
+                [
+                  0.17,
+                  -0.2
+                ],
+                [
+                  0.2,
+                  -0.17
+                ],
+                [
+                  0.2,
+                  0.17
+                ],
+                [
+                  0.17,
+                  0.2
+                ],
+                [
+                  -0.19,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-fabric-fold",
+              "bone": "seat",
+              "role": "texture",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "kind": "path",
+              "d": "M -0.10 -0.1 C -0.05 -0.09 0.02 -0.11 0.09 -0.1"
+            },
+            {
+              "id": "seat-cushion",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.016 0.2 C -0.014 0.23 0.004 0.24 0.02 0.23 C 0.036 0.22 0.04 0.21 0.04 0.19 L 0.04 -0.17 C 0.04 -0.21 0.03 -0.232 0.01 -0.232 C -0.008 -0.232 -0.022 -0.22 -0.022 -0.19 L -0.022 0.18 Z",
+              "region": "chair-fabric",
+              "material": "fabric-upholstery",
+              "penMm": 0.566,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "seat-mechanism",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.22,
+              "kind": "rect",
+              "x": -0.062,
+              "y": -0.1,
+              "w": 0.042,
+              "h": 0.2,
+              "r": 0.006,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.1,
+                "z1": 0.1
+              }
+            },
+            {
+              "id": "backrest-shell",
+              "bone": "backrest",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.07 -0.012 C 0.20 -0.046 0.36 -0.030 0.60 -0.014 C 0.635 -0.010 0.65 0.010 0.62 0.028 C 0.40 0.038 0.22 0.044 0.08 0.040 C 0.06 0.036 0.06 0.0 0.07 -0.012 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.22,
+                "z1": 0.22
+              }
+            },
+            {
+              "id": "backrest-strut",
+              "bone": "backrest",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.22,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.012,
+              "x1": 0.24,
+              "y1": 0.026,
+              "r0": 0.011,
+              "r1": 0.009,
+              "region": "chair-steel",
+              "material": "steel-painted",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.011,
+                "z1": 0.011
+              }
+            },
+            {
+              "id": "armrest-post-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.26,
+                "z1": 0.28
+              }
+            },
+            {
+              "id": "armrest-post--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.04 0.05 L 0.04 0.02 L 0.2 0.025 L 0.2 0.045 Z",
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.28,
+                "z1": -0.26
+              }
+            },
+            {
+              "id": "armrest-pad-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.25,
+                "z1": 0.29
+              }
+            },
+            {
+              "id": "armrest-pad--1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "capsule",
+              "x0": 0.215,
+              "y0": 0.19,
+              "x1": 0.215,
+              "y1": -0.115,
+              "r0": 0.014,
+              "r1": 0.018,
+              "region": "chair-plastic",
+              "material": "pa-plastic",
+              "penMm": 0.35,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.29,
+                "z1": -0.25
+              }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 11.9 x 22.0 mm: a five-star base projected into three visible arms on castors, a gas-lift column with sleeve and rod, an upholstered seat on its mechanism, a curved backrest on a strut and one armrest.",
-            "de": "Seitenansicht 11,9 x 22,0 mm: ein Fünfstern-Fuß, auf drei sichtbare Arme mit Rollen projiziert, eine Gasfedersäule mit Hülse und Stange, ein gepolsterter Sitz auf seinem Mechanismus, eine gebogene Lehne auf Strebe und eine Armlehne."
+            "en": "Side elevation 11.9 x 22.0 mm: a five-star base projected into three visible arms on castors, a gas-lift column with sleeve and rod, an upholstered seat on its mechanism, a curved backrest on a strut and one armrest. Front view: star, hub, the five castors with their hubs, column sleeve with collar and rod, the seat mechanism, the cushion with piping, the armrests on their posts and the backrest shell on its strut; every part rides up and leans with its bone. Plan: the rounded seat with piping and a fabric fold, the armrest pads, the backrest as the extruded shell profile that leans back when it reclines and the five star arms with castors and hubs. Seat, mechanism, armrests and the backrest shell are extruded solids shared by all three views, so the swivel turns them about the column axis in side view, front view and plan.",
+            "de": "Seitenansicht 11,9 x 22,0 mm: ein Fünfstern-Fuß, auf drei sichtbare Arme mit Rollen projiziert, eine Gasfedersäule mit Hülse und Stange, ein gepolsterter Sitz auf seinem Mechanismus, eine gebogene Lehne auf Strebe und eine Armlehne. Vorderansicht: Stern, Nabe, die fünf Rollen mit ihren Naben, Säulenhülse mit Manschette und Stange, die Sitzmechanik, das Polster mit Keder, die Armlehnen auf ihren Stützen und die Rückenschale auf ihrer Strebe; jedes Teil fährt mit seinem Knochen hoch und neigt sich. Grundriss: der gerundete Sitz mit Keder und einer Stoffwelle, die Armlehnenpolster, die Rückenlehne als gezogenes Schalenprofil, das sich beim Zurücklehnen nach hinten neigt, und die fünf Sternarme mit Rollen und Naben. Sitz, Mechanik, Armlehnen und Rückenschale sind gezogene Körper für alle drei Ansichten, damit die Drehung sie in Seitenansicht, Vorderansicht und Grundriss um die Säulenachse dreht."
           },
           "retained": {
             "en": "Hub, arm ribs, castor yokes and stems, tyre and hub of each castor, sleeve with collar, rod with groove and cone, cushion with shell line, piping and fold, mechanism with lever, armrest post, pad and line, backrest strut, shell, pad edge, rim and texture.",
@@ -1965,6 +4967,105 @@
           "emitters": {}
         },
         "loads": []
+      },
+      {
+        "id": "swivel-quarter",
+        "title": {
+          "en": "Seat swivelled a quarter turn",
+          "de": "Sitz eine Vierteldrehung geschwenkt"
+        },
+        "description": {
+          "en": "The seat, armrests and backrest are turned 90 degrees about the column; the star base and the castors stay put.",
+          "de": "Sitz, Armlehnen und Rückenlehne sind um 90 Grad um die Säule gedreht; Stern und Rollen bleiben stehen."
+        },
+        "bones": {
+          "column": {
+            "dy": 0
+          },
+          "seat": {
+            "twistDeg": 90
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-castor-front",
+          "contact-castor-side-a",
+          "contact-castor-side-b",
+          "contact-castor-back-a",
+          "contact-castor-back-b"
+        ],
+        "thermal": {
+          "regions": {
+            "chair-plastic": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "chair-fabric": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "chair-steel": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0.0
+            },
+            "castor-rubber": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "swivel-quarter-opposite-key",
+        "title": {
+          "en": "Seat swivelled a quarter turn the other way (key)",
+          "de": "Sitz eine Vierteldrehung in die Gegenrichtung (Schlüssel)"
+        },
+        "description": {
+          "en": "The same quarter turn to the opposite side.",
+          "de": "Dieselbe Vierteldrehung zur Gegenseite."
+        },
+        "bones": {
+          "column": {
+            "dy": 0
+          },
+          "seat": {
+            "twistDeg": -90
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-castor-front",
+          "contact-castor-side-a",
+          "contact-castor-side-b",
+          "contact-castor-back-a",
+          "contact-castor-back-b"
+        ],
+        "thermal": {
+          "regions": {
+            "chair-plastic": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "chair-fabric": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "chair-steel": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0.0
+            },
+            "castor-rubber": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [],
+        "key": true
       },
       {
         "id": "seat-high",
@@ -2070,8 +5171,8 @@
           "de": "Drehung"
         },
         "description": {
-          "en": "The base turns about the vertical axis while the five castors stay on the floor. Turning is not visible in elevation and is marked as a motion event.",
-          "de": "Der Fuß dreht sich um die Hochachse, während die fünf Rollen auf dem Boden bleiben. Die Drehung ist in der Ansicht nicht sichtbar und als Bewegungsereignis markiert."
+          "en": "The seat, armrests and backrest swivel a quarter turn to each side and back about the column while the star base and the five castors stay on the floor.",
+          "de": "Sitz, Armlehnen und Rückenlehne schwenken eine Vierteldrehung zu jeder Seite und zurück um die Säule, während Stern und fünf Rollen auf dem Boden bleiben."
         },
         "durationS": 4.0,
         "fps": 30,
@@ -2081,6 +5182,21 @@
           {
             "t": 0,
             "pose": "seat-low",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.0,
+            "pose": "swivel-quarter",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.0,
+            "pose": "seat-low",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.0,
+            "pose": "swivel-quarter-opposite-key",
             "ease": "smooth"
           },
           {
@@ -2132,16 +5248,16 @@
             "t": 1.0,
             "kind": "motion",
             "title": {
-              "en": "Base turns about the vertical axis",
-              "de": "Fuß dreht sich um die Hochachse"
+              "en": "Seat swivels a quarter turn",
+              "de": "Sitz schwenkt eine Vierteldrehung"
             }
           },
           {
             "t": 3.0,
             "kind": "motion",
             "title": {
-              "en": "Base turns back",
-              "de": "Fuß dreht zurück"
+              "en": "Seat swivels to the other side",
+              "de": "Sitz schwenkt zur Gegenseite"
             }
           }
         ],
@@ -2351,7 +5467,7 @@
               "kind": "metal",
               "material": "steel-painted",
               "thicknessM": 0.003,
-              "resistanceM2KW": 6e-05,
+              "resistanceM2KW": 0.00006,
               "source": "literature",
               "heatCapacityJM2K": 10530,
               "reference": "iso-10456-2007"
@@ -2432,8 +5548,8 @@
           "de": "Der Stuhl ist ein starrer Körper auf fünf Rollenkontakten mit Reibung."
         },
         {
-          "en": "The swivel about the vertical axis is not visible in this elevation (it is shown by motion events only); the two far arms and castors coincide with the near ones.",
-          "de": "Die Drehung um die Hochachse ist in dieser Ansicht nicht sichtbar (nur durch Bewegungsereignisse dargestellt); die zwei fernen Arme und Rollen fallen mit den nahen zusammen."
+          "en": "The swivel about the vertical axis is an axial twist of the vertical seat bone; seat cushion, mechanism, armrests and backrest shell are extruded solids, so the side view, front view and plan follow one three-dimensional definition. The two far arms and castors coincide with the near ones.",
+          "de": "Die Drehung um die Hochachse ist eine axiale Verdrehung des senkrechten Sitzknochens; Sitzpolster, Mechanik, Armlehnen und Rückenschale sind gezogene Körper, sodass Seitenansicht, Vorderansicht und Grundriss einer dreidimensionalen Definition folgen. Die zwei fernen Arme und Rollen fallen mit den nahen zusammen."
         }
       ],
       "clinical": false
@@ -2441,9 +5557,6 @@
     "presentation": {
       "defaultPose": "seat-low",
       "defaultClip": "height-adjust",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

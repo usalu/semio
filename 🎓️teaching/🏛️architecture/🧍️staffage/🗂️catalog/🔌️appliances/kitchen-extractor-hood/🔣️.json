@@ -1,0 +1,1949 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "kitchen-extractor-hood",
+    "category": "appliances",
+    "title": {
+      "en": "Kitchen Chimney Extractor Hood",
+      "de": "Küchen-Kaminhaube"
+    },
+    "summary": {
+      "en": "A wall-mounted chimney extractor hood 0.9 m wide in side elevation: a sloped stainless canopy with grease filter and two lamps under a telescopic chimney; at full speed it extracts 500 m3/h and its motor and lamps release 150 W.",
+      "de": "Eine an der Wand montierte Kaminhaube von 0,9 m Breite in der Seitenansicht: ein geneigter Edelstahlkörper mit Fettfilter und zwei Lampen unter einem Teleskopkamin; auf voller Stufe saugt sie 500 m3/h ab, Motor und Lampen geben 150 W ab."
+    },
+    "tags": [
+      "extractor-hood",
+      "kitchen",
+      "ventilation",
+      "appliance",
+      "wall-mounted",
+      "internal-gain",
+      "electrical",
+      "extract-air"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A8)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-60335-2-31",
+          "citation": "IEC 60335-2-31: Household and similar electrical appliances - Safety - Part 2-31: Particular requirements for range hoods and other cooking fume extractors (installation height above the hob, power)."
+        },
+        {
+          "id": "iec-61591",
+          "citation": "IEC 61591 / EN 61591: Household range hoods and other cooking fume extractors - Methods for measuring performance (volume flow at the maximum speed, typical 300 to 600 cubic metres per hour)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of a wall-mounted chimney hood of the common 0.9 m width class: a canopy of 0.5 m depth and 0.2 m height with a sloped front, a 20 mm grease filter and two lamp modules under it, a lower tube of 0.30 m width and a telescopic upper tube of 0.28 m width up to 0.915 m total height. The wall lies at x = 0; the origin is the underside of the filter on the wall, and a call site places it about 0.65 m above the hob (IEC 60335-2-31 asks for at least 0.65 m over an electric hob). The width of 0.9 m is the depth in the elevation (depthM). Dimensions and the mass of 14.5 kg are rounded from this product class (authored estimate). At level 1 the extract airflow is 0.14 m3/s (500 m3/h) leaving at the duct collar; the fan motor and the lamps take 150 W (120 W motor, 30 W LED modules), which ends entirely as heat in the room: the asset releases it at the canopy shell and the lamp modules; the split is an authored estimate. The extracted cooking vapour itself is not modelled (temperature rise 0).",
+        "de": "Seitenansicht einer wandmontierten Kaminhaube der üblichen Breitenklasse von 0,9 m: ein Haubenkörper von 0,5 m Tiefe und 0,2 m Höhe mit geneigter Front, ein 20 mm hoher Fettfilter und zwei Lampenmodule darunter, ein unteres Rohr von 0,30 m Breite und ein teleskopierbares oberes Rohr von 0,28 m Breite bis zu einer Gesamthöhe von 0,915 m. Die Wand liegt bei x = 0; der Ursprung ist die Filterunterseite an der Wand, und ein Aufrufer setzt ihn etwa 0,65 m über das Kochfeld (IEC 60335-2-31 verlangt mindestens 0,65 m über einem Elektrokochfeld). Die Breite von 0,9 m ist die Tiefe in der Ansicht (depthM). Maße und die Masse von 14,5 kg sind aus dieser Produktklasse gerundet (Schätzwert). Auf Stufe 1 beträgt der Abluftstrom 0,14 m3/s (500 m3/h) und tritt am Kanalkragen aus; Lüftermotor und Lampen nehmen 150 W auf (120 W Motor, 30 W LED-Module), die vollständig als Wärme im Raum enden: das Asset gibt sie am Haubenkörper und an den Lampenmodulen ab; die Aufteilung ist ein Schätzwert. Der abgesaugte Kochdunst selbst ist nicht modelliert (Temperaturerhöhung 0)."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.915,
+      "widthM": 0.5,
+      "depthM": 0.9,
+      "massKg": 14.5
+    },
+    "materials": [
+      {
+        "id": "stainless-steel",
+        "title": {
+          "en": "Brushed stainless steel",
+          "de": "Gebürsteter Edelstahl"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7900,
+        "conductivityWmK": 15,
+        "specificHeatJKgK": 500,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "filter-mesh",
+        "title": {
+          "en": "Aluminium mesh grease filter",
+          "de": "Aluminium-Gitterfilter"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 300,
+        "conductivityWmK": 20,
+        "specificHeatJKgK": 900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "lamp-diffuser",
+        "title": {
+          "en": "Opal polycarbonate diffuser",
+          "de": "Opaldiffusor aus Polycarbonat"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.2,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "canopy",
+      "bones": [
+        {
+          "id": "canopy",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Canopy with motor and filter",
+            "de": "Haube mit Motor und Filter"
+          },
+          "lengthM": 0.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 8.5,
+            "comX": 0.22,
+            "comY": 0.1,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "chimney",
+          "parent": "canopy",
+          "x": 0,
+          "y": 0.2,
+          "angleDeg": 0,
+          "title": {
+            "en": "Lower chimney tube",
+            "de": "Unteres Kaminrohr"
+          },
+          "lengthM": 0.35,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.2,
+            "comX": 0.15,
+            "comY": 0.17,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "chimney-top",
+          "parent": "chimney",
+          "x": 0,
+          "y": 0.35,
+          "angleDeg": 0,
+          "title": {
+            "en": "Upper chimney tube",
+            "de": "Oberes Kaminrohr"
+          },
+          "lengthM": 0.365,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.8,
+            "comX": 0.14,
+            "comY": 0.17,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-hook",
+        "bone": "canopy",
+        "x": 0,
+        "y": 0.19,
+        "kind": "support",
+        "title": {
+          "en": "Upper hook on the wall plate",
+          "de": "Oberer Haken an der Wandplatte"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.3
+      },
+      {
+        "id": "wall-rest",
+        "bone": "canopy",
+        "x": 0,
+        "y": 0.03,
+        "kind": "support",
+        "title": {
+          "en": "Lower rest against the wall",
+          "de": "Untere Anlage an der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "outlet",
+        "bone": "chimney-top",
+        "x": 0.14,
+        "y": 0.915,
+        "kind": "emitter",
+        "title": {
+          "en": "Duct collar on top of the chimney",
+          "de": "Kanalkragen oben am Kamin"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.02
+                ],
+                [
+                  0.5,
+                  0.02
+                ],
+                [
+                  0.5,
+                  0.06
+                ],
+                [
+                  0.4,
+                  0.2
+                ],
+                [
+                  0,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "filter",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0,
+              "w": 0.46,
+              "h": 0.02,
+              "region": "filter",
+              "material": "filter-mesh"
+            },
+            {
+              "id": "lamp-a",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "rect",
+              "x": 0.07,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.012,
+              "region": "lamps",
+              "material": "lamp-diffuser"
+            },
+            {
+              "id": "lamp-b",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "rect",
+              "x": 0.34,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.012,
+              "region": "lamps",
+              "material": "lamp-diffuser"
+            },
+            {
+              "id": "panel-edge",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.485,
+                  0.065
+                ],
+                [
+                  0.405,
+                  0.185
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.35,
+              "w": 0.2,
+              "h": 0.015,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "seam",
+              "bone": "chimney-top",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.5,
+              "h": 0.9,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "panel-edge",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.4,
+                  -0.45
+                ],
+                [
+                  0.4,
+                  0.45
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-lip",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.485,
+                  -0.435
+                ],
+                [
+                  0.485,
+                  0.435
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.14,
+              "w": 0.28,
+              "h": 0.28,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.04,
+              "y": -0.1,
+              "w": 0.2,
+              "h": 0.2,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.02
+                ],
+                [
+                  0.45,
+                  0.02
+                ],
+                [
+                  0.45,
+                  0.2
+                ],
+                [
+                  -0.45,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "panel-edge",
+              "bone": "canopy",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.435,
+                  0.06
+                ],
+                [
+                  0.435,
+                  0.06
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "filter",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.43,
+              "y": 0.0,
+              "w": 0.86,
+              "h": 0.02,
+              "region": "filter",
+              "material": "filter-mesh"
+            },
+            {
+              "id": "lamp-a",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "rect",
+              "x": -0.23,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.012,
+              "region": "lamps",
+              "material": "lamp-diffuser"
+            },
+            {
+              "id": "lamp-b",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "rect",
+              "x": 0.17,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.012,
+              "region": "lamps",
+              "material": "lamp-diffuser"
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.2,
+              "w": 0.3,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.55,
+              "w": 0.28,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.9,
+              "w": 0.2,
+              "h": 0.015,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "seam",
+              "bone": "chimney-top",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0.55
+                ],
+                [
+                  0.14,
+                  0.55
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.5 m by 0.915 m side profile, 10 mm by 18.3 mm on paper: a sloping canopy box on the wall with a grease filter and two lamp recesses under it and a two-part stainless chimney above, closed by a duct collar. Front view: the 0.9 m canopy with its trim line, the hanging filter strip with the two lamps, and the 0.3 m chimney stepping to 0.28 m with the collar. Top view: the 0.5 m by 0.9 m canopy with the two trim lines of the sloping front panel and the chimney footprint with its collar.",
+            "de": "Ein Seitenprofil von 0,5 m mal 0,915 m, auf Papier 10 mm mal 18,3 mm: ein geneigter Haubenkörper an der Wand mit Fettfilter und zwei Lampenmulden darunter und ein zweiteiliger Edelstahlkamin darüber, abgeschlossen von einem Kanalkragen. Vorderansicht: die 0,9 m breite Haube mit ihrer Zierlinie, der hängende Filterstreifen mit den beiden Lampen und der 0,3 m breite Kamin, der auf 0,28 m abgesetzt ist, mit dem Kragen. Draufsicht: die Haube von 0,5 m mal 0,9 m mit den beiden Zierlinien der geneigten Frontblende und der Kaminfläche mit ihrem Kragen."
+          },
+          "retained": {
+            "en": "Canopy depth 0.5 m and height 0.2 m with the sloped front, the 20 mm filter strip, the two lamp recesses, the 0.30 m lower and 0.28 m upper chimney tube with the telescopic step, the duct collar and the edge of the control panel.",
+            "de": "Haubentiefe 0,5 m und Höhe 0,2 m mit der geneigten Front, der 20 mm hohe Filterstreifen, die zwei Lampenmulden, das untere Kaminrohr von 0,30 m und das obere von 0,28 m mit dem Teleskopabsatz, der Kanalkragen und die Kante der Bedienblende."
+          },
+          "merged": {
+            "en": "The wall mounting plate is part of the canopy shape; the motor box inside is not drawn.",
+            "de": "Die Wandplatte gehört zur Haubenform; der Motorkasten im Inneren ist nicht gezeichnet."
+          },
+          "omitted": {
+            "en": "Buttons, the display, brackets, the grease drain and the internal motor and fan wheel. Front and top view leave the lamp pairs behind the front ones and the inside of the canopy out; the filter and the lamps are hidden from above.",
+            "de": "Tasten, das Display, Halter, die Fettablaufrinne und Motor und Lüfterrad im Inneren. Vorder- und Draufsicht lassen die hinteren Lampen und das Innere der Haube weg; Filter und Lampen sind von oben verdeckt."
+          },
+          "thinElements": {
+            "en": "The seam and the panel edge are 0.13 mm detail lines; the collar is 15 mm (0.3 mm on paper).",
+            "de": "Fuge und Blendenkante sind 0,13-mm-Detailstriche; der Kragen ist 15 mm hoch (0,3 mm auf Papier)."
+          },
+          "hatching": {
+            "en": "None; the filter is a light tone strip.",
+            "de": "Keine; der Filter ist ein heller Tonstreifen."
+          },
+          "styles": {
+            "en": "Canopy 0.55, filter 0.7, lamps 0.95, chimney 0.6 to 0.65, collar 0.45; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Haube 0,55, Filter 0,7, Lampen 0,95, Kamin 0,6 bis 0,65, Kragen 0,45; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Canopy, filter, lamps and chimney are separate regions: in the thermal view the canopy and the lamps warm, the chimney stays cool; the air leaves at the collar.",
+            "de": "Haube, Filter, Lampen und Kamin sind getrennte Regionen: in der Thermalansicht erwärmen sich Haube und Lampen, der Kamin bleibt kühl; die Luft tritt am Kragen aus."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.025
+                ],
+                [
+                  0.5,
+                  0.025
+                ],
+                [
+                  0.5,
+                  0.06
+                ],
+                [
+                  0.4,
+                  0.2
+                ],
+                [
+                  0,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "filter",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": 0.02,
+              "y": 0,
+              "w": 0.46,
+              "h": 0.025,
+              "regions": [
+                "filter",
+                "lamps"
+              ],
+              "material": "filter-mesh"
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.27,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.03,
+              "y": 0.35,
+              "w": 0.21,
+              "h": 0.02,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.5,
+              "h": 0.9,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.135,
+              "w": 0.27,
+              "h": 0.27,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.03,
+              "y": -0.105,
+              "w": 0.21,
+              "h": 0.21,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.025
+                ],
+                [
+                  0.45,
+                  0.025
+                ],
+                [
+                  0.45,
+                  0.2
+                ],
+                [
+                  -0.45,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "filter",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.43,
+              "y": 0.0,
+              "w": 0.86,
+              "h": 0.025,
+              "regions": [
+                "filter",
+                "lamps"
+              ],
+              "material": "filter-mesh"
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.2,
+              "w": 0.3,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.135,
+              "y": 0.55,
+              "w": 0.27,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.9,
+              "w": 0.21,
+              "h": 0.02,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 5 mm by 9.2 mm profile: a sloping box under a two-part pipe with a collar on top. Front view: the 0.9 m canopy, the filter strip with the lamps merged, and the chimney in two steps with its collar. Top view: the 0.5 m by 0.9 m canopy with the chimney footprint in three steps.",
+            "de": "Ein Profil von 5 mm mal 9,2 mm: ein geneigter Kasten unter einem zweiteiligen Rohr mit einem Kragen oben. Vorderansicht: die 0,9 m breite Haube, der Filterstreifen mit den zusammengefassten Lampen und der zweistufige Kamin mit seinem Kragen. Draufsicht: die Haube von 0,5 m mal 0,9 m mit der dreistufigen Kaminfläche."
+          },
+          "retained": {
+            "en": "Canopy depth 0.5 m with the sloped front, the filter strip, both chimney tubes and the collar.",
+            "de": "Haubentiefe 0,5 m mit der geneigten Front, der Filterstreifen, beide Kaminrohre und der Kragen."
+          },
+          "merged": {
+            "en": "The two lamp recesses join the filter strip (regions filter and lamps merged).",
+            "de": "Die beiden Lampenmulden gehen im Filterstreifen auf (Regionen Filter und Lampen zusammengeführt)."
+          },
+          "omitted": {
+            "en": "Seam line, panel edge and the lamp recesses as separate shapes. Front and top view omit the trim lines and the individual lamps; from above the filter is hidden.",
+            "de": "Fugenlinie, Blendenkante und die Lampenmulden als eigene Formen. Vorder- und Draufsicht lassen die Zierlinien und die einzelnen Lampen weg; von oben ist der Filter verdeckt."
+          },
+          "thinElements": {
+            "en": "The filter strip is thickened from 20 to 25 mm (0.25 mm on paper) and the collar from 15 to 20 mm.",
+            "de": "Der Filterstreifen ist von 20 auf 25 mm (0,25 mm auf Papier) und der Kragen von 15 auf 20 mm verdickt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Canopy 0.55, filter 0.75, chimney 0.6 to 0.65, collar 0.45; one body pen of 0.18 mm.",
+            "de": "Haube 0,55, Filter 0,75, Kamin 0,6 bis 0,65, Kragen 0,45; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The strip lists filter and lamps as merged regions, so the lamp heat still shows in the thermal view.",
+            "de": "Der Streifen führt Filter und Lampen als zusammengeführte Regionen, sodass die Lampenwärme in der Thermalansicht sichtbar bleibt."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0.06
+                ],
+                [
+                  0.4,
+                  0.2
+                ],
+                [
+                  0,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "canopy",
+                "filter",
+                "lamps"
+              ],
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.37,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.5,
+              "h": 0.9,
+              "region": "canopy",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "canopy",
+              "bone": "canopy",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.0
+                ],
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.45,
+                  0.2
+                ],
+                [
+                  -0.45,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "canopy",
+                "filter",
+                "lamps"
+              ],
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-lower",
+              "bone": "chimney",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.2,
+              "w": 0.3,
+              "h": 0.35,
+              "region": "chimney",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "chimney-upper",
+              "bone": "chimney-top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.55,
+              "w": 0.3,
+              "h": 0.37,
+              "region": "chimney",
+              "material": "stainless-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.5 mm by 4.6 mm profile: a sloped wedge under a plain pipe. Front view: a 0.9 m by 0.2 m canopy block under a 0.3 m chimney in two pieces. Top view: the 0.5 m by 0.9 m canopy with the 0.3 m chimney footprint.",
+            "de": "Ein Profil von 2,5 mm mal 4,6 mm: ein geneigter Keil unter einem glatten Rohr. Vorderansicht: ein Haubenblock von 0,9 m mal 0,2 m unter einem 0,3 m breiten Kamin aus zwei Teilen. Draufsicht: die Haube von 0,5 m mal 0,9 m mit der 0,3 m großen Kaminfläche."
+          },
+          "retained": {
+            "en": "Canopy depth 0.5 m with the sloped front and the chimney of 0.3 m width up to 0.92 m.",
+            "de": "Haubentiefe 0,5 m mit der geneigten Front und der Kamin von 0,3 m Breite bis 0,92 m."
+          },
+          "merged": {
+            "en": "Filter and lamps join the canopy (regions canopy, filter and lamps merged); collar and telescopic step join the chimney.",
+            "de": "Filter und Lampen gehen in der Haube auf (Regionen Haube, Filter und Lampen zusammengeführt); Kragen und Teleskopabsatz gehen im Kamin auf."
+          },
+          "omitted": {
+            "en": "Filter strip, lamp recesses, seam, panel edge and the collar. Front and top view omit the collar, the trim lines and the lamps.",
+            "de": "Filterstreifen, Lampenmulden, Fuge, Blendenkante und der Kragen. Vorder- und Draufsicht lassen Kragen, Zierlinien und Lampen weg."
+          },
+          "thinElements": {
+            "en": "None below the feature width; the 0.3 m chimney is 1.5 mm.",
+            "de": "Nichts unterhalb der Mindestbreite; der 0,3 m breite Kamin ist 1,5 mm breit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Canopy 0.55, chimney 0.6 to 0.65; one body pen of 0.18 mm.",
+            "de": "Haube 0,55, Kamin 0,6 bis 0,65; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The wedge lists canopy, filter and lamps as merged regions; the chimney stays separate.",
+            "de": "Der Keil führt Haube, Filter und Lampen als zusammengeführte Regionen; der Kamin bleibt getrennt."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the 0.5 m by 0.915 m hood is 1 mm by 1.8 mm and its 20 mm filter strip 0.04 mm, below every print profile.",
+          "de": "Bei 1:500 ist die 0,5 m mal 0,915 m große Haube 1 mm mal 1,8 mm groß und ihr 20 mm hoher Filterstreifen 0,04 mm, unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "Filter strip of 20 mm",
+          "de": "Filterstreifen von 20 mm"
+        },
+        "limitingSizeM": 0.02,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "Fan and lamps are off, the hood is at room temperature.",
+          "de": "Lüfter und Lampen sind aus, die Haube hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "canopy": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "filter": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "lamps": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "chimney": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "extract": 0
+          },
+          "operating": {
+            "fan": 0,
+            "light": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "low",
+        "title": {
+          "en": "Low speed",
+          "de": "Kleine Stufe"
+        },
+        "description": {
+          "en": "The fan runs on the low stage at 40 percent, the lamps are on.",
+          "de": "Der Lüfter läuft auf der kleinen Stufe mit 40 Prozent, die Lampen sind an."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "canopy": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "filter": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "lamps": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "chimney": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "extract": 0.4
+          },
+          "operating": {
+            "fan": 0.4,
+            "light": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "extracting",
+        "title": {
+          "en": "Extracting",
+          "de": "Absaugend"
+        },
+        "description": {
+          "en": "The fan runs at full speed and extracts 500 cubic metres per hour through the filter and the chimney; the motor and the lamps release 150 W.",
+          "de": "Der Lüfter läuft mit voller Drehzahl und saugt 500 Kubikmeter je Stunde durch Filter und Kamin ab; Motor und Lampen geben 150 W ab."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-hook",
+          "wall-rest"
+        ],
+        "thermal": {
+          "regions": {
+            "canopy": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "filter": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "lamps": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "chimney": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "extract": 1
+          },
+          "operating": {
+            "fan": 1,
+            "light": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "switch-on-warm-up",
+        "title": {
+          "en": "Switch on and warm up",
+          "de": "Einschalten und aufwärmen"
+        },
+        "description": {
+          "en": "The hood is switched on at full speed after five seconds: the extract air starts at once and the canopy warms within ten minutes.",
+          "de": "Die Haube wird nach fünf Sekunden auf voller Stufe eingeschaltet: der Abluftstrom setzt sofort ein und die Haube erwärmt sich binnen zehn Minuten."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "extracting",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "extracting",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "run",
+            "fromS": 5,
+            "toS": 600,
+            "title": {
+              "en": "Extracting, warming up",
+              "de": "Saugt ab, wärmt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Fan and lamps on",
+              "de": "Lüfter und Lampen an"
+            },
+            "target": "fan"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:light",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:extract",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "step-down-and-off",
+        "title": {
+          "en": "Step down and switch off",
+          "de": "Herunterschalten und ausschalten"
+        },
+        "description": {
+          "en": "The fan steps from full speed to the low stage after one minute and is switched off after two more minutes.",
+          "de": "Der Lüfter schaltet nach einer Minute von voller auf die kleine Stufe und nach zwei weiteren Minuten aus."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "extracting",
+            "ease": "step"
+          },
+          {
+            "t": 60,
+            "pose": "low",
+            "ease": "step"
+          },
+          {
+            "t": 180,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-hook",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "wall-rest",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "full",
+            "fromS": 0,
+            "toS": 60,
+            "title": {
+              "en": "Full speed",
+              "de": "Volle Stufe"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 60,
+            "toS": 180,
+            "title": {
+              "en": "Low stage",
+              "de": "Kleine Stufe"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 180,
+            "toS": 300,
+            "title": {
+              "en": "Off, cooling",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 180,
+            "kind": "shutdown",
+            "title": {
+              "en": "Fan and lamps off",
+              "de": "Lüfter und Lampen aus"
+            },
+            "target": "fan"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0.4
+              },
+              {
+                "t": 180,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:light",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 180,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:extract",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0.4
+              },
+              {
+                "t": 180,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "fan",
+          "title": {
+            "en": "Fan",
+            "de": "Lüfter"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.4,
+              "title": {
+                "en": "Low stage (40 percent)",
+                "de": "Kleine Stufe (40 Prozent)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full speed (500 m3/h)",
+                "de": "Volle Stufe (500 m3/h)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "light",
+          "title": {
+            "en": "Lamps",
+            "de": "Lampen"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "On (30 W)",
+                "de": "An (30 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "canopy",
+          "title": {
+            "en": "Canopy shell with motor",
+            "de": "Haubenkörper mit Motor"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "stainless-steel",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.5,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Stainless steel sheet 0.8 mm",
+                "de": "Edelstahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.000053,
+              "heatCapacityJM2K": 3160,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3160,
+          "operating": {
+            "key": "fan",
+            "heatW": 120
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "filter",
+          "title": {
+            "en": "Grease filter",
+            "de": "Fettfilter"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "filter-mesh",
+          "areaM2": 0.2,
+          "characteristicLengthM": 0.46,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "mesh",
+              "title": {
+                "en": "Aluminium mesh pack 10 mm",
+                "de": "Aluminium-Gitterpaket 10 mm"
+              },
+              "kind": "metal",
+              "material": "filter-mesh",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.0003,
+              "heatCapacityJM2K": 900,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 900,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "lamps",
+          "title": {
+            "en": "Lamp modules",
+            "de": "Lampenmodule"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "lamp-diffuser",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.06,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "diffuser",
+              "title": {
+                "en": "Opal polycarbonate diffuser 2 mm",
+                "de": "Opaldiffusor aus Polycarbonat 2 mm"
+              },
+              "kind": "polymer",
+              "material": "lamp-diffuser",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "operating": {
+            "key": "light",
+            "heatW": 30
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "chimney",
+          "title": {
+            "en": "Telescopic chimney",
+            "de": "Teleskopkamin"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stainless-steel",
+          "areaM2": 0.75,
+          "characteristicLengthM": 0.7,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Stainless steel sheet 0.6 mm",
+                "de": "Edelstahlblech 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-steel",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 0.00004,
+              "heatCapacityJM2K": 2370,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2370,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "extract",
+          "kind": "vent",
+          "title": {
+            "en": "Extract air leaving at the duct collar",
+            "de": "Abluft am Kanalkragen"
+          },
+          "anchor": "outlet",
+          "directionDeg": 90,
+          "diameterM": 0.15,
+          "operatingKey": "fan",
+          "volumeFlowM3S": 0.14,
+          "temperatureRiseK": 0,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "iec-61591"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 150 W at full speed end entirely as heat in the room: 120 W at the canopy shell (motor, electronics) and 30 W at the lamp modules; the heat of the extracted cooking vapour belongs to the hob, not to the hood.",
+          "de": "Die 150 W auf voller Stufe enden vollständig als Wärme im Raum: 120 W am Haubenkörper (Motor, Elektronik) und 30 W an den Lampenmodulen; die Wärme des abgesaugten Kochdunstes gehört zum Kochfeld, nicht zur Haube."
+        },
+        {
+          "en": "The airflow scales with the fan level: 0.056 m3/s at the low stage, 0.14 m3/s at full speed.",
+          "de": "Der Luftstrom skaliert mit der Lüfterstufe: 0,056 m3/s auf der kleinen Stufe, 0,14 m3/s auf voller Stufe."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-hook",
+        "wall-rest"
+      ],
+      "assumptions": [
+        {
+          "en": "The 14.5 kg hood hangs on the upper hook (pin) and leans against the wall at the lower edge (roller): the hook carries the weight, the pair resists the overturning moment of the centre of mass 0.2 m from the wall.",
+          "de": "Die 14,5 kg schwere Haube hängt am oberen Haken (Festlager) und lehnt unten an der Wand (Rollenlager): der Haken trägt das Gewicht, das Paar nimmt das Kippmoment des Schwerpunkts 0,2 m vor der Wand auf."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "extracting",
+      "defaultClip": "switch-on-warm-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -43,10 +43,10 @@ def compute(doc):
     return {
         "_tool": "anastruct", "_version": oracle.anastruct_version(),
         "reactionLeftFyN": float(-left["Fy"]), "reactionRightFyN": float(-right["Fy"]),
-        "maxMomentNm": float(-max(moments)), "midDeflectionM": float(-mid["uy"]),
-        "analyticMaxMomentNm": -(Q * L**2 / 8 + P * L / 4),
+        "maxMomentNm": float(max(moments)), "midDeflectionM": float(-mid["uy"]),
+        "analyticMaxMomentNm": Q * L**2 / 8 + P * L / 4,
         "analyticMidDeflectionM": -(5 * Q * L**4 / (384 * E_PA * I) + P * L**3 / (48 * E_PA * I)),
-        "stationMomentNm": {str(s): float(-(Q * s * (L - s) / 2 + (P * s / 2 if s <= L / 2 else P * (L - s) / 2))) for s in (0.5, 1.0, 2.0, 3.0)},
+        "stationMomentNm": {str(s): float(Q * s * (L - s) / 2 + (P * s / 2 if s <= L / 2 else P * (L - s) / 2)) for s in (0.5, 1.0, 2.0, 3.0)},
     }
 
 

@@ -1,0 +1,2 @@
+{ "version": 1, "casts": {
+ "agave-plan": { "asset": "agave", "pose": "summer-turgid", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" } } }

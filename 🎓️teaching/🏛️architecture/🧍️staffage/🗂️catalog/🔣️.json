@@ -43,7 +43,7 @@
     },
     {
       "id": "furniture",
-      "emoji": "🛋",
+      "emoji": "🛋️",
       "title": {
         "en": "Furniture",
         "de": "Möbel"
@@ -53,6 +53,19 @@
         "de": "Sitzmöbel, Tische, Stauraum und Betten für Innenräume und öffentlichen Raum."
       },
       "folder": "🛋️furniture"
+    },
+    {
+      "id": "appliances",
+      "emoji": "🔌️",
+      "title": {
+        "en": "Appliances",
+        "de": "Geräte"
+      },
+      "description": {
+        "en": "Household and office devices and luminaires with electrical power, operating poses and the heat they release into a room.",
+        "de": "Haushalts- und Bürogeräte sowie Leuchten mit elektrischer Leistung, Betriebsposen und der Wärme, die sie in den Raum abgeben."
+      },
+      "folder": "🔌️appliances"
     },
     {
       "id": "objects",
@@ -82,7 +95,7 @@
     },
     {
       "id": "machinery",
-      "emoji": "🏗",
+      "emoji": "🏗️",
       "title": {
         "en": "Machinery",
         "de": "Maschinen"
@@ -233,9 +246,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -253,11 +263,47 @@
       "completion": "authored"
     },
     {
+      "id": "seated-office-worker",
+      "category": "humans",
+      "title": { "en": "Seated Office Worker", "de": "Büroarbeitende Person im Sitzen" },
+      "heightM": 1.411,
+      "widthM": 1.291,
+      "poses": ["typing", "reading-screen", "leaning-back"],
+      "clips": ["typing", "settle-back"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": ["seated-person-marker"],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A man at 1.2 met on a swivel chair with a 30 W laptop and fan exhaust on a desk: a typing loop and a tilting backrest that no standing or bench-seated figure can show.",
+        "de": "Ein Mann bei 1,2 met im Drehstuhl mit einem 30-W-Laptop samt Lüfterabluft auf dem Schreibtisch: eine Tippschleife und eine mitkippende Lehne, die keine stehende oder auf einer Bank sitzende Figur zeigen kann."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sleeping-person",
+      "category": "humans",
+      "title": { "en": "Sleeping Person", "de": "Schlafende Person" },
+      "heightM": 0.45,
+      "widthM": 1.9,
+      "poses": ["supine", "side", "curled"],
+      "clips": ["breathing", "turn-over"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A lying body at 0.7 met under a 1.6 clo duvet on the mattress datum of the single-bed, with breath rising from the pillow: the only figure whose weight rests on a mattress.",
+        "de": "Ein liegender Körper bei 0,7 met unter einer Bettdecke von 1,6 clo auf dem Matratzenbezug des Einzelbetts, mit vom Kissen aufsteigendem Atem: die einzige Figur, deren Gewicht auf einer Matratze ruht."
+      },
+      "completion": "authored"
+    },
+    {
       "id": "seated-reader",
       "category": "humans",
       "title": {
         "en": "Seated Reader",
-        "de": "Lesende Person im Sitzen"
+        "de": "Sitzende lesende Person"
       },
       "heightM": 1.34,
       "widthM": 1.02,
@@ -285,9 +331,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -340,9 +383,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -393,9 +433,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -444,9 +481,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -494,9 +528,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -547,9 +578,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -598,9 +626,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -622,7 +647,7 @@
       "category": "humans",
       "title": {
         "en": "Jogger",
-        "de": "Jogger:in"
+        "de": "Joggende Person"
       },
       "heightM": 1.775,
       "widthM": 1.035,
@@ -651,9 +676,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -700,9 +722,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -752,9 +771,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -802,9 +818,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -848,15 +861,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "english-oak-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -900,15 +910,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "lombardy-poplar-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -953,15 +960,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "multi-stem-birch-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1006,15 +1010,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "scots-pine-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1040,7 +1041,7 @@
         "de": "Dattelpalme"
       },
       "heightM": 12.5,
-      "widthM": 6.87,
+      "widthM": 6.3,
       "poses": [
         "calm",
         "windy",
@@ -1058,15 +1059,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "date-palm-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1110,15 +1108,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "weeping-willow-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1163,15 +1158,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "hornbeam-hedge-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1216,15 +1208,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "miscanthus-grass-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1273,9 +1262,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1326,9 +1312,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1374,9 +1357,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1429,9 +1409,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1480,9 +1457,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1533,9 +1507,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1580,9 +1551,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1630,9 +1598,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1661,7 +1626,8 @@
       "poses": [
         "seat-low",
         "seat-high",
-        "reclined"
+        "reclined",
+        "swivel-quarter"
       ],
       "clips": [
         "swivel-rotation",
@@ -1677,9 +1643,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1725,9 +1688,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1777,9 +1737,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1824,9 +1781,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1873,9 +1827,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1920,9 +1871,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -1972,9 +1920,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -1988,6 +1933,52 @@
       "distinction": {
         "en": "Suspended front and rear axles with ±0.1 m prismatic travel, a bonnet and tailgate on revolute hinges, and a tailpipe emitter, with two axle contacts in elevation, unlike the two-wheeled cargo bike.",
         "de": "Gefederte Vorder- und Hinterachse mit ±0,1 m prismatischem Federweg, Motorhaube und Heckklappe an Drehgelenken und einer Auspuffquelle; in der Ansicht zwei Achskontakte, anders als beim zweirädrigen Lastenrad."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "vintage-car-1929",
+      "category": "vehicles",
+      "title": {
+        "en": "Vintage Saloon 1929",
+        "de": "Salonwagen von 1929"
+      },
+      "heightM": 1.7,
+      "widthM": 4.38,
+      "poses": [
+        "parked",
+        "driving",
+        "braking"
+      ],
+      "clips": [
+        "drive-by",
+        "arrive-and-park"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A late-1920s saloon with separate crescent fenders, running boards and side-mounted spare wheels, authored in elevation and in plan, unlike the modern hatchback city-car.",
+        "de": "Ein Salonwagen der späten 1920er mit getrennten Sichelkotflügeln, Trittbrettern und seitlich montierten Reserverädern, in Ansicht und Grundriss gezeichnet, anders als das moderne Schrägheck-Stadtauto."
       },
       "completion": "authored"
     },
@@ -2022,9 +2013,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2073,9 +2061,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2118,15 +2103,12 @@
         "500": "authored"
       },
       "symbols": [
-        "site-plan-reach"
+        "tower-crane-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2174,9 +2156,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2205,7 +2184,8 @@
       "poses": [
         "parked-on-stand",
         "loaded-on-stand",
-        "rolling-loaded"
+        "rolling-loaded",
+        "turning-left"
       ],
       "clips": [
         "roll-by",
@@ -2221,9 +2201,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2271,9 +2248,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2319,9 +2293,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2363,14 +2334,11 @@
         "500": "authored"
       },
       "symbols": [
-        "section-plan"
+        "steel-column-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2413,14 +2381,11 @@
         "500": "authored"
       },
       "symbols": [
-        "flight-plan"
+        "stair-flight-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2464,14 +2429,11 @@
         "500": "authored"
       },
       "symbols": [
-        "sliding-door-plan"
+        "sliding-door-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2515,15 +2477,12 @@
         "500": "unavailable"
       },
       "symbols": [
-        "window-plan",
+        "tilt-window-symbol",
         "tilt-opening-sign"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2538,6 +2497,141 @@
       "distinction": {
         "en": "A 1.2 m timber-framed sash pinned at its bottom hinge, with a horizontal head-stay roller active in every pose, that tilts outward with wind suction acting normal to the sash.",
         "de": "Ein 1,2 m breiter Holzrahmenflügel, unten am Scharnier gelenkig gelagert, mit einem horizontalen Kopfhaltestab als Rollenlager, der in jeder Pose aktiv ist; er kippt nach außen, Windsog wirkt senkrecht zum Flügel."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "solid-brick-wall-1960",
+      "category": "components",
+      "title": {
+        "en": "Solid Brick Wall 1960",
+        "de": "Vollziegelwand 1960"
+      },
+      "heightM": 1,
+      "widthM": 0.4,
+      "poses": [
+        "winter-night",
+        "winter-sun",
+        "half-shaded"
+      ],
+      "clips": [
+        "sunrise",
+        "cloud-shadow"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A uninsulated 1960 solid brick wall in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick and 20 mm mineral render, U = 1.43 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
+        "de": "Eine ungedämmte Vollziegelwand von 1960 im Vertikalschnitt, 1 m hoch: 15 mm Innenputz, 365 mm Vollziegel und 20 mm Mineralputz, U = 1,43 W/(m² K) bei Innenraum 20 °C und R_si 0,13, R_se 0,04 m²K/W."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "etics-brick-wall-12",
+      "category": "components",
+      "title": {
+        "en": "Brick Wall with 12 cm ETICS",
+        "de": "Ziegelwand mit 12 cm WDVS"
+      },
+      "heightM": 1,
+      "widthM": 0.52,
+      "poses": [
+        "winter-night",
+        "winter-sun",
+        "half-shaded"
+      ],
+      "clips": [
+        "sunrise",
+        "cloud-shadow"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1960 solid brick wall with 12 cm ETICS in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick, 120 mm mineral wool ETICS and 20 mm mineral render, U = 0.24 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
+        "de": "Eine Vollziegelwand von 1960 mit 12 cm WDVS im Vertikalschnitt, 1 m hoch: 15 mm Innenputz, 365 mm Vollziegel, 120 mm Mineralwolle-WDVS und 20 mm Mineralputz, U = 0,24 W/(m² K) bei Innenraum 20 °C und R_si 0,13, R_se 0,04 m²K/W."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "etics-brick-wall-30",
+      "category": "components",
+      "title": {
+        "en": "Brick Wall with 30 cm ETICS",
+        "de": "Ziegelwand mit 30 cm WDVS"
+      },
+      "heightM": 1,
+      "widthM": 0.7,
+      "poses": [
+        "winter-night",
+        "winter-sun",
+        "half-shaded"
+      ],
+      "clips": [
+        "sunrise",
+        "cloud-shadow"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1960 solid brick wall with 30 cm ETICS in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick, 300 mm mineral wool ETICS and 20 mm mineral render, U = 0.11 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
+        "de": "Eine Vollziegelwand von 1960 mit 30 cm WDVS im Vertikalschnitt, 1 m hoch: 15 mm Innenputz, 365 mm Vollziegel, 300 mm Mineralwolle-WDVS und 20 mm Mineralputz, U = 0,11 W/(m² K) bei Innenraum 20 °C und R_si 0,13, R_se 0,04 m²K/W."
       },
       "completion": "authored"
     },
@@ -2567,14 +2661,11 @@
         "500": "unavailable"
       },
       "symbols": [
-        "balustrade-plan"
+        "glass-balustrade-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2599,7 +2690,7 @@
         "en": "Tied Canopy",
         "de": "Abgespanntes Vordach"
       },
-      "heightM": 3.14,
+      "heightM": 5.35,
       "widthM": 6.0,
       "poses": [
         "self-weight",
@@ -2620,9 +2711,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2669,9 +2757,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2720,9 +2805,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2743,7 +2825,7 @@
       "id": "kneeling-gardener",
       "category": "humans",
       "title": {
-        "en": "Kneeling gardener",
+        "en": "Kneeling Gardener",
         "de": "Kniende Gärtnerin"
       },
       "heightM": 1.145,
@@ -2769,9 +2851,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2792,7 +2871,7 @@
       "id": "parent-carrying-toddler",
       "category": "humans",
       "title": {
-        "en": "Parent carrying a toddler",
+        "en": "Parent Carrying a Toddler",
         "de": "Elternteil trägt ein Kleinkind"
       },
       "heightM": 1.73,
@@ -2809,17 +2888,14 @@
       "representations": {
         "50": "authored",
         "100": "authored",
-        "200": "unavailable",
-        "500": "unavailable"
+        "200": "authored",
+        "500": "authored"
       },
       "symbols": [],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2866,9 +2942,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -2917,9 +2990,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2967,9 +3037,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -2994,7 +3061,7 @@
         "de": "Schwangere Person"
       },
       "heightM": 1.65,
-      "widthM": 0.72,
+      "widthM": 0.69,
       "poses": [
         "hand-on-back",
         "cradling-belly",
@@ -3016,9 +3083,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3068,9 +3132,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3091,7 +3152,7 @@
       "id": "seated-guitarist",
       "category": "humans",
       "title": {
-        "en": "Seated guitarist",
+        "en": "Seated Guitarist",
         "de": "Sitzender Gitarrist"
       },
       "heightM": 1.495,
@@ -3118,9 +3179,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3142,10 +3200,10 @@
       "category": "humans",
       "title": {
         "en": "Skateboarder",
-        "de": "Skateboarder:in"
+        "de": "Skateboardfahrende Person"
       },
       "heightM": 1.774,
-      "widthM": 1.218,
+      "widthM": 1.084,
       "poses": [
         "cruising",
         "pushing",
@@ -3160,17 +3218,14 @@
       "representations": {
         "50": "authored",
         "100": "authored",
-        "200": "unavailable",
-        "500": "unavailable"
+        "200": "authored",
+        "500": "authored"
       },
       "symbols": [],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3185,6 +3240,100 @@
       "distinction": {
         "en": "A 19-year-old, 1.78 m skateboarder in beanie, hooded sweatshirt, cotton trousers and vulcanised shoes on a 0.81 m street deck: cruising, pushing off, a crouch and a tail-snap ollie with a flight phase; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
         "de": "Ein 19-jähriger, 1,78 m großer Skateboarder in Mütze, Kapuzenpullover, Baumwollhose und vulkanisierten Schuhen auf einem 0,81 m langen Street-Deck: Rollen, Anschieben, Hocke und ein Ollie mit Flugphase; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "person-cooking",
+      "category": "humans",
+      "title": {
+        "en": "Person Cooking",
+        "de": "Kochende Person"
+      },
+      "heightM": 1.69,
+      "widthM": 1.088,
+      "poses": [
+        "stirring",
+        "tasting",
+        "standing-by"
+      ],
+      "clips": [
+        "stirring",
+        "stir-and-taste"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult of 1.69 m cooking at a 0.90 m kitchen counter at about 1.8 met: stirring a 2.5 litre pot on the hob with a wooden spoon, tasting from the spoon and standing by, with steam above the pot that follows the hob level.",
+        "de": "Eine erwachsene Person von 1,69 m kocht an einer 0,90 m hohen Küchenzeile bei etwa 1,8 met: Sie rührt mit einem Holzlöffel in einem 2,5-Liter-Topf auf dem Herd, probiert vom Löffel und wartet, mit Dampf über dem Topf, der der Herdstufe folgt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "standing-adult",
+      "category": "humans",
+      "title": {
+        "en": "Standing Adult",
+        "de": "Stehende erwachsene Person"
+      },
+      "heightM": 1.69,
+      "widthM": 0.328,
+      "poses": [
+        "relaxed",
+        "arms-crossed",
+        "pointing",
+        "hands-warming"
+      ],
+      "clips": [
+        "idle-breathing",
+        "shiver",
+        "fanning"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A neutral 1.67 m adult in a fleece sweatshirt, jeans and sneakers at 1.2 met, the archive's generic scale figure: relaxed, arms crossed, pointing sideways and warming the hands, with loops for idle breathing, shivering with cold and fanning in the heat.",
+        "de": "Eine neutrale erwachsene Person von 1,67 m in Fleece-Sweatshirt, Jeans und Sneakern bei 1,2 met, die generische Maßstabsfigur des Archivs: entspannt, Arme verschränkt, seitlich zeigend und Hände wärmend, mit Schleifen für ruhiges Atmen, Zittern vor Kälte und Fächeln in der Hitze."
       },
       "completion": "authored"
     },
@@ -3217,9 +3366,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3267,9 +3413,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3316,9 +3459,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3364,9 +3504,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3416,9 +3553,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3465,9 +3599,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3513,9 +3644,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3564,9 +3692,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3614,9 +3739,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -3660,16 +3782,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "agave-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation",
-        "plan"
       ],
       "exports": [
         "svg",
@@ -3714,16 +3832,13 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-crown",
+        "apple-tree-symbol",
         "tree-sign"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3768,16 +3883,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "bamboo-clump-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation",
-        "plan"
       ],
       "exports": [
         "svg",
@@ -3821,16 +3932,12 @@
         "500": "unavailable"
       },
       "symbols": [
-        "plan-extent"
+        "hosta-clump-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation",
-        "plan"
       ],
       "exports": [
         "svg",
@@ -3875,16 +3982,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-extent"
+        "ivy-on-trellis-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation",
-        "plan"
       ],
       "exports": [
         "svg",
@@ -3930,16 +4033,13 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-crown",
+        "japanese-maple-symbol",
         "tree-sign"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -3985,16 +4085,13 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-crown",
+        "london-plane-pollarded-symbol",
         "tree-sign"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4041,16 +4138,13 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-crown",
+        "small-leaved-lime-symbol",
         "tree-sign"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4095,14 +4189,11 @@
         "500": "authored"
       },
       "symbols": [
-        "stool-plan"
+        "bar-stool-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4146,14 +4237,11 @@
         "500": "authored"
       },
       "symbols": [
-        "shelf-plan"
+        "bookshelf-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4198,14 +4286,11 @@
         "500": "authored"
       },
       "symbols": [
-        "table-plan"
+        "dining-table-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4250,14 +4335,11 @@
         "500": "authored"
       },
       "symbols": [
-        "chair-plan"
+        "folding-deck-chair-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4302,14 +4384,11 @@
         "500": "authored"
       },
       "symbols": [
-        "picnic-plan"
+        "picnic-table-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4354,14 +4433,11 @@
         "500": "authored"
       },
       "symbols": [
-        "bed-plan"
+        "single-bed-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4407,14 +4483,11 @@
         "500": "authored"
       },
       "symbols": [
-        "sofa-plan"
+        "three-seat-sofa-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4458,15 +4531,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-true",
-        "plan-mark"
+        "bicycle-stand-symbol-true-extent",
+        "bicycle-stand-symbol-conventional"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4515,9 +4585,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -4563,9 +4630,6 @@
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4614,9 +4678,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -4630,6 +4691,78 @@
       "distinction": {
         "en": "A free-standing 13 kW propane radiant heater, 2.25 m high with a 0.80 m dome: operating levels off, low (6 kW) and high (13 kW) heat the emitter shroud and the dome and send a hot flue plume up through the dome.",
         "de": "Ein freistehender Propan-Heizstrahler von 13 kW, 2,25 m hoch mit 0,80 m Haube: die Betriebsstufen Aus, Klein (6 kW) und Groß (13 kW) heizen Strahlermantel und Haube und schicken eine heiße Abgasfahne durch die Haube nach oben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "laptop",
+      "category": "appliances",
+      "title": { "en": "Laptop Computer", "de": "Laptop" },
+      "heightM": 0.218,
+      "widthM": 0.275,
+      "poses": ["open", "open-idle", "closed"],
+      "clips": ["open-lid", "work-and-sleep"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 14-inch aluminium laptop whose 60 W of electrical power under load ends as heat, mostly at the underside and the keyboard deck; the lid opens to 105 degrees and the machine idles at 15 W or sleeps at 1.8 W.",
+        "de": "Ein 14-Zoll-Laptop aus Aluminium, dessen 60 W elektrische Leistung unter Last als Wärme enden, hauptsächlich an Unterseite und Tastaturdeck; der Deckel öffnet auf 105 Grad, die Maschine läuft im Leerlauf mit 15 W oder ruht mit 1,8 W."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "desktop-monitor",
+      "category": "appliances",
+      "title": { "en": "Desktop Monitor with Stand", "de": "Desktop-Monitor mit Standfuß" },
+      "heightM": 0.411,
+      "widthM": 0.211,
+      "poses": ["on", "standby", "off"],
+      "clips": ["power-on-warm-up", "standby-cool-down"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 24-inch LED monitor on a stand with the panel tilted back by 5 degrees: 25 W of electrical power ends as heat, most of it in the rear housing with the power supply.",
+        "de": "Ein 24-Zoll-LED-Monitor auf Standfuß mit um 5 Grad nach hinten geneigtem Panel: 25 W elektrische Leistung enden als Wärme, der größte Teil im Rückgehäuse mit dem Netzteil."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tower-server",
+      "category": "appliances",
+      "title": {"en": "Office Tower Server", "de": "Büro-Tower-Server"},
+      "heightM": 0.45,
+      "widthM": 0.45,
+      "poses": ["typical", "rated", "standby", "off"],
+      "clips": ["power-up", "load-surge"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A single office tower server: 90 W at typical load and 200 W rated, mostly carried away by the rear fan; the 5 kW rack is the data-centre counterpart.",
+        "de": "Ein einzelner Büro-Tower-Server: 90 W bei typischer Last und 200 W Nennlast, überwiegend vom Rücklüfter abgeführt; das 5-kW-Rack ist das Rechenzentrums-Gegenstück."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "pendant-lamp",
+      "category": "appliances",
+      "title": { "en": "Pendant Lamp with Incandescent Bulb", "de": "Pendelleuchte mit Glühlampe" },
+      "heightM": 0.8,
+      "widthM": 0.266,
+      "poses": ["on", "dimmed", "off"],
+      "clips": ["switch-on-warm-up", "switch-off-cool-down"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A pendant luminaire with an enamelled dome shade and a 60 W incandescent bulb hanging out of it: 95 % of the 60 W (57 W) leave as heat in the glass, the shade and the cap and the other 3 W as light that the room absorbs, the origin is the lowest point of the bulb.",
+        "de": "Eine Pendelleuchte mit emailliertem Kuppelschirm und einer daraus herabhängenden 60-W-Glühlampe: 95 % der 60 W (57 W) verlassen Glas, Schirm und Sockel als Wärme und die übrigen 3 W als Licht, das der Raum absorbiert, der Ursprung ist der tiefste Punkt der Lampe."
       },
       "completion": "authored"
     },
@@ -4659,15 +4792,12 @@
         "500": "authored"
       },
       "symbols": [
-        "plan-true",
-        "plan-dot"
+        "retractable-bollard-symbol-true-extent",
+        "retractable-bollard-symbol-conventional"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4714,9 +4844,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -4762,9 +4889,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -4807,14 +4931,11 @@
         "500": "unavailable"
       },
       "symbols": [
-        "bicycle-plan"
+        "bicycle-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4859,15 +4980,12 @@
         "500": "authored"
       },
       "symbols": [
-        "van-plan"
+        "van-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4911,14 +5029,11 @@
         "500": "unavailable"
       },
       "symbols": [
-        "kick-scooter-plan"
+        "kick-scooter-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -4949,7 +5064,8 @@
         "parked-on-stand",
         "cruising",
         "braking-nose-down",
-        "idling-seat-open"
+        "idling-seat-open",
+        "turning-left"
       ],
       "clips": [
         "ride-loop",
@@ -4962,15 +5078,12 @@
         "500": "authored"
       },
       "symbols": [
-        "scooter-plan"
+        "scooter-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5015,15 +5128,12 @@
         "500": "authored"
       },
       "symbols": [
-        "tram-plan"
+        "tram-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5072,9 +5182,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -5122,9 +5229,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -5168,15 +5272,12 @@
         "500": "authored"
       },
       "symbols": [
-        "site-plan-footprint"
+        "heat-pump-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5219,15 +5320,12 @@
         "500": "unavailable"
       },
       "symbols": [
-        "site-plan-footprint"
+        "scissor-lift-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5271,15 +5369,12 @@
         "500": "authored"
       },
       "symbols": [
-        "articulated-steering-plan"
+        "wheel-loader-symbol"
       ],
       "analytics": [
         "thermal",
         "transport",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5310,12 +5405,14 @@
         "dead-load",
         "cradle-at-mid",
         "seismic-in-plane",
-        "shaded-by-overhang"
+        "shaded-by-overhang",
+        "wind-suction"
       ],
       "clips": [
         "cradle-pass",
         "shadow-rise",
-        "seismic-pulse"
+        "seismic-pulse",
+        "wind-suction-gust"
       ],
       "representations": {
         "50": "authored",
@@ -5327,9 +5424,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5372,15 +5466,12 @@
         "50": "authored",
         "100": "authored",
         "200": "authored",
-        "500": "unavailable"
+        "500": "authored"
       },
       "symbols": [],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5429,9 +5520,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -5455,8 +5543,8 @@
         "en": "Panel Radiator Type 22",
         "de": "Plattenheizkörper Typ 22"
       },
-      "heightM": 0.85,
-      "widthM": 0.285,
+      "heightM": 0.71,
+      "widthM": 0.135,
       "poses": [
         "off",
         "night",
@@ -5480,9 +5568,6 @@
         "transport",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -5494,8 +5579,8 @@
         "component"
       ],
       "distinction": {
-        "en": "A compact type 22 steel panel radiator (two water panels, two convectors; 600 mm high, 1000 mm long, 100 mm deep, rated 1.2 kW at 75/65/20 degC) shown in vertical section on two wall brackets 35 mm off a plastered wall, with its thermostatic valve; output scales with the EN 442 exponent n = 1.3 and rises as a convection plume.",
-        "de": "Ein kompakter Stahl-Plattenheizkörper Typ 22 (zwei Wasserplatten, zwei Konvektoren; 600 mm hoch, 1000 mm lang, 100 mm tief, 1,2 kW bei 75/65/20 °C) im Vertikalschnitt an zwei Wandkonsolen 35 mm vor einer verputzten Wand, mit Thermostatventil; die Leistung folgt dem EN-442-Exponenten n = 1,3 und steigt als Konvektionsfahne auf."
+        "en": "A compact type 22 steel panel radiator (two water panels, two convectors; 600 mm high, 1000 mm long, 100 mm deep, rated 1.2 kW at 75/65/20 degC) shown in vertical section on two wall brackets that stand 35 mm off the wall of the scene, with its thermostatic valve; output scales with the EN 442 exponent n = 1.3 and rises as a convection plume.",
+        "de": "Ein kompakter Stahl-Plattenheizkörper Typ 22 (zwei Wasserplatten, zwei Konvektoren; 600 mm hoch, 1000 mm lang, 100 mm tief, 1,2 kW bei 75/65/20 °C) im Vertikalschnitt an zwei Wandkonsolen 35 mm vor der Wand der Szene, mit Thermostatventil; die Leistung folgt dem EN-442-Exponenten n = 1,3 und steigt als Konvektionsfahne auf."
       },
       "completion": "authored"
     },
@@ -5529,9 +5614,6 @@
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation"
       ],
       "exports": [
         "svg",
@@ -5576,15 +5658,11 @@
         "500": "authored"
       },
       "symbols": [
-        "spiral-stair-plan"
+        "spiral-stair-symbol"
       ],
       "analytics": [
         "thermal",
         "structural"
-      ],
-      "viewpoints": [
-        "elevation",
-        "plan"
       ],
       "exports": [
         "svg",
@@ -5633,9 +5711,6 @@
         "thermal",
         "structural"
       ],
-      "viewpoints": [
-        "elevation"
-      ],
       "exports": [
         "svg",
         "pdf",
@@ -5649,6 +5724,879 @@
       "distinction": {
         "en": "A 1.4 m wide reinforced concrete access ramp rising 0.60 m in two 3.6 m runs at 1:12 (8.3 %), with an at-grade landing, a middle landing and a top landing of 1.5 m, 0.10 m wheel-guard kerbs and continuous steel handrails at 0.85 m on both sides with 0.30 m extensions. 1:12 is the ADA maximum; DIN 18040-1 asks for at most 6 %.",
         "de": "Eine 1,4 m breite Stahlbeton-Zugangsrampe, die in zwei 3,6 m langen Läufen mit 1:12 (8,3 %) um 0,60 m ansteigt, mit ebenerdigem Podest, Zwischenpodest und oberem Podest von je 1,5 m, 0,10 m hohen Radabweisern und durchgehenden Stahlhandläufen in 0,85 m Höhe auf beiden Seiten mit 0,30 m Verlängerung. 1:12 ist das ADA-Maximum; DIN 18040-1 verlangt höchstens 6 %."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "split-ac-indoor-unit",
+      "category": "appliances",
+      "title": { "en": "Split Air Conditioner Indoor Unit", "de": "Split-Klimagerät Innenteil" },
+      "heightM": 0.29,
+      "widthM": 0.21,
+      "poses": ["off", "cooling", "cooling-low"],
+      "clips": ["start-cooling", "vane-swing"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A wall-mounted indoor unit that extracts 2.5 kW from the room: a rotating discharge vane and a cold air jet of 450 m3/h cooled by 13 K, the opposite of the fan heater.",
+        "de": "Ein wandhängendes Innengerät, das dem Raum 2,5 kW entzieht: eine drehende Ausblaslamelle und ein kalter Luftstrahl von 450 m3/h, um 13 K abgekühlt, das Gegenteil des Heizlüfters."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "toaster",
+      "category": "appliances",
+      "title": { "en": "Two-Slice Toaster", "de": "Zweischeiben-Toaster" },
+      "heightM": 0.2,
+      "widthM": 0.3,
+      "poses": ["idle", "toasting", "popped"],
+      "clips": ["toast-cycle", "cool-down"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 900 W two-slice toaster, 0.30 m wide: in toasting pose the housing, the top plate and the bread crust heat up and hot air rises from the slots.",
+        "de": "Ein Zweischeiben-Toaster von 900 W, 0,30 m breit: In der Pose Toasten erwärmen sich Gehäuse, Deckplatte und Brotkruste, und heiße Luft steigt aus den Schlitzen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "vacuum-cleaner",
+      "category": "appliances",
+      "title": { "en": "Canister Vacuum Cleaner", "de": "Bodenstaubsauger" },
+      "heightM": 0.76,
+      "widthM": 1.5,
+      "poses": ["parked", "running", "running-pulled"],
+      "clips": ["floor-stroke", "run-and-park"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 700 W canister vacuum cleaner with hose, wand and floor nozzle: shell, lid and grille warm up and 520 W of warm air leave behind the canister.",
+        "de": "Ein Bodenstaubsauger von 700 W mit Schlauch, Rohr und Bodendüse: Schale, Deckel und Gitter erwärmen sich, und 520 W warme Luft treten hinter dem Kessel aus."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "electric-fan-heater",
+      "category": "appliances",
+      "title": { "en": "Electric Fan Heater", "de": "Elektrischer Heizlüfter" },
+      "heightM": 0.31,
+      "widthM": 0.196,
+      "poses": ["off", "heating-low", "heating"],
+      "clips": ["warm-up", "step-down-and-off"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 2000 W portable fan heater in two stages: a 0.032 m3/s warm jet leaves the front grille while grille, cover and housing warm up.",
+        "de": "Ein tragbarer Heizlüfter von 2000 W in zwei Stufen: Ein warmer Strahl von 0,032 m3/s verlässt das vordere Gitter, während Gitter, Haube und Gehäuse sich erwärmen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "operating-table",
+      "category": "furniture",
+      "title": { "en": "Operating Table with Surgical Light", "de": "Operationstisch mit Operationsleuchte" },
+      "heightM": 1.96,
+      "widthM": 2.45,
+      "poses": ["light-off", "light-on", "head-down"],
+      "clips": ["switch-on-warm-up", "tilt-table"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A mobile operating table 2.0 m long with a 0.90 m padded top that tilts head down and a mobile stand whose spring arm carries a 120 W surgical light: the lamp head is the only warm surface.",
+        "de": "Ein fahrbarer Operationstisch von 2,0 m Länge mit einer 0,90 m hohen gepolsterten Platte, die in Kopftieflage kippt, und ein fahrbarer Ständer, dessen Federarm eine 120-W-Operationsleuchte trägt: der Leuchtenkopf ist die einzige warme Fläche."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "chalkboard",
+      "category": "objects",
+      "title": { "en": "Wall-Mounted Classroom Chalkboard", "de": "Wandtafel für den Klassenraum" },
+      "heightM": 1.26,
+      "widthM": 4,
+      "poses": ["leaf-left", "leaf-middle", "leaf-right"],
+      "clips": ["slide-leaf", "sun-on-board"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 4.0 m by 1.2 m classroom board with chalk tray and a 2.0 m front leaf that slides over either back panel; a passive surface that takes the sun.",
+        "de": "Eine Klassenraumtafel von 4,0 m mal 1,2 m mit Kreideablage und einem 2,0 m breiten Vorderflügel, der über jede Rückplatte gleitet; eine passive Fläche, die die Sonne aufnimmt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "kitchen-extractor-hood",
+      "category": "appliances",
+      "title": { "en": "Kitchen Chimney Extractor Hood", "de": "Küchen-Kaminhaube" },
+      "heightM": 0.915,
+      "widthM": 0.5,
+      "poses": ["off", "low", "extracting"],
+      "clips": ["switch-on-warm-up", "step-down-and-off"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.9 m wide wall chimney hood in side elevation that extracts 500 m3/h through the chimney while its motor and lamps release 150 W.",
+        "de": "Eine 0,9 m breite Wand-Kaminhaube in der Seitenansicht, die 500 m3/h durch den Kamin absaugt, während Motor und Lampen 150 W abgeben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "mvhr-unit",
+      "category": "appliances",
+      "title": { "en": "Wall-Mounted Heat-Recovery Ventilation Unit", "de": "Wandmontiertes Lüftungsgerät mit Wärmerückgewinnung" },
+      "heightM": 0.665,
+      "widthM": 0.6,
+      "poses": ["off", "normal", "boost"],
+      "clips": ["boost-spin", "normal-spin", "day-cycle"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.6 m wall unit with an inspection window onto the turning supply impeller and four duct spigots: 110 to 220 m3/h for 38 to 75 W with 85 percent heat recovery, supply air 2.6 K and exhaust air 17.9 K below the room.",
+        "de": "Ein 0,6 m großes Wandgerät mit Schauglas auf das drehende Zuluftlaufrad und vier Kanalstutzen: 110 bis 220 m3/h bei 38 bis 75 W mit 85 Prozent Wärmerückgewinnung, Zuluft 2,6 K und Fortluft 17,9 K unter der Raumluft."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "duct-fan",
+      "category": "appliances",
+      "title": { "en": "Wall-Mounted Axial Extract Fan", "de": "Axial-Wandventilator zur Abluft" },
+      "heightM": 0.22,
+      "widthM": 0.22,
+      "poses": ["off", "low", "high"],
+      "clips": ["spin", "speed-steps"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.22 m square axial wall fan seen face-on with five turning swept blades: 90 m3/h at 14 W on the low stage and 180 m3/h at 28 W at full speed; it replaces the circle-with-blades symbol.",
+        "de": "Ein quadratischer Axial-Wandventilator von 0,22 m in der Frontansicht mit fünf drehenden gepfeilten Flügeln: 90 m3/h bei 14 W auf kleiner Stufe und 180 m3/h bei 28 W auf voller Drehzahl; er ersetzt das Symbol aus Kreis mit Flügeln."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "decentralised-hrv-fan",
+      "category": "appliances",
+      "title": { "en": "Decentralised Reversing Fan with Ceramic Heat Store", "de": "Dezentraler Pendellüfter mit Keramik-Wärmespeicher" },
+      "heightM": 0.26,
+      "widthM": 0.26,
+      "poses": ["off", "extract", "supply"],
+      "clips": ["pendulum-cycle", "reverse-spin"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.26 m square push-pull ventilation unit with its inner cover off: a reversible five-bladed fan in front of a ceramic honeycomb core that stores the heat of the extract air for 70 seconds and gives it back to the supply air for the next 70.",
+        "de": "Ein quadratisches Pendellüftungsgerät von 0,26 m bei abgenommener Innenblende: ein umkehrbarer fünfflügeliger Ventilator vor einem Keramik-Wabenkern, der die Wärme der Abluft 70 Sekunden speichert und in den nächsten 70 Sekunden an die Zuluft zurückgibt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "oil-pumpjack",
+      "category": "machinery",
+      "title": { "en": "Conventional Oil Pumpjack with Nodding Beam", "de": "Klassische Erdölpumpe mit nickendem Balancier" },
+      "heightM": 5.57,
+      "widthM": 9.2,
+      "poses": ["stopped", "mid-stroke", "bottom-of-stroke"],
+      "clips": ["pump-cycle", "start-up"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 9 m wide conventional beam pumpjack whose walking beam nods over a crank with counterweight and a 2.65 m pitman rod: the horsehead rises and falls by 1.9 m at the polished rod, driven by a 30 kW motor and gear reducer that lose about 2.5 kW as heat while it runs.",
+        "de": "Eine 9 m breite klassische Balancier-Erdölpumpe, deren Balancier über eine Kurbel mit Gegengewicht und eine 2,65 m lange Schubstange nickt: der Pferdekopf hebt und senkt die Polierstange um 1,9 m, angetrieben von einem 30-kW-Motor und Getriebe, die im Betrieb etwa 2,5 kW als Wärme verlieren."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "room-thermostat",
+      "category": "appliances",
+      "title": { "en": "Wall-Mounted Room Thermostat with Dial", "de": "Raumthermostat mit Drehknopf für die Wand" },
+      "heightM": 0.09,
+      "widthM": 0.09,
+      "poses": ["idle", "calling", "set-high"],
+      "clips": ["turn-up", "heating-cycle"],
+      "representations": { "50": "authored", "100": "authored", "200": "unavailable", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 90 mm square electronic room thermostat seen face-on with a display window, a heating-call lamp and a set-point dial that turns from 20 to 24 degrees; its electronics take 0.14 W at idle and 0.7 W with the relay closed.",
+        "de": "Ein quadratischer elektronischer Raumthermostat von 90 mm in der Frontansicht mit Anzeigefenster, Heizanforderungs-Lampe und einem Sollwert-Drehknopf, der von 20 auf 24 Grad dreht; die Elektronik nimmt 0,14 W im Leerlauf und 0,7 W bei geschlossenem Relais auf."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "thermostatic-radiator-valve",
+      "category": "appliances",
+      "title": { "en": "Thermostatic Radiator Valve with Setting Knob", "de": "Thermostat-Heizkörperventil mit Einstellknopf" },
+      "heightM": 0.145,
+      "widthM": 0.06,
+      "poses": ["open", "part-open", "closed"],
+      "clips": ["close-down", "open-up"],
+      "representations": { "50": "authored", "100": "authored", "200": "unavailable", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A brass angle valve with a 60 mm thermostat head seen along its axis whose knob turns from the star setting to setting 5: the body stays at the hot supply temperature while the head and the knob warm only with the flow.",
+        "de": "Ein Eckventil aus Messing mit 60 mm großem Thermostatkopf in Achsrichtung gesehen, dessen Knopf von der Frostschutzstufe auf Stufe 5 dreht: der Körper bleibt auf heißer Vorlauftemperatur, während sich Kopf und Knopf nur mit dem Durchfluss erwärmen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tealight",
+      "category": "objects",
+      "title": { "en": "Tealight Candle", "de": "Teelicht" },
+      "heightM": 0.0405,
+      "widthM": 0.038,
+      "poses": ["unlit", "lit", "flicker-peak"],
+      "clips": ["flicker", "light-and-burn"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 38 mm tealight in its aluminium cup whose flame lifts out of the cup when lit, leans and stretches at the flicker peak and releases 35 to 40 W as a small plume.",
+        "de": "Ein Teelicht von 38 mm im Aluminiumschälchen, dessen Flamme beim Anzünden aus dem Schälchen wächst, sich im Flackermaximum neigt und streckt und 35 bis 40 W als kleine Fahne abgibt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "shower-head",
+      "category": "appliances",
+      "title": { "en": "Wall-Mounted Hand Shower on Riser Rail", "de": "Handbrause an Brausestange" },
+      "heightM": 1.12,
+      "widthM": 0.23,
+      "poses": ["off", "running", "eco"],
+      "clips": ["turn-on-and-run", "eco-and-off"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.11 m hand shower on a 0.7 m riser rail with a hose loop to the wall elbow: 12 L/min (eco 9 L/min) of 38 degC water as a warm spray with a vapour plume.",
+        "de": "Eine Handbrause von 0,11 m an einer 0,7 m langen Brausestange mit Schlauchbogen zum Wandanschluss: 12 L/min (Sparmodus 9 L/min) Wasser von 38 degC als warmer Strahl mit Dampffahne."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "gas-hob",
+      "category": "appliances",
+      "title": {
+        "en": "Domino Gas Hob",
+        "de": "Domino-Gaskochfeld"
+      },
+      "heightM": 0.088,
+      "widthM": 0.3,
+      "poses": [
+        "off",
+        "simmer",
+        "high"
+      ],
+      "clips": [
+        "flicker",
+        "light-and-burn"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.30 m domino gas hob whose flame crown lifts out of the plate when lit, whose pan support glows and which releases about 2.5 kW.",
+        "de": "Ein 0,30 m breites Domino-Gaskochfeld, dessen Flammenkranz beim Zünden aus der Platte wächst, dessen Pfannenträger aufglüht und das rund 2,5 kW abgibt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "cooking-pot",
+      "category": "objects",
+      "title": {
+        "en": "Stock Pot with Boiling Water",
+        "de": "Kochtopf mit kochendem Wasser"
+      },
+      "heightM": 0.1,
+      "widthM": 0.25,
+      "poses": [
+        "cold",
+        "heating",
+        "boiling"
+      ],
+      "clips": [
+        "heat-to-boil",
+        "boil"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.22 m stock pot cut open through its axis with 3 L of water that warms to the boil, bobs and sends up a steam plume.",
+        "de": "Ein 0,22 m großer, durch die Achse aufgeschnittener Kochtopf mit 3 l Wasser, das sich bis zum Sieden erwärmt, wogt und eine Dampffahne aufsteigen lässt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "electric-kettle",
+      "category": "appliances",
+      "title": {
+        "en": "Electric Jug Kettle",
+        "de": "Elektrischer Wasserkocher"
+      },
+      "heightM": 0.24,
+      "widthM": 0.245,
+      "poses": [
+        "off",
+        "heating",
+        "boiling"
+      ],
+      "clips": [
+        "boil",
+        "rattle"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.7 L jug kettle on its base that heats, boils with steam at the spout and rattles its lid.",
+        "de": "Ein 1,7-l-Wasserkocher auf seinem Sockel, der heizt, mit Dampf am Ausguss kocht und mit dem Deckel klappert."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "scroll-compressor",
+      "category": "machinery",
+      "title": {
+        "en": "Hermetic Scroll Compressor",
+        "de": "Hermetischer Scrollverdichter"
+      },
+      "heightM": 0.43,
+      "widthM": 0.3,
+      "poses": [
+        "off",
+        "part-load",
+        "full-load"
+      ],
+      "clips": [
+        "spin",
+        "start-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.43 m hermetic scroll compressor with a sight glass on the orbiting scroll, a hot discharge dome and a cold suction stub.",
+        "de": "Ein 0,43 m hoher hermetischer Scrollverdichter mit Schauglas auf die orbitierende Spirale, heißem Druckdom und kaltem Saugstutzen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "expansion-valve",
+      "category": "machinery",
+      "title": {
+        "en": "Thermostatic Expansion Valve",
+        "de": "Thermostatisches Expansionsventil"
+      },
+      "heightM": 0.09,
+      "widthM": 0.19,
+      "poses": [
+        "closed",
+        "half-open",
+        "open"
+      ],
+      "clips": [
+        "modulate",
+        "open-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A brass thermostatic expansion valve with a sensing bulb whose outlet and body run cold while the liquid inlet stays warm.",
+        "de": "Ein thermostatisches Expansionsventil aus Messing mit Fühler, dessen Ausgang und Körper kalt laufen, während der Flüssigkeitseingang warm bleibt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "finned-heat-exchanger",
+      "category": "machinery",
+      "title": {
+        "en": "Finned Tube Coil",
+        "de": "Lamellenrohr-Register"
+      },
+      "heightM": 0.52,
+      "widthM": 0.205,
+      "poses": [
+        "cold",
+        "idle",
+        "hot"
+      ],
+      "clips": [
+        "reverse",
+        "warm-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.52 m finned tube coil in section that is cold as evaporator or cooling coil and hot as condenser or heating coil.",
+        "de": "Ein 0,52 m hoher Lamellenrohr-Register im Schnitt, der als Verdampfer oder Kühler kalt und als Verflüssiger oder Erhitzer heiß ist."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sorption-wheel",
+      "category": "machinery",
+      "title": {
+        "en": "Desiccant Sorption Wheel",
+        "de": "Sorptionsrad"
+      },
+      "heightM": 0.62,
+      "widthM": 0.62,
+      "poses": [
+        "off",
+        "slow",
+        "rated"
+      ],
+      "clips": [
+        "spin",
+        "start-and-run"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.62 m desiccant wheel face-on with a turning honeycomb matrix and a hot regeneration sector.",
+        "de": "Ein 0,62 m großes Sorptionsrad in der Frontansicht mit drehender Wabenmatrix und heißem Regenerationssektor."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "plate-heat-exchanger",
+      "category": "machinery",
+      "title": {
+        "en": "Cross-Flow Plate Heat Exchanger",
+        "de": "Kreuzstrom-Plattenwärmeübertrager"
+      },
+      "heightM": 0.634,
+      "widthM": 0.62,
+      "poses": [
+        "off",
+        "partial",
+        "full"
+      ],
+      "clips": [
+        "bypass",
+        "warm-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.5 m by 0.6 m cross-flow plate heat exchanger in section with a hatched plate pack, four collars and a bypass damper flap.",
+        "de": "Ein 0,5 m mal 0,6 m großer Kreuzstrom-Plattenwärmeübertrager im Schnitt mit schraffiertem Plattenpaket, vier Stutzen und Bypass-Klappe."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "solar-thermal-collector",
+      "category": "machinery",
+      "title": {
+        "en": "Flat-Plate Solar Thermal Collector",
+        "de": "Flachkollektor (Solarthermie)"
+      },
+      "heightM": 1.4091,
+      "widthM": 1.6957,
+      "poses": [
+        "night-idle",
+        "operating",
+        "stagnation"
+      ],
+      "clips": [
+        "stagnation",
+        "start-up",
+        "operating"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 2.0 m by 1.0 m glazed flat-plate solar collector tilted by 35 degrees on a steel stand, whose absorber heats to stagnation in the sun and cools while the pump runs.",
+        "de": "Ein verglaster Flachkollektor von 2,0 m mal 1,0 m, 35 Grad geneigt auf einem Stahlgestell, dessen Absorber in der Sonne bis zum Stillstand heiß wird und bei laufender Pumpe abkühlt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "evaporative-humidifier",
+      "category": "machinery",
+      "title": {
+        "en": "Evaporative Cooling Humidifier",
+        "de": "Verdunstungsbefeuchter"
+      },
+      "heightM": 0.6,
+      "widthM": 0.5,
+      "poses": [
+        "dry",
+        "wetting",
+        "running"
+      ],
+      "clips": [
+        "drip",
+        "start-wetting"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.5 m by 0.6 m evaporative humidifier cut open: drops fall over a fluted pad that cools below the air temperature.",
+        "de": "Ein aufgeschnittener Verdunstungsbefeuchter von 0,5 m mal 0,6 m: Tropfen fallen über eine Wellenmatte, die unter die Lufttemperatur abkühlt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "gas-meter",
+      "category": "appliances",
+      "title": { "en": "Bellows Gas Meter with Counter and Test Dial", "de": "Balgengaszähler mit Zählwerk und Prüfrad" },
+      "heightM": 0.27,
+      "widthM": 0.24,
+      "poses": ["off", "low-flow", "rated-flow"],
+      "clips": ["run", "day-profile"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.24 m by 0.27 m G4 bellows gas meter in front view with two union-nut stubs, an eight-digit counter and a test dial whose pointer turns with the gas flow; it replaces the dial-and-needle meter symbol.",
+        "de": "Ein Balgengaszähler G4 von 0,24 m mal 0,27 m in der Frontansicht mit zwei Rohrstutzen mit Überwurfmuttern, einem achtstelligen Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht; er ersetzt das Zählersymbol aus Zifferblatt und Nadel."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "electricity-meter",
+      "category": "appliances",
+      "title": { "en": "Electromechanical Electricity Meter with Rotor Disc", "de": "Elektromechanischer Stromzähler mit Läuferscheibe" },
+      "heightM": 0.285,
+      "widthM": 0.17,
+      "poses": ["idle", "half-load", "full-load"],
+      "clips": ["run", "daily-load"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.17 m by 0.285 m Ferraris electricity meter in front view with a six-digit counter and a window onto the aluminium rotor disc whose dark mark turns with the load; it replaces the meter-with-bolt symbol.",
+        "de": "Ein Ferraris-Stromzähler von 0,17 m mal 0,285 m in der Frontansicht mit sechsstelligem Zählwerk und einem Fenster auf die Läuferscheibe aus Aluminium, deren dunkle Markierung sich mit der Last dreht; er ersetzt das Zählersymbol mit Blitz."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "ceiling-diffuser",
+      "category": "appliances",
+      "title": { "en": "Four-Way Square Ceiling Diffuser", "de": "Quadratischer Vierwege-Deckenauslass" },
+      "heightM": 0.12,
+      "widthM": 0.595,
+      "poses": ["off", "half", "design"],
+      "clips": ["switch-on", "modulate"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.595 m square four-way ceiling diffuser in side view with a flange flush with the ceiling, stepped cones and a round collar; it supplies 300 m3/h of 18 degC air that spreads left and right along the ceiling and replaces the slotted grille strip.",
+        "de": "Ein quadratischer Vierwege-Deckenauslass von 0,595 m in der Seitenansicht mit einem Flansch bündig zur Decke, Kegelstufen und einem runden Kragen; er bläst 300 m3/h Luft von 18 °C ein, die sich links und rechts an der Decke entlang ausbreitet, und ersetzt den geschlitzten Gitterstreifen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "storage-crate-stack",
+      "category": "objects",
+      "title": { "en": "Stack of Plastic Storage Crates", "de": "Stapel aus Kunststoff-Lagerkisten" },
+      "heightM": 1.5,
+      "widthM": 0.62,
+      "poses": ["high", "half", "low"],
+      "clips": ["unload-stack", "load-stack"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "Five 600 by 400 by 300 mm plastic crates that stack loaded to 1.5 m or nest empty to 0.62 m, so the pile changes height rather than standing fixed.",
+        "de": "Fünf Kunststoffkisten von 600 mal 400 mal 300 mm, die beladen auf 1,5 m stapelbar und leer auf 0,62 m ineinanderstellbar sind, sodass der Stapel seine Höhe ändert statt fest zu stehen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "server-rack",
+      "category": "appliances",
+      "title": { "en": "Server Rack, 42U", "de": "Serverschrank, 42 HE" },
+      "heightM": 2,
+      "widthM": 0.6,
+      "poses": ["idle", "full-load", "off"],
+      "clips": ["load-ramp", "power-up"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 42U 19-inch rack with perforated front door, six servers, a storage array and a switch: 1.5 kW of heat at idle and 5 kW at full load, almost all of it in the air the fans blow from front to rear.",
+        "de": "Ein 19-Zoll-Schrank mit 42 HE, gelochter Fronttür, sechs Servern, einem Speicher und einem Switch: 1,5 kW Wärme im Leerlauf und 5 kW bei Volllast, fast alles in der Luft, die die Lüfter von vorn nach hinten blasen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "circulation-pump",
+      "category": "appliances",
+      "title": { "en": "Heating Circulation Pump", "de": "Heizungs-Umwälzpumpe" },
+      "heightM": 0.15,
+      "widthM": 0.18,
+      "poses": ["off", "low", "high"],
+      "clips": ["run-high", "run-low", "start-and-throttle"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A wet-rotor heating circulator on a pipe section, seen along its shaft, with a turning rotor indicator in a window: 5 W on the low stage and 45 W at full speed, about 30 W of it warming the room.",
+        "de": "Eine Nassläufer-Heizungsumwälzpumpe in einem Rohrstück, gesehen längs der Welle, mit drehender Rotoranzeige im Fenster: 5 W auf kleiner Stufe und 45 W bei voller Drehzahl, davon wärmen etwa 30 W den Raum."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "gas-boiler",
+      "category": "appliances",
+      "title": { "en": "Wall-Hung Condensing Gas Boiler", "de": "Wandhängender Gas-Brennwertkessel" },
+      "heightM": 0.72,
+      "widthM": 0.44,
+      "poses": ["off", "heating", "hot-water"],
+      "clips": ["heating-cycle", "hot-water-priority", "steady-burn"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 20 kW wall-hung condensing boiler with a visible burner flame behind its sight glass: 14 kW for heating and 20 kW for hot water, while its casing releases only about 85 W and the flue gas carries about 430 W (2.1 % of the input) at 46 K above the room.",
+        "de": "Ein wandhängender 20-kW-Brennwertkessel mit sichtbarer Brennerflamme hinter dem Schauglas: 14 kW zum Heizen und 20 kW für Warmwasser, während sein Gehäuse nur etwa 85 W abgibt und das Abgas etwa 430 W (2,1 % der Zufuhr) mit 46 K über dem Raum abführt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hot-water-cylinder",
+      "category": "appliances",
+      "title": { "en": "Hot-Water Storage Cylinder, 200 L", "de": "Warmwasser-Standspeicher, 200 l" },
+      "heightM": 1.48,
+      "widthM": 0.66,
+      "poses": ["cold", "half-charged", "charged"],
+      "clips": ["charge-up", "draw-off"],
+      "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
+      "symbols": [],
+      "analytics": ["thermal", "transport", "structural"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "distinction": {
+        "en": "A 0.6 m by 1.48 m insulated 200 L storage tank whose four jacket quarters show the stratification: cold, a hot upper half over a cold lower half, or fully charged with a 76 W standby loss.",
+        "de": "Ein gedämmter 200-l-Speicher von 0,6 m mal 1,48 m, dessen vier Mantelviertel die Schichtung zeigen: kalt, eine heiße obere Hälfte über einer kalten unteren oder voll geladen mit 76 W Bereitschaftsverlust."
       },
       "completion": "authored"
     }

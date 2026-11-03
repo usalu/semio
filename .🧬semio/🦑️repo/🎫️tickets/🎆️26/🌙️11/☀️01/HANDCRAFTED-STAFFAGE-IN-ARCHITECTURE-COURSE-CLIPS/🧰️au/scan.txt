@@ -1,0 +1,658 @@
+clip+helper files: 188 (helpers 2)
+
+## 1 missing cast ids (literal not in manifest)
+missing count 0
+
+## 2 energy clip casts that are not thermal and not allowlisted (rule_b)
+view violations 0
+
+## 3 manifest orphans (no clip/helper reference)
+orphans (no clip, helper or non-test reference):
+orphan count 0
+referenced only by tests (non-orphan):
+  NONCLIP bim-consistency-decider in ['🏗️bim/🎬️clip/🔗️consistency/🐍️.py']
+  NONCLIP cooling-heating-comparison-laptop in ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py']
+  NONCLIP cooling-heating-comparison-laptop-summer in ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py']
+  NONCLIP cooling-heating-comparison-toaster-summer in ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py']
+  NONCLIP cooling-internal-gains-jogger in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-lamp-dimmed in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-laptop in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-laptop-closed in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-office-chair in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-seated-worker in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-server-rack in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-sleeper in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-standing in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-internal-gains-walker in ['⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP cooling-summer-strategy-blind in ['⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py']
+  NONCLIP demand-certificate-sleeper in ['⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py']
+  NONCLIP demand-primary-energy-tree in ['⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py']
+  NONCLIP heating-calculation-radiator in ['⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py']
+  NONCLIP heating-calculation-radiator-mirrored in ['⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py']
+  NONCLIP heating-calculation-thermostat in ['⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py']
+  NONCLIP physics-fundamentals-clerk in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-compressor in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-condenser in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-evaporator in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-hob in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-kettle in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-pot in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-shower in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-vacuum in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP physics-fundamentals-valve in ['⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py']
+  NONCLIP shared-lamp-summer in ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py', '⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py']
+  NONCLIP shared-person-fanning in ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py', '⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py']
+  NONCLIP shared-person-relaxed-line in ['🏗️bim/🎬️clip/🔌️exchange/🐍️.py', '🏗️bim/🎬️clip/🔗️consistency/🐍️.py']
+  NONCLIP shared-radiator-thermostat-front in ['⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py', '⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py']
+  NONCLIP shared-watt-heater in ['⚡️energy/🏗️authoring/🎨️visuals/🐍️.py']
+  NONCLIP shared-watt-laptop in ['⚡️energy/🏗️authoring/🎨️visuals/🐍️.py']
+  NONCLIP shared-watt-seated in ['⚡️energy/🏗️authoring/🎨️visuals/🐍️.py']
+  NONCLIP shared-watt-toaster in ['⚡️energy/🏗️authoring/🎨️visuals/🐍️.py']
+  NONCLIP ventilation-natural-radiator-off in ['⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py']
+  NONCLIP ventilation-need-occupant-mirrored in ['⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py']
+  NONCLIP ventilation-volume-cook in ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+  NONCLIP ventilation-volume-office-worker in ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+  NONCLIP ventilation-volume-student in ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+manifest casts 97, used by clips/helpers 54
+
+## 4 stale allowlist entries
+ok-A ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py::_north_window
+ok-A ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py::_year_clock
+ok-A ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py::_valve_dial
+ok-A ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py::_window_wall
+ok-A ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py::_lattice
+ok-A ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::person_bars
+ok-A 🎯️optimization/🎬️clip/🎲️sampling/🐍️.py::_meters
+ok-A 🎯️optimization/🎬️clip/🏆️pareto/🐍️.py::_payback_table
+ok-A 🎯️optimization/🎬️clip/🧪️experiments/🐍️.py::_table
+ok-A 📊️excel/🎬️clip/📋️program/🐍️.py::table_dressing
+ok-A 🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py::present_trees
+ok-A 🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py::_table
+ok-A 🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py::_table
+ok-A 🦗️grasshopper/🎬️clip/🧱️model/🐍️.py::window
+ok-B shared-desk used by ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py', '⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py']
+STALE-B unused by any clip: cooling-internal-gains-office-chair
+ok-B cooling-heating-comparison-table used by ['⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py']
+ok-B ventilation-volume-blackboard used by ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+ok-B ventilation-volume-crates-low used by ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+ok-B ventilation-volume-crates-half used by ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+ok-B ventilation-volume-crates-high used by ['⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py']
+STALE-B unused by any clip: demand-primary-energy-tree
+
+## 5 functions calling primitives without any staffage call (* = object noun)
+  ⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:408 construct Line,Rectangle
+  ⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:103 _house Polygon
+  ⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:161 construct Circle
+  ⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:483 construct Dot,Polygon
+  ⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:192 _step Circle
+  ⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:189 construct SurroundingRectangle
+  ⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:887 construct Dot,Line,RoundedRectangle
+  ⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:687 light_rays Line
+  ⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:117 _build_house Polygon
+  ⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:226 construct Line,Polygon
+  ⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:376 construct Rectangle
+  ⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:417 stack Rectangle
+  ⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:217 construct RoundedRectangle,SurroundingRectangle
+  ⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:392 construct Circle,Line,RoundedRectangle,SurroundingRectangle,Triangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:174 _port Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:203 _live_flow Ellipse
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:230 _temp_port RoundedRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:270 construct SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:447 construct Line,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:925 construct Circle,Dot,Line,Rectangle,SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:588 seg Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:748 loss_bar Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:949 tube Line,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:958 disc Circle
+  ⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:170 _handover SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:242 construct Dot,Line,Rectangle,RoundedRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:432 construct Polygon
+  ⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:273 tick Line
+  ⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:382 season_card RoundedRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:133 _cube_faces Polygon
+  ⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:585 construct Line,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:611 column Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:618 fill Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:179 _poly Polygon
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:224 _pf_house Line,Polygon
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:314 _n_scale Line
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:345 _scale_marks Dot,Line
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:371 _mini_room Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:474 construct Line,Polygon,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:905 construct Line,Rectangle,RoundedRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:528 back Line,Polygon
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:590 prism Line,Polygon
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:928 area_rect Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:1000 card RoundedRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:112 _sym_card RoundedRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:151 _bar_stack Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:156 build Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:245 construct Line,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:403 construct Line,SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py:20 helpers Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:139 _badge SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:179 _vbar Rectangle
+* ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:245 _valve_dial Line
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:254 _energy_row Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:184 fill Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:247 mark Line
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:256 build Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:329 construct Rectangle,SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:566 construct Rectangle,SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:791 construct Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:990 construct Line,SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1218 construct Dot,Line,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1428 construct Dot,Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1025 _legend SurroundingRectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1249 _zone Rectangle
+  ⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1269 _key Line
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:152 window_frame Polygon
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:206 radiation_ray Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:343 animate_flows Dot,Ellipse
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:444 flow_animation Dot,Ellipse
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:504 meter Rectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:589 cross_mark Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:599 dim_arrow Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:645 beam Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:687 ripples Arc
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:777 _section_material Rectangle
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:784 window_glyph Line,Polygon
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:811 window_opening Line,Polygon
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:845 house_section Polygon
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:897 room_section Rectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:978 cloud_trail Line
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:987 clock_glyph Circle,Line
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1002 tracked_clock Dot,Line
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1019 thermometer_glyph Circle,Line,Rectangle,RoundedRectangle
+* ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1050 energy_tank Rectangle,RoundedRectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1090 droplets Ellipse
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1211 side_labels Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1265 stacked_bar Rectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1298 labeled_axes Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1353 equation_row Rectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1401 highlight_param SurroundingRectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1586 _math_render Dot,Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:701 update Arc
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1010 hand Line
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1032 column Circle,Rectangle
+  ⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1061 fill Rectangle
+  ⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🐍️.py:96 _box Rectangle
+  ⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🎬️scene/🐍️.py:19 cursor_shape Polygon
+  ⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🖌️render/🐍️.py:19 _icon Rectangle
+  ⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:322 _chimney Line
+  ⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:336 _ratio_row Line,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:386 _product_row Line,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:560 construct Rectangle
+  ⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:745 construct Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:222 _right_axis Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:234 _cell Rectangle
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:260 _trace Dot
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:297 _legend Square
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:340 _level_flow Dot
+* ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:360 _north_window Polygon,Rectangle
+* ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:478 _year_clock Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:262 build Dot
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:483 hand Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:710 construct Rectangle
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:943 construct Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1070 _orientation Rectangle
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1130 construct Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1255 _degree_area Polygon
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1285 _heating_strips Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1259 build Polygon
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1291 flush Line
+  ⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1266 flush Polygon
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:151 _card RoundedRectangle
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:187 _kw_ticks Line
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:206 _hour_labels Line
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:228 _partial_area Polygon
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:298 _rate_stream Ellipse
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:416 construct Dot,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:611 construct Dot,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:871 construct Dot,Polygon
+  ⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:1063 construct Dot,Line,Polygon
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:159 _ground Line
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:169 _ring RoundedRectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:250 _supply_flow Dot
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:309 _bar_rects Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:329 _ghost Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:918 construct SurroundingRectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1143 construct Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:648 chain_marks Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:662 factor_bar Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:665 build Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:100 _document Line,Rectangle,RoundedRectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:123 _certificate Line
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:138 _class_strip Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:185 _pointer Circle,Polygon
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:204 _class_badge Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:213 _end_bar Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:230 _month_bars Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:189 build Circle,Polygon
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:216 build Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:233 build Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:331 construct Line
+  ⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:528 construct Rectangle,SurroundingRectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:150 _home Polygon
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:180 _envelope Polygon
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:280 _overhangs Line
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:298 _lead Line
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:311 _surfaces Line
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:328 _card RoundedRectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:613 construct Dot,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:932 construct Line,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1212 construct Line,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:952 block Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1237 column Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1249 gap Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1238 build Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:156 _stream Dot,Ellipse
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:633 _room_row Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:921 _stack Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:940 _class_scale Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:953 _class_chip RoundedRectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:981 _tile RoundedRectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:304 construct Circle,Dot,Line,Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:925 build Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:395 _bar Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:400 _segments Rectangle
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:424 _legend Dot
+  ⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:550 _zone Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:221 _block Polygon
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:227 _section_room Line,Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:287 _patch_mob Polygon
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:465 _bands Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:584 _glazing Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:374 construct Line
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:494 construct Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:737 construct Arc
+  ⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:1097 construct Rectangle,SurroundingRectangle
+  ⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:127 _segment Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:129 build Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:162 construct Line,Polygon,Rectangle,RoundedRectangle
+  ⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:126 _light_rays Line
+  ⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:219 _house_air Polygon
+  ⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:291 construct Dot
+  ⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:644 construct Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:230 _house Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:248 _envelope_paths Line
+* ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:271 _window_wall Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:438 construct Line,Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:819 construct Line,Polygon,Square,SurroundingRectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1306 construct Line,Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:551 filled_area Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:872 band Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1350 bar Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:186 _flow_lines Line
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:191 _span Line
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:214 _brick_block Line,Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:230 _slab Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:269 _zoom_inset Circle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:299 _ground_line Line
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:315 _envelope_house Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:375 construct Circle,Dot,Line,Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:557 construct Dot,Rectangle,SurroundingRectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:674 construct Dot,Line,Rectangle,Square,SurroundingRectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:853 construct Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1196 construct Polygon,Rectangle,Square
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:786 profile Dot,Line
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1263 row_parts Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1275 strips Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:98 _box Polygon
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:130 _night_sky Dot
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:139 _ground Line
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:234 _loop_flow Ellipse
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:400 _layer Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:413 _layer_legend Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:547 _lens Circle,Line,Rectangle
+* ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:567 _lattice Dot,Line
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:791 _room_air Dot
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1357 _wall_section Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:466 construct Circle,Line
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:554 band Rectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:616 construct Circle,Line
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:726 construct Rectangle,RoundedRectangle
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:936 construct Dot
+  ⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1171 construct Line,Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:185 _log_ladder Line
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:239 _ladder_marks Dot,Line
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:285 _paced_flow Dot
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:322 _beam Line
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:387 _ripples Arc
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:397 update Arc
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:944 construct Dot,Line,Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1346 construct Circle,Line,Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2327 construct Line,Polygon,Square
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3101 construct Square,SurroundingRectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:661 area Polygon
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:857 year_area Polygon
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1052 plugged_cable Dot
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1357 form_bar Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1422 bar Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1426 lost_bar Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1600 winter_bars Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1633 summer_bars Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1817 block Rectangle
+  ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2905 droplet Circle,Dot
+* ⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2946 person_bars Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:236 __init__ Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:298 _ticks Line
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:329 _member Dot,Line
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:525 _build Circle,Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:755 build_panel Line
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:843 value_strip Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:874 materials_overlay Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:895 marker Square
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:910 bar_row Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:919 highlight Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1009 block_daylight Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1089 screen_cards Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1140 naive_rows Circle,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1350 screen_board Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1401 index_axis Line
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1453 screen_sweep Dot,Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1527 screen_range Circle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1590 slot_frame Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1668 screen_limits Dot,Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:772 dimension Line
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:847 build Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:878 build Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1013 build Line,Rectangle
+  🎯️optimization/🎬️clip/⚖️index/🐍️.py:1511 marker Dot,Line
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:261 column Line
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:502 _ring_polygon Polygon
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:1330 _leader Line
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:837 facade Line,Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:881 plan Circle,Line,Polygon
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:939 energy_bars Line,Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:1142 thumbnail Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:1182 pulse SurroundingRectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:1192 ramp_strip Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:599 rect Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:605 build Circle,Polygon,Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:843 build Line,Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:916 build Line,Polygon
+  🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py:961 build Rectangle
+  🎯️optimization/🎬️clip/🎨️visuals/🐍️.py:174 live_marker Circle,Dot
+  🎯️optimization/🎬️clip/🎨️visuals/🐍️.py:189 build Circle,Dot
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:161 _shape Square,Triangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:217 _plane_group Line,Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:235 _bars Line,Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:280 _card Line
+* 🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:304 _meters Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:376 _pips Square
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:430 _sweep Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:495 _slider Dot,Line
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:509 _key Square
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:518 _tile Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:552 _intro Rectangle,SurroundingRectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:604 _grid Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:645 _growth Square
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:712 _orientation_glyph Circle,Line,Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:721 _random Circle,Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:810 _lhs Line,Rectangle,Square
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:916 _reveal Circle,Dot,Line
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:985 _compare Circle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:1011 _region Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:247 build Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:306 gauge Rectangle
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:378 build Square
+  🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:502 build Dot
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:309 _legend Rectangle
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:339 _bar_legend Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:422 _tile Rectangle
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:501 _pareto_intro Circle
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:579 _anatomy Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:626 _pareto_dominance Circle,Rectangle
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:658 _sweep Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:704 _path_rows Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:728 _pareto_front Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:835 _payback_chart Dot,Line
+* 🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:911 _payback_table Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:934 _pareto_walk Circle,Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:1006 _pareto_daylight Circle
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:1077 _pareto_choice Circle,Dot,Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:346 build Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:710 build Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:839 build Dot,Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:916 build Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:1084 iso Circle,Line
+  🎯️optimization/🎬️clip/🏆️pareto/🐍️.py:1098 slider Dot,Line
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:332 _variant Line
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:371 _focus Rectangle
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:388 _strip Dot,Line
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:470 _bands Polygon
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:602 _phase_extrema Circle,Square
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:661 _compare Circle,Line
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:728 _phase_constraint Polygon,Square
+  🎯️optimization/🎬️clip/📉️extrema/🐍️.py:776 _phase_scope Circle,Dot
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:171 _rect Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:319 _bar Dot,Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:360 _slider Line,Triangle
+* 🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:374 _table Line
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:394 _badge Circle,Square
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:420 _veil Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:434 _signs Circle,Line
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:461 _mark Dot,Square
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:511 _question Line,Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:537 _cloud Circle,Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:596 _plot Dot,Line
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:619 _saving Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:647 _savings Line
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:686 _effects Circle,Square
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:739 _column_tags Line
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:750 _waterfall Line,Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:826 _curvature Circle,Dot,Line,Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:911 _cube Dot,Line
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:968 _answer Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:323 build Dot,Rectangle
+  🎯️optimization/🎬️clip/🧪️experiments/🐍️.py:755 build Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:209 _tape Line,Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:233 _pointer Circle,Dot
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:249 _painted Dot
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:365 _card Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:407 _lens Circle,Line
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:424 _prepare Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:592 _tape_legend Square
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:600 _compass Circle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:610 _pattern Circle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:678 _dot_live Circle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:712 _hull Polygon
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:816 _breeding Circle,Polygon
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:877 _children Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:950 _genetic_result Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:968 _compare Circle,Dot,Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:1030 _stopping Circle,Line
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:1075 _proof Circle,Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:1108 _slider Circle,Line
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:1118 _tools Line,Rectangle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:1145 _close Circle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:235 build Circle,Dot
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:683 build Circle
+  🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py:992 build Dot
+  🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📋️plan/🐍️.py:496 _plan_ramps Dot
+  🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧊️axon/🐍️.py:667 _bubble Circle
+  🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧊️axon/🧪️ground/🐍️.py:101 test_native_context_does_not_fill_real_void_and_floor_masks_cellar Square
+  🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py:383 leader Dot
+  🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py:404 badge RoundedRectangle
+  🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py:413 north_arrow Circle
+  🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🧩️surfaces/🧪️coverage/🐍️.py:7 test_native_cell_coverage_matches_independent_unsplit_cairo_reference Polygon
+  🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🧩️surfaces/🧪️coverage/🐍️.py:12 rectangle Polygon
+  🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🧪️assembly/🐍️.py:91 test_native_cairo_pixels_order_and_copy_isolation Rectangle
+  🏗️bim/🎬️clip/🎨️visuals/🧮️analysis/🐍️.py:204 analysis_view Circle,Dot
+  🏗️bim/🎬️clip/🎨️visuals/🧮️analysis/🐍️.py:365 tributary_view Dot
+  🏗️bim/🎬️clip/🎨️visuals/🧮️analysis/🐍️.py:453 mesh_view Dot
+  🏗️bim/🎬️clip/🎨️visuals/🧮️analysis/🧪️profiles/🐍️.py:14 test_true_shape_follows_rectangular_section_rather_than_bounding_circle Polygon
+  🏗️bim/🎬️clip/🎨️visuals/🧮️analysis/🧪️profiles/🐍️.py:30 test_analytical_plan_marker_uses_the_actual_member_section Polygon
+  🏗️bim/🎬️clip/🎨️visuals/🧾️panels/🐍️.py:27 frame_box RoundedRectangle
+  🏗️bim/🎬️clip/🎨️visuals/🧾️panels/🐍️.py:71 build RoundedRectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:227 _loupe Circle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:274 _card RoundedRectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:297 _trail_group Dot
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:313 _key_chips Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:325 _slot Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:397 _plan_detail Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:476 _wall_cut Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:518 _beat_section Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:608 _row_axis Dot
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:716 _beat_derived Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:766 _board_section Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:796 _beat_update Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:868 _layer_rows Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:970 _beat_sweep Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:1028 _beat_takeoff Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:1074 _beat_volume Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:1156 _beat_regenerate Rectangle
+  🏗️bim/🎬️clip/👁️representations/🐍️.py:1167 _beat_copies Rectangle,SurroundingRectangle
+  🏗️bim/🎬️clip/📊️information/🐍️.py:250 _rows Dot
+  🏗️bim/🎬️clip/📊️information/🐍️.py:509 _column Circle
+  🏗️bim/🎬️clip/📊️information/🐍️.py:561 _route Dot
+  🏗️bim/🎬️clip/📊️information/🐍️.py:568 present_information Dot
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:72 _ring SurroundingRectangle
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:83 _wire Dot
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:95 _route Dot
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:110 _backed RoundedRectangle
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:303 _bay Circle
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:354 _strip Dot
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:412 _beat_interface Circle
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:447 _beat_semantic Square
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:494 _beat_properties Dot
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:600 _file SurroundingRectangle
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:675 _beat_assumptions Square
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:716 _load_path Dot
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:985 _beat_domain SurroundingRectangle
+  🏗️bim/🎬️clip/🔌️exchange/🐍️.py:1010 _beat_check Circle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:294 backed RoundedRectangle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:394 build_up Rectangle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:431 drops Dot
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:444 leak_marks Circle,Dot,Ellipse,Rectangle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:480 zoom_lines Circle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:488 detail_frame Rectangle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:591 _leakpath Ellipse
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:620 _change Circle
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:739 mini_cell Dot
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:823 delta_cells Circle,Dot
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:881 link_object Dot
+  🏗️bim/🎬️clip/🔗️consistency/🐍️.py:1018 _retranslate Square
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:453 _buildup Rectangle
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:534 _services Dot
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:577 _schema Rectangle
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:624 _federation Dot,Line
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:755 _check Circle
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:840 _members Circle
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:876 _midsurface Circle,Dot
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:1050 _loss Dot,Line
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:1088 _properties Circle,Dot
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:1155 _kind_chart Rectangle
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:1177 _trace Line
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:559 drops Dot
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:901 detail Dot
+  🏗️bim/🎬️clip/🧩️models/🐍️.py:1171 bars Rectangle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:179 _chip RoundedRectangle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:241 _xray Circle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:277 _plan_lit Circle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:410 _occurrences Circle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:513 _pilot Circle,Dot
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:689 _concrete_axon Line
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:779 _values Circle,Dot
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:847 _storey_chip RoundedRectangle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:1026 _exchange Dot
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:279 build Circle
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:517 build Circle,Dot
+  🏗️bim/🎬️clip/🧬️objects/🐍️.py:694 build Line
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:241 _face_flyers Square
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:276 _build_capsule Ellipse
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:312 _arrow Dot
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:372 _chain RoundedRectangle
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:423 present_energy Dot,Rectangle
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:692 _annual_tiles RoundedRectangle
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:813 _recap Dot
+  📊️excel/🎬️clip/⚡️energy/🐍️.py:696 tile RoundedRectangle
+  📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py:227 _tabs Circle
+  📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py:427 range Rectangle
+  📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py:603 _title_bar Circle,Dot,RoundedRectangle
+  📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py:631 _ribbon RoundedRectangle
+  📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py:810 xl_trace Dot
+  📊️excel/🎬️clip/📋️program/🐍️.py:348 plan Line,Rectangle
+  📊️excel/🎬️clip/📋️program/🐍️.py:390 legend Square
+* 📊️excel/🎬️clip/📋️program/🐍️.py:516 table_dressing Rectangle
+  📊️excel/🎬️clip/📋️program/🐍️.py:602 act_areas Rectangle
+  📊️excel/🎬️clip/📋️program/🐍️.py:688 product_tiles Square
+  📊️excel/🎬️clip/📋️program/🐍️.py:699 below_arrow Dot
+  📊️excel/🎬️clip/📋️program/🐍️.py:707 act_edit Circle,Rectangle
+  📊️excel/🎬️clip/📍️references/🐍️.py:119 _shatter Polygon
+  📊️excel/🎬️clip/📍️references/🐍️.py:144 _padlock Arc,RoundedRectangle
+  📊️excel/🎬️clip/📍️references/🐍️.py:194 _card RoundedRectangle
+  📊️excel/🎬️clip/📍️references/🐍️.py:252 _cursor Rectangle
+  📊️excel/🎬️clip/📍️references/🐍️.py:709 _bracket Line
+  📊️excel/🎬️clip/📍️references/🐍️.py:782 _stage_names_and_recap Line
+  📊️excel/🎬️clip/📍️references/🐍️.py:254 build Rectangle
+  📊️excel/🎬️clip/🦴️anatomy/🐍️.py:307 present_anatomy Line,Rectangle,RoundedRectangle,Square
+  📊️excel/🎬️clip/🦴️anatomy/🐍️.py:533 _legend Square,SurroundingRectangle
+  🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:54 __init__ Dot
+  🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:257 _ring Circle
+  🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:294 _plate RoundedRectangle
+  🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:298 _diagram Dot
+  🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:413 _swatches Square
+* 🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:420 present_trees Line,Rectangle
+  🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py:733 _mini Dot
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:146 anchor Dot
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:196 gh_component RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:255 gh_slider RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:314 gh_panel Rectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:346 gh_toggle RoundedRectangle,Square
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:362 gh_value_list Rectangle,RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:409 gh_bubble Circle,RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:434 gh_ribbon Rectangle,RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:470 gh_param_viewer Dot,RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:502 gh_group RoundedRectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:516 gh_background Rectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:535 gh_viewport Dot,Rectangle
+  🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py:280 moving RoundedRectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:216 _tag RoundedRectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:281 _viewport Rectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:297 _stage Circle,Dot
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:399 _glide Dot
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:530 _icon Dot,Rectangle,RoundedRectangle,Square
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:564 _params_card Dot,RoundedRectangle
+* 🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:578 _table Dot,Rectangle,RoundedRectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:612 present_capsule Circle,Dot,Rectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:1125 _card Dot,RoundedRectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:942 bolt_rings Circle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:986 highlight Rectangle
+  🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:1044 angle_ready Dot
+  🦗️grasshopper/🎬️clip/🗼️tower/🐍️.py:177 _type_legend Square
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:227 _slider SurroundingRectangle
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:236 _eye Dot,Ellipse,Line
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:243 _pulse Dot
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:266 _preview Circle
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:314 _frame_rows Rectangle
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:343 _num Circle
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:349 _tie Dot,Line
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:354 _bracket Line
+* 🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:361 _table Line
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:412 present_anatomy Circle,Line,Rectangle,SurroundingRectangle,Triangle
+  🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py:270 build Circle
+  🦗️grasshopper/🎬️clip/🧱️model/🐍️.py:312 apply Circle,Line,Rectangle
+  🦗️grasshopper/🎬️clip/🧱️model/🐍️.py:802 decode Circle,Line
+  🦗️grasshopper/🎬️clip/🧱️model/🐍️.py:884 slot_part Line
+  🦗️grasshopper/🎬️clip/🧱️model/🐍️.py:946 make_reference_capsule Circle
+* 🦗️grasshopper/🎬️clip/🧱️model/🐍️.py:258 window Circle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:227 _tag RoundedRectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:233 _dashed Rectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:238 _flags Rectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:362 _stage Dot
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:428 _numberline Circle,Dot
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:452 _order RoundedRectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:522 _matrix Rectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:556 _grid_cells Rectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:574 _filled Rectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:594 _legend Rectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:613 _habits RoundedRectangle
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:632 _present_casting Dot,Line,Rectangle,Square
+  🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py:439 build Circle
+wide count 571, noun hits 22
+
+## 6 raw image/svg mobjects
+SVG ⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🖌️render/🐍️.py:28 SVGMobject SVGMobject(str(source), height=None, width=None, should_center=False)
+svg count 1

@@ -26,7 +26,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -66,18 +65,22 @@ highlight_param = _manim_module.highlight_param
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
+unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
 window_opening = _manim_module.window_opening
-person_glyph = _manim_module.person_glyph
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
+fitted_staffage = _manim_module.fitted_staffage
 color_ramp = _manim_module.color_ramp
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
@@ -132,19 +135,37 @@ def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
     return section_material(VGroup(body, section["floor"]))
 
 
-def _fan(pos, color, radius=0.24):
-    """🌀 Hub plus three blades — the glyph that marks a stream as mechanically driven."""
-    ring = Circle(radius=radius, color=color, stroke_width=2.4).set_fill(P_DEEP_DARK, 1.0)
-    blades = VGroup(*[
-        Line(ORIGIN, RIGHT * radius * 0.78, color=color, stroke_width=2.4).rotate(a, about_point=ORIGIN)
-        for a in (0.0, TAU / 3, 2 * TAU / 3)
-    ])
-    return VGroup(ring, blades).move_to(pos)
+def _fan(pos, radius=0.24):
+    """🌀 Handcrafted duct fan in thermal view, fitted into a square of ``2 * radius``; it stands still until ``_spin`` starts it."""
+    return fitted_staffage("ventilation-mechanical-duct-fan", width=2 * radius, height=2 * radius, rate=0.0, loop=True).move_to(pos)
 
 
-def _spin(fans, rt: float, period: float = 0.9, sign: float = -1.0):
-    """🔄 Turn the blades of every ``_fan`` for ``rt`` seconds."""
-    return [Rotate(f[1], angle=sign * TAU * rt / period, about_point=f[0].get_center(), rate_func=linear) for f in fans]
+PENDULUM_PHASES = 6
+PENDULUM_PHASE_S = 70.0
+
+
+def _mvhr(pos, height=0.62):
+    """♻️ Handcrafted heat-recovery unit in thermal view, ``height`` tall, centred on ``pos``; its impeller turns once ``_spin`` starts it."""
+    return fitted_staffage("ventilation-mechanical-mvhr", height=height, rate=0.0, loop=True).move_to(pos)
+
+
+def _pendulum_unit(pos, size=0.5):
+    """🔄 Handcrafted decentralised push-pull fan with its ceramic core in thermal view, fitted into a square of ``size``; ``_pendulum_half`` drives its clip."""
+    return fitted_staffage("ventilation-mechanical-pendulum-fan", width=size, height=size, rate=0.0).move_to(pos)
+
+
+def _pendulum_half(unit, half: int, rt: float):
+    """↔️ Play one 70 s phase of the pendulum clip in ``rt`` seconds: the rotor turns one way and back while the core stores or gives up heat; from the seventh phase on the last two repeat."""
+    index = half if half < PENDULUM_PHASES else PENDULUM_PHASES - 2 + half % 2
+    start = index * PENDULUM_PHASE_S
+    return UpdateFromAlphaFunc(unit, lambda m, a: m.seek(start + a * PENDULUM_PHASE_S), run_time=rt, rate_func=linear)
+
+
+def _spin(fans, rt: float):
+    """▶️ Start the rotor of every ``_fan`` and hold for ``rt`` seconds."""
+    for fan in fans:
+        fan.rate = 1.0
+    return [Wait(rt)]
 
 
 def _streams(streams, rt: float, *, speed: float = 0.85, waves: int = 3):
@@ -160,11 +181,11 @@ def _port(pos, color=P_WHITE):
     ).move_to(pos)
 
 
-def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
-    """🧍 A 1.75 m occupant in a 2.5 m clear room, anchored to the slab top."""
+def _stand(room_c, room_h, x, cast: str = "shared-person-pathlines", t: float = 0.16):
+    """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
     height = 0.7 * (room_h - t)
     floor_y = float(room_c[1]) - room_h / 2 + t / 2
-    return person_glyph([x, floor_y + height / 2, 0], color=color, scale=height / 0.66)
+    return staffage_motion(cast, unit=height / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
 
 
 def _math_chip(src: str, color: str):
@@ -213,7 +234,7 @@ def _temp_port(title: str, value_fn, at, color):
     box = RoundedRectangle(width=1.3, height=0.84, corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER,
                            fill_color=_theme_module.CHROME_FILL, fill_opacity=0.82).move_to(at)
     name = Text(title, font_size=LABEL_FONT_SIZE, color=color).move_to(box.get_center() + UP * 0.24)
-    read = math_readout(lambda: rf"{de_num(value_fn())}\,°\mathrm{{C}}", box.get_center() + DOWN * 0.17,
+    read = math_readout(lambda: rf"{label_number(value_fn())}\,°\mathrm{{C}}", box.get_center() + DOWN * 0.17,
                         size=BODY_FONT_SIZE, color=P_WHITE, edge="center")
     return VGroup(box, name), read
 
@@ -251,7 +272,7 @@ class Beat1_Grundtypen(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Drei mechanische Grundtypen")
+        subtitle = section_heading(tr("Three basic mechanical types", "Drei mechanische Grundtypen"))
         din = _din_ref("DIN EN 16798-3")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -268,9 +289,9 @@ class Beat1_Grundtypen(Scene):
         headers = VGroup(*[
             Text(t, font_size=BODY_FONT_SIZE, color=c).move_to(np.array([cx[0], 1.98, 0.0]))
             for t, c, cx in (
-                ("Abluftanlage", P_ORANGE, c0),
-                ("Zuluftanlage", P_CYAN, c1),
-                ("Zu-/Abluftanlage", P_GREEN, c2),
+                (tr("Extract-only system", "Abluftanlage"), P_ORANGE, c0),
+                (tr("Supply-only system", "Zuluftanlage"), P_CYAN, c1),
+                (tr("Supply/extract system", "Zu-/Abluftanlage"), P_GREEN, c2),
             )
         ])
 
@@ -278,7 +299,7 @@ class Beat1_Grundtypen(Scene):
             return Arrow(start, end, buff=0, color=color, stroke_width=4,
                          max_tip_length_to_length_ratio=0.26)
 
-        exh_fan = _fan(np.array([c0[0] + 1.25, wall_y, 0.0]), P_ORANGE)
+        exh_fan = _fan(np.array([c0[0] + 1.25, wall_y, 0.0]))
         exh_out = _duct_arrow(np.array([c0[0] + 1.58, wall_y, 0.0]),
                               np.array([c0[0] + 2.10, wall_y, 0.0]), P_ORANGE)
         ald = _port(np.array([c0[0] - self.ROOM_W / 2, 0.70, 0.0]))
@@ -292,7 +313,7 @@ class Beat1_Grundtypen(Scene):
             for dy in (-0.6, 0.0, 0.55)
         ])
 
-        sup_fan = _fan(np.array([c1[0] - 1.25, wall_y, 0.0]), P_CYAN)
+        sup_fan = _fan(np.array([c1[0] - 1.25, wall_y, 0.0]))
         sup_in = _duct_arrow(np.array([c1[0] - 2.10, wall_y, 0.0]),
                              np.array([c1[0] - 1.58, wall_y, 0.0]), P_CYAN)
         leak = _port(np.array([c1[0] + self.ROOM_W / 2, 0.70, 0.0]))
@@ -306,8 +327,8 @@ class Beat1_Grundtypen(Scene):
             for dy in (-0.6, 0.0, 0.55)
         ])
 
-        bal_sup = _fan(np.array([c2[0] - 1.25, wall_y, 0.0]), P_CYAN)
-        bal_exh = _fan(np.array([c2[0] + 1.25, wall_y, 0.0]), P_ORANGE)
+        bal_sup = _fan(np.array([c2[0] - 1.25, wall_y, 0.0]))
+        bal_exh = _fan(np.array([c2[0] + 1.25, wall_y, 0.0]))
         bal_in = _duct_arrow(np.array([c2[0] - 2.10, wall_y, 0.0]),
                              np.array([c2[0] - 1.58, wall_y, 0.0]), P_CYAN)
         bal_out = _duct_arrow(np.array([c2[0] + 1.58, wall_y, 0.0]),
@@ -329,22 +350,22 @@ class Beat1_Grundtypen(Scene):
         sign_tags = VGroup(*[
             Text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([cx[0], -1.18, 0.0]))
             for (t, c), cx in zip(
-                (("Unterdruck", P_ORANGE), ("Überdruck", P_CYAN), ("ausgeglichen", P_GREEN)),
+                ((tr("Negative pressure", "Unterdruck"), P_ORANGE), (tr("Positive pressure", "Überdruck"), P_CYAN), (tr("balanced", "ausgeglichen"), P_GREEN)),
                 self.CENTERS,
             )
         ])
         port_tags = VGroup(*[
             Text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([cx[0], -1.54, 0.0]))
             for (t, c), cx in zip(
-                (("Außenluft ungefiltert", P_WHITE),
-                 ("Abluft über Fugen", P_WHITE),
-                 ("beide Ströme geführt", P_GREEN)),
+                ((tr("Unfiltered outdoor air", "Außenluft ungefiltert"), P_WHITE),
+                 (tr("Exhaust through leaks", "Abluft über Fugen"), P_WHITE),
+                 (tr("both flows ducted", "beide Ströme geführt"), P_GREEN)),
                 self.CENTERS,
             )
         ])
 
         verdict = Text(
-            "erst beide Ströme geführt → Filter, Feuchte, Wärmerückgewinnung möglich",
+            tr("only with both flows ducted → filtering, humidity control, heat recovery possible", "erst beide Ströme geführt → Filter, Feuchte, Wärmerückgewinnung möglich"),
             font_size=BODY_FONT_SIZE, color=P_GREEN,
         ).move_to(np.array([0.0, -2.18, 0.0]))
 
@@ -429,7 +450,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Wärmerückgewinnung im Plattenübertrager")
+        subtitle = section_heading(tr("Heat recovery in a plate heat exchanger", "Wärmerückgewinnung im Plattenübertrager"))
         din = _din_ref("DIN EN 308")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -465,9 +486,9 @@ class Beat2_Waermerueckgewinnung(Scene):
             for y in (y_sup, y_exh) for dy in (-0.22, 0.22)
             for xa, xb in ((x_in, core.get_left()[0]), (core.get_right()[0], x_out))
         ])
-        fans = [_fan(np.array([-4.45, y_sup, 0.0]), P_WHITE, radius=0.17),
-                _fan(np.array([-0.62, y_exh, 0.0]), P_WHITE, radius=0.17)]
-        core_tag = Text("Plattenwärmeübertrager", font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(np.array([core_c[0], -0.22, 0.0]))
+        fans = [_fan(np.array([-4.45, y_sup, 0.0]), radius=0.17),
+                _fan(np.array([-0.62, y_exh, 0.0]), radius=0.17)]
+        core_tag = Text(tr("Plate heat exchanger", "Plattenwärmeübertrager"), font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(np.array([core_c[0], -0.22, 0.0]))
 
         supply = VGroup(smooth_path([np.array([x_in, y_sup, 0.0]), np.array([-3.0, y_sup, 0.0]),
                                      np.array([-2.0, y_sup, 0.0]), np.array([x_out, y_sup, 0.0])]))
@@ -484,10 +505,10 @@ class Beat2_Waermerueckgewinnung(Scene):
 
         arrows_up, arrows_down = heat_arrows(True), heat_arrows(False)
 
-        aul_box, aul_read = _temp_port("Außenluft", t_aul, np.array([-5.95, y_sup, 0.0]), P_WHITE)
-        zul_box, zul_read = _temp_port("Zuluft", t_zul, np.array([0.75, y_sup, 0.0]), P_CYAN)
-        abl_box, abl_read = _temp_port("Abluft", t_abl, np.array([0.75, y_exh, 0.0]), P_TEAL)
-        fol_box, fol_read = _temp_port("Fortluft", t_fol, np.array([-5.95, y_exh, 0.0]), P_ORANGE)
+        aul_box, aul_read = _temp_port(tr("Outdoor air", "Außenluft"), t_aul, np.array([-5.95, y_sup, 0.0]), P_WHITE)
+        zul_box, zul_read = _temp_port(tr("Supply air", "Zuluft"), t_zul, np.array([0.75, y_sup, 0.0]), P_CYAN)
+        abl_box, abl_read = _temp_port(tr("Extract air", "Abluft"), t_abl, np.array([0.75, y_exh, 0.0]), P_TEAL)
+        fol_box, fol_read = _temp_port(tr("Exhaust air", "Fortluft"), t_fol, np.array([-5.95, y_exh, 0.0]), P_ORANGE)
 
         def stream_color(t_from, t_to):
             def fn(t):
@@ -505,13 +526,13 @@ class Beat2_Waermerueckgewinnung(Scene):
             return [_live_flow(air, rt, speed=0.35, waves=7), *_spin(fans, rt)]
 
         chip_winter = _math_chip(r"\text{Winter}", P_BLUE).move_to(np.array([core_c[0], 2.2, 0.0]))
-        chip_summer = _math_chip(r"\text{Sommer}", P_ORANGE).move_to(chip_winter)
+        chip_summer = _math_chip(tr(r"\text{Summer}", r"\text{Sommer}"), P_ORANGE).move_to(chip_winter)
 
         eta_gauge = meter("η", length=3.0, thickness=0.3, color=P_GREEN, vertical=False)
         eta_gauge["group"] = VGroup(eta_gauge["track"], eta_gauge["fill"])
         eta_gauge["group"].move_to(np.array([core_c[0] - 0.4, -0.72, 0.0]))
         bind_meter(eta_gauge, gain)
-        eta_read = math_readout(lambda: rf"\eta = {de_num(gain.get_value(), 2)}",
+        eta_read = math_readout(lambda: rf"\eta = {label_number(gain.get_value(), 2)}",
                                 eta_gauge["track"].get_right() + RIGHT * 0.25, size=BODY_FONT_SIZE, color=P_GREEN)
 
         def eta_panel(value_src):
@@ -550,7 +571,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         hold_for(self, N, "winter", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
-        eq, eq_box, items = eta_panel(r"\frac{16\,\mathrm{K}}{20\,\mathrm{K}} = 0{,}8")
+        eq, eq_box, items = eta_panel(tr(r"\frac{16\,\mathrm{K}}{20\,\mathrm{K}} = 0.8", r"\frac{16\,\mathrm{K}}{20\,\mathrm{K}} = 0{,}8"))
         self.add(eta_read)
         self.play(FadeIn(eta_gauge["group"]), FadeIn(eq), Create(eq_box), *exchanger(1.2), run_time=1.2)
         ring_num = highlight_param(items, "num", color=P_CYAN)
@@ -582,24 +603,24 @@ class Beat2_Waermerueckgewinnung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "winter_bars"))
         full_w = Q_V_WINTER * unit
-        w_head = head("Winter · Heizung", P_ORANGE, y_w)
+        w_head = head(tr("Winter · Heating", "Winter · Heizung"), P_ORANGE, y_w)
         w_name = name(r"\dot{Q}_{\mathrm{V,sens}}", bx0 + full_w / 2, y_w, P_RED)
         w_full = seg(bx0, full_w, P_RED, y_w)
         wf = ValueTracker(0.0)
-        w_read = math_readout(lambda: rf"{de_num(Q_V_WINTER * wf.get_value())}\,\mathrm{{W}}",
+        w_read = math_readout(lambda: rf"{label_number(Q_V_WINTER * wf.get_value())}\,\mathrm{{W}}",
                               np.array([bx0 + full_w / 2, y_w - 0.42, 0.0]), size=LABEL_FONT_SIZE, color=P_RED,
                               edge="center")
         self.add(w_read)
         self.play(FadeIn(w_head), FadeIn(w_name), GrowFromEdge(w_full, LEFT), wf.animate.set_value(1.0),
                   *exchanger(1.4), run_time=1.4)
         self.remove(w_read)
-        w_val = value(rf"{de_num(Q_V_WINTER)}\,\mathrm{{W}}", bx0 + full_w / 2, y_w, P_RED)
+        w_val = value(rf"{label_number(Q_V_WINTER)}\,\mathrm{{W}}", bx0 + full_w / 2, y_w, P_RED)
         self.add(w_val)
         self.play(*exchanger(1.2), run_time=1.2)
         w_green = seg(bx0, full_w * ETA_WRG, P_GREEN, y_w)
         w_rest = seg(bx0 + full_w * ETA_WRG, full_w * (1 - ETA_WRG), P_RED, y_w)
-        w_green_val = value(rf"−{de_num(Q_V_WINTER * ETA_WRG)}\,\mathrm{{W}}", bx0 + full_w * ETA_WRG / 2, y_w, P_GREEN)
-        w_rest_val = value(rf"{de_num(Q_V_WINTER * (1 - ETA_WRG))}\,\mathrm{{W}}",
+        w_green_val = value(rf"−{label_number(Q_V_WINTER * ETA_WRG)}\,\mathrm{{W}}", bx0 + full_w * ETA_WRG / 2, y_w, P_GREEN)
+        w_rest_val = value(rf"{label_number(Q_V_WINTER * (1 - ETA_WRG))}\,\mathrm{{W}}",
                            bx0 + full_w * (ETA_WRG + (1 - ETA_WRG) / 2), y_w, P_RED)
         lp = loss_panel(r"300\,\mathrm{W}")
         self.play(ReplacementTransform(w_full, w_rest), GrowFromEdge(w_green, LEFT),
@@ -609,7 +630,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         hold_for(self, N, "winter_bars", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(N, "summer"))
-        eq2, eq2_box, items2 = eta_panel(r"\frac{5\,\mathrm{K}}{6\,\mathrm{K}} \approx 0{,}8")
+        eq2, eq2_box, items2 = eta_panel(tr(r"\frac{5\,\mathrm{K}}{6\,\mathrm{K}} \approx 0.8", r"\frac{5\,\mathrm{K}}{6\,\mathrm{K}} \approx 0{,}8"))
         self.play(ReplacementTransform(chip_winter, chip_summer),
                   ReplacementTransform(arrows_up, arrows_down),
                   season.animate(rate_func=smooth).set_value(1.0),
@@ -623,30 +644,30 @@ class Beat2_Waermerueckgewinnung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "summer_bars"))
         sens_w, lat_w = Q_V_SENS_SUMMER * unit, Q_V_LAT_SUMMER * unit
-        s_head = head("Sommer · Kühlung", P_CYAN, y_s)
+        s_head = head(tr("Summer · Cooling", "Sommer · Kühlung"), P_CYAN, y_s)
         s_name = name(r"\dot{Q}_{\mathrm{V,sens}}", bx0 + sens_w / 2, y_s, P_RED)
         l_name = name(r"\dot{Q}_{\mathrm{V,lat}}", bx0 + sens_w + lat_w / 2, y_s, P_CYAN)
         s_full = seg(bx0, sens_w, P_RED, y_s)
         l_full = seg(bx0 + sens_w, lat_w, P_CYAN, y_s)
         sf = ValueTracker(0.0)
-        s_read = math_readout(lambda: rf"{de_num(Q_V_SENS_SUMMER * sf.get_value())}\,\mathrm{{W}}",
+        s_read = math_readout(lambda: rf"{label_number(Q_V_SENS_SUMMER * sf.get_value())}\,\mathrm{{W}}",
                               np.array([bx0 + sens_w / 2, y_s - 0.42, 0.0]), size=LABEL_FONT_SIZE, color=P_RED,
                               edge="center")
-        l_read = math_readout(lambda: rf"{de_num(Q_V_LAT_SUMMER * sf.get_value())}\,\mathrm{{W}}",
+        l_read = math_readout(lambda: rf"{label_number(Q_V_LAT_SUMMER * sf.get_value())}\,\mathrm{{W}}",
                               np.array([bx0 + sens_w + lat_w / 2, y_s - 0.42, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN,
                               edge="center")
         self.add(s_read, l_read)
         self.play(FadeIn(s_head), FadeIn(s_name), FadeIn(l_name), GrowFromEdge(s_full, LEFT), GrowFromEdge(l_full, LEFT),
                   sf.animate.set_value(1.0), *exchanger(1.4), run_time=1.4)
         self.remove(s_read, l_read)
-        s_val = value(rf"{de_num(Q_V_SENS_SUMMER)}\,\mathrm{{W}}", bx0 + sens_w / 2, y_s, P_RED)
-        l_val = value(rf"{de_num(Q_V_LAT_SUMMER)}\,\mathrm{{W}}", bx0 + sens_w + lat_w / 2, y_s, P_CYAN)
+        s_val = value(rf"{label_number(Q_V_SENS_SUMMER)}\,\mathrm{{W}}", bx0 + sens_w / 2, y_s, P_RED)
+        l_val = value(rf"{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}", bx0 + sens_w + lat_w / 2, y_s, P_CYAN)
         self.add(s_val, l_val)
         self.play(*exchanger(1.0), run_time=1.0)
         s_green = seg(bx0, sens_w * ETA_WRG, P_GREEN, y_s)
         s_rest = seg(bx0 + sens_w * ETA_WRG, sens_w * (1 - ETA_WRG), P_RED, y_s)
-        s_green_val = value(rf"−{de_num(Q_V_SENS_SUMMER * ETA_WRG)}\,\mathrm{{W}}", bx0 + 0.02, y_s, P_GREEN)
-        s_rest_val = value(rf"{de_num(Q_V_SENS_SUMMER * (1 - ETA_WRG))}\,\mathrm{{W}}", bx0 + sens_w + 0.02, y_s, P_RED)
+        s_green_val = value(rf"−{label_number(Q_V_SENS_SUMMER * ETA_WRG)}\,\mathrm{{W}}", bx0 + 0.02, y_s, P_GREEN)
+        s_rest_val = value(rf"{label_number(Q_V_SENS_SUMMER * (1 - ETA_WRG))}\,\mathrm{{W}}", bx0 + sens_w + 0.02, y_s, P_RED)
         sp = math_panel([
             ("q", r"\dot{Q}_{\mathrm{V,sens,WRG}}", P_RED), (None, "=", P_WHITE),
             ("sens", r"\dot{Q}_{\mathrm{V,sens}}", P_RED), (None, r"\cdot", P_WHITE),
@@ -660,7 +681,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         hold_for(self, N, "summer_bars", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(N, "latent"))
-        keep = Text("unverändert", font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK).move_to(
+        keep = Text(tr("unchanged", "unverändert"), font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK).move_to(
             np.array([bx0 + sens_w + lat_w / 2, y_s, 0.0]))
         lp2 = math_panel([
             ("sens", r"\dot{Q}_{\mathrm{V,sens}}\cdot(1-\eta)", P_RED), (None, "+", P_WHITE),
@@ -703,7 +724,7 @@ class Beat3_Anlagenvergleich(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Lüftungssysteme im Vergleich")
+        subtitle = section_heading(tr("Ventilation systems compared", "Lüftungssysteme im Vergleich"))
         din = _din_ref("DIN 1946-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -731,8 +752,8 @@ class Beat3_Anlagenvergleich(Scene):
             track = Rectangle(width=width, height=0.2, color=P_WHITE, stroke_width=1.6, fill_color=P_DEEP_DARK, fill_opacity=1.0)
             upper = Rectangle(width=width * hi, height=0.2, stroke_width=0, fill_color=color, fill_opacity=0.35)
             lower = Rectangle(width=width * lo, height=0.2, stroke_width=0, fill_color=color, fill_opacity=0.9)
-            watts = (rf"\dot{{Q}}_{{\mathrm{{V}}}} = {de_num(Q_V_WINTER * lo)}\,\mathrm{{W}}" if lo == hi
-                     else rf"\dot{{Q}}_{{\mathrm{{V}}}} = {de_num(Q_V_WINTER * lo)}\ldots{de_num(Q_V_WINTER * hi)}\,\mathrm{{W}}")
+            watts = (rf"\dot{{Q}}_{{\mathrm{{V}}}} = {label_number(Q_V_WINTER * lo)}\,\mathrm{{W}}" if lo == hi
+                     else rf"\dot{{Q}}_{{\mathrm{{V}}}} = {label_number(Q_V_WINTER * lo)}\ldots{label_number(Q_V_WINTER * hi)}\,\mathrm{{W}}")
             label = math_label(watts, size=LABEL_FONT_SIZE, color=color)
             label.next_to(track, RIGHT, buff=0.15)
             return {"track": track, "upper": upper, "lower": lower, "group": VGroup(track, label)}
@@ -753,58 +774,55 @@ class Beat3_Anlagenvergleich(Scene):
                 part.set_stroke(P_WHITE).set_fill(P_WHITE, opacity=1)
             room["glass"].set_stroke(P_CYAN).set_fill(P_CYAN, opacity=0.15)
             height = 0.7 * room_h
-            person = person_glyph([px + 1.17, room["y_f"] + height / 2, 0], color=P_ORANGE, scale=height / 0.66)
+            person = staffage_motion("shared-person-pathlines", unit=height / staffage_height("shared-person-pathlines"),
+                                     anchor=np.array([px + 0.95, room["y_f"], 0.0]))
             return card, hdr, box, room, person
 
         p1 = -4.4
         bar1 = loss_bar(1.0, 1.0, P_RED)
         card1, hdr1, box1_stat, room1, person1 = panel(
-            p1, P_RED, semio_color("dark-8-9"), "Fensterlüftung", "freie Lüftung ohne WRG", r"\eta_{\mathrm{WRG}} = 0", bar1)
+            p1, P_RED, semio_color("dark-8-9"), tr("Window ventilation", "Fensterlüftung"), tr("natural, no heat recovery", "freie Lüftung ohne WRG"), r"\eta_{\mathrm{WRG}} = 0", bar1)
         x_l, y_f, y_c, lo, hi = room1["x_l"], room1["y_f"], room1["y_c"], room1["win_lo"], room1["win_hi"]
         win1 = window_glyph(room1["glass_x"], lo, hi, depth=0.4, wall=0.13, color=P_CYAN)
         in1 = [path((x_l - 1.05, lo - 0.05), (x_l - 0.4, lo + 0.08), (x_l + 0.3, lo + 0.06), (x_l + 0.8, y_f + 0.15),
                     (p1 + 0.5, y_f + 0.2))]
         out1 = [path((p1 + 0.55, y_c - 0.35), (p1 + 0.3, y_c - 0.15), (x_l + 0.45, hi - 0.06), (x_l - 0.35, hi - 0.04),
                      (x_l - 1.0, hi + 0.35))]
-        lbl_in1 = legend(["Kaltluft", "(0 °C)"], P_BLUE, 0.75, [p1 - 1.4, -1.55, 0])
-        lbl_out1 = legend(["Warmluft", "(20 °C)"], P_ORANGE, 0.75, [p1 - 1.3, 0.45, 0])
+        lbl_in1 = legend([tr("Cold air", "Kaltluft"), "(0 °C)"], P_BLUE, 0.75, [p1 - 1.4, -1.55, 0])
+        lbl_out1 = legend([tr("Warm air", "Warmluft"), "(20 °C)"], P_ORANGE, 0.75, [p1 - 1.3, 0.45, 0])
         col1 = VGroup(card1, hdr1, room1["shell"], win1["group"], person1, lbl_in1, lbl_out1, box1_stat)
 
         p2 = 0.0
         bar2 = loss_bar(0.1, 0.2, P_GREEN)
         card2, hdr2, box2_stat, room2, person2 = panel(
-            p2, P_BLUE, semio_color("dark-8-9"), "Zentrale WRG", "zentrales Lüftungsgerät", r"\eta_{\mathrm{WRG}} \approx 0{,}8 \ldots 0{,}9", bar2)
+            p2, P_BLUE, semio_color("dark-8-9"), tr("Central HRV", "Zentrale WRG"), tr("central ventilation unit", "zentrales Lüftungsgerät"), tr(r"\eta_{\mathrm{WRG}} \approx 0.8 \ldots 0.9", r"\eta_{\mathrm{WRG}} \approx 0{,}8 \ldots 0{,}9"), bar2)
         y_c2 = room2["y_c"]
-        mvhr_box = RoundedRectangle(width=1.5, height=0.5, corner_radius=0.05, color=P_WHITE, fill_color=semio_color("dark-5-7"),
-                                    fill_opacity=0.95, stroke_width=2).move_to([p2 + 0.15, 0.6, 0])
-        lbl_mvhr = Text("WRG\nZentral", font_size=LABEL_FONT_SIZE, color=P_YELLOW).scale(0.65)
-        lbl_mvhr.move_to(mvhr_box.get_center() + LEFT * 0.33)
-        fan2 = _fan(mvhr_box.get_center() + RIGHT * 0.42, P_WHITE, radius=0.15)
-        x_s, x_e = p2 - 0.35, p2 + 0.6
+        mvhr_box = _mvhr(np.array([p2 + 0.15, 0.6, 0.0]))
+        lbl_mvhr = Text(tr("Central HRV", "WRG Zentral"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).scale(0.65)
+        lbl_mvhr.next_to(mvhr_box, UP, buff=0.08)
+        x_s, x_e = mvhr_box.get_left()[0] + 0.1, mvhr_box.get_right()[0] - 0.1
         ducts2 = VGroup(*[Line([x + dx, mvhr_box.get_bottom()[1], 0], [x + dx, y_c2, 0], color=P_WHITE, stroke_width=1.4,
                                stroke_opacity=0.7) for x in (x_s, x_e) for dx in (-0.09, 0.09)])
-        fresh2 = [path((p2 - 1.95, 1.0), (p2 - 1.0, 0.95), (mvhr_box.get_left()[0] + 0.05, 0.62))]
-        fort2 = [path((mvhr_box.get_right()[0] - 0.05, 0.62), (p2 + 1.5, 0.95), (p2 + 1.95, 1.05))]
+        fresh2 = [path((p2 - 1.95, 1.0), (p2 - 1.0, 0.95), (mvhr_box.get_left()[0] + 0.02, 0.62))]
+        fort2 = [path((mvhr_box.get_right()[0] - 0.02, 0.62), (p2 + 1.5, 0.95), (p2 + 1.95, 1.05))]
         sup2 = [path((x_s, 0.33), (x_s, -0.3), (p2 - 0.6, -0.85), (p2 - 0.45, -1.3))]
         ext2 = [path((p2 + 0.45, -1.25), (x_e, -0.6), (x_e, 0.33))]
-        lbl_supply = legend(["vorgewärmte", "Zuluft (16 °C)"], P_GREEN, 0.62, [p2 - 1.53, -0.75, 0])
-        col2 = VGroup(card2, hdr2, room2["shell"], room2["glass"], person2, ducts2, mvhr_box, lbl_mvhr, fan2, lbl_supply,
+        lbl_supply = legend([tr("preheated", "vorgewärmte"), tr("supply air (16 °C)", "Zuluft (16 °C)")], P_GREEN, 0.62, [p2 - 1.53, -0.75, 0])
+        col2 = VGroup(card2, hdr2, room2["shell"], room2["glass"], person2, ducts2, mvhr_box, lbl_mvhr, lbl_supply,
                       box2_stat)
 
         p3 = 4.4
         bar3 = loss_bar(0.1, 0.3, P_GREEN)
         card3, hdr3, box3_stat, room3, person3 = panel(
-            p3, P_GREEN, semio_color("dark-8-9"), "Dezentrale WRG", "Pendellüfter mit Keramik", r"\eta_{\mathrm{WRG}} \approx 0{,}7 \ldots 0{,}9", bar3)
+            p3, P_GREEN, semio_color("dark-8-9"), tr("Decentral HRV", "Dezentrale WRG"), tr("Reversing fan with ceramic core", "Pendellüfter mit Keramik"), tr(r"\eta_{\mathrm{WRG}} \approx 0.7 \ldots 0.9", r"\eta_{\mathrm{WRG}} \approx 0{,}7 \ldots 0{,}9"), bar3)
         x_l3, gx3 = room3["x_l"], room3["glass_x"]
         y_u = 0.5 * (room3["win_hi"] + room3["y_c"])
-        core = Rectangle(width=0.37, height=0.22, color=P_YELLOW, stroke_width=1.5, fill_color=P_ORANGE,
-                         fill_opacity=0.9).move_to([gx3, y_u, 0])
-        fan3 = _fan([x_l3 + 0.24, y_u, 0], P_WHITE, radius=0.11)
+        unit3 = _pendulum_unit(np.array([gx3, y_u, 0.0]))
         ab3 = [path((p3 + 0.6, -0.95), (x_l3 + 0.45, y_u - 0.05), (gx3, y_u), (p3 - 1.4, y_u + 0.2), (p3 - 1.9, 0.12))]
         zu3 = [path((p3 - 1.9, -0.02), (p3 - 1.4, y_u - 0.12), (gx3, y_u), (x_l3 + 0.45, y_u - 0.1), (p3 + 0.6, -1.0))]
-        lbl_cyc1 = legend(["70 s Abluft", "(Speichern)"], P_ORANGE, 0.65, [p3 - 1.35, 0.45, 0])
-        lbl_cyc2 = legend(["70 s Zuluft", "(16 °C)"], P_GREEN, 0.65, [p3 - 1.35, -0.75, 0])
-        col3 = VGroup(card3, hdr3, room3["shell"], room3["glass"], person3, core, fan3, lbl_cyc1, lbl_cyc2, box3_stat)
+        lbl_cyc1 = legend([tr("70 s exhaust", "70 s Abluft"), tr("(storing)", "(Speichern)")], P_ORANGE, 0.65, [p3 - 1.35, 0.45, 0])
+        lbl_cyc2 = legend([tr("70 s supply", "70 s Zuluft"), f"({unit_text('16', '°C')})"], P_GREEN, 0.65, [p3 - 1.52, -1.05, 0])
+        col3 = VGroup(card3, hdr3, room3["shell"], room3["glass"], person3, unit3, lbl_cyc1, lbl_cyc2, box3_stat)
 
         paths = VGroup(*in1, *out1, *fresh2, *fort2, *sup2, *ext2, *ab3, *zu3)
         fills = VGroup(*[b[k] for b in (bar1, bar2, bar3) for k in ("upper", "lower")])
@@ -815,14 +833,14 @@ class Beat3_Anlagenvergleich(Scene):
                          flow_guides(sup2, P_GREEN, opacity=0.2), flow_guides(ext2, P_ORANGE, opacity=0.2))
         guides3 = VGroup(flow_guides(ab3, P_ORANGE, opacity=0.2, tips=False))
         active = []
-        pendulum = {"out": True}
+        pendulum = {"out": True, "half": 0}
 
         def window_air(rt):
             return [_streams([(in1, P_BLUE, P_ORANGE), (out1, P_ORANGE)], rt, speed=0.5, waves=4)]
 
         def central_air(rt):
             return [_streams([(fresh2, P_BLUE), (fort2, GREY_B), (sup2, P_GREEN), (ext2, P_ORANGE)], rt,
-                             speed=0.55, waves=3), *_spin([fan2], rt)]
+                             speed=0.55, waves=3), *_spin([mvhr_box], rt)]
 
         def pendulum_air(rt):
             n = max(1, int(round(rt / 2.2)))
@@ -831,11 +849,11 @@ class Beat3_Anlagenvergleich(Scene):
                 out = pendulum["out"]
                 flow = _streams([(ab3, P_ORANGE)] if out else [(zu3, P_BLUE, P_GREEN)], rt / n, speed=0.55, waves=4)
                 flow.run_time = rt / n
-                turn = _spin([fan3], rt / n, sign=-1.0 if out else 1.0)[0]
-                turn.run_time = rt / n
+                turn = _pendulum_half(unit3, pendulum["half"], rt / n)
                 flows.append(flow)
                 turns.append(turn)
                 pendulum["out"] = not out
+                pendulum["half"] += 1
             return [Succession(*flows), Succession(*turns)]
 
         def systems(rt):
@@ -868,7 +886,7 @@ class Beat3_Anlagenvergleich(Scene):
         hold_for(self, N, "outro", during=systems)
 
         caption = swap_caption(self, caption, subtitle_text(N, "passivhaus"))
-        verdict = note_line("Passivhaus: Zu-/Abluft mit WRG — Fensterlüftung entfällt als Hauptweg", color=P_ORANGE)
+        verdict = note_line(tr("Passive house: heat-recovery ventilation replaces windows", "Passivhaus: Zu-/Abluft mit WRG — Fensterlüftung entfällt als Hauptweg"), color=P_ORANGE)
         mark = cross_mark(size=0.2).move_to(win1["hinge"])
         ring_bad = SurroundingRectangle(col1, color=P_RED, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5)
         ring_good = SurroundingRectangle(VGroup(col2, col3), color=P_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5)
@@ -910,7 +928,7 @@ class Beat4_Kanalquerschnitt(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Vom Luftstrom zum Kanalquerschnitt")
+        subtitle = section_heading(tr("From airflow to duct cross-section", "Vom Luftstrom zum Kanalquerschnitt"))
         din = _din_ref("VDI 2087")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -959,15 +977,15 @@ class Beat4_Kanalquerschnitt(Scene):
         def line_at(y):
             return np.array([rx, y, 0.0])
 
-        q_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {de_num(Q_VR * shown.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
+        q_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {label_number(Q_VR * shown.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
                               line_at(1.95), size=BODY_FONT_SIZE, color=P_YELLOW)
-        v_read = math_readout(lambda: rf"v_{{m}} = {de_num(vel(), 1)}\,\mathrm{{m/s}}", line_at(1.25),
+        v_read = math_readout(lambda: rf"v_{{m}} = {label_number(vel(), 1)}\,\mathrm{{m/s}}", line_at(1.25),
                               size=BODY_FONT_SIZE, color=P_CYAN)
-        a_read = math_readout(lambda: rf"A = {de_num(area(), 4)}\,\mathrm{{m^{{2}}}}", line_at(0.55),
+        a_read = math_readout(lambda: rf"A = {label_number(area(), 4)}\,\mathrm{{m^{{2}}}}", line_at(0.55),
                               size=BODY_FONT_SIZE, color=P_BLUE)
-        r_read = math_readout(lambda: rf"r = {de_num(r.get_value() / units_per_m, 3)}\,\mathrm{{m}}", line_at(-0.15),
+        r_read = math_readout(lambda: rf"r = {label_number(r.get_value() / units_per_m, 3)}\,\mathrm{{m}}", line_at(-0.15),
                               size=BODY_FONT_SIZE, color=P_YELLOW)
-        d_read = math_readout(lambda: rf"d = 2\,r = {de_num(200 * r.get_value() / units_per_m)}\,\mathrm{{cm}}",
+        d_read = math_readout(lambda: rf"d = 2\,r = {label_number(200 * r.get_value() / units_per_m)}\,\mathrm{{cm}}",
                               line_at(-0.85), size=BODY_FONT_SIZE, color=P_WHITE)
 
         v_gauge = meter("m/s", length=2.4, thickness=0.3, color=P_GREEN, vertical=False)
@@ -979,7 +997,7 @@ class Beat4_Kanalquerschnitt(Scene):
         limit_x = v_gauge["track"].get_left()[0] + 0.04 + (V_M / v_scale) * v_gauge["span"]
         limit = VGroup(
             Line(np.array([limit_x, 1.25 - 0.26, 0.0]), np.array([limit_x, 1.25 + 0.26, 0.0]), color=P_YELLOW, stroke_width=3),
-            math_label(r"2{,}5", np.array([limit_x, 1.25 - 0.48, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW),
+            math_label(tr(r"2.5", r"2{,}5"), np.array([limit_x, 1.25 - 0.48, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW),
         )
 
         def cont_panel():
@@ -994,7 +1012,7 @@ class Beat4_Kanalquerschnitt(Scene):
                 ("A", "A", P_BLUE), (None, "=", P_WHITE),
                 ("frac", rf"\frac{{\textcolor{{{P_YELLOW}}}{{q_{{v,\mathrm{{R}}}}}}}}{{\textcolor{{{P_CYAN}}}{{v_{{m}}}}}}", P_WHITE),
                 (None, "=", P_WHITE),
-                ("val", r"\frac{0{,}061\,\mathrm{m^{3}/s}}{2{,}5\,\mathrm{m/s}} \approx 0{,}0244\,\mathrm{m^{2}}", P_BLUE),
+                ("val", tr(r"\frac{0.061\,\mathrm{m^{3}/s}}{2.5\,\mathrm{m/s}} \approx 0.0244\,\mathrm{m^{2}}", r"\frac{0{,}061\,\mathrm{m^{3}/s}}{2{,}5\,\mathrm{m/s}} \approx 0{,}0244\,\mathrm{m^{2}}"), P_BLUE),
             ], color=P_BLUE)
 
         def radius_panel():
@@ -1002,7 +1020,7 @@ class Beat4_Kanalquerschnitt(Scene):
                 ("r", "r", P_YELLOW), (None, "=", P_WHITE),
                 ("root", rf"\sqrt{{\frac{{\textcolor{{{P_BLUE}}}{{A}}}}{{\pi}}}}", P_WHITE),
                 (None, "=", P_WHITE),
-                ("val", r"\sqrt{\frac{0{,}0244\,\mathrm{m^{2}}}{\pi}} \approx 0{,}088\,\mathrm{m}", P_YELLOW),
+                ("val", tr(r"\sqrt{\frac{0.0244\,\mathrm{m^{2}}}{\pi}} \approx 0.088\,\mathrm{m}", r"\sqrt{\frac{0{,}0244\,\mathrm{m^{2}}}{\pi}} \approx 0{,}088\,\mathrm{m}"), P_YELLOW),
             ], color=P_YELLOW)
 
         self.add(duct_wall, duct_disc, a_tag)
@@ -1059,15 +1077,15 @@ class Beat4_Kanalquerschnitt(Scene):
             *[DashedLine(np.array([tube_x0, cy + s * r_big, 0.0]), np.array([disc_x, cy + s * r_big, 0.0]), color=P_CYAN,
                          stroke_width=3) for s in (-1, 1)],
         )
-        ghost_tag = Text("Kühlung: mehr Luft, größerer Kanal", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        ghost_tag = Text(tr("Cooling: more air, larger duct", "Kühlung: mehr Luft, größerer Kanal"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
         ghost_tag.move_to(np.array([-2.6, cy - r_big - 0.3, 0.0]))
         self.play(FadeOut(rp), FadeOut(rp_box), Create(ghost), FadeIn(ghost_tag), *duct_air(1.8), run_time=1.8)
         hold_for(self, N, "cooling", during=duct_air)
 
         caption = swap_caption(self, caption, subtitle_text(N, "handover"))
-        heat_chip = _math_chip(r"\text{→ Heizung:}\;\eta_{\mathrm{WRG}}\;\to\;\Phi_{\mathrm{V}}", P_ORANGE)
-        cool_chip = _math_chip(r"\text{→ Kühlung:}\;q_{v,\mathrm{R}}\;\to\;A,\,r", P_CYAN)
-        chips = VGroup(heat_chip, cool_chip).arrange(RIGHT, buff=0.5).move_to(np.array([0.9, -1.95, 0.0]))
+        heat_chip = _math_chip(tr(r"\text{→ Heating:}\;\eta_{\mathrm{WRG}}\;\to\;\Phi_{\mathrm{V}}", r"\text{→ Heizung:}\;\eta_{\mathrm{WRG}}\;\to\;\Phi_{\mathrm{V}}"), P_ORANGE)
+        cool_chip = _math_chip(tr(r"\text{→ Cooling:}\;q_{v,\mathrm{R}}\;\to\;A,\,r", r"\text{→ Kühlung:}\;q_{v,\mathrm{R}}\;\to\;A,\,r"), P_CYAN)
+        VGroup(heat_chip, cool_chip).arrange(RIGHT, buff=0.5).move_to(np.array([0.9, -1.95, 0.0]))
         self.play(FadeIn(heat_chip, shift=UP * 0.1), FadeIn(cool_chip, shift=UP * 0.1), *duct_air(1.2), run_time=1.2)
         hold_for(self, N, "handover", during=duct_air)
         self.play(FadeOut(caption), run_time=0.3)

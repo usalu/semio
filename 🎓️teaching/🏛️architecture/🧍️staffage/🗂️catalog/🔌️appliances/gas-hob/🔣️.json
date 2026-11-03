@@ -1,0 +1,2541 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "gas-hob",
+    "category": "appliances",
+    "title": {
+      "en": "Domino Gas Hob",
+      "de": "Domino-Gaskochfeld"
+    },
+    "summary": {
+      "en": "A 0.30 m domino gas hob seen from the front: a steel plate with one burner, a flame crown of about 2.5 kW, a control knob and a cast-iron pan support that glows once the flame burns.",
+      "de": "Ein 0,30 m breites Domino-Gaskochfeld in der Frontansicht: eine Stahlplatte mit einem Brenner, einem Flammenkranz von rund 2,5 kW, einem Bedienknebel und einem gusseisernen Pfannenträger, der aufglüht, sobald die Flamme brennt."
+    },
+    "tags": [
+      "hob",
+      "gas",
+      "cooking",
+      "flame",
+      "burner",
+      "kitchen",
+      "internal-gain",
+      "plume"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "din-en-30-1-1-2008",
+          "citation": "DIN EN 30-1-1:2008 Domestic cooking appliances burning gas - Safety (rated heat input of hotplate burners, typically 1 to 3 kW for a rapid burner)."
+        },
+        {
+          "id": "quintiere-2006",
+          "citation": "Quintiere, J. G. (2006). Fundamentals of Fire Phenomena, Wiley (premixed and diffusion flames, convective share of the combustion heat)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A domino gas hob of 0.30 m by 0.52 m with one rapid burner of 2.5 kW rated heat input: a 0.8 mm enamelled steel plate on a pressed housing, a brass burner with a ring of flame ports 0.1 m across, a cast-iron pan support whose rail stands 48 mm above the plate (the pan sits on it, 48 mm above the burner head) and a bakelite knob at the right front. The mass of 5.2 kg is the sum of the housing (4.1 kg), burner (0.4 kg), pan support (0.7 kg) and knob (0.03 kg). Natural gas releases 10 kWh per cubic metre; the thermal model puts 865 W into the flame region (about 35 percent of the rated input leaves the flame directly as plume and radiation, the pot absorbs about 1200 W, 48 percent, as the cooking-pot asset books it) and 260 W into the pan support, 120 W into the burner head and 55 W into the plate (authored estimates). The origin is the centre of the burner on the plate base line; the view is the front elevation.",
+        "de": "Ein Domino-Gaskochfeld von 0,30 m mal 0,52 m mit einem Schnellkochbrenner von 2,5 kW Nennwärmebelastung: eine 0,8 mm starke emaillierte Stahlplatte auf einem gepressten Gehäuse, ein Messingbrenner mit einem Kranz von Flammenöffnungen von 0,1 m Durchmesser, ein gusseiserner Pfannenträger, dessen Schiene 48 mm über der Platte liegt (der Topf steht darauf, 48 mm über dem Brennerkopf) und ein Bakelit-Knebel vorn rechts. Die Masse von 5,2 kg ist die Summe aus Gehäuse (4,1 kg), Brenner (0,4 kg), Pfannenträger (0,7 kg) und Knebel (0,03 kg). Erdgas setzt 10 kWh je Kubikmeter frei; das Wärmemodell legt 865 W in die Flammenregion (rund 35 Prozent der Nennbelastung verlassen die Flamme direkt als Fahne und Strahlung, der Topf nimmt etwa 1200 W auf, 48 Prozent, wie es das Asset cooking-pot bucht) und 260 W in den Pfannenträger, 120 W in den Brennerkopf und 55 W in die Platte (Schätzwerte). Der Ursprung ist die Mitte des Brenners auf der Plattengrundlinie; die Ansicht ist die Vorderansicht."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.088,
+      "widthM": 0.3,
+      "depthM": 0.52,
+      "massKg": 5.23
+    },
+    "materials": [
+      {
+        "id": "steel-enamel",
+        "title": {
+          "en": "Enamelled steel",
+          "de": "Emaillierter Stahl"
+        },
+        "emissivity": 0.88,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 480,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "brass",
+        "title": {
+          "en": "Brass",
+          "de": "Messing"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 8500,
+        "conductivityWmK": 110,
+        "specificHeatJKgK": 380,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "cast-iron",
+        "title": {
+          "en": "Cast iron",
+          "de": "Gusseisen"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7200,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 540,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "bakelite",
+        "title": {
+          "en": "Phenolic resin",
+          "de": "Phenolharz"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 1300,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1500,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "flame",
+        "title": {
+          "en": "Gas flame",
+          "de": "Gasflamme"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.05,
+        "densityKgM3": 0.3,
+        "conductivityWmK": 0.07,
+        "specificHeatJKgK": 1100,
+        "source": "authored-estimate",
+        "reference": "quintiere-2006"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "hob",
+      "bones": [
+        {
+          "id": "hob",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Hob body with steel plate",
+            "de": "Kochfeldkörper mit Stahlplatte"
+          },
+          "lengthM": 0.3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 4.1,
+            "comX": 0,
+            "comY": 0.02,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "burner",
+          "parent": "hob",
+          "x": 0,
+          "y": 0.04,
+          "angleDeg": 0,
+          "title": {
+            "en": "Burner head with cap",
+            "de": "Brennerkopf mit Deckel"
+          },
+          "lengthM": 0.02,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.4,
+            "comX": 0,
+            "comY": 0.007,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "trivet",
+          "parent": "hob",
+          "x": 0,
+          "y": 0.04,
+          "angleDeg": 0,
+          "title": {
+            "en": "Cast-iron pan support",
+            "de": "Pfannenträger aus Gusseisen"
+          },
+          "lengthM": 0.05,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.7,
+            "comX": 0,
+            "comY": 0.03,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "knob",
+          "parent": "hob",
+          "x": 0.105,
+          "y": 0.019,
+          "angleDeg": 0,
+          "title": {
+            "en": "Control knob",
+            "de": "Bedienknebel"
+          },
+          "lengthM": 0.012,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -130,
+            "maxDeg": 130
+          },
+          "mass": {
+            "kg": 0.03,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "flame",
+          "parent": "burner",
+          "x": 0,
+          "y": 0.007,
+          "angleDeg": 0,
+          "title": {
+            "en": "Flame lift (hides the flame behind the plate)",
+            "de": "Flammenhub (verbirgt die Flamme hinter der Platte)"
+          },
+          "lengthM": 0.02,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.036,
+            "maxM": 0.004
+          }
+        },
+        {
+          "id": "flame-body",
+          "parent": "flame",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Flame crown, leans in a draught",
+            "de": "Flammenkranz, neigt sich im Luftzug"
+          },
+          "lengthM": 0.02,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -20,
+            "maxDeg": 20
+          }
+        },
+        {
+          "id": "flame-tip",
+          "parent": "flame-body",
+          "x": 0,
+          "y": 0.015,
+          "angleDeg": 0,
+          "title": {
+            "en": "Central flame tongue, stretches in gusts",
+            "de": "Mittlere Flammenzunge, streckt sich in Böen"
+          },
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.006,
+            "maxM": 0.006
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "hob",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.3,
+        "footprintWidthM": 0.5,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "flame-top",
+        "bone": "flame-tip",
+        "x": 0,
+        "y": 0.018,
+        "kind": "emitter",
+        "title": {
+          "en": "Tip of the flame crown",
+          "de": "Spitze des Flammenkranzes"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "flame-left",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M -0.038 0 C -0.038 0.009 -0.0332 0.015 -0.03 0.02 C -0.0268 0.015 -0.022 0.009 -0.022 0 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "flame-right",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M 0.022 0 C 0.022 0.009 0.0268 0.015 0.03 0.02 C 0.0332 0.015 0.038 0.009 0.038 0 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "flame-centre",
+              "bone": "flame-tip",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.97,
+              "kind": "path",
+              "d": "M -0.009 -0.015 C -0.009 -0.00285 -0.0036 0.00525 0 0.012 C 0.0036 0.00525 0.009 -0.00285 0.009 -0.015 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "burner-cap",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  0.007
+                ],
+                [
+                  0.02,
+                  0.007
+                ],
+                [
+                  0.016,
+                  0.018
+                ],
+                [
+                  -0.016,
+                  0.018
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "burner-ring",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  0
+                ],
+                [
+                  0.052,
+                  0
+                ],
+                [
+                  0.046,
+                  0.007
+                ],
+                [
+                  -0.046,
+                  0.007
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.03,
+              "w": 0.3,
+              "h": 0.01,
+              "r": 0.003,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "housing",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.55,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.031,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "plate-lip",
+              "bone": "hob",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0.012
+                ],
+                [
+                  0.14,
+                  0.012
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "knob",
+              "material": "bakelite"
+            },
+            {
+              "id": "knob-pointer",
+              "bone": "knob",
+              "role": "detail",
+              "z": 3.9,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.011
+                ]
+              ],
+              "closed": false,
+              "region": "knob",
+              "material": "bakelite"
+            },
+            {
+              "id": "trivet-leg-left",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.127,
+              "y": 0,
+              "w": 0.014,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-leg-right",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.113,
+              "y": 0,
+              "w": 0.014,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-rail",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.135,
+              "y": 0.038,
+              "w": 0.27,
+              "h": 0.01,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "vent-slots",
+              "bone": "hob",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.006
+                ],
+                [
+                  -0.08,
+                  0.016
+                ],
+                [
+                  -0.060000000000000005,
+                  0.006
+                ],
+                [
+                  -0.04000000000000001,
+                  0.016
+                ],
+                [
+                  -0.020000000000000004,
+                  0.006
+                ],
+                [
+                  0.0,
+                  0.016
+                ],
+                [
+                  0.01999999999999999,
+                  0.006
+                ],
+                [
+                  0.04000000000000001,
+                  0.016
+                ],
+                [
+                  0.06,
+                  0.006
+                ],
+                [
+                  0.07999999999999999,
+                  0.016
+                ],
+                [
+                  0.1,
+                  0.006
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "front-panel-seam",
+              "bone": "hob",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0.021
+                ],
+                [
+                  0.14,
+                  0.021
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "burner-ports",
+              "bone": "burner",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.046,
+                  0.0035
+                ],
+                [
+                  -0.0368,
+                  0.005
+                ],
+                [
+                  -0.0276,
+                  0.0035
+                ],
+                [
+                  -0.0184,
+                  0.005
+                ],
+                [
+                  -0.0092,
+                  0.0035
+                ],
+                [
+                  0.0,
+                  0.005
+                ],
+                [
+                  0.0092,
+                  0.0035
+                ],
+                [
+                  0.0184,
+                  0.005
+                ],
+                [
+                  0.0276,
+                  0.0035
+                ],
+                [
+                  0.0368,
+                  0.005
+                ],
+                [
+                  0.046,
+                  0.0035
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.26,
+              "w": 0.3,
+              "h": 0.52,
+              "r": 0.01,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "plan-burner-ring",
+              "bone": "burner",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.03,
+              "rx": 0.052,
+              "ry": 0.052,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plan-flame-ring",
+              "bone": "flame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.03,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "plan-burner-cap",
+              "bone": "burner",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.03,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plan-trivet-back",
+              "bone": "hob",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.135,
+              "y": 0.08499999999999999,
+              "w": 0.27,
+              "h": 0.012,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "plan-trivet-front",
+              "bone": "hob",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.135,
+              "y": -0.037000000000000005,
+              "w": 0.27,
+              "h": 0.012,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "plan-trivet-left",
+              "bone": "hob",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.135,
+              "y": -0.037000000000000005,
+              "w": 0.012,
+              "h": 0.134,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "plan-trivet-right",
+              "bone": "hob",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.123,
+              "y": -0.037000000000000005,
+              "w": 0.012,
+              "h": 0.134,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "plan-knob",
+              "bone": "hob",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0.105,
+              "cy": -0.2,
+              "rx": 0.011,
+              "ry": 0.011,
+              "region": "knob",
+              "material": "bakelite"
+            },
+            {
+              "id": "plan-knob-pointer",
+              "bone": "hob",
+              "role": "detail",
+              "z": 7,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.105,
+                  -0.2
+                ],
+                [
+                  0.105,
+                  -0.189
+                ]
+              ],
+              "closed": false,
+              "region": "knob",
+              "material": "bakelite"
+            }
+          ],
+          "front": [
+            {
+              "id": "flame-left",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M -0.008 0.047 C -0.008 0.056 -0.0032 0.062 0.0 0.067 C 0.0032 0.062 0.008 0.056 0.008 0.047 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "flame-right",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M 0.052 0.047 C 0.052 0.056 0.0568 0.062 0.06 0.067 C 0.0632 0.062 0.068 0.056 0.068 0.047 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "flame-centre",
+              "bone": "flame-tip",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.97,
+              "kind": "path",
+              "d": "M 0.021 0.047 C 0.021 0.05915 0.0264 0.06725 0.03 0.074 C 0.0336 0.06725 0.039 0.05915 0.039 0.047 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "burner-cap",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.01,
+                  0.047
+                ],
+                [
+                  0.05,
+                  0.047
+                ],
+                [
+                  0.046,
+                  0.058
+                ],
+                [
+                  0.014,
+                  0.058
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "burner-ring",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.022,
+                  0.04
+                ],
+                [
+                  0.082,
+                  0.04
+                ],
+                [
+                  0.076,
+                  0.047
+                ],
+                [
+                  -0.016,
+                  0.047
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.26,
+              "y": 0.03,
+              "w": 0.52,
+              "h": 0.01,
+              "r": 0.003,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "housing",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.55,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.031,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "plate-lip",
+              "bone": "hob",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.012
+                ],
+                [
+                  0.25,
+                  0.012
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "steel-enamel"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.211,
+              "y": 0.04,
+              "w": 0.022,
+              "h": 0.012,
+              "region": "knob",
+              "material": "bakelite"
+            },
+            {
+              "id": "trivet-leg-left",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.083,
+              "y": 0.04,
+              "w": 0.014,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-leg-right",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.037,
+              "y": 0.04,
+              "w": 0.014,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-rail",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.037,
+              "y": 0.078,
+              "w": 0.134,
+              "h": 0.01,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "vent-slots",
+              "bone": "hob",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.22,
+                  0.006
+                ],
+                [
+                  -0.18,
+                  0.016
+                ],
+                [
+                  -0.14,
+                  0.006
+                ],
+                [
+                  -0.1,
+                  0.016
+                ],
+                [
+                  -0.06,
+                  0.006
+                ],
+                [
+                  -0.01999999999999999,
+                  0.016
+                ],
+                [
+                  0.01999999999999999,
+                  0.006
+                ],
+                [
+                  0.060000000000000026,
+                  0.016
+                ],
+                [
+                  0.1,
+                  0.006
+                ],
+                [
+                  0.13999999999999999,
+                  0.016
+                ],
+                [
+                  0.18000000000000002,
+                  0.006
+                ],
+                [
+                  0.22,
+                  0.016
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "front-panel-seam",
+              "bone": "hob",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.021
+                ],
+                [
+                  0.25,
+                  0.021
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.30 m domino hob seen from the front, 6 mm by 1.8 mm tall on paper: a flat plate with the burner standing on it, the flame crown above and the cast-iron pan support spanning over it. Plan: the 0.30 m by 0.52 m plate (6 mm by 10.4 mm), the burner head with its flame ring and cap, the rectangular pan-support frame and the control knob at the front edge. Front, 10.4 mm by 1.8 mm on paper: the whole width of the 0.52 m hob with its low housing, the plate with its lip line, the burner standing off-centre with ring, cap and the two side flames and the centre flame, the knob as a small cylinder on the right edge, and the pan support as two legs and a rail across the front. Front, 10.4 mm by 1.8 mm on paper: the whole width of the 0.52 m hob with its low housing, the plate with its lip line, the burner standing off-centre with ring, cap and the two side flames and the centre flame, the knob as a small cylinder on the right edge, and the pan support as two legs and a rail across the front.",
+            "de": "Ein 0,30 m breites Domino-Kochfeld in der Frontansicht, auf Papier 6 mm breit und 1,8 mm hoch: eine flache Platte mit dem Brenner darauf, dem Flammenkranz darüber und dem Pfannenträger aus Gusseisen darüber hinweg. Grundriss: die Platte von 0,30 m mal 0,52 m (6 mm mal 10,4 mm), der Brennerkopf mit Flammenring und Deckel, der rechteckige Pfannenträger-Rahmen und der Bedienknebel an der Vorderkante. Vorderansicht, 10,4 mm auf 1,8 mm: die ganze Breite des 0,52 m tiefen Kochfelds mit niedrigem Gehäuse, die Platte mit Kantenlinie, der außermittig stehende Brenner mit Ring, Kappe sowie den beiden Seitenflammen und der Mittelflamme, der Knebel als kleiner Zylinder am rechten Rand und der Topfträger als zwei Beine mit einer Schiene davor. Vorderansicht, 10,4 mm auf 1,8 mm: die ganze Breite des 0,52 m tiefen Kochfelds mit niedrigem Gehäuse, die Platte mit Kantenlinie, der außermittig stehende Brenner mit Ring, Kappe sowie den beiden Seitenflammen und der Mittelflamme, der Knebel als kleiner Zylinder am rechten Rand und der Topfträger als zwei Beine mit einer Schiene davor."
+          },
+          "retained": {
+            "en": "The 10 mm plate rim overhanging the 0.28 m pressed housing, the housing seam, the control knob with pointer, the burner ring and cap, three flame tongues (the middle one taller) and the pan support with its two legs and top rail.",
+            "de": "Der 10 mm hohe Plattenrand, der über das 0,28 m breite gepresste Gehäuse auskragt, die Gehäusefuge, der Bedienknebel mit Zeiger, Brennerring und -deckel, drei Flammenzungen (die mittlere höher) und der Pfannenträger mit seinen zwei Beinen und der oberen Schiene."
+          },
+          "merged": {
+            "en": "Nothing is merged: every region has its own shape.",
+            "de": "Nichts ist zusammengeführt: jede Region hat ihre eigene Form."
+          },
+          "omitted": {
+            "en": "The second burner, the grate fingers towards the centre, the burner flame ports and the plate seam. In the front view the knob pointer is left out; the flames sit on the flame bones and drop out of sight under the burner ring when the hob is off. In the front view the knob pointer is left out; the flames sit on the flame bones and drop out of sight under the burner ring when the hob is off.",
+            "de": "Der zweite Brenner, die Roststäbe zur Mitte hin, die Flammenöffnungen des Brenners und die Plattenfuge. In der Vorderansicht entfällt der Knebelzeiger; die Flammen sitzen an den Flammenknochen und sinken bei ausgeschaltetem Feld unter den Brennerring. In der Vorderansicht entfällt der Knebelzeiger; die Flammen sitzen an den Flammenknochen und sinken bei ausgeschaltetem Feld unter den Brennerring."
+          },
+          "thinElements": {
+            "en": "The flame ring is drawn as three tongues 16 mm wide with 11 mm gaps so that they stay separate on paper; the trivet legs are 14 mm wide.",
+            "de": "Der Flammenkranz ist als drei Zungen von 16 mm Breite mit 11 mm Lücken gezeichnet, damit sie auf Papier getrennt bleiben; die Beine des Pfannenträgers sind 14 mm breit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Plate, knob, burner, flame and pan support are five regions; in the thermal view the flame and the pan support glow, the burner head warms and the plate stays cool except around the burner.",
+            "de": "Platte, Knebel, Brenner, Flamme und Pfannenträger sind fünf Regionen; in der Thermalansicht glühen Flamme und Pfannenträger, der Brennerkopf erwärmt sich, und die Platte bleibt außer um den Brenner kühl."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "flame-crown",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M -0.042 0 C -0.044 0.011 -0.036 0.019 -0.028 0.02 C -0.022 0.017 -0.02 0.015 -0.012 0.023 C -0.006 0.029 -0.003 0.033 0 0.034 C 0.003 0.033 0.006 0.029 0.012 0.023 C 0.02 0.015 0.022 0.017 0.028 0.02 C 0.036 0.019 0.044 0.011 0.042 0 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "burner",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  0
+                ],
+                [
+                  0.052,
+                  0
+                ],
+                [
+                  0.044,
+                  0.007
+                ],
+                [
+                  0.02,
+                  0.007
+                ],
+                [
+                  0.016,
+                  0.018
+                ],
+                [
+                  -0.016,
+                  0.018
+                ],
+                [
+                  -0.02,
+                  0.007
+                ],
+                [
+                  -0.044,
+                  0.007
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.04,
+              "regions": [
+                "plate",
+                "knob"
+              ],
+              "material": "steel-enamel"
+            },
+            {
+              "id": "trivet-leg-left",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.128,
+              "y": 0,
+              "w": 0.016,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-leg-right",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.112,
+              "y": 0,
+              "w": 0.016,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-rail",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.136,
+              "y": 0.038,
+              "w": 0.272,
+              "h": 0.012,
+              "region": "trivet",
+              "material": "cast-iron"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.26,
+              "w": 0.3,
+              "h": 0.52,
+              "r": 0.01,
+              "regions": [
+                "plate",
+                "knob"
+              ],
+              "material": "steel-enamel"
+            },
+            {
+              "id": "plan-burner",
+              "bone": "hob",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.03,
+              "rx": 0.052,
+              "ry": 0.052,
+              "regions": [
+                "burner",
+                "flame"
+              ],
+              "material": "brass"
+            },
+            {
+              "id": "plan-trivet",
+              "bone": "hob",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.135,
+                  -0.037000000000000005
+                ],
+                [
+                  0.135,
+                  -0.037000000000000005
+                ],
+                [
+                  0.135,
+                  0.097
+                ],
+                [
+                  -0.135,
+                  0.097
+                ]
+              ],
+              "closed": true,
+              "region": "trivet",
+              "material": "cast-iron"
+            }
+          ],
+          "front": [
+            {
+              "id": "flame-crown",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M -0.012 0.047 C -0.014 0.058 -0.006 0.066 0.002 0.067 C 0.008 0.064 0.01 0.062 0.018 0.07 C 0.024 0.076 0.027 0.08 0.03 0.081 C 0.033 0.08 0.036 0.076 0.042 0.07 C 0.05 0.062 0.052 0.064 0.058 0.067 C 0.066 0.066 0.074 0.058 0.072 0.047 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "burner",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.022,
+                  0.04
+                ],
+                [
+                  0.082,
+                  0.04
+                ],
+                [
+                  0.074,
+                  0.047
+                ],
+                [
+                  0.05,
+                  0.047
+                ],
+                [
+                  0.046,
+                  0.058
+                ],
+                [
+                  0.014,
+                  0.058
+                ],
+                [
+                  0.01,
+                  0.047
+                ],
+                [
+                  -0.014,
+                  0.047
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.26,
+              "y": 0,
+              "w": 0.52,
+              "h": 0.04,
+              "regions": [
+                "plate",
+                "knob"
+              ],
+              "material": "steel-enamel"
+            },
+            {
+              "id": "trivet-leg-left",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.081,
+              "y": 0.04,
+              "w": 0.016,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-leg-right",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.037,
+              "y": 0.04,
+              "w": 0.016,
+              "h": 0.04,
+              "region": "trivet",
+              "material": "cast-iron"
+            },
+            {
+              "id": "trivet-rail",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.078,
+              "w": 0.14,
+              "h": 0.012,
+              "region": "trivet",
+              "material": "cast-iron"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.30 m hob 3 mm wide on paper: a flat plate, a burner wedge with its flame crown and the pan support bridge above. Plan: the 3 mm by 5.2 mm plate, one burner disc with the flame ring merged in and the pan-support frame as an outline. Front, 5.2 mm by 0.9 mm: plate as one strip, burner wedge with the flame crown above it and the pan support as two legs and a rail. Front, 5.2 mm by 0.9 mm: plate as one strip, burner wedge with the flame crown above it and the pan support as two legs and a rail.",
+            "de": "Ein 0,30 m breites Kochfeld, auf Papier 3 mm breit: eine flache Platte, ein Brennerkeil mit Flammenkranz und die Pfannenträger-Brücke darüber. Grundriss: die Platte von 3 mm mal 5,2 mm, eine Brennerscheibe mit eingeschmolzenem Flammenring und der Pfannenträger-Rahmen als Umriss. Vorderansicht, 5,2 mm auf 0,9 mm: die Platte als ein Streifen, der Brennerkeil mit der Flammenkrone darüber und der Topfträger als zwei Beine mit Schiene. Vorderansicht, 5,2 mm auf 0,9 mm: die Platte als ein Streifen, der Brennerkeil mit der Flammenkrone darüber und der Topfträger als zwei Beine mit Schiene."
+          },
+          "retained": {
+            "en": "Plate, burner wedge, one scalloped flame crown with a taller middle tongue, and the pan support with legs and rail.",
+            "de": "Platte, Brennerkeil, ein gezackter Flammenkranz mit höherer mittlerer Zunge sowie der Pfannenträger mit Beinen und Schiene."
+          },
+          "merged": {
+            "en": "Plate and knob share one shape (regions plate and knob); burner ring and cap are one wedge; the three tongues are one crown.",
+            "de": "Platte und Knebel teilen eine Form (Regionen Platte und Knebel); Brennerring und -deckel sind ein Keil; die drei Zungen sind ein Kranz."
+          },
+          "omitted": {
+            "en": "The knob pointer, the plate lip and the single tongues. Lip line, knob and the separate housing in the front view. Lip line, knob and the separate housing in the front view.",
+            "de": "Der Knebelzeiger, die Plattenkante und die einzelnen Zungen. Kantenlinie, Knebel und das getrennte Gehäuse in der Vorderansicht. Kantenlinie, Knebel und das getrennte Gehäuse in der Vorderansicht."
+          },
+          "thinElements": {
+            "en": "The flame crown is thickened from 48 to 84 mm wide; the legs are 16 mm wide (0.16 mm).",
+            "de": "Der Flammenkranz ist von 48 auf 84 mm Breite verdickt; die Beine sind 16 mm breit (0,16 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail not drawn, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "The plate shape carries plate and knob as merged regions; burner and crown stay separate, so the flame and the pan support still glow on their own.",
+            "de": "Die Plattenform trägt Platte und Knebel als zusammengeführte Regionen; Brenner und Kranz bleiben getrennt, sodass Flamme und Pfannenträger weiter für sich glühen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "flame-crown",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "path",
+              "d": "M -0.05 0 C -0.052 0.013 -0.038 0.025 -0.02 0.027 C -0.01 0.031 -0.004 0.037 0 0.041 C 0.004 0.037 0.01 0.031 0.02 0.027 C 0.038 0.025 0.052 0.013 0.05 0 Z",
+              "region": "flame",
+              "material": "flame"
+            },
+            {
+              "id": "burner",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.056,
+                  0
+                ],
+                [
+                  0.056,
+                  0
+                ],
+                [
+                  0.046,
+                  0.012
+                ],
+                [
+                  0.022,
+                  0.012
+                ],
+                [
+                  0.018,
+                  0.03
+                ],
+                [
+                  -0.018,
+                  0.03
+                ],
+                [
+                  -0.022,
+                  0.012
+                ],
+                [
+                  -0.046,
+                  0.012
+                ]
+              ],
+              "closed": true,
+              "region": "burner",
+              "material": "brass"
+            },
+            {
+              "id": "plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.04,
+              "regions": [
+                "plate",
+                "knob"
+              ],
+              "material": "steel-enamel"
+            },
+            {
+              "id": "trivet",
+              "bone": "trivet",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.138,
+              "y": 0.004,
+              "w": 0.276,
+              "h": 0.044,
+              "region": "trivet",
+              "material": "cast-iron"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.26,
+              "w": 0.3,
+              "h": 0.52,
+              "r": 0.012,
+              "regions": [
+                "plate",
+                "knob"
+              ],
+              "material": "steel-enamel"
+            },
+            {
+              "id": "plan-burner",
+              "bone": "hob",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.03,
+              "rx": 0.06,
+              "ry": 0.06,
+              "regions": [
+                "burner",
+                "flame",
+                "trivet"
+              ],
+              "material": "brass"
+            }
+          ],
+          "front": [
+            {
+              "id": "plate",
+              "bone": "hob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.26,
+              "y": 0,
+              "w": 0.52,
+              "h": 0.04,
+              "regions": [
+                "plate",
+                "knob"
+              ],
+              "material": "steel-enamel"
+            },
+            {
+              "id": "burner-block",
+              "bone": "burner",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.04,
+              "w": 0.14,
+              "h": 0.05,
+              "regions": [
+                "trivet",
+                "burner",
+                "flame"
+              ],
+              "material": "cast-iron"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.5 mm wide hob: a plate strip, a burner wedge with a flame drop and the pan support as one block above. Front, 2.6 mm by 0.45 mm: a plate strip, a burner wedge with a flame drop and the pan support as one block. Plan, 1.5 mm by 2.6 mm: the plate, one burner disc with the flame ring merged in and the pan-support frame as an outline. Front, 2.6 mm by 0.45 mm: a plate strip and one block that carries burner, flame and pan support together. Plan, 1.5 mm by 2.6 mm: the plate and one disc in which burner, flame ring and pan support are merged. In the side view the burner is drawn 0.03 m high (0.15 mm on paper plus the line) instead of 0.018 m so that it stays a printable 0.2 mm feature; the front block and the plan disc are already wider than that.",
+            "de": "Ein 1,5 mm breites Kochfeld: ein Plattenstreifen, ein Brennerkeil mit Flammentropfen und der Pfannenträger als ein Block darüber. Vorderansicht, 2,6 mm auf 0,45 mm: ein Plattenstreifen, ein Brennerkeil mit Flammentropfen und der Topfträger als ein Block. Grundriss, 1,5 mm auf 2,6 mm: die Platte, eine Brennerscheibe mit eingeschmolzenem Flammenring und der Topfträgerrahmen als Umriss. Vorderansicht, 2,6 mm auf 0,45 mm: ein Plattenstreifen und ein Block, der Brenner, Flamme und Topfträger zusammen trägt. Grundriss, 1,5 mm auf 2,6 mm: die Platte und eine Scheibe, in der Brenner, Flammenring und Topfträger verschmolzen sind. In der Seitenansicht ist der Brenner 0,03 m hoch gezeichnet (0,15 mm auf dem Papier plus Linie) statt 0,018 m, damit er ein druckbares 0,2-mm-Detail bleibt; Frontblock und Grundrissscheibe sind bereits breiter."
+          },
+          "retained": {
+            "en": "Plate strip, burner wedge, flame drop and the pan support as a closed bar.",
+            "de": "Plattenstreifen, Brennerkeil, Flammentropfen und der Pfannenträger als geschlossener Balken."
+          },
+          "merged": {
+            "en": "Legs and rail of the pan support are one block (the opening below is 0.2 mm tall, so it is closed); plate and knob share the plate strip.",
+            "de": "Beine und Schiene des Pfannenträgers sind ein Block (die Öffnung darunter ist 0,2 mm hoch und deshalb geschlossen); Platte und Knebel teilen den Plattenstreifen."
+          },
+          "omitted": {
+            "en": "Knob, pointer, plate lip and every single flame tongue. Knob and cap in the plan; the plate is a single strip in front. Knob, burner cap and the frame outline in the plan; the plate is a single strip in front and burner, flame and pan support share one block.",
+            "de": "Knebel, Zeiger, Plattenkante und jede einzelne Flammenzunge. Knebel und Kappe im Grundriss; die Platte ist vorn ein einziger Streifen. Knebel, Brennerkappe und Rahmenumriss im Grundriss; die Platte ist vorn ein einziger Streifen, Brenner, Flamme und Topfträger teilen sich einen Block."
+          },
+          "thinElements": {
+            "en": "The pan support is thickened from 10 mm to 44 mm and lies 4 mm higher than at 1:50; the flame is thickened to 100 mm.",
+            "de": "Der Pfannenträger ist von 10 mm auf 44 mm verdickt und liegt 4 mm höher als bei 1:50; die Flamme ist auf 100 mm verdickt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail not drawn, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Four shapes carry the five regions; the flame and the pan support stay their own regions.",
+            "de": "Vier Formen tragen die fünf Regionen; Flamme und Pfannenträger bleiben eigene Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the asset is only 0.6 mm wide on paper and its smallest part, the 10 mm pan support rail, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 0.6 mm breit auf Papier und sein kleinstes Teil, die 10 mm breite Schiene des Pfannenträgers, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 10 mm pan support rail",
+          "de": "Die 10 mm breite Schiene des Pfannenträgers"
+        },
+        "limitingSizeM": 0.01,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The burner is closed, the flame is gone and everything is at room temperature.",
+          "de": "Der Brenner ist geschlossen, die Flamme fehlt und alles hat Raumtemperatur."
+        },
+        "bones": {
+          "flame": {
+            "dy": -0.036
+          },
+          "knob": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "knob": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "burner": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "flame": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "trivet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "flame-plume": 0
+          },
+          "operating": {
+            "burner": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "simmer",
+        "title": {
+          "en": "Simmer",
+          "de": "Köcheln"
+        },
+        "description": {
+          "en": "The knob stands at a third and the flame burns small: about 1 kW.",
+          "de": "Der Knebel steht bei einem Drittel und die Flamme brennt klein: rund 1 kW."
+        },
+        "bones": {
+          "flame": {
+            "dy": -0.006
+          },
+          "knob": {
+            "angleDeg": 45
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "knob": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "burner": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "flame": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "trivet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "flame-plume": 0.4
+          },
+          "operating": {
+            "burner": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "high",
+        "title": {
+          "en": "High",
+          "de": "Volle Flamme"
+        },
+        "description": {
+          "en": "The knob is fully open and the flame stands upright and releases about 2.5 kW.",
+          "de": "Der Knebel ist ganz geöffnet und die Flamme steht aufrecht und gibt rund 2,5 kW ab."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 110
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "knob": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "burner": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "flame": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "trivet": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "flame-plume": 1
+          },
+          "operating": {
+            "burner": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "flicker",
+        "title": {
+          "en": "Flicker",
+          "de": "Flackern"
+        },
+        "description": {
+          "en": "The flames of the running burner lean left and right and stretch their middle tongue every 2 seconds.",
+          "de": "Die Flammen des laufenden Brenners neigen sich nach links und rechts und strecken alle 2 Sekunden ihre mittlere Zunge."
+        },
+        "durationS": 2,
+        "fps": 15,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "high",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.5,
+            "pose": "high",
+            "ease": "smooth",
+            "bones": {
+              "flame-body": {
+                "angleDeg": -8
+              },
+              "flame-tip": {
+                "dy": 0.005
+              }
+            }
+          },
+          {
+            "t": 1,
+            "pose": "high",
+            "ease": "smooth",
+            "bones": {
+              "flame-body": {
+                "angleDeg": 7
+              },
+              "flame-tip": {
+                "dy": -0.003
+              }
+            }
+          },
+          {
+            "t": 1.5,
+            "pose": "high",
+            "ease": "smooth",
+            "bones": {
+              "flame-body": {
+                "angleDeg": -4
+              },
+              "flame-tip": {
+                "dy": 0.004
+              }
+            }
+          },
+          {
+            "t": 2,
+            "pose": "high",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 2
+          }
+        ],
+        "phases": [
+          {
+            "id": "rest",
+            "fromS": 0,
+            "toS": 0.4,
+            "title": {
+              "en": "Upright",
+              "de": "Aufrecht"
+            }
+          },
+          {
+            "id": "gusts",
+            "fromS": 0.4,
+            "toS": 1.6,
+            "title": {
+              "en": "Gusts",
+              "de": "Böen"
+            }
+          },
+          {
+            "id": "settle",
+            "fromS": 1.6,
+            "toS": 2,
+            "title": {
+              "en": "Settling",
+              "de": "Beruhigen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.5,
+            "kind": "thermal",
+            "title": {
+              "en": "Flame peak",
+              "de": "Flammenspitze"
+            },
+            "target": "burner"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.95
+              },
+              {
+                "t": 0.5,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.9
+              },
+              {
+                "t": 1.5,
+                "v": 1
+              },
+              {
+                "t": 2,
+                "v": 0.95
+              }
+            ]
+          },
+          {
+            "target": "emitter:flame-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.95
+              },
+              {
+                "t": 0.5,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.9
+              },
+              {
+                "t": 1.5,
+                "v": 1
+              },
+              {
+                "t": 2,
+                "v": 0.95
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "light-and-burn",
+        "title": {
+          "en": "Light and burn",
+          "de": "Anzünden und brennen"
+        },
+        "description": {
+          "en": "The knob is turned and the burner is lit after two seconds: the flame grows out of the plate and burns on at full power while the pan support and the burner head glow up.",
+          "de": "Der Knebel wird gedreht und der Brenner nach zwei Sekunden gezündet: die Flamme wächst aus der Platte und brennt mit voller Leistung weiter, während Pfannenträger und Brennerkopf aufglühen."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 2,
+            "pose": "off",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "high",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "high",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "lighting",
+            "fromS": 2,
+            "toS": 3,
+            "title": {
+              "en": "Lighting",
+              "de": "Zünden"
+            }
+          },
+          {
+            "id": "burn",
+            "fromS": 3,
+            "toS": 300,
+            "title": {
+              "en": "Burning, heating up",
+              "de": "Brennt, heizt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "ignition",
+            "title": {
+              "en": "Burner lit",
+              "de": "Brenner gezündet"
+            },
+            "target": "burner"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:flame-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "burner",
+          "title": {
+            "en": "Burner",
+            "de": "Brenner"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.4,
+              "title": {
+                "en": "Simmer (1 kW)",
+                "de": "Köcheln (1 kW)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "High (2.5 kW)",
+                "de": "Volle Flamme (2,5 kW)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "plate",
+          "title": {
+            "en": "Steel plate",
+            "de": "Stahlplatte"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "steel-enamel",
+          "areaM2": 0.14,
+          "characteristicLengthM": 0.3,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "plate-skin",
+              "title": {
+                "en": "Steel plate",
+                "de": "Stahlplatte"
+              },
+              "kind": "metal",
+              "material": "steel-enamel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "operating": {
+            "key": "burner",
+            "heatW": 55
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "knob",
+          "title": {
+            "en": "Control knob",
+            "de": "Bedienknebel"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "bakelite",
+          "areaM2": 0.0025,
+          "characteristicLengthM": 0.025,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "knob-skin",
+              "title": {
+                "en": "Control knob",
+                "de": "Bedienknebel"
+              },
+              "kind": "polymer",
+              "material": "bakelite",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.035,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "burner",
+          "title": {
+            "en": "Burner head and cap",
+            "de": "Brennerkopf und -deckel"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "brass",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.1,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "burner-skin",
+              "title": {
+                "en": "Burner head and cap",
+                "de": "Brennerkopf und -deckel"
+              },
+              "kind": "metal",
+              "material": "brass",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 1200,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1200,
+          "operating": {
+            "key": "burner",
+            "heatW": 120
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "flame",
+          "title": {
+            "en": "Flame crown",
+            "de": "Flammenkranz"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "flame",
+          "areaM2": 0.008,
+          "characteristicLengthM": 0.025,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "flame-skin",
+              "title": {
+                "en": "Flame crown",
+                "de": "Flammenkranz"
+              },
+              "kind": "polymer",
+              "material": "flame",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.04,
+              "heatCapacityJM2K": 150,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 150,
+          "operating": {
+            "key": "burner",
+            "heatW": 865
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "trivet",
+          "title": {
+            "en": "Cast-iron pan support",
+            "de": "Pfannenträger aus Gusseisen"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "cast-iron",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.27,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "trivet-skin",
+              "title": {
+                "en": "Cast-iron pan support",
+                "de": "Pfannenträger aus Gusseisen"
+              },
+              "kind": "metal",
+              "material": "cast-iron",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.0001,
+              "heatCapacityJM2K": 4500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4500,
+          "operating": {
+            "key": "burner",
+            "heatW": 260
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "flame-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Plume above the burner",
+            "de": "Fahne über dem Brenner"
+          },
+          "anchor": "flame-top",
+          "directionDeg": 90,
+          "diameterM": 0.1,
+          "region": "flame",
+          "source": "authored-estimate",
+          "reference": "quintiere-2006"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 2.5 kW of gas leave in three parts: 865 W into the flame region (plume and radiation), 435 W into plate, burner head and pan support and 1200 W into the pot above (cooking-pot: 1155 W water, 20 W base, 25 W wall); combustion products (carbon dioxide, 0.4 g/s of water vapour) are neglected.",
+          "de": "Die 2,5 kW Gas verteilen sich in drei Teile: 865 W in die Flammenregion (Fahne und Strahlung), 435 W in Platte, Brennerkopf und Pfannenträger und 1200 W in den Topf darüber (cooking-pot: 1155 W Wasser, 20 W Boden, 25 W Wand); die Verbrennungsprodukte (Kohlendioxid, 0,4 g/s Wasserdampf) bleiben unberücksichtigt."
+        },
+        {
+          "en": "The unlit pose hides the flame by lowering the flame bones behind the plate, so one asset shows all states.",
+          "de": "Die Pose Aus verbirgt die Flamme, indem sie die Flammenknochen hinter die Platte absenkt, sodass ein Asset alle Zustände zeigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 5.2 kg hob stands on its housing: a unilateral contact of 0.30 m by 0.50 m carries the weight.",
+          "de": "Das 5,2 kg schwere Kochfeld steht auf seinem Gehäuse: ein einseitiger Kontakt von 0,30 m mal 0,50 m trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "high",
+      "defaultClip": "flicker",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

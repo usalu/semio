@@ -1,0 +1,323 @@
+{
+  "title": "Handcrafted Staffage in Architecture Course Clips",
+  "emoji": "🧍",
+  "status": "open",
+  "description": "Every clip of the architecture course must use only the handcrafted staffage archive (🎓️teaching/🏛️architecture/🧍️staffage) instead of the ad-hoc silhouettes, activity SVGs and glyphs it uses now. Extend the handcrafted staffage where assets are missing. Energy clips use the animated thermodynamic staffage views. Coordinator Opus 5.5 with a 20-agent fleet (Sonnet 5.5 execution, Haiku 5.5 audits).",
+  "summary": "Architecture course clips now draw every person, device, furniture item, machine, vehicle and building component only from the handcrafted staffage archive.\n- **Bridge:** a TS cast exporter (schema; elevation, plan and front views; theme and transport; 600-frame cap; content-keyed cache) and a Python staffage, staffage_motion, fitted_staffage and pendant_lamp API with a lazy, bounded parser.\n- **New handcrafted assets:** humans, a new appliances category, machinery for the heat-pump and DEC hardware, objects, front and plan views. The catalog check passes 144/144.\n- **Deleted:** silhouettes, person, object and lamp glyphs, radiator(), the activity SVGs and every primitive-built device.\n- **Thermal rule:** energy and optimization comfort clips use the animated thermal staffage views.\n- **Guard:** the `staffage_only` test enforces the rule.\n- **Verification:** visuals Python tests (including integration and the guard) pass, staffage vitest 994 passed, and the changed scenes were rendered and inspected.\n- **Known infra leftovers:** repo dependencies ensure refuses, optimization has a pre-existing $schema assertion failure, and the long BIM suites are not fully run.\nThe full summary is in summary.md in the ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2778"
+  },
+  "goal": "🎯runningdrawing",
+  "sessions": [
+    "e6c54651-a487-4869-b7d2-dcb047816ee7",
+    "b2cdd4a0-74b4-4a21-b989-d3a5480cf219",
+    "338992fa-aeb6-426c-8fcb-96717bd48ff4"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-01 01:31:35",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Every clip of the architecture course must use only the handcrafted staffage archive (🎓️teaching/🏛️architecture/🧍️staffage) instead of the ad-hoc silhouettes, activity SVGs and glyphs it uses now. Extend the handcrafted staffage where assets are missing. Energy clips use the animated thermodynamic staffage views. Coordinator Opus 5.5 with a 20-agent fleet (Sonnet 5.5 execution, Haiku 5.5 audits).",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-01 11:01:51",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "ccac6866cc11544b90ee55a9e0c78184fd689766",
+      "summary": "Architecture course clips now draw every person, device, furniture item, machine, vehicle and building component only from the handcrafted staffage archive.\n- **Bridge:** a TS cast exporter (schema; elevation, plan and front views; theme and transport; 600-frame cap; content-keyed cache) and a Python staffage, staffage_motion, fitted_staffage and pendant_lamp API with a lazy, bounded parser.\n- **New handcrafted assets:** humans, a new appliances category, machinery for the heat-pump and DEC hardware, objects, front and plan views. The catalog check passes 144/144.\n- **Deleted:** silhouettes, person, object and lamp glyphs, radiator(), the activity SVGs and every primitive-built device.\n- **Thermal rule:** energy and optimization comfort clips use the animated thermal staffage views.\n- **Guard:** the `staffage_only` test enforces the rule.\n- **Verification:** visuals Python tests (including integration and the guard) pass, staffage vitest 994 passed, and the changed scenes were rendered and inspected.\n- **Known infra leftovers:** repo dependencies ensure refuses, optimization has a pre-existing $schema assertion failure, and the long BIM suites are not fully run.\nThe full summary is in summary.md in the ticket folder.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔠️english💻📖️detail"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n🗃️🔡️german💻📖️detail"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🎚️config💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️📦️packages🛅🟦️typescript💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🗂️catalog💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🎚️config💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🎞️clipsampling💾🥒️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🧰️support💻🧰️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧫️fixtures🗃️✅️assetvalidation⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️☀️solarradiation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️⚖️heatingcomparison💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️🌤️summerstrategy💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️⚙️mechanical💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️❓️need💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🌡️heatflow💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️📦️volume💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🧪️architecture⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🧪️architecture💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🌬️ventilation🗃️🎬️clip🗃️🪟️natural💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring💻📜️script"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️scenes"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️integration"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️scenes"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests🗃️🎨️semiostyle💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎬️clip🗃️🪟️presentation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️♨️systemlosses💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️⚖️regulations💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️⚡️demandpower💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🏭️primaryenergy💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🏷️certificate💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🔁️recap💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📊️demand🗃️🎬️clip🗃️🧪️practice💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️☀️solargains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️👥️internalgains💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧮️calculation💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧱️conduction💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🔥️heating🗃️🎬️clip🗃️🧲️fundamentals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🧲️physics🗃️🎬️clip🗃️🧲️fundamentals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🎯️optimization🗃️🎬️clip🗃️⚖️index💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🎯️optimization🗃️🎬️clip🗃️🎨️visuals💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🎯️optimization🗃️🎬️clip🗃️🎨️visuals🗃️🏠️room💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🎯️optimization🗃️🎬️clip🗃️📉️extrema💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🎯️optimization🗃️🎬️clip🗃️🧪️experiments💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🏗️bim🗃️🎬️clip🗃️📊️information💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🏗️bim🗃️🎬️clip🗃️🔗️consistency💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📊️excel🗃️🎬️clip🗃️📋️program💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏠️overview💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️📚️catalogloading💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🧪️tests🗃️🗂️gridscroll💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🎞️animation💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🎨️depiction💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🎨️depiction🗃️💨️transportview💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️📤️export🗃️🎬️cli💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🖨️representation💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🖨️representation🗃️🪞️copies💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🔨️modules🗃️🧮️evaluation💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️👤️humans🗃️walkingcommuter⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🚜️vehicles🗃️citycar⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️panelradiator⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog🗃️🧱️components🗃️tiltwindow⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🎞️clipsampling💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🎞️frametiming💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️💨️transportview💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️📕️pdfreopen💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🗜️zipreopen💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧪️tests🗃️🧬️schematwin💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🧬️schema💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity🗃️🏃️sprint💾🖼️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity🗃️😴️sleep💾🖼️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity🗃️🚶️walk💾🖼️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity🗃️🧪️tests⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️❄️cooling🗃️🎬️clip🗃️👥️internalgains🗃️🏃️activity🗃️🧬️schema⚙️🔣️schema"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests⚙️🔣️silhouettes"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧪️tests💻🐍️silhouettes"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🧬️schema⚙️🔣️schema"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🫟️silhouettes⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🫟️silhouettes📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️🏗️authoring🗃️🎨️visuals🗃️🫟️silhouettes🗃️🧬️schema⚙️🔣️schema"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-01 11:02:32",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Final 20-agent verification and polish pass: run the unverified BIM and optimization suites, re-render and audit every staffage scene per series after all concurrent changes, and audit the new assets (en/de text, handcrafted authoring rules, thermal physics plausibility, tests with a third-party check), docstrings and the non-energy series. Fix everything found.",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-03 00:00:00",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Round 3: finish canonical staffage migration end to end: provenance (asset, revision, view, scale variant, pose/animation, scenario) for every depicted entity, explicit validation failures for missing combinations, central library extensions browsable in the library browser, documented thermal model for thermal lessons, canonical structural force/moment representations, deterministic scene time across player/seek/preview/export, regenerated media and cache keys, close r2 open items. Coordinator opus 5.5 medium, 20 named workers. Reopened manually (ticket_reopen permission not granted).",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    }
+  ]
+}

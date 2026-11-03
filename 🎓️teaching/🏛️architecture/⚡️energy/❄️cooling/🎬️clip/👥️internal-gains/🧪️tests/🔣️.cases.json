@@ -1,0 +1,12 @@
+{
+  "metabolic_watts": [70, 120, 300, 900],
+  "cast_prefix": "cooling-internal-gains-",
+  "forbidden": ["person_glyph", "seated_person_glyph", "object_silhouette", "lamp_glyph", "SVGMobject", "_ACTIVITY_ROOT", "_ACTIVITY\\b"],
+  "thermal": ["standing", "walker", "jogger", "sleeper", "seated-worker", "laptop", "laptop-closed", "server-rack", "lamp", "lamp-dimmed"],
+  "activity_assets": {
+    "sleep": "sleeping-person",
+    "sit": "seated-office-worker",
+    "walk": "walking-commuter",
+    "sprint": "jogger"
+  }
+}

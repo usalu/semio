@@ -5,7 +5,7 @@
     "id": "kneeling-gardener",
     "category": "humans",
     "title": {
-      "en": "Kneeling gardener",
+      "en": "Kneeling Gardener",
       "de": "Kniende Gärtnerin"
     },
     "summary": {
@@ -374,7 +374,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": 0.19
         },
         {
           "id": "forearm-l",
@@ -449,7 +450,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": -0.19
         },
         {
           "id": "forearm-r",
@@ -524,7 +526,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": 0.09
         },
         {
           "id": "shank-l",
@@ -616,7 +619,8 @@
             "distribution": "point",
             "source": "literature",
             "reference": "de-leva-1996"
-          }
+          },
+          "z": -0.09
         },
         {
           "id": "shank-r",
@@ -721,7 +725,7 @@
         "kind": "contact",
         "title": {
           "en": "Left ball of foot",
-          "de": "Linke Ballen"
+          "de": "Linker Fußballen"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -753,7 +757,7 @@
         "kind": "contact",
         "title": {
           "en": "Right ball of foot",
-          "de": "Rechte Ballen"
+          "de": "Rechter Fußballen"
         },
         "support": "contact",
         "normalDeg": 90,
@@ -1269,28 +1273,2242 @@
               "region": "trowel",
               "material": "steel"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.002,
+                  0.5
+                ],
+                [
+                  0.012,
+                  0.31752
+                ],
+                [
+                  0.032,
+                  0.0945
+                ],
+                [
+                  0.148,
+                  0.0945
+                ],
+                [
+                  0.168,
+                  0.31752
+                ],
+                [
+                  0.178,
+                  0.5
+                ],
+                [
+                  0.16621,
+                  0.52
+                ],
+                [
+                  0.134,
+                  0.53464
+                ],
+                [
+                  0.09,
+                  0.54
+                ],
+                [
+                  0.046,
+                  0.53464
+                ],
+                [
+                  0.01379,
+                  0.52
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.034,
+                  0.0945
+                ],
+                [
+                  0.032,
+                  -0.02433
+                ],
+                [
+                  0.048,
+                  -0.20258
+                ],
+                [
+                  0.052,
+                  -0.3016
+                ],
+                [
+                  0.128,
+                  -0.3016
+                ],
+                [
+                  0.132,
+                  -0.20258
+                ],
+                [
+                  0.148,
+                  -0.02433
+                ],
+                [
+                  0.146,
+                  0.0945
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.09,
+              "cy": 0.0945,
+              "rx": 0.0532,
+              "ry": 0.05,
+              "id": "knee-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.08,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.3016
+                ],
+                [
+                  0.043,
+                  -0.3016
+                ],
+                [
+                  0.043,
+                  -0.3016
+                ],
+                [
+                  0.0493,
+                  -0.3393
+                ],
+                [
+                  0.0665,
+                  -0.3669
+                ],
+                [
+                  0.09,
+                  -0.377
+                ],
+                [
+                  0.1135,
+                  -0.3669
+                ],
+                [
+                  0.1307,
+                  -0.3393
+                ],
+                [
+                  0.137,
+                  -0.3016
+                ],
+                [
+                  0.137,
+                  -0.3016
+                ],
+                [
+                  0.13,
+                  -0.3016
+                ],
+                [
+                  0.12464,
+                  -0.2781
+                ],
+                [
+                  0.11,
+                  -0.2609
+                ],
+                [
+                  0.09,
+                  -0.2546
+                ],
+                [
+                  0.07,
+                  -0.2609
+                ],
+                [
+                  0.05536,
+                  -0.2781
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "foot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.043,
+                  -0.377
+                ],
+                [
+                  0.049,
+                  -0.377
+                ],
+                [
+                  0.131,
+                  -0.377
+                ],
+                [
+                  0.137,
+                  -0.377
+                ],
+                [
+                  0.1307,
+                  -0.3495
+                ],
+                [
+                  0.1135,
+                  -0.32937
+                ],
+                [
+                  0.09,
+                  -0.322
+                ],
+                [
+                  0.0665,
+                  -0.32937
+                ],
+                [
+                  0.0493,
+                  -0.3495
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.22,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.138,
+                  1
+                ],
+                [
+                  0.142,
+                  0.85375
+                ],
+                [
+                  0.148,
+                  0.7075
+                ],
+                [
+                  0.15363,
+                  0.6875
+                ],
+                [
+                  0.169,
+                  0.67286
+                ],
+                [
+                  0.19,
+                  0.6675
+                ],
+                [
+                  0.211,
+                  0.67286
+                ],
+                [
+                  0.22637,
+                  0.6875
+                ],
+                [
+                  0.232,
+                  0.7075
+                ],
+                [
+                  0.238,
+                  0.85375
+                ],
+                [
+                  0.242,
+                  1
+                ],
+                [
+                  0.23503,
+                  1.0225
+                ],
+                [
+                  0.216,
+                  1.03897
+                ],
+                [
+                  0.19,
+                  1.045
+                ],
+                [
+                  0.164,
+                  1.03897
+                ],
+                [
+                  0.14497,
+                  1.0225
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.148,
+                  0.7075
+                ],
+                [
+                  0.146,
+                  0.61839
+                ],
+                [
+                  0.158,
+                  0.4529
+                ],
+                [
+                  0.16229,
+                  0.4379
+                ],
+                [
+                  0.174,
+                  0.42692
+                ],
+                [
+                  0.19,
+                  0.4229
+                ],
+                [
+                  0.206,
+                  0.42692
+                ],
+                [
+                  0.21771,
+                  0.4379
+                ],
+                [
+                  0.222,
+                  0.4529
+                ],
+                [
+                  0.234,
+                  0.61839
+                ],
+                [
+                  0.232,
+                  0.7075
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.55,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.158,
+                  0.4529
+                ],
+                [
+                  0.15,
+                  0.368
+                ],
+                [
+                  0.168,
+                  0.2831
+                ],
+                [
+                  0.17095,
+                  0.2681
+                ],
+                [
+                  0.179,
+                  0.25712
+                ],
+                [
+                  0.19,
+                  0.2531
+                ],
+                [
+                  0.201,
+                  0.25712
+                ],
+                [
+                  0.20905,
+                  0.2681
+                ],
+                [
+                  0.212,
+                  0.2831
+                ],
+                [
+                  0.23,
+                  0.368
+                ],
+                [
+                  0.222,
+                  0.4529
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.178,
+                  0.5
+                ],
+                [
+                  -0.168,
+                  0.31752
+                ],
+                [
+                  -0.148,
+                  0.0945
+                ],
+                [
+                  -0.032,
+                  0.0945
+                ],
+                [
+                  -0.012,
+                  0.31752
+                ],
+                [
+                  -0.002,
+                  0.5
+                ],
+                [
+                  -0.01379,
+                  0.52
+                ],
+                [
+                  -0.046,
+                  0.53464
+                ],
+                [
+                  -0.09,
+                  0.54
+                ],
+                [
+                  -0.134,
+                  0.53464
+                ],
+                [
+                  -0.16621,
+                  0.52
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.146,
+                  0.0945
+                ],
+                [
+                  -0.148,
+                  -0.02433
+                ],
+                [
+                  -0.132,
+                  -0.20258
+                ],
+                [
+                  -0.128,
+                  -0.3016
+                ],
+                [
+                  -0.052,
+                  -0.3016
+                ],
+                [
+                  -0.048,
+                  -0.20258
+                ],
+                [
+                  -0.032,
+                  -0.02433
+                ],
+                [
+                  -0.034,
+                  0.0945
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.09,
+              "cy": 0.0945,
+              "rx": 0.0532,
+              "ry": 0.05,
+              "id": "knee-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.08,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  -0.3016
+                ],
+                [
+                  -0.137,
+                  -0.3016
+                ],
+                [
+                  -0.137,
+                  -0.3016
+                ],
+                [
+                  -0.1307,
+                  -0.3393
+                ],
+                [
+                  -0.1135,
+                  -0.3669
+                ],
+                [
+                  -0.09,
+                  -0.377
+                ],
+                [
+                  -0.0665,
+                  -0.3669
+                ],
+                [
+                  -0.0493,
+                  -0.3393
+                ],
+                [
+                  -0.043,
+                  -0.3016
+                ],
+                [
+                  -0.043,
+                  -0.3016
+                ],
+                [
+                  -0.05,
+                  -0.3016
+                ],
+                [
+                  -0.05536,
+                  -0.2781
+                ],
+                [
+                  -0.07,
+                  -0.2609
+                ],
+                [
+                  -0.09,
+                  -0.2546
+                ],
+                [
+                  -0.11,
+                  -0.2609
+                ],
+                [
+                  -0.12464,
+                  -0.2781
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "foot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.137,
+                  -0.377
+                ],
+                [
+                  -0.131,
+                  -0.377
+                ],
+                [
+                  -0.049,
+                  -0.377
+                ],
+                [
+                  -0.043,
+                  -0.377
+                ],
+                [
+                  -0.0493,
+                  -0.3495
+                ],
+                [
+                  -0.0665,
+                  -0.32937
+                ],
+                [
+                  -0.09,
+                  -0.322
+                ],
+                [
+                  -0.1135,
+                  -0.32937
+                ],
+                [
+                  -0.1307,
+                  -0.3495
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.22,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.242,
+                  1
+                ],
+                [
+                  -0.238,
+                  0.85375
+                ],
+                [
+                  -0.232,
+                  0.7075
+                ],
+                [
+                  -0.22637,
+                  0.6875
+                ],
+                [
+                  -0.211,
+                  0.67286
+                ],
+                [
+                  -0.19,
+                  0.6675
+                ],
+                [
+                  -0.169,
+                  0.67286
+                ],
+                [
+                  -0.15363,
+                  0.6875
+                ],
+                [
+                  -0.148,
+                  0.7075
+                ],
+                [
+                  -0.142,
+                  0.85375
+                ],
+                [
+                  -0.138,
+                  1
+                ],
+                [
+                  -0.14497,
+                  1.0225
+                ],
+                [
+                  -0.164,
+                  1.03897
+                ],
+                [
+                  -0.19,
+                  1.045
+                ],
+                [
+                  -0.216,
+                  1.03897
+                ],
+                [
+                  -0.23503,
+                  1.0225
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.232,
+                  0.7075
+                ],
+                [
+                  -0.234,
+                  0.61839
+                ],
+                [
+                  -0.222,
+                  0.4529
+                ],
+                [
+                  -0.21771,
+                  0.4379
+                ],
+                [
+                  -0.206,
+                  0.42692
+                ],
+                [
+                  -0.19,
+                  0.4229
+                ],
+                [
+                  -0.174,
+                  0.42692
+                ],
+                [
+                  -0.16229,
+                  0.4379
+                ],
+                [
+                  -0.158,
+                  0.4529
+                ],
+                [
+                  -0.146,
+                  0.61839
+                ],
+                [
+                  -0.148,
+                  0.7075
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.55,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.222,
+                  0.4529
+                ],
+                [
+                  -0.23,
+                  0.368
+                ],
+                [
+                  -0.212,
+                  0.2831
+                ],
+                [
+                  -0.20905,
+                  0.2681
+                ],
+                [
+                  -0.201,
+                  0.25712
+                ],
+                [
+                  -0.19,
+                  0.2531
+                ],
+                [
+                  -0.179,
+                  0.25712
+                ],
+                [
+                  -0.17095,
+                  0.2681
+                ],
+                [
+                  -0.168,
+                  0.2831
+                ],
+                [
+                  -0.15,
+                  0.368
+                ],
+                [
+                  -0.158,
+                  0.4529
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.165,
+                  0.43
+                ],
+                [
+                  0.165,
+                  0.43
+                ],
+                [
+                  0.17,
+                  0.512
+                ],
+                [
+                  0.155,
+                  0.594
+                ],
+                [
+                  -0.155,
+                  0.594
+                ],
+                [
+                  -0.17,
+                  0.512
+                ]
+              ],
+              "closed": true,
+              "id": "pelvis",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.165,
+                  0.52488
+                ],
+                [
+                  -0.165,
+                  0.5943
+                ],
+                [
+                  -0.15,
+                  0.72447
+                ],
+                [
+                  -0.17,
+                  0.86332
+                ],
+                [
+                  -0.19,
+                  0.98481
+                ],
+                [
+                  -0.07,
+                  1.0482
+                ],
+                [
+                  0.07,
+                  1.0482
+                ],
+                [
+                  0.19,
+                  0.98481
+                ],
+                [
+                  0.17,
+                  0.86332
+                ],
+                [
+                  0.15,
+                  0.72447
+                ],
+                [
+                  0.165,
+                  0.5943
+                ],
+                [
+                  0.165,
+                  0.52488
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  1.0282
+                ],
+                [
+                  -0.0511,
+                  1.07403
+                ],
+                [
+                  0.0511,
+                  1.07403
+                ],
+                [
+                  0.052,
+                  1.0282
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "head",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.1788,
+              "rx": 0.072,
+              "ry": 0.105,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.078,
+              "cy": 1.1748,
+              "rx": 0.009,
+              "ry": 0.024,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.078,
+              "cy": 1.1748,
+              "rx": 0.009,
+              "ry": 0.024,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.03,
+              "cy": 1.1978,
+              "rx": 0.009,
+              "ry": 0.006,
+              "id": "eye-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  1.2158
+                ],
+                [
+                  0.03,
+                  1.2218
+                ],
+                [
+                  0.012,
+                  1.2178
+                ]
+              ],
+              "closed": false,
+              "id": "brow-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": false,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.03,
+              "cy": 1.1978,
+              "rx": 0.009,
+              "ry": 0.006,
+              "id": "eye-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  1.2158
+                ],
+                [
+                  -0.03,
+                  1.2218
+                ],
+                [
+                  -0.012,
+                  1.2178
+                ]
+              ],
+              "closed": false,
+              "id": "brow-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": false,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  1.1928
+                ],
+                [
+                  -0.008,
+                  1.1708
+                ],
+                [
+                  0,
+                  1.1668
+                ],
+                [
+                  0.008,
+                  1.1708
+                ]
+              ],
+              "closed": false,
+              "id": "nose",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": false,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.017,
+                  1.1288
+                ],
+                [
+                  0,
+                  1.1258
+                ],
+                [
+                  0.017,
+                  1.1288
+                ]
+              ],
+              "closed": false,
+              "id": "mouth",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": false,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.04,
+              "r": 0.015,
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "pad",
+              "material": "eva-foam"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.21,
+                  0
+                ],
+                [
+                  0.21,
+                  0
+                ],
+                [
+                  0.255,
+                  0.21
+                ],
+                [
+                  -0.255,
+                  0.21
+                ]
+              ],
+              "closed": true,
+              "id": "trug",
+              "bone": "trug",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.205
+                ],
+                [
+                  -0.2,
+                  0.205
+                ],
+                [
+                  -0.19319,
+                  0.23269
+                ],
+                [
+                  -0.17321,
+                  0.2585
+                ],
+                [
+                  -0.14142,
+                  0.28066
+                ],
+                [
+                  -0.1,
+                  0.29766
+                ],
+                [
+                  -0.05176,
+                  0.30835
+                ],
+                [
+                  0,
+                  0.312
+                ],
+                [
+                  0.05176,
+                  0.30835
+                ],
+                [
+                  0.1,
+                  0.29766
+                ],
+                [
+                  0.14142,
+                  0.28066
+                ],
+                [
+                  0.17321,
+                  0.2585
+                ],
+                [
+                  0.19319,
+                  0.23269
+                ],
+                [
+                  0.2,
+                  0.205
+                ],
+                [
+                  0.2,
+                  0.205
+                ]
+              ],
+              "closed": true,
+              "id": "trug-weeds",
+              "bone": "trug",
+              "role": "body",
+              "z": 7.05,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.255,
+                  0.21
+                ],
+                [
+                  0.255,
+                  0.21
+                ]
+              ],
+              "closed": false,
+              "id": "trug-rim",
+              "bone": "trug",
+              "role": "detail",
+              "z": 7.06,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2195,
+                  0.2929
+                ],
+                [
+                  -0.224,
+                  0.2629
+                ],
+                [
+                  -0.22,
+                  0.1429
+                ],
+                [
+                  -0.194,
+                  0.0829
+                ],
+                [
+                  -0.186,
+                  0.0829
+                ],
+                [
+                  -0.16,
+                  0.1429
+                ],
+                [
+                  -0.156,
+                  0.2629
+                ],
+                [
+                  -0.1605,
+                  0.2929
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "trowel-blade",
+              "bone": "trowel",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "trowel",
+              "material": "steel"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  1.233
+                ],
+                [
+                  -0.104,
+                  1.233
+                ],
+                [
+                  -0.10139,
+                  1.25681
+                ],
+                [
+                  -0.0937,
+                  1.27943
+                ],
+                [
+                  -0.08131,
+                  1.29971
+                ],
+                [
+                  -0.06484,
+                  1.31666
+                ],
+                [
+                  -0.04512,
+                  1.3294
+                ],
+                [
+                  -0.02314,
+                  1.33732
+                ],
+                [
+                  0,
+                  1.34
+                ],
+                [
+                  0.02314,
+                  1.33732
+                ],
+                [
+                  0.04512,
+                  1.3294
+                ],
+                [
+                  0.06484,
+                  1.31666
+                ],
+                [
+                  0.08131,
+                  1.29971
+                ],
+                [
+                  0.0937,
+                  1.27943
+                ],
+                [
+                  0.10139,
+                  1.25681
+                ],
+                [
+                  0.104,
+                  1.233
+                ],
+                [
+                  0.104,
+                  1.233
+                ]
+              ],
+              "closed": true,
+              "id": "hat-crown",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.1812,
+                  0
+                ],
+                [
+                  0.1812,
+                  0.235
+                ],
+                [
+                  0.2278,
+                  0.235
+                ],
+                [
+                  0.2278,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hat-brim",
+              "bone": "head",
+              "role": "body",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "head",
+                "axis": "u",
+                "axisX": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.09,
+              "cy": 0.1385,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "knee-patch-l",
+              "bone": "shank-l",
+              "role": "detail",
+              "z": 1.09,
+              "filled": false,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.09,
+              "cy": 0.1385,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "knee-patch-r",
+              "bone": "shank-r",
+              "role": "detail",
+              "z": 1.09,
+              "filled": false,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  1.262
+                ],
+                [
+                  0.104,
+                  1.262
+                ]
+              ],
+              "closed": false,
+              "id": "hat-band",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.3
+                ],
+                [
+                  -0.19,
+                  0.1
+                ]
+              ],
+              "closed": false,
+              "followTip": true,
+              "id": "trowel-rib",
+              "bone": "trowel",
+              "role": "detail",
+              "z": 4.85,
+              "filled": false,
+              "tone": 0.7,
+              "region": "trowel",
+              "material": "steel"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.21
+                ],
+                [
+                  -0.091,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "id": "weed-stalk-0",
+              "bone": "trug",
+              "role": "detail",
+              "z": 7.07,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  0.21
+                ],
+                [
+                  -0.026,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "id": "weed-stalk-1",
+              "bone": "trug",
+              "role": "detail",
+              "z": 7.07,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.21
+                ],
+                [
+                  0.052,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "id": "weed-stalk-2",
+              "bone": "trug",
+              "role": "detail",
+              "z": 7.07,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.09,
+                  0.21
+                ],
+                [
+                  0.117,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "id": "weed-stalk-3",
+              "bone": "trug",
+              "role": "detail",
+              "z": 7.07,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.262
+                ],
+                [
+                  0.13,
+                  -0.262
+                ]
+              ],
+              "closed": false,
+              "id": "clog-strap-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 1.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  -0.262
+                ],
+                [
+                  -0.05,
+                  -0.262
+                ]
+              ],
+              "closed": false,
+              "id": "clog-strap-r",
+              "bone": "foot-r",
+              "role": "detail",
+              "z": 1.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.09,
+              "x1": 0,
+              "y1": 0.09,
+              "r0": 0.078,
+              "r1": 0.06,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.09,
+              "x1": 0,
+              "y1": 0.09,
+              "r0": 0.058,
+              "r1": 0.043,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.022,
+              "y0": 0.09,
+              "x1": 0.17,
+              "y1": 0.09,
+              "r0": 0.04,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "foot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.15,
+              "y0": 0.09,
+              "x1": 0.175,
+              "y1": 0.09,
+              "r0": 0.046,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.19,
+              "x1": 0,
+              "y1": 0.19,
+              "r0": 0.052,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.19,
+              "x1": 0,
+              "y1": 0.19,
+              "r0": 0.045,
+              "r1": 0.034,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.19,
+              "x1": 0,
+              "y1": 0.19,
+              "r0": 0.03,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.09,
+              "x1": 0,
+              "y1": -0.09,
+              "r0": 0.078,
+              "r1": 0.06,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.09,
+              "x1": 0,
+              "y1": -0.09,
+              "r0": 0.058,
+              "r1": 0.043,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.022,
+              "y0": -0.09,
+              "x1": 0.17,
+              "y1": -0.09,
+              "r0": 0.04,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "foot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.15,
+              "y0": -0.09,
+              "x1": 0.175,
+              "y1": -0.09,
+              "r0": 0.046,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.052,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.045,
+              "r1": 0.034,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.03,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.12,
+              "ry": 0.17,
+              "id": "waist",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0,
+              "y1": 0,
+              "r0": 0.12,
+              "r1": 0.12,
+              "followTip": true,
+              "id": "trunk",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.11,
+              "ry": 0.235,
+              "id": "shoulders",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.004,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.09,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.014,
+              "cy": 0.09,
+              "rx": 0.012,
+              "ry": 0.007,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.014,
+              "cy": -0.09,
+              "rx": 0.012,
+              "ry": 0.007,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.094,
+              "y0": 0,
+              "x1": 0.11,
+              "y1": 0,
+              "r0": 0.011,
+              "r1": 0.008,
+              "id": "nose",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "rect",
+              "x": -0.56,
+              "y": -0.2,
+              "w": 0.76,
+              "h": 0.4,
+              "r": 0.04,
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "pad",
+              "material": "eva-foam"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 1.02,
+              "cy": 0,
+              "rx": 0.255,
+              "ry": 0.25,
+              "id": "trug",
+              "bone": "trug",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 1.02,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.19,
+              "id": "trug-weeds",
+              "bone": "trug",
+              "role": "detail",
+              "z": 0.55,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 1.02,
+              "cy": 0,
+              "rx": 0.225,
+              "ry": 0.22,
+              "id": "trug-rim",
+              "bone": "trug",
+              "role": "detail",
+              "z": 0.56,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.033,
+              "r1": 0.033,
+              "followTip": true,
+              "id": "trowel-blade",
+              "bone": "trowel",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "trowel",
+              "material": "steel"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.235,
+              "ry": 0.235,
+              "id": "hat-brim",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.104,
+              "ry": 0.1,
+              "id": "hat-band",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.1,
+              "filled": false,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.13,
+              "ry": 0.13,
+              "id": "hat-crown-ring",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.05,
+              "filled": false,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Full articulation of the near leg, both arms in sleeve, bare forearm and glove with an integrated thumb, linen shirt, face profile with eye under a woven hat with crown, brim and straw hatching, trowel blade, pad and trug with weeds and rim.",
-            "de": "Volle Gliederung des nahen Beins, beider Arme in Ärmel, nacktem Unterarm und Handschuh mit integriertem Daumen, Leinenhemd, Gesichtsprofil mit Auge unter einem Strohhut mit Kopf, Krempe und Strohschraffur, Schaufelblatt, Kissen und Trog mit Unkraut und Rand."
+            "en": "Full articulation of the near leg, both arms in sleeve, bare forearm and glove with an integrated thumb, linen shirt, face profile with eye under a woven hat with crown, brim and straw hatching, trowel blade, pad and trug with weeds and rim. Front view and plan: Front and plan are drawn in full detail for this scale: tapered clothing outlines, hands with a thumb form, shoe construction, hair mass with parting, ears, face features in the front view and nose and ears in plan, plus the equipment of the figure. Every limb keeps its bone binding (plan: stadiums stretched along the bone; front: outlines stretched between the heights of bone origin and tip), so strides, bent knees and reaching arms read correctly in each pose and clip instant.",
+            "de": "Volle Gliederung des nahen Beins, beider Arme in Ärmel, nacktem Unterarm und Handschuh mit integriertem Daumen, Leinenhemd, Gesichtsprofil mit Auge unter einem Strohhut mit Kopf, Krempe und Strohschraffur, Schaufelblatt, Kissen und Trog mit Unkraut und Rand. Vorder- und Draufsicht: Vorder- und Draufsicht sind für diesen Maßstab in voller Detaillierung gezeichnet: verjüngte Kleidungsumrisse, Hände mit Daumenform, Schuhaufbau, Haarmasse mit Scheitel, Ohren, Gesichtszüge in der Vorderansicht sowie Nase und Ohren im Grundriss, dazu die Ausrüstung der Figur. Jedes Glied behält seine Knochenbindung (Grundriss: entlang des Knochens gestreckte Stadien; Vorderansicht: zwischen den Höhen von Knochenursprung und Spitze gestreckte Umrisse); Schritte, gebeugte Knie und greifende Arme lesen sich daher in jeder Haltung und jedem Clip-Zeitpunkt richtig."
           },
           "retained": {
-            "en": "Knee patch, clog strap, the glove as its own form over the bare forearm, the straw weave hatching and the trug rim.",
-            "de": "Kniepolster, Clog-Riemen, der Handschuh als eigene Form über dem nackten Unterarm, die Strohgeflecht-Schraffur und der Trogrand."
+            "en": "Knee patch, clog strap, the glove as its own form over the bare forearm, the straw weave hatching and the trug rim. Front view and plan: Retained: every clothing layer with its own region, shoe details, hair, face and ear forms, equipment and the seams and folds that stay visible from the front or from above. The knee patches, hat band, eyes, nose, mouth, the trowel with its rib, the rim of the trug and the weed stalks are drawn; the plan shows the brim, crown and band of the hat as three rings.",
+            "de": "Kniepolster, Clog-Riemen, der Handschuh als eigene Form über dem nackten Unterarm, die Strohgeflecht-Schraffur und der Trogrand. Vorder- und Draufsicht: Beibehalten: jede Kleidungsschicht mit eigener Region, Schuhdetails, Haar-, Gesichts- und Ohrenformen, Ausrüstung sowie die Nähte und Falten, die von vorn oder von oben sichtbar bleiben. Knieflicken, Hutband, Augen, Nase, Mund, die Kelle mit ihrer Mittelrippe, der Rand des Trogs und die Unkrauthalme sind gezeichnet; der Grundriss zeigt Krempe, Krone und Band des Hutes als drei Ringe."
           },
           "merged": {
-            "en": "The sock is part of the clog form; fingers and thumb are one glove outline; the pelvis is covered by shirt hem and thigh; the far leg is hidden behind the near one.",
-            "de": "Die Socke ist Teil der Clog-Form; Finger und Daumen sind eine Handschuhkontur; das Becken ist von Hemdsaum und Oberschenkel verdeckt; das ferne Bein ist hinter dem nahen verdeckt."
+            "en": "The sock is part of the clog form; fingers and thumb are one glove outline; the pelvis is covered by shirt hem and thigh; the far leg is hidden behind the near one. Front view and plan: Merged: only fabric texture and the finest stitching, which would fall below the detail pen.",
+            "de": "Die Socke ist Teil der Clog-Form; Finger und Daumen sind eine Handschuhkontur; das Becken ist von Hemdsaum und Oberschenkel verdeckt; das ferne Bein ist hinter dem nahen verdeckt. Vorder- und Draufsicht: Zusammengefasst: nur Stofftextur und feinste Steppnähte, die unter die Detailfeder fielen."
           },
           "omitted": {
-            "en": "Ear, mouth, placket, finger lines, trowel handle and ferrule, eyelashes, stitching (below 0.1 mm paper).",
-            "de": "Ohr, Mund, Knopfleiste, Fingerlinien, Schaufelgriff und -zwinge, Wimpern, Nähte (unter 0,1 mm Papier)."
+            "en": "Ear, mouth, placket, finger lines, trowel handle and ferrule, eyelashes, stitching (below 0.1 mm paper). Front view and plan: Omitted: fingers as separate forms and anything hidden from the viewpoint. The gardener's second leg is drawn in front and plan even where the side view hides it behind the first.",
+            "de": "Ohr, Mund, Knopfleiste, Fingerlinien, Schaufelgriff und -zwinge, Wimpern, Nähte (unter 0,1 mm Papier). Vorder- und Draufsicht: Weggelassen: Finger als eigene Formen und alles, was vom Blickpunkt aus verdeckt ist. Das zweite Bein der Person ist in Vorderansicht und Grundriss auch dort gezeichnet, wo die Seitenansicht es hinter dem ersten verbirgt."
           },
           "thinElements": {
-            "en": "The hat brim is 0.04 m thick (0.8 mm); the trowel blade 0.06 m wide; no feature is thickened.",
-            "de": "Die Hutkrempe ist 0,04 m dick (0,8 mm); das Schaufelblatt 0,06 m breit; nichts wird verdickt."
+            "en": "The hat brim is 0.04 m thick (0.8 mm); the trowel blade 0.06 m wide; no feature is thickened. Front view and plan: Thin elements keep at least the detail pen; hatching is shared with the side view and used only where its spacing stays above the profile limit.",
+            "de": "Die Hutkrempe ist 0,04 m dick (0,8 mm); das Schaufelblatt 0,06 m breit; nichts wird verdickt. Vorder- und Draufsicht: Dünne Elemente behalten mindestens die Detailfeder; die Schraffuren sind mit der Seitenansicht geteilt und nur dort verwendet, wo ihr Abstand über der Profilgrenze bleibt."
           },
           "hatching": {
             "en": "Straw weave hatch on the hat crown (0.5 mm spacing, 0.13 mm pen).",
@@ -1301,8 +3519,8 @@
             "de": "0,25-mm-Silhouetten, 0,18-mm-Detail, 0,13-mm-Textur."
           },
           "overlays": {
-            "en": "Every region is its own form; detail lines lie inside the form of their region.",
-            "de": "Jede Region ist eine eigene Form; Detaillinien liegen innerhalb der Form ihrer Region."
+            "en": "Every region is its own form; detail lines lie inside the form of their region. Front view and plan: Every filled shape carries the region and material of its side-view counterpart, so thermal, structural and transport views work from every viewpoint.",
+            "de": "Jede Region ist eine eigene Form; Detaillinien liegen innerhalb der Form ihrer Region. Vorder- und Draufsicht: Jede gefüllte Form trägt Region und Material ihres Gegenstücks in der Seitenansicht; Thermik-, Tragwerks- und Transportansichten funktionieren daher aus jedem Blickwinkel."
           }
         }
       },
@@ -1592,28 +3810,1880 @@
               "d": "M 0.0 -0.022 C 0.0 -0.0073 0.0 0.0073 0.0 0.022 C 0.0133 0.0247 0.0083 0.027 0.04 0.03 C 0.0717 0.033 0.1533 0.0403 0.19 0.04 C 0.2267 0.0397 0.2417 0.0347 0.26 0.028 C 0.2783 0.0213 0.2867 0.0093 0.3 0.0 C 0.2867 -0.0067 0.2783 -0.015 0.26 -0.02 C 0.2417 -0.025 0.2167 -0.0297 0.19 -0.03 C 0.1633 -0.0303 0.1317 -0.0233 0.1 -0.022 C 0.0683 -0.0207 0.0333 -0.022 0.0 -0.022 Z",
               "region": "trowel"
             }
+          ],
+          "front": [
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.002,
+                  0.5
+                ],
+                [
+                  0.012,
+                  0.31752
+                ],
+                [
+                  0.032,
+                  0.0945
+                ],
+                [
+                  0.148,
+                  0.0945
+                ],
+                [
+                  0.168,
+                  0.31752
+                ],
+                [
+                  0.178,
+                  0.5
+                ],
+                [
+                  0.16621,
+                  0.52
+                ],
+                [
+                  0.134,
+                  0.53464
+                ],
+                [
+                  0.09,
+                  0.54
+                ],
+                [
+                  0.046,
+                  0.53464
+                ],
+                [
+                  0.01379,
+                  0.52
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.034,
+                  0.0945
+                ],
+                [
+                  0.032,
+                  -0.02433
+                ],
+                [
+                  0.048,
+                  -0.20258
+                ],
+                [
+                  0.052,
+                  -0.3016
+                ],
+                [
+                  0.128,
+                  -0.3016
+                ],
+                [
+                  0.132,
+                  -0.20258
+                ],
+                [
+                  0.148,
+                  -0.02433
+                ],
+                [
+                  0.146,
+                  0.0945
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.09,
+              "cy": 0.0945,
+              "rx": 0.0532,
+              "ry": 0.05,
+              "id": "knee-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.08,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.3016
+                ],
+                [
+                  0.043,
+                  -0.3016
+                ],
+                [
+                  0.043,
+                  -0.3016
+                ],
+                [
+                  0.0493,
+                  -0.3393
+                ],
+                [
+                  0.0665,
+                  -0.3669
+                ],
+                [
+                  0.09,
+                  -0.377
+                ],
+                [
+                  0.1135,
+                  -0.3669
+                ],
+                [
+                  0.1307,
+                  -0.3393
+                ],
+                [
+                  0.137,
+                  -0.3016
+                ],
+                [
+                  0.137,
+                  -0.3016
+                ],
+                [
+                  0.13,
+                  -0.3016
+                ],
+                [
+                  0.12464,
+                  -0.2781
+                ],
+                [
+                  0.11,
+                  -0.2609
+                ],
+                [
+                  0.09,
+                  -0.2546
+                ],
+                [
+                  0.07,
+                  -0.2609
+                ],
+                [
+                  0.05536,
+                  -0.2781
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "foot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.043,
+                  -0.377
+                ],
+                [
+                  0.049,
+                  -0.377
+                ],
+                [
+                  0.131,
+                  -0.377
+                ],
+                [
+                  0.137,
+                  -0.377
+                ],
+                [
+                  0.1307,
+                  -0.3495
+                ],
+                [
+                  0.1135,
+                  -0.32937
+                ],
+                [
+                  0.09,
+                  -0.322
+                ],
+                [
+                  0.0665,
+                  -0.32937
+                ],
+                [
+                  0.0493,
+                  -0.3495
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.22,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.138,
+                  1
+                ],
+                [
+                  0.142,
+                  0.85375
+                ],
+                [
+                  0.148,
+                  0.7075
+                ],
+                [
+                  0.15363,
+                  0.6875
+                ],
+                [
+                  0.169,
+                  0.67286
+                ],
+                [
+                  0.19,
+                  0.6675
+                ],
+                [
+                  0.211,
+                  0.67286
+                ],
+                [
+                  0.22637,
+                  0.6875
+                ],
+                [
+                  0.232,
+                  0.7075
+                ],
+                [
+                  0.238,
+                  0.85375
+                ],
+                [
+                  0.242,
+                  1
+                ],
+                [
+                  0.23503,
+                  1.0225
+                ],
+                [
+                  0.216,
+                  1.03897
+                ],
+                [
+                  0.19,
+                  1.045
+                ],
+                [
+                  0.164,
+                  1.03897
+                ],
+                [
+                  0.14497,
+                  1.0225
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.148,
+                  0.7075
+                ],
+                [
+                  0.146,
+                  0.61839
+                ],
+                [
+                  0.158,
+                  0.4529
+                ],
+                [
+                  0.16229,
+                  0.4379
+                ],
+                [
+                  0.174,
+                  0.42692
+                ],
+                [
+                  0.19,
+                  0.4229
+                ],
+                [
+                  0.206,
+                  0.42692
+                ],
+                [
+                  0.21771,
+                  0.4379
+                ],
+                [
+                  0.222,
+                  0.4529
+                ],
+                [
+                  0.234,
+                  0.61839
+                ],
+                [
+                  0.232,
+                  0.7075
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.55,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.158,
+                  0.4529
+                ],
+                [
+                  0.15,
+                  0.368
+                ],
+                [
+                  0.168,
+                  0.2831
+                ],
+                [
+                  0.17095,
+                  0.2681
+                ],
+                [
+                  0.179,
+                  0.25712
+                ],
+                [
+                  0.19,
+                  0.2531
+                ],
+                [
+                  0.201,
+                  0.25712
+                ],
+                [
+                  0.20905,
+                  0.2681
+                ],
+                [
+                  0.212,
+                  0.2831
+                ],
+                [
+                  0.23,
+                  0.368
+                ],
+                [
+                  0.222,
+                  0.4529
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.178,
+                  0.5
+                ],
+                [
+                  -0.168,
+                  0.31752
+                ],
+                [
+                  -0.148,
+                  0.0945
+                ],
+                [
+                  -0.032,
+                  0.0945
+                ],
+                [
+                  -0.012,
+                  0.31752
+                ],
+                [
+                  -0.002,
+                  0.5
+                ],
+                [
+                  -0.01379,
+                  0.52
+                ],
+                [
+                  -0.046,
+                  0.53464
+                ],
+                [
+                  -0.09,
+                  0.54
+                ],
+                [
+                  -0.134,
+                  0.53464
+                ],
+                [
+                  -0.16621,
+                  0.52
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.146,
+                  0.0945
+                ],
+                [
+                  -0.148,
+                  -0.02433
+                ],
+                [
+                  -0.132,
+                  -0.20258
+                ],
+                [
+                  -0.128,
+                  -0.3016
+                ],
+                [
+                  -0.052,
+                  -0.3016
+                ],
+                [
+                  -0.048,
+                  -0.20258
+                ],
+                [
+                  -0.032,
+                  -0.02433
+                ],
+                [
+                  -0.034,
+                  0.0945
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.09,
+              "cy": 0.0945,
+              "rx": 0.0532,
+              "ry": 0.05,
+              "id": "knee-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.08,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  -0.3016
+                ],
+                [
+                  -0.137,
+                  -0.3016
+                ],
+                [
+                  -0.137,
+                  -0.3016
+                ],
+                [
+                  -0.1307,
+                  -0.3393
+                ],
+                [
+                  -0.1135,
+                  -0.3669
+                ],
+                [
+                  -0.09,
+                  -0.377
+                ],
+                [
+                  -0.0665,
+                  -0.3669
+                ],
+                [
+                  -0.0493,
+                  -0.3393
+                ],
+                [
+                  -0.043,
+                  -0.3016
+                ],
+                [
+                  -0.043,
+                  -0.3016
+                ],
+                [
+                  -0.05,
+                  -0.3016
+                ],
+                [
+                  -0.05536,
+                  -0.2781
+                ],
+                [
+                  -0.07,
+                  -0.2609
+                ],
+                [
+                  -0.09,
+                  -0.2546
+                ],
+                [
+                  -0.11,
+                  -0.2609
+                ],
+                [
+                  -0.12464,
+                  -0.2781
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "foot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.137,
+                  -0.377
+                ],
+                [
+                  -0.131,
+                  -0.377
+                ],
+                [
+                  -0.049,
+                  -0.377
+                ],
+                [
+                  -0.043,
+                  -0.377
+                ],
+                [
+                  -0.0493,
+                  -0.3495
+                ],
+                [
+                  -0.0665,
+                  -0.32937
+                ],
+                [
+                  -0.09,
+                  -0.322
+                ],
+                [
+                  -0.1135,
+                  -0.32937
+                ],
+                [
+                  -0.1307,
+                  -0.3495
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.22,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.242,
+                  1
+                ],
+                [
+                  -0.238,
+                  0.85375
+                ],
+                [
+                  -0.232,
+                  0.7075
+                ],
+                [
+                  -0.22637,
+                  0.6875
+                ],
+                [
+                  -0.211,
+                  0.67286
+                ],
+                [
+                  -0.19,
+                  0.6675
+                ],
+                [
+                  -0.169,
+                  0.67286
+                ],
+                [
+                  -0.15363,
+                  0.6875
+                ],
+                [
+                  -0.148,
+                  0.7075
+                ],
+                [
+                  -0.142,
+                  0.85375
+                ],
+                [
+                  -0.138,
+                  1
+                ],
+                [
+                  -0.14497,
+                  1.0225
+                ],
+                [
+                  -0.164,
+                  1.03897
+                ],
+                [
+                  -0.19,
+                  1.045
+                ],
+                [
+                  -0.216,
+                  1.03897
+                ],
+                [
+                  -0.23503,
+                  1.0225
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.232,
+                  0.7075
+                ],
+                [
+                  -0.234,
+                  0.61839
+                ],
+                [
+                  -0.222,
+                  0.4529
+                ],
+                [
+                  -0.21771,
+                  0.4379
+                ],
+                [
+                  -0.206,
+                  0.42692
+                ],
+                [
+                  -0.19,
+                  0.4229
+                ],
+                [
+                  -0.174,
+                  0.42692
+                ],
+                [
+                  -0.16229,
+                  0.4379
+                ],
+                [
+                  -0.158,
+                  0.4529
+                ],
+                [
+                  -0.146,
+                  0.61839
+                ],
+                [
+                  -0.148,
+                  0.7075
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 4.55,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.222,
+                  0.4529
+                ],
+                [
+                  -0.23,
+                  0.368
+                ],
+                [
+                  -0.212,
+                  0.2831
+                ],
+                [
+                  -0.20905,
+                  0.2681
+                ],
+                [
+                  -0.201,
+                  0.25712
+                ],
+                [
+                  -0.19,
+                  0.2531
+                ],
+                [
+                  -0.179,
+                  0.25712
+                ],
+                [
+                  -0.17095,
+                  0.2681
+                ],
+                [
+                  -0.168,
+                  0.2831
+                ],
+                [
+                  -0.15,
+                  0.368
+                ],
+                [
+                  -0.158,
+                  0.4529
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.165,
+                  0.43
+                ],
+                [
+                  0.165,
+                  0.43
+                ],
+                [
+                  0.17,
+                  0.512
+                ],
+                [
+                  0.155,
+                  0.594
+                ],
+                [
+                  -0.155,
+                  0.594
+                ],
+                [
+                  -0.17,
+                  0.512
+                ]
+              ],
+              "closed": true,
+              "id": "pelvis",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.165,
+                  0.52488
+                ],
+                [
+                  -0.165,
+                  0.5943
+                ],
+                [
+                  -0.15,
+                  0.72447
+                ],
+                [
+                  -0.17,
+                  0.86332
+                ],
+                [
+                  -0.19,
+                  0.98481
+                ],
+                [
+                  -0.07,
+                  1.0482
+                ],
+                [
+                  0.07,
+                  1.0482
+                ],
+                [
+                  0.19,
+                  0.98481
+                ],
+                [
+                  0.17,
+                  0.86332
+                ],
+                [
+                  0.15,
+                  0.72447
+                ],
+                [
+                  0.165,
+                  0.5943
+                ],
+                [
+                  0.165,
+                  0.52488
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "torso",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.052,
+                  1.0282
+                ],
+                [
+                  -0.0511,
+                  1.07403
+                ],
+                [
+                  0.0511,
+                  1.07403
+                ],
+                [
+                  0.052,
+                  1.0282
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "neck",
+              "bone": "head",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.1788,
+              "rx": 0.072,
+              "ry": 0.105,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.078,
+              "cy": 1.1748,
+              "rx": 0.009,
+              "ry": 0.024,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.078,
+              "cy": 1.1748,
+              "rx": 0.009,
+              "ry": 0.024,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.04,
+              "r": 0.015,
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "pad",
+              "material": "eva-foam"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.21,
+                  0
+                ],
+                [
+                  0.21,
+                  0
+                ],
+                [
+                  0.255,
+                  0.21
+                ],
+                [
+                  -0.255,
+                  0.21
+                ]
+              ],
+              "closed": true,
+              "id": "trug",
+              "bone": "trug",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.205
+                ],
+                [
+                  -0.2,
+                  0.205
+                ],
+                [
+                  -0.19319,
+                  0.23269
+                ],
+                [
+                  -0.17321,
+                  0.2585
+                ],
+                [
+                  -0.14142,
+                  0.28066
+                ],
+                [
+                  -0.1,
+                  0.29766
+                ],
+                [
+                  -0.05176,
+                  0.30835
+                ],
+                [
+                  0,
+                  0.312
+                ],
+                [
+                  0.05176,
+                  0.30835
+                ],
+                [
+                  0.1,
+                  0.29766
+                ],
+                [
+                  0.14142,
+                  0.28066
+                ],
+                [
+                  0.17321,
+                  0.2585
+                ],
+                [
+                  0.19319,
+                  0.23269
+                ],
+                [
+                  0.2,
+                  0.205
+                ],
+                [
+                  0.2,
+                  0.205
+                ]
+              ],
+              "closed": true,
+              "id": "trug-weeds",
+              "bone": "trug",
+              "role": "body",
+              "z": 7.05,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.255,
+                  0.21
+                ],
+                [
+                  0.255,
+                  0.21
+                ]
+              ],
+              "closed": false,
+              "id": "trug-rim",
+              "bone": "trug",
+              "role": "detail",
+              "z": 7.06,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2195,
+                  0.2929
+                ],
+                [
+                  -0.224,
+                  0.2629
+                ],
+                [
+                  -0.22,
+                  0.1429
+                ],
+                [
+                  -0.194,
+                  0.0829
+                ],
+                [
+                  -0.186,
+                  0.0829
+                ],
+                [
+                  -0.16,
+                  0.1429
+                ],
+                [
+                  -0.156,
+                  0.2629
+                ],
+                [
+                  -0.1605,
+                  0.2929
+                ]
+              ],
+              "closed": true,
+              "followTip": true,
+              "id": "trowel-blade",
+              "bone": "trowel",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.7,
+              "region": "trowel",
+              "material": "steel"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  -0.104,
+                  1.233
+                ],
+                [
+                  -0.104,
+                  1.233
+                ],
+                [
+                  -0.10139,
+                  1.25681
+                ],
+                [
+                  -0.0937,
+                  1.27943
+                ],
+                [
+                  -0.08131,
+                  1.29971
+                ],
+                [
+                  -0.06484,
+                  1.31666
+                ],
+                [
+                  -0.04512,
+                  1.3294
+                ],
+                [
+                  -0.02314,
+                  1.33732
+                ],
+                [
+                  0,
+                  1.34
+                ],
+                [
+                  0.02314,
+                  1.33732
+                ],
+                [
+                  0.04512,
+                  1.3294
+                ],
+                [
+                  0.06484,
+                  1.31666
+                ],
+                [
+                  0.08131,
+                  1.29971
+                ],
+                [
+                  0.0937,
+                  1.27943
+                ],
+                [
+                  0.10139,
+                  1.25681
+                ],
+                [
+                  0.104,
+                  1.233
+                ],
+                [
+                  0.104,
+                  1.233
+                ]
+              ],
+              "closed": true,
+              "id": "hat-crown",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "poly",
+              "points": [
+                [
+                  0.1812,
+                  0
+                ],
+                [
+                  0.1812,
+                  0.235
+                ],
+                [
+                  0.2278,
+                  0.235
+                ],
+                [
+                  0.2278,
+                  0
+                ]
+              ],
+              "closed": true,
+              "id": "hat-brim",
+              "bone": "head",
+              "role": "body",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw",
+              "solid": {
+                "kind": "revolved",
+                "axisBone": "head",
+                "axis": "u",
+                "axisX": 0,
+                "mirror": true
+              }
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0.09,
+              "cy": 0.1385,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "knee-patch-l",
+              "bone": "shank-l",
+              "role": "detail",
+              "z": 1.09,
+              "filled": false,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.09,
+              "cy": 0.1385,
+              "rx": 0.04,
+              "ry": 0.04,
+              "id": "knee-patch-r",
+              "bone": "shank-r",
+              "role": "detail",
+              "z": 1.09,
+              "filled": false,
+              "tone": 0.5,
+              "region": "trousers"
+            }
+          ],
+          "plan": [
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.09,
+              "x1": 0,
+              "y1": 0.09,
+              "r0": 0.078,
+              "r1": 0.06,
+              "followTip": true,
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.09,
+              "x1": 0,
+              "y1": 0.09,
+              "r0": 0.058,
+              "r1": 0.043,
+              "followTip": true,
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.022,
+              "y0": 0.09,
+              "x1": 0.17,
+              "y1": 0.09,
+              "r0": 0.04,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "foot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.15,
+              "y0": 0.09,
+              "x1": 0.175,
+              "y1": 0.09,
+              "r0": 0.046,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.19,
+              "x1": 0,
+              "y1": 0.19,
+              "r0": 0.052,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.19,
+              "x1": 0,
+              "y1": 0.19,
+              "r0": 0.045,
+              "r1": 0.034,
+              "followTip": true,
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0.19,
+              "x1": 0,
+              "y1": 0.19,
+              "r0": 0.03,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.09,
+              "x1": 0,
+              "y1": -0.09,
+              "r0": 0.078,
+              "r1": 0.06,
+              "followTip": true,
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.09,
+              "x1": 0,
+              "y1": -0.09,
+              "r0": 0.058,
+              "r1": 0.043,
+              "followTip": true,
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": -0.022,
+              "y0": -0.09,
+              "x1": 0.17,
+              "y1": -0.09,
+              "r0": 0.04,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "foot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0.15,
+              "y0": -0.09,
+              "x1": 0.175,
+              "y1": -0.09,
+              "r0": 0.046,
+              "r1": 0.04,
+              "followTip": true,
+              "id": "toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.052,
+              "r1": 0.046,
+              "followTip": true,
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.045,
+              "r1": 0.034,
+              "followTip": true,
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.86,
+              "material": "skin",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.03,
+              "r1": 0.022,
+              "followTip": true,
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.12,
+              "ry": 0.17,
+              "id": "waist",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "trousers"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0,
+              "y1": 0,
+              "r0": 0.12,
+              "r1": 0.12,
+              "followTip": true,
+              "id": "trunk",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.11,
+              "ry": 0.235,
+              "id": "shoulders",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.88,
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.004,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.09,
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.014,
+              "cy": 0.09,
+              "rx": 0.012,
+              "ry": 0.007,
+              "id": "ear-l",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "ellipse",
+              "cx": -0.014,
+              "cy": -0.09,
+              "rx": 0.012,
+              "ry": 0.007,
+              "id": "ear-r",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.86,
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "kind": "rect",
+              "x": -0.56,
+              "y": -0.2,
+              "w": 0.76,
+              "h": 0.4,
+              "r": 0.04,
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "pad",
+              "material": "eva-foam"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 1.02,
+              "cy": 0,
+              "rx": 0.255,
+              "ry": 0.25,
+              "id": "trug",
+              "bone": "trug",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 1.02,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.19,
+              "id": "trug-weeds",
+              "bone": "trug",
+              "role": "detail",
+              "z": 0.55,
+              "filled": true,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 1.02,
+              "cy": 0,
+              "rx": 0.225,
+              "ry": 0.22,
+              "id": "trug-rim",
+              "bone": "trug",
+              "role": "detail",
+              "z": 0.56,
+              "filled": false,
+              "tone": 0.72,
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "kind": "capsule",
+              "x0": 0,
+              "y0": -0.19,
+              "x1": 0,
+              "y1": -0.19,
+              "r0": 0.033,
+              "r1": 0.033,
+              "followTip": true,
+              "id": "trowel-blade",
+              "bone": "trowel",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.7,
+              "region": "trowel",
+              "material": "steel"
+            },
+            {
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.235,
+              "ry": 0.235,
+              "id": "hat-brim",
+              "bone": "head",
+              "role": "body",
+              "z": 5.9,
+              "filled": true,
+              "tone": 0.78,
+              "region": "hat",
+              "material": "straw"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Clothing outlines: shirt with leaning back, trousers of the near leg with a knee patch ellipse, clog with strap, a forearm form per arm that runs on into the glove, hat with crown, brim and band, face profile with eye, trowel blade, pad, trug with rim and weeds.",
-            "de": "Kleidungsumrisse: Hemd mit geneigtem Rücken, Hose des nahen Beins mit Kniepolster-Ellipse, Clog mit Riemen, je Arm eine Unterarmform, die in den Handschuh übergeht, Hut mit Kopf, Krempe und Band, Gesichtsprofil mit Auge, Schaufelblatt, Kissen, Trog mit Rand und Unkraut."
+            "en": "Clothing outlines: shirt with leaning back, trousers of the near leg with a knee patch ellipse, clog with strap, a forearm form per arm that runs on into the glove, hat with crown, brim and band, face profile with eye, trowel blade, pad, trug with rim and weeds. Front view and plan: Front and plan are articulated outlines designed for this scale: clothing profiles with calf and thigh swell, shoulders, mitten hands, shoe and toe box, hair mass, ears and the neck. Limb shapes follow their bones by travel only (plan: stadiums stretched from bone origin to tip; front: outlines stretched between origin and tip height), so every pose and clip reads correctly.",
+            "de": "Kleidungsumrisse: Hemd mit geneigtem Rücken, Hose des nahen Beins mit Kniepolster-Ellipse, Clog mit Riemen, je Arm eine Unterarmform, die in den Handschuh übergeht, Hut mit Kopf, Krempe und Band, Gesichtsprofil mit Auge, Schaufelblatt, Kissen, Trog mit Rand und Unkraut. Vorder- und Draufsicht: Vorder- und Draufsicht sind für diesen Maßstab entworfene gegliederte Umrisse: Kleidungsprofile mit Waden- und Oberschenkelschwellung, Schultern, Fausthandschuhformen, Schuh mit Kappe, Haarmasse, Ohren und Hals. Gliedformen folgen ihren Knochen nur über den Weg (Grundriss: von Knochenursprung zu Spitze gestreckte Stadien; Vorderansicht: zwischen Ursprungs- und Spitzenhöhe gestreckte Umrisse); so lesen sich alle Haltungen und Clips richtig."
           },
           "retained": {
-            "en": "Knee patch, clog strap, hat band, trug rim, eye and the rolled sleeve edge where the upper arm ends; real height 1.16 m and width 1.84 m of the weeding pose.",
-            "de": "Kniepolster, Clog-Riemen, Hutband, Trogrand, Auge und die hochgekrempelte Ärmelkante am Ende des Oberarms; reale Höhe 1,16 m und Breite 1,84 m der Jätepose."
+            "en": "Knee patch, clog strap, hat band, trug rim, eye and the rolled sleeve edge where the upper arm ends; real height 1.16 m and width 1.84 m of the weeding pose. Front view and plan: Retained: all articulated segments, clothing silhouettes, hands, shoes, hair and the main clothing details that are wider than the line gap. The pad and the trug stand beside the gardener as separate forms: the pad as a rounded strip, the trug as a round bucket with the weed heap; the wide-brimmed hat keeps crown and brim.",
+            "de": "Kniepolster, Clog-Riemen, Hutband, Trogrand, Auge und die hochgekrempelte Ärmelkante am Ende des Oberarms; reale Höhe 1,16 m und Breite 1,84 m der Jätepose. Vorder- und Draufsicht: Beibehalten: alle Gliedsegmente, Kleidungssilhouetten, Hände, Schuhe, Haar und die wichtigsten Kleidungsdetails, die breiter als die Linienlücke sind. Polster und Trog stehen als eigene Formen neben der Person: das Polster als abgerundeter Streifen, der Trog als runder Eimer mit dem Unkrauthaufen; der breitkrempige Hut behält Krone und Krempe."
           },
           "merged": {
-            "en": "Bare forearm and glove into one forearm form; fingers and thumb into the glove end; the trowel handle is hidden in the glove; the pelvis is covered by shirt hem and thigh. The far leg is hidden behind the near leg and not drawn.",
-            "de": "Nackter Unterarm und Handschuh zu einer Unterarmform; Finger und Daumen im Handschuhende; der Schaufelgriff steckt im Handschuh; das Becken ist von Hemdsaum und Oberschenkel verdeckt. Das ferne Bein ist hinter dem nahen verdeckt und wird nicht gezeichnet."
+            "en": "Bare forearm and glove into one forearm form; fingers and thumb into the glove end; the trowel handle is hidden in the glove; the pelvis is covered by shirt hem and thigh. The far leg is hidden behind the near leg and not drawn. Front view and plan: Merged: skin and cloth layers that overlap by less than the gap limit; the toe box stays a separate form only where the toe bone moves.",
+            "de": "Nackter Unterarm und Handschuh zu einer Unterarmform; Finger und Daumen im Handschuhende; der Schaufelgriff steckt im Handschuh; das Becken ist von Hemdsaum und Oberschenkel verdeckt. Das ferne Bein ist hinter dem nahen verdeckt und wird nicht gezeichnet. Vorder- und Draufsicht: Zusammengefasst: Haut- und Stoffschichten, die sich weniger als die Lückengrenze überlappen; die Schuhkappe bleibt nur dort eine eigene Form, wo sich der Zehenknochen bewegt."
           },
           "omitted": {
-            "en": "Ear, mouth, placket, finger lines, trowel ferrule and handle, far clog.",
-            "de": "Ohr, Mund, Knopfleiste, Fingerlinien, Schaufelzwinge und -griff, ferner Clog."
+            "en": "Ear, mouth, placket, finger lines, trowel ferrule and handle, far clog. Front view and plan: Omitted: individual fingers, facial features, stitching and fabric texture. Weeds are one mound without single stalks.",
+            "de": "Ohr, Mund, Knopfleiste, Fingerlinien, Schaufelzwinge und -griff, ferner Clog. Vorder- und Draufsicht: Weggelassen: einzelne Finger, Gesichtszüge, Steppnähte und Stofftextur. Das Unkraut ist ein Haufen ohne einzelne Halme."
           },
           "thinElements": {
-            "en": "The trowel blade is drawn 0.06 m wide (0.6 mm) with a blunt start inside the glove; the hat band is a 0.13 mm line; nothing is thickened.",
-            "de": "Das Schaufelblatt ist 0,06 m breit (0,6 mm) mit stumpfem Anfang im Handschuh gezeichnet; das Hutband ist eine 0,13-mm-Linie; nichts wird verdickt."
+            "en": "The trowel blade is drawn 0.06 m wide (0.6 mm) with a blunt start inside the glove; the hat band is a 0.13 mm line; nothing is thickened. Front view and plan: Straps, bands and seams are drawn as detail lines of at least the detail pen only where they carry meaning for the figure; finer ones are omitted.",
+            "de": "Das Schaufelblatt ist 0,06 m breit (0,6 mm) mit stumpfem Anfang im Handschuh gezeichnet; das Hutband ist eine 0,13-mm-Linie; nichts wird verdickt. Vorder- und Draufsicht: Riemen, Bänder und Nähte sind nur dort als Detaillinien mit mindestens der Detailfeder gezeichnet, wo sie für die Figur Bedeutung tragen; feinere entfallen."
           },
           "hatching": {
             "en": "None; tones carry the materials.",
@@ -1624,14 +5694,15 @@
             "de": "0,20-mm-Konturen, 0,13-mm-Detaillinien; helles Hemd und heller Hut, mittelgraue Hose, dunkler Clog."
           },
           "overlays": {
-            "en": "The forearm form lists forearm skin and glove regions; every other region is its own form; the knee patch and strap lines lie inside their regions.",
-            "de": "Die Unterarmform nennt die Regionen Unterarmhaut und Handschuh; jede andere Region ist eine eigene Form; Kniepolster- und Riemenlinien liegen innerhalb ihrer Regionen."
+            "en": "The forearm form lists forearm skin and glove regions; every other region is its own form; the knee patch and strap lines lie inside their regions. Front view and plan: Each shape carries the region of its side-view counterpart; clothing and skin layers keep their own regions so layered thermal results are visible in all three views.",
+            "de": "Die Unterarmform nennt die Regionen Unterarmhaut und Handschuh; jede andere Region ist eine eigene Form; Kniepolster- und Riemenlinien liegen innerhalb ihrer Regionen. Vorder- und Draufsicht: Jede Form trägt die Region ihres Gegenstücks in der Seitenansicht; Kleidungs- und Hautschichten behalten ihre eigenen Regionen, sodass geschichtete Thermikergebnisse in allen drei Ansichten sichtbar sind."
           }
         }
       },
       "200": {
         "status": "unavailable",
         "denominator": 200,
+        "cause": "below-printable-feature",
         "reason": {
           "en": "At 1:200 the 0.04 m trowel, the 0.04 m thick hat brim and the pad are 0.2 mm wide or less, and the limbs of the leaning figure lie 0.03 to 0.10 m apart (0.15 to 0.5 mm): the gaps between arms, thigh and torso fall below the 0.15 mm minimum white gap plus line width and the hat brim falls below the feature limit, so no drawing keeps them apart without merging the working arm into the body.",
           "de": "Bei 1:200 sind die 0,04 m breite Schaufel, die 0,04 m dicke Hutkrempe und das Kissen höchstens 0,2 mm breit, und die Gliedmaßen der vorgebeugten Figur liegen 0,03 bis 0,10 m (0,15 bis 0,5 mm) auseinander: Die Abstände zwischen Armen, Oberschenkel und Rumpf liegen unter der Mindestlücke von 0,15 mm zuzüglich Linienbreite und die Hutkrempe unter der Mindestbreite, sodass keine Zeichnung sie getrennt hält, ohne den arbeitenden Arm mit dem Körper zu verschmelzen."
@@ -1651,6 +5722,7 @@
       "500": {
         "status": "unavailable",
         "denominator": 500,
+        "cause": "below-printable-feature",
         "reason": {
           "en": "At 1:500 the 1.16 m high kneeling figure is 2.3 mm tall: the folded limbs, the gloved hand holding a 0.04 m wide trowel and the 0.04 m kneeling pad are below the 0.2 mm feature limit, and arms, thigh and torso lie 0.03 to 0.12 m apart, closer than the minimum white gap of 0.15 mm plus line width, so they print as one blot.",
           "de": "Bei 1:500 ist die 1,16 m hohe kniende Figur 2,3 mm groß: die gefalteten Gliedmaßen, die behandschuhte Hand mit der 0,04 m breiten Schaufel und das 0,04 m dicke Kniekissen liegen unter der Mindestbreite von 0,2 mm, und Arme, Oberschenkel und Rumpf liegen 0,03 bis 0,12 m auseinander, enger als die Mindestlücke von 0,15 mm zuzüglich Linienbreite, sodass sie als ein Fleck drucken."
@@ -3427,10 +7499,7 @@
     "presentation": {
       "defaultPose": "kneeling-weeding",
       "defaultClip": "dig-cycle",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

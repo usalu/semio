@@ -548,36 +548,72 @@
   },
   "anchors": [
    {
-    "id": "contact-f",
+    "id": "contact-f-l",
     "bone": "axle-f",
     "x": 0,
     "y": -0.29,
     "kind": "contact",
     "title": {
-     "en": "Drive tyre patches",
-     "de": "Antriebsreifenaufstandsflächen"
+     "en": "Drive tyre patches (left)",
+     "de": "Antriebsreifenaufstandsflächen (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.17,
-    "footprintWidthM": 0.46,
-    "frictionCoefficient": 0.7
+    "footprintWidthM": 0.23,
+    "frictionCoefficient": 0.7,
+    "z": 0.5
    },
    {
-    "id": "contact-r",
+    "id": "contact-f-r",
+    "bone": "axle-f",
+    "x": 0,
+    "y": -0.29,
+    "kind": "contact",
+    "title": {
+     "en": "Drive tyre patches (right)",
+     "de": "Antriebsreifenaufstandsflächen (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.17,
+    "footprintWidthM": 0.23,
+    "frictionCoefficient": 0.7,
+    "z": -0.5
+   },
+   {
+    "id": "contact-r-l",
     "bone": "axle-r",
     "x": 0,
     "y": -0.23,
     "kind": "contact",
     "title": {
-     "en": "Steer tyre patches",
-     "de": "Lenkreifenaufstandsflächen"
+     "en": "Steer tyre patches (left)",
+     "de": "Lenkreifenaufstandsflächen (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.13,
-    "footprintWidthM": 0.36,
-    "frictionCoefficient": 0.7
+    "footprintWidthM": 0.18,
+    "frictionCoefficient": 0.7,
+    "z": 0.24
+   },
+   {
+    "id": "contact-r-r",
+    "bone": "axle-r",
+    "x": 0,
+    "y": -0.23,
+    "kind": "contact",
+    "title": {
+     "en": "Steer tyre patches (right)",
+     "de": "Lenkreifenaufstandsflächen (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.13,
+    "footprintWidthM": 0.18,
+    "frictionCoefficient": 0.7,
+    "z": -0.24
    },
    {
     "id": "motor-vent",
@@ -936,8 +972,7 @@
        "w": 1.6,
        "h": 0.1,
        "region": "mast",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.406
       },
       {
@@ -953,8 +988,7 @@
        "w": 0.6,
        "h": 0.1,
        "region": "fork-gear",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.406
       },
       {
@@ -970,8 +1004,7 @@
        "w": 1.05,
        "h": 0.09,
        "region": "fork-gear",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.556
       },
       {
@@ -1041,8 +1074,7 @@
        "h": 0.9,
        "r": 0.02,
        "region": "cargo",
-       "material": "goods"
-      ,
+       "material": "goods",
        "penMm": 0.556
       },
       {
@@ -1199,6 +1231,1448 @@
        "ry": 0.04,
        "material": "paint"
       }
+     ],
+     "front": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.144,
+       "w": 1.16,
+       "h": 0.9,
+       "r": 0.02,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.044,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-bar-outer-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.5,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-bar-outer-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": -0.5
+       }
+      },
+      {
+       "id": "fork-backrest-bar-inner-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "fork-backrest-bar-inner-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.2
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 1,
+       "y": -0.09,
+       "w": 0.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-rail",
+       "bone": "forks",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.5,
+       "y": -0.09,
+       "w": 0.04,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "tilt-barrel-left",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "tilt-barrel-right",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "tilt-rod-left",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.235,
+        "z1": 0.285
+       }
+      },
+      {
+       "id": "tilt-rod-right",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.285,
+        "z1": -0.235
+       }
+      },
+      {
+       "id": "goods-strap-1",
+       "bone": "pallet",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.13,
+         0.159
+        ],
+        [
+         -0.13,
+         1.059
+        ]
+       ],
+       "closed": false,
+       "material": "goods"
+      },
+      {
+       "id": "goods-strap-2",
+       "bone": "pallet",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.13,
+         0.159
+        ],
+        [
+         0.13,
+         1.059
+        ]
+       ],
+       "closed": false,
+       "material": "goods"
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 2.2,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 2.1,
+       "w": 1.1,
+       "h": 0.05,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "guard-post-left",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": 0.47,
+       "y": 0.96,
+       "w": 0.06,
+       "h": 1.14,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "guard-post-right",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.53,
+       "y": 0.96,
+       "w": 0.06,
+       "h": 1.14,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "seat-back",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.22,
+       "kind": "rect",
+       "x": -0.22,
+       "y": 1.1,
+       "w": 0.44,
+       "h": 0.5,
+       "r": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "seat-cushion",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.45,
+       "filled": true,
+       "tone": 0.22,
+       "kind": "rect",
+       "x": -0.25,
+       "y": 1.05,
+       "w": 0.5,
+       "h": 0.1,
+       "r": 0.03,
+       "material": "interior"
+      },
+      {
+       "id": "steering-wheel",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.35,
+       "rx": 0.17,
+       "ry": 0.17,
+       "material": "interior"
+      },
+      {
+       "id": "steering-column",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.02,
+       "y": 0.98,
+       "w": 0.04,
+       "h": 0.2,
+       "material": "interior"
+      },
+      {
+       "id": "cowl-dash",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.6,
+       "w": 0.6,
+       "h": 0.4,
+       "region": "controller",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "drive-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.58,
+       "w": 0.8,
+       "h": 0.1,
+       "region": "drive-motor",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.58,
+       "w": 0.9,
+       "h": 0.47,
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.78,
+       "region": "chassis-paint",
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.18,
+       "w": 1.1,
+       "h": 1.02,
+       "r": 0.05,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": 0.4,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.6,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "rim-f-left",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.44,
+       "y": 0.12,
+       "w": 0.08,
+       "h": 0.34,
+       "region": "brakes",
+       "material": "paint"
+      },
+      {
+       "id": "rim-f-right",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.52,
+       "y": 0.12,
+       "w": 0.08,
+       "h": 0.34,
+       "region": "brakes",
+       "material": "paint"
+      },
+      {
+       "id": "tyre-r-left",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.46,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-right",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.32,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.46,
+       "region": "tyres",
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.144,
+       "w": 1.16,
+       "h": 0.9,
+       "r": 0.02,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.044,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-bar-outer-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.5,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-bar-outer-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": -0.5
+       }
+      },
+      {
+       "id": "fork-backrest-bar-inner-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2,
+        "z1": 0.25
+       }
+      },
+      {
+       "id": "fork-backrest-bar-inner-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.2
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 1,
+       "y": -0.09,
+       "w": 0.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-rail",
+       "bone": "forks",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.5,
+       "y": -0.09,
+       "w": 0.04,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "tilt-barrel-left",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "tilt-barrel-right",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "tilt-rod-left",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.235,
+        "z1": 0.285
+       }
+      },
+      {
+       "id": "tilt-rod-right",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.285,
+        "z1": -0.235
+       }
+      },
+      {
+       "id": "goods-strap-1",
+       "bone": "pallet",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         1.8,
+         -0.38
+        ],
+        [
+         1.8,
+         0.38
+        ]
+       ],
+       "closed": false,
+       "material": "goods"
+      },
+      {
+       "id": "goods-strap-2",
+       "bone": "pallet",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         2.2,
+         -0.38
+        ],
+        [
+         2.2,
+         0.38
+        ]
+       ],
+       "closed": false,
+       "material": "goods"
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": -0.5,
+       "cy": 0,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-slat-1",
+       "bone": "chassis",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -1.1,
+         -0.5
+        ],
+        [
+         -1.1,
+         0.5
+        ]
+       ],
+       "closed": false,
+       "material": "paint"
+      },
+      {
+       "id": "guard-slat-2",
+       "bone": "chassis",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         -0.5
+        ],
+        [
+         -0.9,
+         0.5
+        ]
+       ],
+       "closed": false,
+       "material": "paint"
+      },
+      {
+       "id": "guard-slat-3",
+       "bone": "chassis",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.7,
+         -0.5
+        ],
+        [
+         -0.7,
+         0.5
+        ]
+       ],
+       "closed": false,
+       "material": "paint"
+      },
+      {
+       "id": "guard-slat-4",
+       "bone": "chassis",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.5,
+         -0.5
+        ],
+        [
+         -0.5,
+         0.5
+        ]
+       ],
+       "closed": false,
+       "material": "paint"
+      },
+      {
+       "id": "guard-slat-5",
+       "bone": "chassis",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.3,
+         -0.5
+        ],
+        [
+         -0.3,
+         0.5
+        ]
+       ],
+       "closed": false,
+       "material": "paint"
+      },
+      {
+       "id": "guard-slat-6",
+       "bone": "chassis",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         -0.5
+        ],
+        [
+         -0.1,
+         0.5
+        ]
+       ],
+       "closed": false,
+       "material": "paint"
+      },
+      {
+       "id": "guard-roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.2,
+       "y": -0.55,
+       "w": 1.35,
+       "h": 1.1,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "cowl-dash",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.18,
+       "y": -0.3,
+       "w": 0.23,
+       "h": 0.6,
+       "region": "controller",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "drive-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.3,
+       "y": -0.4,
+       "w": 0.5,
+       "h": 0.8,
+       "region": "drive-motor",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -1.7,
+       "y": -0.5,
+       "w": 2.15,
+       "h": 1,
+       "r": 0.1,
+       "region": "chassis-paint",
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -2.45,
+       "y": -0.55,
+       "w": 0.75,
+       "h": 1.1,
+       "r": 0.08,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": 0.4,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": -0.6,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      }
      ]
     },
     "decisions": {
@@ -1207,16 +2681,16 @@
       "de": "Vollständige Seitenansicht der ersten Fassung."
      },
      "retained": {
-      "en": "Everything: courses, straps, slats, backrest bars, vents.",
-      "de": "Alles: Lagen, Gurte, Lamellen, Rückenstreben, Schlitze."
+      "en": "Everything: courses, straps, slats, backrest bars, vents. Front view: full detail from the fork side: the load block with straps on the pallet, tines, the barred backrest, carriage plate, both mast stages and the tilt barrels and rods as extruded solids of their side-view outlines (mast tilt, lift and fork travel change their height range exactly), guard posts and roof, seat, steering wheel and column, beacon, cowl, battery, counterweight and the front tyres with rims. Plan: the same solids seen from above (the tilting mast stretches backwards), pallet with goods and straps, roof with slats, beacon, cowl, chassis, counterweight and front tyres.",
+      "de": "Alles: Lagen, Gurte, Lamellen, Rückenstreben, Schlitze. Vorderansicht: voller Detailgrad von der Gabelseite: der Lastblock mit Gurten auf der Palette, Zinken, das Gitter des Lastschutzes, Gabelträger, beide Mastteile sowie Neigezylinder und Kolbenstangen als extrudierte Körper ihrer Seitenansichtsumrisse (Mastneigung, Hub und Gabelweg ändern ihren Höhenbereich genau), Dachstützen und Dach, Sitz, Lenkrad und Säule, Rundumleuchte, Haube, Batterie, Gegengewicht und die Vorderreifen mit Felgen. Grundriss: dieselben Körper von oben (der kippende Mast streckt sich nach hinten), Palette mit Ladung und Gurten, Dach mit Lamellen, Rundumleuchte, Haube, Fahrgestell, Gegengewicht und Vorderreifen."
      },
      "merged": {
       "en": "Nothing merged.",
       "de": "Nichts zusammengefasst."
      },
      "omitted": {
-      "en": "Hoses and cables (not modelled).",
-      "de": "Schläuche und Kabel (nicht modelliert)."
+      "en": "Hoses and cables (not modelled). The rear tyres and the seat are hidden below the body and roof in the plan; the rear tyre pair is hidden behind the front tyres in the front view.",
+      "de": "Schläuche und Kabel (nicht modelliert). Die Hinterreifen und der Sitz sind im Grundriss unter Aufbau und Dach verdeckt; das hintere Reifenpaar ist in der Vorderansicht hinter den Vorderreifen verdeckt."
      },
      "thinElements": {
       "en": "Fork tine 0.045 m = 0.9 mm.",
@@ -1353,8 +2827,7 @@
        "filled": true,
        "tone": 0.4,
        "region": "guard",
-       "material": "paint"
-      ,
+       "material": "paint",
        "penMm": 0.33
       },
       {
@@ -1433,8 +2906,7 @@
        "regions": [
         "mast"
        ],
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.4
       },
       {
@@ -1730,6 +3202,1083 @@
        "d": "M 0.4,0.144 L 0.4,1.044 M 0.8,0.144 L 0.8,1.044",
        "material": "goods"
       }
+     ],
+     "front": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.144,
+       "w": 1.16,
+       "h": 0.9,
+       "r": 0.02,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.044,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-bar-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.5,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-bar-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": -0.5
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 1,
+       "y": -0.09,
+       "w": 0.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "tilt-barrel-left",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "tilt-barrel-right",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "tilt-rod-left",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.235,
+        "z1": 0.285
+       }
+      },
+      {
+       "id": "tilt-rod-right",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.285,
+        "z1": -0.235
+       }
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 2.2,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 2.1,
+       "w": 1.1,
+       "h": 0.05,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "guard-post-left",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": 0.47,
+       "y": 0.96,
+       "w": 0.06,
+       "h": 1.14,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "guard-post-right",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.53,
+       "y": 0.96,
+       "w": 0.06,
+       "h": 1.14,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "seat-back",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.22,
+       "kind": "rect",
+       "x": -0.22,
+       "y": 1.1,
+       "w": 0.44,
+       "h": 0.5,
+       "r": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "steering-wheel",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.35,
+       "rx": 0.17,
+       "ry": 0.17,
+       "material": "interior"
+      },
+      {
+       "id": "cowl-dash",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.6,
+       "w": 0.6,
+       "h": 0.4,
+       "region": "controller",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "drive-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.58,
+       "w": 0.8,
+       "h": 0.1,
+       "region": "drive-motor",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.58,
+       "w": 0.9,
+       "h": 0.47,
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.78,
+       "region": "chassis-paint",
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.18,
+       "w": 1.1,
+       "h": 1.02,
+       "r": 0.05,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": 0.4,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.6,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "rim-f-left",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.44,
+       "y": 0.12,
+       "w": 0.08,
+       "h": 0.34,
+       "region": "brakes",
+       "material": "paint"
+      },
+      {
+       "id": "rim-f-right",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.52,
+       "y": 0.12,
+       "w": 0.08,
+       "h": 0.34,
+       "region": "brakes",
+       "material": "paint"
+      },
+      {
+       "id": "tyre-r-left",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.46,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-right",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.32,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.46,
+       "region": "tyres",
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.144,
+       "w": 1.16,
+       "h": 0.9,
+       "r": 0.02,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.044,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-bar-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.5,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-bar-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": -0.5
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 1,
+       "y": -0.09,
+       "w": 0.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "tilt-barrel-left",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "tilt-barrel-right",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "tilt-rod-left",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.235,
+        "z1": 0.285
+       }
+      },
+      {
+       "id": "tilt-rod-right",
+       "bone": "tilt-rod",
+       "role": "detail",
+       "z": 3.45,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.285,
+        "z1": -0.235
+       }
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": -0.5,
+       "cy": 0,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.2,
+       "y": -0.55,
+       "w": 1.35,
+       "h": 1.1,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "cowl-dash",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.18,
+       "y": -0.3,
+       "w": 0.23,
+       "h": 0.6,
+       "region": "controller",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "drive-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.3,
+       "y": -0.4,
+       "w": 0.5,
+       "h": 0.8,
+       "region": "drive-motor",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -1.7,
+       "y": -0.5,
+       "w": 2.15,
+       "h": 1,
+       "r": 0.1,
+       "region": "chassis-paint",
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -2.45,
+       "y": -0.55,
+       "w": 0.75,
+       "h": 1.1,
+       "r": 0.08,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": 0.4,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": -0.6,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      }
      ]
     },
     "decisions": {
@@ -1738,16 +4287,16 @@
       "de": "Der Stapler von 1:200 mit Sitz, Lenkrad, Bedienelementen, Rundumleuchte, Schutzdachlamellen, Lochkreisen in den Felgen und Warengurten."
      },
      "retained": {
-      "en": "Seat, wheel, controls, beacon, rim holes (brakes region), straps.",
-      "de": "Sitz, Lenkrad, Bedienelemente, Rundumleuchte, Felgenlöcher (Region Bremsen), Gurte."
+      "en": "Seat, wheel, controls, beacon, rim holes (brakes region), straps. Front view: load block, pallet, tines, backrest frame, carriage, both mast stages, tilt barrels and rods as extruded side-view solids, guard posts and roof, seat back, steering wheel, beacon, cowl, battery, counterweight and tyres with rims. Plan: the same solids from above, roof, beacon, cowl, chassis, counterweight and front tyres.",
+      "de": "Sitz, Lenkrad, Bedienelemente, Rundumleuchte, Felgenlöcher (Region Bremsen), Gurte. Vorderansicht: Lastblock, Palette, Zinken, Lastschutzrahmen, Gabelträger, beide Mastteile, Neigezylinder und Kolbenstangen als extrudierte Seitenansichtskörper, Dachstützen und Dach, Sitzlehne, Lenkrad, Rundumleuchte, Haube, Batterie, Gegengewicht und Reifen mit Felgen. Grundriss: dieselben Körper von oben, Dach, Rundumleuchte, Haube, Fahrgestell, Gegengewicht und Vorderreifen."
      },
      "merged": {
       "en": "Goods courses and fork backrest bars are not drawn.",
       "de": "Warenlagen und Gabelrückenstreben werden nicht gezeichnet."
      },
      "omitted": {
-      "en": "Battery lines, chassis skirt, vents.",
-      "de": "Batterielinien, Rahmenschürze, Lüftungsschlitze."
+      "en": "Battery lines, chassis skirt, vents. Rear tyres below the body; the backrest has no middle bars.",
+      "de": "Batterielinien, Rahmenschürze, Lüftungsschlitze. Hinterreifen unter dem Aufbau; der Lastschutz hat keine Mittelstäbe."
      },
      "thinElements": {
       "en": "None thickened.",
@@ -1794,8 +4343,7 @@
        "filled": true,
        "tone": 0.6,
        "region": "chassis-paint",
-       "material": "paint"
-      ,
+       "material": "paint",
        "penMm": 0.332
       },
       {
@@ -2051,8 +4599,7 @@
        "filled": true,
        "tone": 0.6,
        "region": "pallet",
-       "material": "wood"
-      ,
+       "material": "wood",
        "penMm": 0.332
       },
       {
@@ -2159,6 +4706,871 @@
        "tone": 0.7,
        "material": "paint"
       }
+     ],
+     "front": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.16,
+       "w": 1.16,
+       "h": 0.884,
+       "r": 0.02,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.06,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-bar-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.49,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-bar-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": -0.49
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.99,
+       "y": -0.09,
+       "w": 0.06,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "tilt-barrel-left",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "tilt-barrel-right",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 2.2,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 2.1,
+       "w": 1.1,
+       "h": 0.06,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "guard-post-left",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.47,
+       "y": 0.96,
+       "w": 0.06,
+       "h": 1.14,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "guard-post-right",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.53,
+       "y": 0.96,
+       "w": 0.06,
+       "h": 1.14,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "cowl-dash",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.6,
+       "w": 0.6,
+       "h": 0.4,
+       "region": "controller",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "drive-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.58,
+       "w": 0.8,
+       "h": 0.1,
+       "region": "drive-motor",
+       "material": "drive-electronics"
+      },
+      {
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.58,
+       "w": 0.9,
+       "h": 0.47,
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.78,
+       "region": "chassis-paint",
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.18,
+       "w": 1.1,
+       "h": 1.02,
+       "r": 0.05,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": 0.4,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.6,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.16,
+       "w": 1.16,
+       "h": 0.884,
+       "r": 0.02,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.06,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-bar-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.49,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "fork-backrest-bar-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.09,
+       "w": 1.05,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": -0.49
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.99,
+       "y": -0.09,
+       "w": 0.06,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "tilt-barrel-left",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.3
+       }
+      },
+      {
+       "id": "tilt-barrel-right",
+       "bone": "tilt-cyl",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.45,
+       "y1": 0,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "hydraulics",
+       "material": "hydraulic",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "ellipse",
+       "cx": -0.5,
+       "cy": 0,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -1.2,
+       "y": -0.55,
+       "w": 1.35,
+       "h": 1.1,
+       "region": "guard",
+       "material": "paint"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -1.7,
+       "y": -0.5,
+       "w": 2.15,
+       "h": 1,
+       "region": "chassis-paint",
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -2.45,
+       "y": -0.55,
+       "w": 0.75,
+       "h": 1.1,
+       "r": 0.08,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": 0.4,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": -0.6,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      }
      ]
     },
     "decisions": {
@@ -2167,16 +5579,16 @@
       "de": "Aufbau mit Haube, Antriebsabdeckung und Armaturenbrett, Fahrerschutzdach mit Dach und zwei Stützen, Batterie und Gegengewicht, zweistufiger Mast mit Gabelträger, Gabel und Neigezylinder, eine Palette mit Füßen, Deck und Ware, zwei Räder mit Felge und Nabe."
      },
      "retained": {
-      "en": "Everything that carries a thermal region: motor cover, dash electronics, tilt cylinder, mast stages, fork gear, pallet and goods.",
-      "de": "Alles, was eine thermische Region trägt: Motorabdeckung, Armaturenelektronik, Neigezylinder, Maststufen, Gabelzeug, Palette und Ware."
+      "en": "Everything that carries a thermal region: motor cover, dash electronics, tilt cylinder, mast stages, fork gear, pallet and goods. Front view: load, pallet, two tines, backrest bars, carriage, mast stages and tilt barrels as extruded side-view solids, guard, beacon, body, battery, counterweight and two tyres. Plan: the same solids from above, roof, body, counterweight and the two front tyres.",
+      "de": "Alles, was eine thermische Region trägt: Motorabdeckung, Armaturenelektronik, Neigezylinder, Maststufen, Gabelzeug, Palette und Ware. Vorderansicht: Ladung, Palette, zwei Zinken, Lastschutzstäbe, Gabelträger, Mastteile und Neigezylinder als extrudierte Seitenansichtskörper, Schutzdach, Rundumleuchte, Aufbau, Batterie, Gegengewicht und zwei Reifen. Grundriss: dieselben Körper von oben, Dach, Aufbau, Gegengewicht und die zwei Vorderreifen."
      },
      "merged": {
       "en": "Rim and drum are one lighter disc (brakes region); fork backrest and tine are two bars.",
       "de": "Felge und Trommel sind eine hellere Scheibe (Region Bremsen); Gabelrückenlehne und Zinke sind zwei Balken."
      },
      "omitted": {
-      "en": "Seat, steering wheel, beacon, guard slats, battery lines, goods courses and straps.",
-      "de": "Sitz, Lenkrad, Rundumleuchte, Schutzdachlamellen, Batterielinien, Warenlagen und Gurte."
+      "en": "Seat, steering wheel, beacon, guard slats, battery lines, goods courses and straps. Seat, steering wheel, tilt rods, tyre rims, straps and the rear tyres.",
+      "de": "Sitz, Lenkrad, Rundumleuchte, Schutzdachlamellen, Batterielinien, Warenlagen und Gurte. Sitz, Lenkrad, Kolbenstangen, Reifenfelgen, Gurte und die Hinterreifen."
      },
      "thinElements": {
       "en": "Guard posts 0.06 m = 0.3 mm real; the pallet deck is drawn 0.06 m (real 0.044 m).",
@@ -2227,8 +5639,7 @@
         "drive-motor",
         "controller"
        ],
-       "material": "paint"
-      ,
+       "material": "paint",
        "penMm": 0.256
       },
       {
@@ -2271,8 +5682,7 @@
        "filled": true,
        "tone": 0.4,
        "region": "battery-pack",
-       "material": "battery-case"
-      ,
+       "material": "battery-case",
        "penMm": 0.246
       },
       {
@@ -2318,8 +5728,7 @@
        "filled": true,
        "tone": 0.5,
        "region": "mast",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.226
       },
       {
@@ -2335,8 +5744,7 @@
        "filled": true,
        "tone": 0.5,
        "region": "fork-gear",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.182
       },
       {
@@ -2352,8 +5760,7 @@
        "filled": true,
        "tone": 0.5,
        "region": "fork-gear",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.226
       },
       {
@@ -2369,8 +5776,7 @@
        "filled": true,
        "tone": 0.5,
        "region": "fork-gear",
-       "material": "steel"
-      ,
+       "material": "steel",
        "penMm": 0.273
       },
       {
@@ -2386,8 +5792,7 @@
        "filled": true,
        "tone": 0.6,
        "region": "pallet",
-       "material": "wood"
-      ,
+       "material": "wood",
        "penMm": 0.166
       },
       {
@@ -2440,9 +5845,680 @@
         "tyres",
         "brakes"
        ],
-       "material": "rubber"
-      ,
+       "material": "rubber",
        "penMm": 0.246
+      }
+     ],
+     "front": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.16,
+       "w": 1.16,
+       "h": 0.884,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.06,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.98,
+       "y": -0.09,
+       "w": 0.07,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 2.2,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-frame",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.5,
+         0.96
+        ],
+        [
+         -0.5,
+         2.125
+        ],
+        [
+         0.5,
+         2.125
+        ],
+        [
+         0.5,
+         0.96
+        ]
+       ],
+       "closed": false,
+       "region": "guard",
+       "material": "paint",
+       "penMm": 0.15
+      },
+      {
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "body",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.58,
+       "w": 0.9,
+       "h": 0.47,
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.18,
+       "w": 1,
+       "h": 0.78,
+       "regions": [
+        "chassis-paint",
+        "drive-motor",
+        "controller"
+       ],
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.18,
+       "w": 1.1,
+       "h": 1.02,
+       "r": 0.05,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": 0.4,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.6,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.58,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pallet-goods",
+       "bone": "pallet",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.16,
+       "w": 1.16,
+       "h": 0.884,
+       "region": "cargo",
+       "material": "goods",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "pallet-deck",
+       "bone": "pallet",
+       "role": "body",
+       "z": 5.9,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.1,
+       "w": 1.2,
+       "h": 0.06,
+       "region": "pallet",
+       "material": "wood",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.4,
+        "z1": 0.4
+       }
+      },
+      {
+       "id": "fork-tine-left",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.46
+       }
+      },
+      {
+       "id": "fork-tine-right",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -1.07,
+       "w": 0.045,
+       "h": 0.98,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.46,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "fork-backrest-top",
+       "bone": "forks",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.98,
+       "y": -0.09,
+       "w": 0.07,
+       "h": 0.09,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.55,
+        "z1": 0.55
+       }
+      },
+      {
+       "id": "carriage-plate",
+       "bone": "carriage",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 0.6,
+       "h": 0.1,
+       "region": "fork-gear",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.42,
+        "z1": 0.42
+       }
+      },
+      {
+       "id": "mast-inner-left",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.32
+       }
+      },
+      {
+       "id": "mast-inner-right",
+       "bone": "mast-inner",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0,
+       "y": -0.05,
+       "w": 1.6,
+       "h": 0.1,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.32,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "mast-outer-left",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.34,
+        "z1": 0.48
+       }
+      },
+      {
+       "id": "mast-outer-right",
+       "bone": "mast-outer",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.07,
+       "w": 2.05,
+       "h": 0.14,
+       "region": "mast",
+       "material": "steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.48,
+        "z1": -0.34
+       }
+      },
+      {
+       "id": "beacon",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "ellipse",
+       "cx": -0.5,
+       "cy": 0,
+       "rx": 0.06,
+       "ry": 0.06,
+       "material": "interior"
+      },
+      {
+       "id": "guard-frame",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -1.2,
+         -0.52
+        ],
+        [
+         0.15,
+         -0.52
+        ],
+        [
+         0.15,
+         0.52
+        ],
+        [
+         -1.2,
+         0.52
+        ]
+       ],
+       "closed": true,
+       "region": "guard",
+       "material": "paint",
+       "penMm": 0.15
+      },
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -1.7,
+       "y": -0.5,
+       "w": 2.15,
+       "h": 1,
+       "regions": [
+        "chassis-paint",
+        "drive-motor",
+        "controller",
+        "battery-pack"
+       ],
+       "material": "paint"
+      },
+      {
+       "id": "counterweight-body",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -2.45,
+       "y": -0.55,
+       "w": 0.75,
+       "h": 1.1,
+       "r": 0.08,
+       "region": "counterweight",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f-left",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": 0.4,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-right",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "rect",
+       "x": -0.29,
+       "y": -0.6,
+       "w": 0.58,
+       "h": 0.2,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
       }
      ]
     },
@@ -2452,16 +6528,16 @@
       "de": "Gegengewichtsstapler als eine Fahrzeugmasse mit Batterie- und Gegengewichtsblock, einem als Linienzeichnung gegebenen Fahrerschutzdach, Mast, Gabelträger und Gabel als dünne volle Balken, einer Palette mit Warenblock und zwei schwarzen Radscheiben."
      },
      "retained": {
-      "en": "Body, guard, battery, counterweight, both mast stages, carriage, fork (backrest and tine), pallet block with goods, both wheels; the mast still tilts and lifts.",
-      "de": "Aufbau, Schutzdach, Batterie, Gegengewicht, beide Maststufen, Gabelträger, Gabel (Rückenlehne und Zinken), Palettenblock mit Ware, beide Räder; der Mast neigt und hebt sich weiter."
+      "en": "Body, guard, battery, counterweight, both mast stages, carriage, fork (backrest and tine), pallet block with goods, both wheels; the mast still tilts and lifts. Front view: one body mass with battery and counterweight blocks, the guard as a line, the two mast stages as bars, the fork as tines under a backrest bar, the pallet block with goods and two black tyre bars; mast and fork are extruded solids and still tilt and lift. Plan: one chassis block, the counterweight block, the guard outline, the mast bars, fork, pallet with goods and the two front tyres.",
+      "de": "Aufbau, Schutzdach, Batterie, Gegengewicht, beide Maststufen, Gabelträger, Gabel (Rückenlehne und Zinken), Palettenblock mit Ware, beide Räder; der Mast neigt und hebt sich weiter. Vorderansicht: eine Aufbaumasse mit Batterie- und Gegengewichtblock, das Schutzdach als Linie, die zwei Mastteile als Balken, die Gabel als Zinken unter einem Lastschutzbalken, der Palettenblock mit Ladung und zwei schwarze Reifenbalken; Mast und Gabel sind extrudierte Körper und kippen und heben weiter. Grundriss: ein Fahrgestellblock, der Gegengewichtblock, der Dachumriss, die Mastbalken, Gabel, Palette mit Ladung und die zwei Vorderreifen."
      },
      "merged": {
       "en": "Motor housing and electronics merge into the body fill; the tilt cylinders merge into the outer mast; the pallet feet and deck are one block; rim, holes and drums merge into the wheel disc.",
       "de": "Motorgehäuse und Elektronik gehen in der Aufbaufläche auf; die Neigezylinder im äußeren Mast; Palettenfüße und Deck sind ein Block; Felge, Löcher und Trommeln gehen in der Radscheibe auf."
      },
      "omitted": {
-      "en": "Seat, steering wheel, controls, beacon, tilt cylinder bones' shapes, slats of the guard, fork backrest bars.",
-      "de": "Sitz, Lenkrad, Bedienelemente, Rundumleuchte, Formen der Neigezylinderknochen, Schutzdachlamellen, Gabelrückenstreben."
+      "en": "Seat, steering wheel, controls, beacon, tilt cylinder bones' shapes, slats of the guard, fork backrest bars. In both views seat, steering wheel, tilt cylinders, rims and rear tyres.",
+      "de": "Sitz, Lenkrad, Bedienelemente, Rundumleuchte, Formen der Neigezylinderknochen, Schutzdachlamellen, Gabelrückenstreben. In beiden Ansichten Sitz, Lenkrad, Neigezylinder, Felgen und Hinterreifen."
      },
      "thinElements": {
       "en": "The guard posts (0.06 m) are lines of 0.15 mm (0.075 m); the mast bars and fork are real size (0.1 to 0.14 m = 0.2 to 0.3 mm, fork tine 0.045 m = 0.09 mm is drawn as outline only).",
@@ -2512,8 +6588,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -2629,8 +6707,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -2760,8 +6840,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -2883,8 +6965,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3007,8 +7091,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3145,8 +7231,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3283,8 +7371,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3416,12 +7506,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f",
+      "anchor": "contact-f-l",
       "fromS": 0,
       "toS": 10
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-f-r",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-r-l",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-r-r",
       "fromS": 0,
       "toS": 10
      }
@@ -3649,12 +7749,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f",
+      "anchor": "contact-f-l",
       "fromS": 0,
       "toS": 7.5
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-f-r",
+      "fromS": 0,
+      "toS": 7.5
+     },
+     {
+      "anchor": "contact-r-l",
+      "fromS": 0,
+      "toS": 7.5
+     },
+     {
+      "anchor": "contact-r-r",
       "fromS": 0,
       "toS": 7.5
      }
@@ -4376,10 +8486,7 @@
   "presentation": {
    "defaultPose": "lowered-forks",
    "defaultClip": "lift-pallet",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

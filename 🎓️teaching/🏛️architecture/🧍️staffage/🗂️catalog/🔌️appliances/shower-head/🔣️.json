@@ -1,0 +1,3238 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "shower-head",
+    "category": "appliances",
+    "title": {
+      "en": "Wall-Mounted Hand Shower on Riser Rail",
+      "de": "Handbrause an Brausestange"
+    },
+    "summary": {
+      "en": "A wall-mounted hand shower of 0.11 m head diameter on a 0.7 m riser rail with a hose loop to the wall elbow; running it delivers 12 L/min (eco 9 L/min) of 38 degC water as a warm spray and a vapour plume.",
+      "de": "Eine wandmontierte Handbrause mit 0,11 m Kopfdurchmesser an einer 0,7 m langen Brausestange mit Schlauchbogen zum Wandanschluss; im Betrieb liefert sie 12 L/min (Sparmodus 9 L/min) Wasser von 38 degC als warmen Strahl und Dampffahne."
+    },
+    "tags": [
+      "shower",
+      "hand-shower",
+      "riser-rail",
+      "bathroom",
+      "hot-water",
+      "spray",
+      "vapour",
+      "moisture",
+      "internal-gain",
+      "appliance"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A10)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-1112-2008",
+          "citation": "EN 1112:2008 Sanitary tapware - Shower outlets for sanitary tapware for water supply systems of type 1 and type 2 (flow classes, flow rates of 8 to 12 litres per minute at 3 bar)."
+        },
+        {
+          "id": "din-1988-300-2012",
+          "citation": "DIN 1988-300:2012 Codes of practice for drinking water installations - Part 300: Pipe sizing (design flow of a shower of 0.15 litres per second at about 38 degC)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, Chapter 18 Nonresidential cooling and heating load calculations and Chapter 10 Indoor environmental modelling (latent and sensible gains of a shower, moisture production of a 10 minute shower)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A hand shower of the common 110 mm head diameter in side elevation on a 0.7 m riser rail (wall brackets 0.1 m from the ends, rail centre 60 mm from the wall) with a sliding holder, a wall elbow with a shut-off valve and a 1.2 m hose hanging as a loop. The wall lies at x = 0; the origin is the lower edge of the wall elbow on the wall. The handle is 0.18 m long, the head a flat disc 0.11 m across and 27 mm thick seen edge-on, tilted so that the spray goes 33 degrees below the horizontal; the poses tilt it by 8 and 4 degrees. Dimensions and the mass of 2.3 kg are rounded from this product class (authored estimate). The valve lever stands for the flow: down = off, halfway = eco 9 L/min (an aerated, water-saving spray), up = 12 L/min. The water temperature is 38 degC (DIN 1988-300). The spray is air-borne water without outline and carries 300 W of sensible heat to the room air at level 1 (12 L/min x 4.18 kJ/kgK x 1.5 K of cooling in flight); the latent part is the vapour of the spray-mist emitter: 0.036 kg/s of air with 0.007 kg/kg of excess vapour = 0.25 g/s = 600 W latent, about 0.15 kg of vapour in a 10 minute shower (ASHRAE).",
+        "de": "Eine Handbrause mit üblichem Kopfdurchmesser von 110 mm in der Seitenansicht an einer 0,7 m langen Brausestange (Wandhalter 0,1 m von den Enden, Stangenmitte 60 mm von der Wand) mit Gleithalter, einem Wandanschlussbogen mit Absperrventil und einem 1,2 m langen Schlauch, der als Bogen hängt. Die Wand liegt bei x = 0; der Ursprung ist die Unterkante des Wandanschlussbogens an der Wand. Der Griff ist 0,18 m lang, der Kopf eine flache Scheibe von 0,11 m Durchmesser und 27 mm Dicke, in der Kante gesehen und so geneigt, dass der Strahl 33 Grad unter die Waagerechte geht; die Posen neigen ihn um 8 und 4 Grad. Maße und die Masse von 2,3 kg sind aus dieser Produktklasse gerundet (Schätzwert). Der Ventilhebel steht für die Menge: unten = aus, halbhoch = Sparmodus 9 L/min (ein belüfteter, wassersparender Strahl), oben = 12 L/min. Die Wassertemperatur beträgt 38 degC (DIN 1988-300). Der Strahl ist luftgetragenes Wasser ohne Kontur und gibt auf Stufe 1 300 W fühlbare Wärme an die Raumluft ab (12 L/min x 4,18 kJ/kgK x 1,5 K Abkühlung im Flug); der latente Anteil ist der Dampf des Emitters spray-mist: 0,036 kg/s Luft mit 0,007 kg/kg Dampfüberschuss = 0,25 g/s = 600 W latent, etwa 0,15 kg Dampf in einer Dusche von 10 Minuten (ASHRAE)."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.12,
+      "widthM": 0.23,
+      "depthM": 0.2,
+      "massKg": 2.27
+    },
+    "materials": [
+      {
+        "id": "chrome",
+        "title": {
+          "en": "Chrome plated brass",
+          "de": "Verchromtes Messing"
+        },
+        "emissivity": 0.1,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 8500,
+        "conductivityWmK": 110,
+        "specificHeatJKgK": 380,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "abs-chrome",
+        "title": {
+          "en": "Chrome plated ABS",
+          "de": "Verchromtes ABS"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "epdm-hose",
+        "title": {
+          "en": "EPDM hose with steel braid",
+          "de": "EPDM-Schlauch mit Stahlgeflecht"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.25,
+        "specificHeatJKgK": 2000,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "rubber-nozzle",
+        "title": {
+          "en": "Silicone nozzles",
+          "de": "Silikondüsen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1500,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "Water at 38 degC",
+          "de": "Wasser von 38 degC"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.05,
+        "densityKgM3": 993,
+        "conductivityWmK": 0.63,
+        "specificHeatJKgK": 4180,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "rail",
+      "bones": [
+        {
+          "id": "rail",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Wall brackets and riser rail",
+            "de": "Wandhalter und Brausestange"
+          },
+          "lengthM": 0.81,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.2,
+            "comX": 0.05,
+            "comY": 0.4,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "elbow",
+          "parent": "rail",
+          "x": 0.03,
+          "y": 0.04,
+          "angleDeg": 0,
+          "title": {
+            "en": "Wall elbow with shut-off valve and hose",
+            "de": "Wandanschlussbogen mit Absperrventil und Schlauch"
+          },
+          "lengthM": 0.06,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.55,
+            "comX": 0.02,
+            "comY": -0.1,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "lever",
+          "parent": "elbow",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Valve lever",
+            "de": "Ventilhebel"
+          },
+          "lengthM": 0.05,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 90
+          },
+          "mass": {
+            "kg": 0.02,
+            "comX": 0.025,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "holder",
+          "parent": "rail",
+          "x": 0.09,
+          "y": 0.62,
+          "angleDeg": 0,
+          "title": {
+            "en": "Sliding holder",
+            "de": "Gleithalter"
+          },
+          "lengthM": 0.06,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.45,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 0.12,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "shower",
+          "parent": "holder",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Hand shower with handle",
+            "de": "Handbrause mit Griff"
+          },
+          "lengthM": 0.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 0.38,
+            "comX": 0.03,
+            "comY": 0.08,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-low",
+        "bone": "rail",
+        "x": 0,
+        "y": 0.095,
+        "kind": "support",
+        "title": {
+          "en": "Lower bracket on the wall",
+          "de": "Unterer Halter an der Wand"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.035,
+        "footprintWidthM": 0.05
+      },
+      {
+        "id": "wall-top",
+        "bone": "rail",
+        "x": 0,
+        "y": 0.79,
+        "kind": "support",
+        "title": {
+          "en": "Upper bracket on the wall",
+          "de": "Oberer Halter an der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.035,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "nozzle",
+        "bone": "shower",
+        "x": 0.0705,
+        "y": 0.11953,
+        "kind": "emitter",
+        "title": {
+          "en": "Centre of the nozzle face",
+          "de": "Mitte der Düsenfläche"
+        }
+      },
+      {
+        "id": "steam-top",
+        "bone": "shower",
+        "x": 0.09917,
+        "y": 0.02689,
+        "kind": "emitter",
+        "title": {
+          "en": "Rising vapour in front of the head",
+          "de": "Aufsteigender Dampf vor dem Kopf"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M 0.01 -0.004 C 0.07 -0.01 0.22 -0.14 0.2 -0.26 C 0.18 -0.38 0.07 -0.36 0.09 -0.22 C 0.11 -0.06 0.14 0.26 0.02196 0.51843",
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.24
+            },
+            {
+              "id": "bracket-low",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.08,
+              "w": 0.05,
+              "h": 0.035,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.775,
+              "w": 0.05,
+              "h": 0.035,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 0.049,
+              "y": 0.1,
+              "w": 0.022,
+              "h": 0.69,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "elbow",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  -0.04
+                ],
+                [
+                  0.03,
+                  -0.04
+                ],
+                [
+                  0.03,
+                  0.04
+                ],
+                [
+                  -0.03,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "region": "valve",
+              "material": "chrome"
+            },
+            {
+              "id": "lever",
+              "bone": "lever",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.045,
+              "y1": 0,
+              "r0": 0.005,
+              "r1": 0.005,
+              "region": "valve",
+              "material": "chrome"
+            },
+            {
+              "id": "holder",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.028,
+              "y": -0.03,
+              "w": 0.056,
+              "h": 0.06,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.0165,
+              "r1": 0.0165,
+              "region": "handle",
+              "material": "abs-chrome"
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.0135,
+              "r1": 0.0135,
+              "region": "head",
+              "material": "abs-chrome"
+            },
+            {
+              "id": "face",
+              "bone": "shower",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04054,
+                  0.0734
+                ],
+                [
+                  0.10046,
+                  0.16566
+                ]
+              ],
+              "closed": false,
+              "region": "head",
+              "material": "rubber-nozzle"
+            }
+          ],
+          "plan": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.0
+                ],
+                [
+                  0.05672,
+                  -0.00334
+                ],
+                [
+                  0.0763,
+                  -0.00941
+                ],
+                [
+                  0.09781,
+                  -0.01712
+                ],
+                [
+                  0.12037,
+                  -0.026
+                ],
+                [
+                  0.14307,
+                  -0.03572
+                ],
+                [
+                  0.165,
+                  -0.04596
+                ],
+                [
+                  0.18527,
+                  -0.05647
+                ],
+                [
+                  0.20296,
+                  -0.067
+                ],
+                [
+                  0.21719,
+                  -0.0773
+                ],
+                [
+                  0.22704,
+                  -0.08716
+                ],
+                [
+                  0.23161,
+                  -0.09638
+                ],
+                [
+                  0.23,
+                  -0.10477
+                ],
+                [
+                  0.22325,
+                  -0.11216
+                ],
+                [
+                  0.21352,
+                  -0.11842
+                ],
+                [
+                  0.20156,
+                  -0.12341
+                ],
+                [
+                  0.18815,
+                  -0.12705
+                ],
+                [
+                  0.17404,
+                  -0.12926
+                ],
+                [
+                  0.16,
+                  -0.13
+                ],
+                [
+                  0.14679,
+                  -0.12926
+                ],
+                [
+                  0.13519,
+                  -0.12705
+                ],
+                [
+                  0.12594,
+                  -0.12341
+                ],
+                [
+                  0.11981,
+                  -0.11842
+                ],
+                [
+                  0.11758,
+                  -0.11216
+                ],
+                [
+                  0.12,
+                  -0.10477
+                ],
+                [
+                  0.12512,
+                  -0.09638
+                ],
+                [
+                  0.1301,
+                  -0.08716
+                ],
+                [
+                  0.13441,
+                  -0.0773
+                ],
+                [
+                  0.13748,
+                  -0.067
+                ],
+                [
+                  0.13878,
+                  -0.05647
+                ],
+                [
+                  0.13775,
+                  -0.04596
+                ],
+                [
+                  0.13384,
+                  -0.03572
+                ],
+                [
+                  0.12651,
+                  -0.026
+                ],
+                [
+                  0.1152,
+                  -0.01712
+                ],
+                [
+                  0.09937,
+                  -0.00941
+                ],
+                [
+                  0.07848,
+                  -0.00334
+                ],
+                [
+                  0.05196,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.24
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.0165,
+              "r1": 0.0165,
+              "region": "handle",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0165,
+                "z1": 0.0165
+              }
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.0135,
+              "r1": 0.0135,
+              "region": "head",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0685,
+                "z1": 0.0685
+              }
+            },
+            {
+              "id": "lever",
+              "bone": "lever",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.045,
+              "y1": 0,
+              "r0": 0.005,
+              "r1": 0.005,
+              "region": "valve",
+              "material": "chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.041,
+                "z1": -0.031
+              }
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.025,
+              "w": 0.05,
+              "h": 0.05,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  0.071,
+                  0.0
+                ],
+                [
+                  0.07016,
+                  0.00421
+                ],
+                [
+                  0.06778,
+                  0.00778
+                ],
+                [
+                  0.06421,
+                  0.01016
+                ],
+                [
+                  0.06,
+                  0.011
+                ],
+                [
+                  0.05579,
+                  0.01016
+                ],
+                [
+                  0.05222,
+                  0.00778
+                ],
+                [
+                  0.04984,
+                  0.00421
+                ],
+                [
+                  0.049,
+                  0.0
+                ],
+                [
+                  0.04984,
+                  -0.00421
+                ],
+                [
+                  0.05222,
+                  -0.00778
+                ],
+                [
+                  0.05579,
+                  -0.01016
+                ],
+                [
+                  0.06,
+                  -0.011
+                ],
+                [
+                  0.06421,
+                  -0.01016
+                ],
+                [
+                  0.06778,
+                  -0.00778
+                ],
+                [
+                  0.07016,
+                  -0.00421
+                ]
+              ],
+              "closed": true,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "elbow",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.06,
+              "region": "valve",
+              "material": "chrome"
+            },
+            {
+              "id": "holder",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.062,
+              "y": -0.028,
+              "w": 0.056,
+              "h": 0.056,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            }
+          ],
+          "front": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.036
+                ],
+                [
+                  -0.00334,
+                  0.03199
+                ],
+                [
+                  -0.00941,
+                  0.02329
+                ],
+                [
+                  -0.01712,
+                  0.01034
+                ],
+                [
+                  -0.026,
+                  -0.00637
+                ],
+                [
+                  -0.03572,
+                  -0.02639
+                ],
+                [
+                  -0.04596,
+                  -0.04925
+                ],
+                [
+                  -0.05647,
+                  -0.07448
+                ],
+                [
+                  -0.067,
+                  -0.10163
+                ],
+                [
+                  -0.0773,
+                  -0.13022
+                ],
+                [
+                  -0.08716,
+                  -0.15979
+                ],
+                [
+                  -0.09638,
+                  -0.18987
+                ],
+                [
+                  -0.10477,
+                  -0.22
+                ],
+                [
+                  -0.11216,
+                  -0.24709
+                ],
+                [
+                  -0.11842,
+                  -0.26843
+                ],
+                [
+                  -0.12341,
+                  -0.28406
+                ],
+                [
+                  -0.12705,
+                  -0.29407
+                ],
+                [
+                  -0.12926,
+                  -0.29853
+                ],
+                [
+                  -0.13,
+                  -0.2975
+                ],
+                [
+                  -0.12926,
+                  -0.29105
+                ],
+                [
+                  -0.12705,
+                  -0.27926
+                ],
+                [
+                  -0.12341,
+                  -0.26219
+                ],
+                [
+                  -0.11842,
+                  -0.23991
+                ],
+                [
+                  -0.11216,
+                  -0.21249
+                ],
+                [
+                  -0.10477,
+                  -0.18
+                ],
+                [
+                  -0.09638,
+                  -0.13679
+                ],
+                [
+                  -0.08716,
+                  -0.08769
+                ],
+                [
+                  -0.0773,
+                  -0.03346
+                ],
+                [
+                  -0.067,
+                  0.02513
+                ],
+                [
+                  -0.05647,
+                  0.08731
+                ],
+                [
+                  -0.04596,
+                  0.1523
+                ],
+                [
+                  -0.03572,
+                  0.21935
+                ],
+                [
+                  -0.026,
+                  0.28768
+                ],
+                [
+                  -0.01712,
+                  0.35653
+                ],
+                [
+                  -0.00941,
+                  0.42511
+                ],
+                [
+                  -0.00334,
+                  0.49267
+                ],
+                [
+                  0.0,
+                  0.55843
+                ]
+              ],
+              "closed": false,
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.24
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.0165,
+              "r1": 0.0165,
+              "region": "handle",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0165,
+                "z1": 0.0165
+              }
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.0135,
+              "r1": 0.0135,
+              "region": "head",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0685,
+                "z1": 0.0685
+              }
+            },
+            {
+              "id": "lever",
+              "bone": "lever",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0.045,
+              "y1": 0,
+              "r0": 0.005,
+              "r1": 0.005,
+              "region": "valve",
+              "material": "chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.041,
+                "z1": -0.031
+              }
+            },
+            {
+              "id": "bracket-low",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 0.08,
+              "w": 0.05,
+              "h": 0.035,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.025,
+              "y": 0.775,
+              "w": 0.05,
+              "h": 0.035,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.011,
+              "y": 0.1,
+              "w": 0.022,
+              "h": 0.69,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "elbow",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.08,
+              "region": "valve",
+              "material": "chrome"
+            },
+            {
+              "id": "holder",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.028,
+              "y": 0.59,
+              "w": 0.056,
+              "h": 0.06,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.1 m by 0.22 m wall set, 22 mm by 4.4 mm on paper: a thin riser rail between two wall brackets with a sliding holder carrying a hand shower (a slim handle and a flat round head), a wall elbow with a small lever, and a hose loop sagging from the elbow to the handle. Front view: the rail with both brackets, the 0.06 m valve block with its lever as a short bar that rises with the lever angle, the holder, the handle and the 0.137 m wide shower head seen from the front, and the hose hanging as a loop that bulges 0.13 m to the right. Top view: the same parts from above, the hose bulging sideways as in the front view.",
+            "de": "Eine Wandgarnitur von 1,1 m mal 0,22 m, auf Papier 22 mm mal 4,4 mm: eine dünne Brausestange zwischen zwei Wandhaltern mit einem Gleithalter, der eine Handbrause trägt (ein schlanker Griff und ein flacher runder Kopf), ein Wandanschlussbogen mit kleinem Hebel und ein Schlauchbogen, der vom Anschluss zum Griff durchhängt. Vorderansicht: die Stange mit beiden Haltern, der 0,06 m breite Ventilblock mit seinem Hebel als kurzer Balken, der mit dem Hebelwinkel steigt, der Halter, der Griff und der 0,137 m breite Brausekopf von vorn und der als Schlaufe hängende Schlauch, der 0,13 m nach rechts ausbaucht. Draufsicht: dieselben Teile von oben, der Schlauch baucht wie in der Vorderansicht zur Seite aus."
+          },
+          "retained": {
+            "en": "Rail of 22 mm with both brackets, holder, handle of 33 mm, head of 0.11 m seen edge-on with its nozzle face line, elbow with lever, hose of 1.2 m as a loop.",
+            "de": "Stange von 22 mm mit beiden Haltern, Gleithalter, Griff von 33 mm, Kopf von 0,11 m in der Kante gesehen mit seiner Düsenfläche als Linie, Anschlussbogen mit Hebel, Schlauch von 1,2 m als Bogen."
+          },
+          "merged": {
+            "en": "The holder clamp and the ball joint are one rectangle; the rubber nozzles are the face line.",
+            "de": "Halterklemme und Kugelgelenk sind ein Rechteck; die Gummidüsen sind die Linie der Düsenfläche."
+          },
+          "omitted": {
+            "en": "The mode selector, the hose nuts, the soap dish and the water itself, which only the emitters show. Front and top view omit the lower bracket (hidden under the upper one in the top view), the lever tick and the spray face.",
+            "de": "Der Strahlartwähler, die Schlauchmuttern, die Seifenschale und das Wasser selbst, das nur die Emitter zeigen. Vorder- und Draufsicht lassen den unteren Halter (in der Draufsicht unter dem oberen verdeckt), die Hebelmarke und die Sprühfläche weg."
+          },
+          "thinElements": {
+            "en": "The hose is drawn as a 0.24 mm line, its true width for a 12 mm hose; the lever is 10 mm (0.2 mm); the face line is a 0.13 mm detail line.",
+            "de": "Der Schlauch wird als 0,24-mm-Linie gezeichnet, seine wahre Breite bei 12 mm; der Hebel ist 10 mm (0,2 mm) breit; die Düsenlinie ist eine 0,13-mm-Detaillinie."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Brackets 0.6, tube 0.8, elbow 0.7, holder 0.7, handle 0.82, head 0.9, hose 0.55; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Halter 0,6, Rohr 0,8, Anschluss 0,7, Gleithalter 0,7, Griff 0,82, Kopf 0,9, Schlauch 0,55; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Rail, valve, hose, handle and head are five regions: in the thermal view the running water warms the head, the handle and the hose; the spray region is air-borne and has no shape (see its hidden note).",
+            "de": "Stange, Ventil, Schlauch, Griff und Kopf sind fünf Regionen: in der Thermalansicht erwärmt das laufende Wasser Kopf, Griff und Schlauch; die Sprühregion ist luftgetragen und hat keine Form (siehe ihren Hinweis)."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M 0.01 -0.004 C 0.07 -0.01 0.22 -0.14 0.2 -0.26 C 0.18 -0.38 0.07 -0.36 0.09 -0.22 C 0.11 -0.06 0.14 0.26 0.02196 0.51843",
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.13
+            },
+            {
+              "id": "bracket-low",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.075,
+              "w": 0.055,
+              "h": 0.045,
+              "regions": [
+                "rail"
+              ],
+              "material": "chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.765,
+              "w": 0.055,
+              "h": 0.045,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 0.045,
+              "y": 0.1,
+              "w": 0.03,
+              "h": 0.69,
+              "r": 0.01,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "elbow",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  -0.04
+                ],
+                [
+                  0.035,
+                  -0.04
+                ],
+                [
+                  0.035,
+                  0.045
+                ],
+                [
+                  -0.03,
+                  0.045
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "valve"
+              ],
+              "material": "chrome"
+            },
+            {
+              "id": "holder",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.03,
+              "y": -0.035,
+              "w": 0.06,
+              "h": 0.07,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.02,
+              "r1": 0.02,
+              "region": "handle",
+              "material": "abs-chrome"
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.017,
+              "r1": 0.017,
+              "region": "head",
+              "material": "abs-chrome"
+            }
+          ],
+          "plan": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.0
+                ],
+                [
+                  0.06621,
+                  -0.00613
+                ],
+                [
+                  0.09781,
+                  -0.01712
+                ],
+                [
+                  0.13176,
+                  -0.03078
+                ],
+                [
+                  0.165,
+                  -0.04596
+                ],
+                [
+                  0.19449,
+                  -0.06175
+                ],
+                [
+                  0.21719,
+                  -0.0773
+                ],
+                [
+                  0.23004,
+                  -0.09186
+                ],
+                [
+                  0.23,
+                  -0.10477
+                ],
+                [
+                  0.21871,
+                  -0.11544
+                ],
+                [
+                  0.20156,
+                  -0.12341
+                ],
+                [
+                  0.18113,
+                  -0.12834
+                ],
+                [
+                  0.16,
+                  -0.13
+                ],
+                [
+                  0.14074,
+                  -0.12834
+                ],
+                [
+                  0.12594,
+                  -0.12341
+                ],
+                [
+                  0.11816,
+                  -0.11544
+                ],
+                [
+                  0.12,
+                  -0.10477
+                ],
+                [
+                  0.12766,
+                  -0.09186
+                ],
+                [
+                  0.13441,
+                  -0.0773
+                ],
+                [
+                  0.13838,
+                  -0.06175
+                ],
+                [
+                  0.13775,
+                  -0.04596
+                ],
+                [
+                  0.13063,
+                  -0.03078
+                ],
+                [
+                  0.1152,
+                  -0.01712
+                ],
+                [
+                  0.08959,
+                  -0.00613
+                ],
+                [
+                  0.05196,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.13
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.02,
+              "r1": 0.02,
+              "region": "handle",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.02,
+                "z1": 0.02
+              }
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.017,
+              "r1": 0.017,
+              "region": "head",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0685,
+                "z1": 0.0685
+              }
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.0275,
+              "w": 0.055,
+              "h": 0.055,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  0.075,
+                  0.0
+                ],
+                [
+                  0.07351,
+                  0.00651
+                ],
+                [
+                  0.06935,
+                  0.01173
+                ],
+                [
+                  0.06334,
+                  0.01462
+                ],
+                [
+                  0.05666,
+                  0.01462
+                ],
+                [
+                  0.05065,
+                  0.01173
+                ],
+                [
+                  0.04649,
+                  0.00651
+                ],
+                [
+                  0.045,
+                  0.0
+                ],
+                [
+                  0.04649,
+                  -0.00651
+                ],
+                [
+                  0.05065,
+                  -0.01173
+                ],
+                [
+                  0.05666,
+                  -0.01462
+                ],
+                [
+                  0.06334,
+                  -0.01462
+                ],
+                [
+                  0.06935,
+                  -0.01173
+                ],
+                [
+                  0.07351,
+                  -0.00651
+                ]
+              ],
+              "closed": true,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "elbow",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.033,
+              "w": 0.065,
+              "h": 0.066,
+              "region": "valve",
+              "material": "chrome"
+            },
+            {
+              "id": "holder",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.06,
+              "y": -0.03,
+              "w": 0.06,
+              "h": 0.06,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            }
+          ],
+          "front": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.036
+                ],
+                [
+                  -0.00613,
+                  0.0282
+                ],
+                [
+                  -0.01712,
+                  0.01034
+                ],
+                [
+                  -0.03078,
+                  -0.016
+                ],
+                [
+                  -0.04596,
+                  -0.04925
+                ],
+                [
+                  -0.06175,
+                  -0.08785
+                ],
+                [
+                  -0.0773,
+                  -0.13022
+                ],
+                [
+                  -0.09186,
+                  -0.17479
+                ],
+                [
+                  -0.10477,
+                  -0.22
+                ],
+                [
+                  -0.11544,
+                  -0.25848
+                ],
+                [
+                  -0.12341,
+                  -0.28406
+                ],
+                [
+                  -0.12834,
+                  -0.29699
+                ],
+                [
+                  -0.13,
+                  -0.2975
+                ],
+                [
+                  -0.12834,
+                  -0.28582
+                ],
+                [
+                  -0.12341,
+                  -0.26219
+                ],
+                [
+                  -0.11544,
+                  -0.22684
+                ],
+                [
+                  -0.10477,
+                  -0.18
+                ],
+                [
+                  -0.09186,
+                  -0.11293
+                ],
+                [
+                  -0.0773,
+                  -0.03346
+                ],
+                [
+                  -0.06175,
+                  0.05582
+                ],
+                [
+                  -0.04596,
+                  0.1523
+                ],
+                [
+                  -0.03078,
+                  0.25341
+                ],
+                [
+                  -0.01712,
+                  0.35653
+                ],
+                [
+                  -0.00613,
+                  0.45907
+                ],
+                [
+                  0.0,
+                  0.55843
+                ]
+              ],
+              "closed": false,
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.13
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.02,
+              "r1": 0.02,
+              "region": "handle",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.02,
+                "z1": 0.02
+              }
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.017,
+              "r1": 0.017,
+              "region": "head",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0685,
+                "z1": 0.0685
+              }
+            },
+            {
+              "id": "bracket-low",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.0275,
+              "y": 0.075,
+              "w": 0.055,
+              "h": 0.045,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.0275,
+              "y": 0.765,
+              "w": 0.055,
+              "h": 0.045,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.015,
+              "y": 0.1,
+              "w": 0.03,
+              "h": 0.69,
+              "r": 0.01,
+              "region": "rail",
+              "material": "chrome"
+            },
+            {
+              "id": "elbow",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.033,
+              "y": 0.0,
+              "w": 0.066,
+              "h": 0.085,
+              "region": "valve",
+              "material": "chrome"
+            },
+            {
+              "id": "holder",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.585,
+              "w": 0.06,
+              "h": 0.07,
+              "r": 0.008,
+              "region": "rail",
+              "material": "chrome"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 11 mm by 2.2 mm set: a thin rail with a holder carrying a slim handle with a flat head, a wall elbow and a hose loop. Front view: rail with brackets, valve block, holder, handle, the 0.137 m shower head and the sideways hose loop. Top view: the same parts from above.",
+            "de": "Eine Garnitur von 11 mm mal 2,2 mm: eine dünne Stange mit Halter, der einen schlanken Griff mit flachem Kopf trägt, ein Wandanschluss und ein Schlauchbogen. Vorderansicht: Stange mit Haltern, Ventilblock, Halter, Griff, der 0,137 m breite Brausekopf und die seitliche Schlauchschlaufe. Draufsicht: dieselben Teile von oben."
+          },
+          "retained": {
+            "en": "Rail with both brackets, holder, handle, head, elbow and hose loop.",
+            "de": "Stange mit beiden Haltern, Gleithalter, Griff, Kopf, Anschluss und Schlauchbogen."
+          },
+          "merged": {
+            "en": "The valve lever joins the elbow block; the nozzle line joins the head.",
+            "de": "Der Ventilhebel geht im Anschlussblock auf; die Düsenlinie im Kopf."
+          },
+          "omitted": {
+            "en": "Lever, nozzle line, mode selector. Front and top view omit the lever, as in the side view, and the lower bracket in the top view.",
+            "de": "Hebel, Düsenlinie, Strahlartwähler. Vorder- und Draufsicht lassen wie die Seitenansicht den Hebel weg und in der Draufsicht den unteren Halter."
+          },
+          "thinElements": {
+            "en": "The tube is thickened from 22 to 30 mm (0.3 mm), the handle from 33 to 40 mm and the head from 27 to 34 mm; the hose is a 0.13 mm line, the finest pen, for its true 0.12 mm.",
+            "de": "Das Rohr ist von 22 auf 30 mm (0,3 mm), der Griff von 33 auf 40 mm und der Kopf von 27 auf 34 mm verdickt; der Schlauch ist eine 0,13-mm-Linie, der feinste Stift, für wahre 0,12 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Brackets 0.6, tube 0.8, elbow 0.7, holder 0.7, handle 0.82, head 0.9, hose 0.55; one body pen of 0.18 mm.",
+            "de": "Halter 0,6, Rohr 0,8, Anschluss 0,7, Gleithalter 0,7, Griff 0,82, Kopf 0,9, Schlauch 0,55; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The elbow block lists the valve as merged; the other regions keep their shape.",
+            "de": "Der Anschlussblock führt das Ventil als zusammengeführt; die anderen Regionen behalten ihre Form."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M 0.01 -0.004 C 0.07 -0.01 0.22 -0.14 0.2 -0.26 C 0.18 -0.38 0.07 -0.36 0.09 -0.22 C 0.11 -0.06 0.14 0.26 0.02196 0.51843",
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.1
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.81,
+              "regions": [
+                "rail",
+                "valve"
+              ],
+              "material": "chrome"
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.026,
+              "r1": 0.026,
+              "region": "handle",
+              "material": "abs-chrome"
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.024,
+              "r1": 0.024,
+              "region": "head",
+              "material": "abs-chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "region": "rail",
+              "material": "chrome",
+              "x": 0.0,
+              "y": 0.775,
+              "w": 0.05,
+              "h": 0.035
+            }
+          ],
+          "plan": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.0
+                ],
+                [
+                  0.08472,
+                  -0.01232
+                ],
+                [
+                  0.13856,
+                  -0.03372
+                ],
+                [
+                  0.18904,
+                  -0.05858
+                ],
+                [
+                  0.22368,
+                  -0.08328
+                ],
+                [
+                  0.23,
+                  -0.10477
+                ],
+                [
+                  0.20896,
+                  -0.12057
+                ],
+                [
+                  0.17688,
+                  -0.12893
+                ],
+                [
+                  0.14432,
+                  -0.12893
+                ],
+                [
+                  0.12184,
+                  -0.12057
+                ],
+                [
+                  0.12,
+                  -0.10477
+                ],
+                [
+                  0.13194,
+                  -0.08328
+                ],
+                [
+                  0.13869,
+                  -0.05858
+                ],
+                [
+                  0.13266,
+                  -0.03372
+                ],
+                [
+                  0.10628,
+                  -0.01232
+                ],
+                [
+                  0.05196,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.1
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.026,
+              "r1": 0.026,
+              "region": "handle",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.026,
+                "z1": 0.026
+              }
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.024,
+              "r1": 0.024,
+              "region": "head",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0685,
+                "z1": 0.0685
+              }
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": 0.04,
+              "y": -0.02,
+              "w": 0.04,
+              "h": 0.04,
+              "regions": [
+                "rail",
+                "valve"
+              ],
+              "material": "chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "region": "rail",
+              "material": "chrome",
+              "x": 0.0,
+              "y": -0.025,
+              "w": 0.05,
+              "h": 0.05
+            }
+          ],
+          "front": [
+            {
+              "id": "hose",
+              "bone": "elbow",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.036
+                ],
+                [
+                  -0.01232,
+                  0.01859
+                ],
+                [
+                  -0.03372,
+                  -0.02214
+                ],
+                [
+                  -0.05858,
+                  -0.07978
+                ],
+                [
+                  -0.08328,
+                  -0.14787
+                ],
+                [
+                  -0.10477,
+                  -0.22
+                ],
+                [
+                  -0.12057,
+                  -0.27536
+                ],
+                [
+                  -0.12893,
+                  -0.29808
+                ],
+                [
+                  -0.12893,
+                  -0.28912
+                ],
+                [
+                  -0.12057,
+                  -0.24944
+                ],
+                [
+                  -0.10477,
+                  -0.18
+                ],
+                [
+                  -0.08328,
+                  -0.06657
+                ],
+                [
+                  -0.05858,
+                  0.07462
+                ],
+                [
+                  -0.03372,
+                  0.23294
+                ],
+                [
+                  -0.01232,
+                  0.39776
+                ],
+                [
+                  0.0,
+                  0.55843
+                ]
+              ],
+              "closed": false,
+              "region": "hose",
+              "material": "epdm-hose",
+              "penMm": 0.1
+            },
+            {
+              "id": "handle",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "capsule",
+              "x0": -0.03804,
+              "y0": -0.08157,
+              "x1": 0.03804,
+              "y1": 0.08157,
+              "r0": 0.026,
+              "r1": 0.026,
+              "region": "handle",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.026,
+                "z1": 0.026
+              }
+            },
+            {
+              "id": "head",
+              "bone": "shower",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "capsule",
+              "x0": 0.02921,
+              "y0": 0.08076,
+              "x1": 0.08913,
+              "y1": 0.17302,
+              "r0": 0.024,
+              "r1": 0.024,
+              "region": "head",
+              "material": "abs-chrome",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0685,
+                "z1": 0.0685
+              }
+            },
+            {
+              "id": "tube",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.81,
+              "regions": [
+                "rail",
+                "valve"
+              ],
+              "material": "chrome"
+            },
+            {
+              "id": "bracket-top",
+              "bone": "rail",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "region": "rail",
+              "material": "chrome",
+              "x": -0.025,
+              "y": 0.775,
+              "w": 0.05,
+              "h": 0.035
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 5.5 mm by 1.1 mm set: a pole with a short handle and a head at the top and the hose loop as a line. Front view: one 0.04 m rail column, the handle, the 0.137 m shower head and the sideways hose loop. Top view: the rail square, handle, head and hose loop.",
+            "de": "Eine Garnitur von 5,5 mm mal 1,1 mm: eine Stange mit kurzem Griff und einem Kopf oben und die Schlauchschleife als Linie. Vorderansicht: eine 0,04 m breite Stangensäule, der Griff, der 0,137 m breite Brausekopf und die seitliche Schlauchschlaufe. Draufsicht: das Stangenquadrat, Griff, Kopf und Schlauchschlaufe."
+          },
+          "retained": {
+            "en": "Rail pole, handle, head and hose loop.",
+            "de": "Stange, Griff, Kopf und Schlauchbogen."
+          },
+          "merged": {
+            "en": "Brackets, holder, elbow and lever join the pole (regions rail and valve merged).",
+            "de": "Halter, Gleithalter, Anschluss und Hebel gehen in der Stange auf (Regionen Stange und Ventil zusammengeführt)."
+          },
+          "omitted": {
+            "en": "All fittings and the nozzle line. Front and top view omit brackets, valve, holder and lever as in the side view.",
+            "de": "Alle Beschläge und die Düsenlinie. Vorder- und Draufsicht lassen wie die Seitenansicht Halter, Ventil, Schiene und Hebel weg."
+          },
+          "thinElements": {
+            "en": "The pole is drawn 40 mm wide (0.2 mm) instead of 22 mm, handle 52 mm and head 48 mm; the hose loop (it spans the extent of the set) is a 0.1 mm line, the finest pen that prints, for a true 0.06 mm; it is not thickened further.",
+            "de": "Die Stange ist 40 mm (0,2 mm) statt 22 mm breit gezeichnet, der Griff 52 mm und der Kopf 48 mm; die Schlauchschleife (sie bestimmt die Ausdehnung der Garnitur) ist eine 0,1-mm-Linie, der feinste druckbare Stift, für wahre 0,06 mm; sie wird nicht weiter verdickt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Pole 0.8, handle 0.82, head 0.9, hose 0.55; body pen 0.13 mm, hose line 0.1 mm.",
+            "de": "Stange 0,8, Griff 0,82, Kopf 0,9, Schlauch 0,55; Körperstift 0,13 mm, Schlauchlinie 0,1 mm."
+          },
+          "overlays": {
+            "en": "The pole lists rail and valve as merged regions.",
+            "de": "Die Stange führt Stange und Ventil als zusammengeführte Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the rail is 0.04 mm wide and the head 0.2 mm long, below every print profile.",
+          "de": "Bei 1:500 ist die Stange 0,04 mm breit und der Kopf 0,2 mm lang, unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "Rail of 22 mm and head of 27 mm thickness",
+          "de": "Stange von 22 mm und Kopf von 27 mm Dicke"
+        },
+        "limitingSizeM": 0.022,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The valve lever points down, the hand shower hangs in its holder and the hose is dry and cold.",
+          "de": "Der Ventilhebel zeigt nach unten, die Handbrause hängt im Halter und der Schlauch ist trocken und kalt."
+        },
+        "bones": {
+          "lever": {
+            "angleDeg": -80
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-low",
+          "wall-top"
+        ],
+        "thermal": {
+          "regions": {
+            "rail": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            },
+            "valve": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hose": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "handle": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "head": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "spray": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 0
+            }
+          },
+          "emitters": {
+            "spray-mist": 0,
+            "steam-plume": 0
+          },
+          "operating": {
+            "water": 0
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9
+        }
+      },
+      {
+        "id": "running",
+        "title": {
+          "en": "Running at 12 L/min",
+          "de": "Läuft mit 12 L/min"
+        },
+        "description": {
+          "en": "The lever stands up and 12 litres per minute of 38 degC water leave the head as a warm spray; the shower is tilted 8 degrees downward.",
+          "de": "Der Hebel steht oben und 12 Liter je Minute Wasser von 38 degC verlassen den Kopf als warmer Strahl; die Brause ist um 8 Grad nach unten geneigt."
+        },
+        "bones": {
+          "lever": {
+            "angleDeg": 60
+          },
+          "shower": {
+            "angleDeg": -8
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-low",
+          "wall-top"
+        ],
+        "thermal": {
+          "regions": {
+            "rail": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            },
+            "valve": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 38
+              }
+            },
+            "hose": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 38
+              }
+            },
+            "handle": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 38
+              }
+            },
+            "head": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.7,
+                "tempC": 38
+              },
+              "wettedness": 1
+            },
+            "spray": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 1
+            }
+          },
+          "emitters": {
+            "spray-mist": 1,
+            "steam-plume": 1
+          },
+          "operating": {
+            "water": 1
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9
+        }
+      },
+      {
+        "id": "eco",
+        "title": {
+          "en": "Eco at 9 L/min",
+          "de": "Sparbetrieb mit 9 L/min"
+        },
+        "description": {
+          "en": "The lever stands halfway and the water-saving mode gives 9 litres per minute at 38 degC with an aerated spray; the shower is tilted 4 degrees downward.",
+          "de": "Der Hebel steht auf halber Höhe und der Sparmodus liefert 9 Liter je Minute bei 38 degC mit belüftetem Strahl; die Brause ist um 4 Grad nach unten geneigt."
+        },
+        "bones": {
+          "lever": {
+            "angleDeg": 5
+          },
+          "shower": {
+            "angleDeg": -4
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-low",
+          "wall-top"
+        ],
+        "thermal": {
+          "regions": {
+            "rail": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            },
+            "valve": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 38
+              }
+            },
+            "hose": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 38
+              }
+            },
+            "handle": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 38
+              }
+            },
+            "head": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.7,
+                "tempC": 38
+              },
+              "wettedness": 0.8
+            },
+            "spray": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "wettedness": 1
+            }
+          },
+          "emitters": {
+            "spray-mist": 1,
+            "steam-plume": 1
+          },
+          "operating": {
+            "water": 0.75
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.9
+        }
+      }
+    ],
+    "clips": [
+      {
+        "id": "turn-on-and-run",
+        "title": {
+          "en": "Turn on and run",
+          "de": "Aufdrehen und laufen lassen"
+        },
+        "description": {
+          "en": "The lever is turned up after five seconds: the spray starts at once and the head, handle and hose warm up during the next five minutes.",
+          "de": "Der Hebel wird nach fünf Sekunden aufgedreht: der Strahl setzt sofort ein, und Kopf, Griff und Schlauch erwärmen sich in den nächsten fünf Minuten."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "running",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "running",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-low",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "wall-top",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "run",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "Running, warming up",
+              "de": "Läuft, erwärmt sich"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Valve opened",
+              "de": "Ventil geöffnet"
+            },
+            "target": "water"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:water",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:spray-mist",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:steam-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "eco-and-off",
+        "title": {
+          "en": "Eco mode and off",
+          "de": "Sparmodus und Aus"
+        },
+        "description": {
+          "en": "The shower runs at full flow for one minute, goes to the eco mode for three and is turned off.",
+          "de": "Die Dusche läuft eine Minute mit voller Menge, geht für drei Minuten in den Sparmodus und wird abgedreht."
+        },
+        "durationS": 420,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "running",
+            "ease": "step"
+          },
+          {
+            "t": 60,
+            "pose": "eco",
+            "ease": "step"
+          },
+          {
+            "t": 240,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 420,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-low",
+            "fromS": 0,
+            "toS": 420
+          },
+          {
+            "anchor": "wall-top",
+            "fromS": 0,
+            "toS": 420
+          }
+        ],
+        "phases": [
+          {
+            "id": "full",
+            "fromS": 0,
+            "toS": 60,
+            "title": {
+              "en": "Full flow",
+              "de": "Volle Menge"
+            }
+          },
+          {
+            "id": "eco",
+            "fromS": 60,
+            "toS": 240,
+            "title": {
+              "en": "Eco mode",
+              "de": "Sparmodus"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 240,
+            "toS": 420,
+            "title": {
+              "en": "Off, cooling",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 240,
+            "kind": "shutdown",
+            "title": {
+              "en": "Valve closed",
+              "de": "Ventil geschlossen"
+            },
+            "target": "water"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:water",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0.75
+              },
+              {
+                "t": 240,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:spray-mist",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 1
+              },
+              {
+                "t": 240,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:steam-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 1
+              },
+              {
+                "t": 240,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 24,
+        "meanRadiantTempC": 24,
+        "relativeHumidity": 0.6,
+        "windMS": 0.05,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "water",
+          "title": {
+            "en": "Hot water",
+            "de": "Warmwasser"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.75,
+              "title": {
+                "en": "Eco (9 L/min at 38 degC)",
+                "de": "Sparmodus (9 L/min bei 38 degC)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Running (12 L/min at 38 degC)",
+                "de": "Läuft (12 L/min bei 38 degC)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "rail",
+          "title": {
+            "en": "Rail, brackets and holder",
+            "de": "Stange, Halter und Gleithalter"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "chrome",
+          "areaM2": 0.06,
+          "characteristicLengthM": 0.7,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Chrome plated brass tube 1.2 mm",
+                "de": "Verchromtes Messingrohr 1,2 mm"
+              },
+              "kind": "metal",
+              "material": "chrome",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 1e-05,
+              "heatCapacityJM2K": 3400,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3400,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "valve",
+          "title": {
+            "en": "Wall elbow with valve",
+            "de": "Wandanschlussbogen mit Ventil"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "chrome",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.06,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "body",
+              "title": {
+                "en": "Brass body 3 mm",
+                "de": "Messingkörper 3 mm"
+              },
+              "kind": "metal",
+              "material": "chrome",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 3e-05,
+              "heatCapacityJM2K": 8000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 8000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "hose",
+          "title": {
+            "en": "Shower hose",
+            "de": "Brauseschlauch"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "epdm-hose",
+          "areaM2": 0.047,
+          "characteristicLengthM": 0.012,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "rubber",
+              "title": {
+                "en": "EPDM hose wall 2 mm over a steel braid",
+                "de": "EPDM-Schlauchwand 2 mm über Stahlgeflecht"
+              },
+              "kind": "polymer",
+              "material": "epdm-hose",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2400,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2400,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "handle",
+          "title": {
+            "en": "Handle",
+            "de": "Griff"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-chrome",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.18,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Chrome plated ABS 2 mm",
+                "de": "Verchromtes ABS 2 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-chrome",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "head",
+          "title": {
+            "en": "Spray head",
+            "de": "Brausekopf"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-chrome",
+          "areaM2": 0.0095,
+          "characteristicLengthM": 0.11,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Chrome plated ABS 2 mm with silicone nozzles",
+                "de": "Verchromtes ABS 2 mm mit Silikondüsen"
+              },
+              "kind": "polymer",
+              "material": "abs-chrome",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "spray",
+          "title": {
+            "en": "Warm spray",
+            "de": "Warmer Strahl"
+          },
+          "kind": "water",
+          "model": "operating",
+          "material": "water",
+          "areaM2": 0.5,
+          "characteristicLengthM": 0.11,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "drops",
+              "title": {
+                "en": "Water drops of 1 mm in flight",
+                "de": "Wassertropfen von 1 mm im Flug"
+              },
+              "kind": "polymer",
+              "material": "water",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.0002,
+              "heatCapacityJM2K": 4180,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4180,
+          "operating": {
+            "key": "water",
+            "heatW": 300
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018",
+          "hidden": {
+            "en": "The spray is air-borne water without a fixed outline: it is not drawn in any elevation but carried by the emitters of the transport view and by the warmed head.",
+            "de": "Der Strahl ist luftgetragenes Wasser ohne feste Kontur: er wird in keiner Ansicht gezeichnet, sondern von den Emittern der Transportansicht und vom erwärmten Kopf getragen."
+          }
+        }
+      ],
+      "emitters": [
+        {
+          "id": "spray-mist",
+          "kind": "vent",
+          "title": {
+            "en": "Warm moist air carried by the spray",
+            "de": "Warme feuchte Luft im Strahl"
+          },
+          "anchor": "nozzle",
+          "directionDeg": -33,
+          "diameterM": 0.11,
+          "operatingKey": "water",
+          "volumeFlowM3S": 0.03,
+          "temperatureRiseK": 3,
+          "vapourKgPerKg": 0.007,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "steam-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Vapour plume rising from the warm spray",
+            "de": "Dampffahne über dem warmen Strahl"
+          },
+          "anchor": "steam-top",
+          "directionDeg": 90,
+          "diameterM": 0.3,
+          "region": "spray",
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 12 L/min of 38 degC water cool by about 1.5 K in flight and give 300 W of sensible heat to the room air; most of the heat leaves with the drain water and is not modelled. The 0.25 g/s of evaporating water add 600 W of latent heat, carried by the vapour excess of the spray-mist emitter.",
+          "de": "Die 12 L/min Wasser von 38 degC kühlen im Flug um etwa 1,5 K ab und geben 300 W fühlbare Wärme an die Raumluft ab; der größte Teil der Wärme geht mit dem Abwasser und wird nicht modelliert. Die 0,25 g/s verdunstendes Wasser fügen 600 W latente Wärme hinzu, getragen vom Dampfüberschuss des Emitters spray-mist."
+        },
+        {
+          "en": "The running water warms the head, handle, hose and valve through a conductive contact to 38 degC with the fractions of the pose; the eco mode runs at 75 percent of the flow (9 of 12 L/min) and with a 20 percent lower contact of the head.",
+          "de": "Das laufende Wasser erwärmt Kopf, Griff, Schlauch und Ventil über einen Leitungskontakt auf 38 degC mit den Anteilen der Pose; der Sparmodus läuft mit 75 Prozent der Menge (9 von 12 L/min) und mit einem um 20 Prozent geringeren Kontakt am Kopf."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-low",
+        "wall-top"
+      ],
+      "assumptions": [
+        {
+          "en": "The 2.3 kg set hangs on the lower bracket (pin) and is held at the upper bracket (roller): the pair resists the overturning moment of the hand shower, 0.15 m from the wall.",
+          "de": "Die 2,3 kg schwere Garnitur hängt am unteren Halter (Festlager) und wird am oberen Halter gehalten (Rollenlager): das Paar nimmt das Kippmoment der Handbrause 0,15 m vor der Wand auf."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "running",
+      "defaultClip": "turn-on-and-run",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

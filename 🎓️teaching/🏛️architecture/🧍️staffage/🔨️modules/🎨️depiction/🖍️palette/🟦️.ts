@@ -14,10 +14,10 @@ import { STRUCTURAL_COLORS } from "../../🏗️structure/🟦️.ts";
 /** 🌗️ The two drawing themes of the line and solid views. */
 export type Theme = "dark" | "light";
 
-/** 🌗️ Background, ink and tone-ramp ends of a theme. */
+/** 🎨️ Background, ink and tone-ramp ends of a theme. */
 export type ThemeColours = { readonly background: string; readonly ink: string; readonly softInk: string; readonly toneDark: string; readonly toneLight: string };
 
-/** 🌗️ The brand themes. */
+/** 🪪️ The brand themes. */
 export const THEMES: Readonly<Record<Theme, ThemeColours>> = {
   dark: { background: "#001117", ink: "#f7f3e3", softInk: "#7b827d", toneDark: "#2e3c3d", toneLight: "#f1edde" },
   light: { background: "#f7f3e3", ink: "#001117", softInk: "#7b827d", toneDark: "#243235", toneLight: "#d3d2c5" },
@@ -74,13 +74,14 @@ export function divergingColour(value: number, scale: Scale, highWarm: boolean, 
 
 /** 🧮️ A symmetric-or-fixed scale for a set of values: auto spans the largest deviation from the centre (at least `minSpan`), fixed uses the given range, shared uses the documented comparison range `shared` of the quantity (auto when the caller has none). */
 export function scaleOf(values: readonly number[], centre: number, display: DisplayRange, minSpan: number, shared?: { readonly min: number; readonly max: number }): Scale {
-  const range = display.mode === "shared" ? (shared === undefined ? ({ mode: "auto" } as const) : ({ mode: "fixed", ...shared } as const)) : display;
+  const range = display.mode === "shared" || display.mode === "span" ? (shared === undefined ? ({ mode: "auto" } as const) : ({ mode: "fixed", ...shared } as const)) : display;
+  if (display.mode === "span") return { min: centre - display.spanK, centre, max: centre + display.spanK };
   if (range.mode === "fixed") return { min: range.min, centre: Math.min(Math.max(centre, range.min), range.max), max: range.max };
   const m = Math.max(minSpan, ...values.map((v) => Math.abs(v - centre)));
   return { min: centre - m, centre, max: centre + m };
 }
 
-/** 🏷️ A legend with nine colour stops sampled along the scale; stop positions are values in the legend unit. */
+/** 🗝️ A legend with nine colour stops sampled along the scale; stop positions are values in the legend unit. */
 export function legendOf(spec: { readonly title: Text; readonly quantity: string; readonly unit: string; readonly convention: Text; readonly interpretation: Text; readonly scale: Scale; readonly colourAt: (value: number) => string; readonly range?: DisplayRange["mode"]; readonly conditions?: Text; readonly assumptions?: readonly Text[] }): Legend {
   const { min, max, centre } = spec.scale;
   const values = [...Array.from({ length: 9 }, (_, i) => min + ((max - min) * i) / 8), centre].sort((a, b) => a - b);

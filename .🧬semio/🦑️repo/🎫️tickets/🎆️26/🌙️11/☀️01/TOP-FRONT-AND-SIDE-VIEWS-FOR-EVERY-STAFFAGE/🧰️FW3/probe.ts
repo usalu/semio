@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+import { evaluate } from "../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { prepare, sourceOf } from "../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🧩️shapes/🟦️.ts";
+const asset = JSON.parse(readFileSync("../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/👤️sample-figure/🔣️.json", "utf8")).asset;
+asset.representations["100"].geometry.elevation.push({ id: "bar", bone: "torso", role: "body", z: 2.9, filled: true, tone: 0.5, kind: "rect", penMm: 0.1, region: "torso", material: "cotton-clothing", x: 0.2, y: 0, w: 0.0003, h: 0.3 });
+const state = evaluate(asset, { kind: "pose", pose: "stand" }, { kind: "scale", scale: { denominator: 100 } });
+const prepared = prepare(state, "elevation", sourceOf(state), 10);
+for (const p of prepared) console.log(p.shape.id, p.order, p.box.minX.toFixed(2), p.box.maxX.toFixed(2), p.box.minY.toFixed(2), p.box.maxY.toFixed(2), p.occluder !== null);
+import { visibleFeatureWidthMm, featureWidthMm } from "../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/🟦️.ts";
+const bar = prepared.find((p) => p.shape.id === "bar")!;
+console.log(JSON.stringify(bar.rings), bar.weightMm);
+const covers = prepared.filter((q) => q.occluder && q.order > bar.order && q.box.minX <= bar.box.maxX && bar.box.minX <= q.box.maxX && q.box.minY <= bar.box.maxY && bar.box.minY <= q.box.maxY).map((q) => ({ rings: q.rings, penMm: q.weightMm }));
+console.log(covers.map((c) => c.penMm), featureWidthMm(bar.rings, 0.2), visibleFeatureWidthMm(bar.rings, covers, 0.2));

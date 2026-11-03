@@ -1,0 +1,17 @@
+{ "version": 1, "casts": {
+ "commuter-stand-50": { "asset": "walking-commuter", "pose": "standing", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "commuter-contact-50": { "asset": "walking-commuter", "pose": "contact-left", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "commuter-passing-50": { "asset": "walking-commuter", "pose": "passing-right", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "commuter-watch-50": { "asset": "walking-commuter", "pose": "check-watch", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "commuter-stand-100": { "asset": "walking-commuter", "pose": "contact-left", "view": "dark-line", "viewpoint": "plan", "scale": 100, "theme": "dark" },
+ "commuter-stand-200": { "asset": "walking-commuter", "pose": "contact-left", "view": "dark-line", "viewpoint": "plan", "scale": 200, "theme": "dark" },
+ "commuter-stand-500": { "asset": "walking-commuter", "pose": "contact-left", "view": "dark-line", "viewpoint": "plan", "scale": 500, "theme": "dark" },
+ "commuter-walk": { "asset": "walking-commuter", "clip": "walk-cycle", "view": "dark-line", "viewpoint": "plan", "scale": 50, "fps": 6, "theme": "dark" },
+ "car-parked-50": { "asset": "city-car", "pose": "parked", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "car-parked-100": { "asset": "city-car", "pose": "parked", "view": "dark-line", "viewpoint": "plan", "scale": 100, "theme": "dark" },
+ "car-parked-200": { "asset": "city-car", "pose": "parked", "view": "dark-line", "viewpoint": "plan", "scale": 200, "theme": "dark" },
+ "car-parked-500": { "asset": "city-car", "pose": "parked", "view": "dark-line", "viewpoint": "plan", "scale": 500, "theme": "dark" },
+ "car-hatch-50": { "asset": "city-car", "pose": "hatch-open", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "car-lane-50": { "asset": "city-car", "pose": "lane-start", "view": "dark-line", "viewpoint": "plan", "scale": 50, "theme": "dark" },
+ "car-thermal-50": { "asset": "city-car", "pose": "parked", "view": "thermal", "viewpoint": "plan", "scale": 50, "environment": "summer-hot-sun", "theme": "dark" }
+} }

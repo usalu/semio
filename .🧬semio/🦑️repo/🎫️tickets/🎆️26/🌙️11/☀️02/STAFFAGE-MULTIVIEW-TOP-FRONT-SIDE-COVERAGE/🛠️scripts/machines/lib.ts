@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from "node:fs";
+export const ROOT = "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog";
+export const fileOf = (id: string) => `${ROOT}/${["concrete-mixer-truck","diesel-generator","evaporative-humidifier","excavator","expansion-valve","finned-heat-exchanger","forklift","heat-pump-outdoor-unit","oil-pumpjack","plate-heat-exchanger","scissor-lift","scroll-compressor","solar-thermal-collector","sorption-wheel","tower-crane","wheel-loader"].includes(id) ? "🏗️machinery" : "🚜️vehicles"}/${id}/🔣️.json`;
+export const load = (id: string) => JSON.parse(readFileSync(fileOf(id), "utf8"));
+export const save = (id: string, doc: unknown) => writeFileSync(fileOf(id), JSON.stringify(doc, null, 1) + "\n");
+export const rep = (doc: any, k: number | string) => doc.asset.representations[String(k)];
+export const setShape = (list: any[], shape: any) => { const i = list.findIndex((s) => s.id === shape.id); if (i >= 0) list[i] = shape; else list.push(shape); };
+export const base = (id: string, bone: string, role: string, z: number, tone: number, extra: any = {}) => ({ id, bone, role, z, filled: true, tone, ...extra });
+export const poly = (id: string, bone: string, role: string, z: number, tone: number, points: number[][], closed = true, extra: any = {}) => ({ kind: "poly", points, closed, ...base(id, bone, role, z, tone, { ...extra, filled: closed && extra.filled !== false }) });
+export const rect = (id: string, bone: string, role: string, z: number, tone: number, x: number, y: number, w: number, h: number, extra: any = {}) => ({ kind: "rect", x, y, w, h, ...base(id, bone, role, z, tone, extra) });
+export const ellipse = (id: string, bone: string, role: string, z: number, tone: number, cx: number, cy: number, rx: number, ry: number, extra: any = {}) => ({ kind: "ellipse", cx, cy, rx, ry, ...base(id, bone, role, z, tone, extra) });

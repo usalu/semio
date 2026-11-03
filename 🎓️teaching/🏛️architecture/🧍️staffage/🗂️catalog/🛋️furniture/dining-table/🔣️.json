@@ -231,36 +231,72 @@
     },
     "anchors": [
       {
-        "id": "leg-left",
+        "id": "leg-left-l",
         "bone": "top-left",
         "x": 0.135,
-        "y": 0.0,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Left leg pair (front and rear coincide)",
-          "de": "Linkes Beinpaar (vorn und hinten fallen zusammen)"
+          "en": "Left end, left leg",
+          "de": "Linkes Ende, linkes Bein"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.045,
-        "footprintWidthM": 0.8,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": 0.375
       },
       {
-        "id": "leg-right",
-        "bone": "top-right",
-        "x": 0.665,
-        "y": 0.0,
+        "id": "leg-left-r",
+        "bone": "top-left",
+        "x": 0.135,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Right leg pair (front and rear coincide)",
-          "de": "Rechtes Beinpaar (vorn und hinten fallen zusammen)"
+          "en": "Left end, right leg",
+          "de": "Linkes Ende, rechtes Bein"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.045,
-        "footprintWidthM": 0.8,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": -0.375
+      },
+      {
+        "id": "leg-right-l",
+        "bone": "top-right",
+        "x": 0.665,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right end, left leg",
+          "de": "Rechtes Ende, linkes Bein"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.045,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": 0.375
+      },
+      {
+        "id": "leg-right-r",
+        "bone": "top-right",
+        "x": 0.665,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right end, right leg",
+          "de": "Rechtes Ende, rechtes Bein"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.045,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": -0.375
       },
       {
         "id": "edge-right",
@@ -279,7 +315,7 @@
         "status": "authored",
         "denominator": 500,
         "validRange": {
-          "minDenominator": 351,
+          "minDenominator": 350,
           "maxDenominator": 1000
         },
         "pens": {
@@ -390,12 +426,150 @@
               "region": "legs",
               "penMm": 0.18
             }
+          ],
+          "front": [
+            {
+              "id": "slab-left",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.64,
+              "w": 0.9,
+              "h": 0.11
+            },
+            {
+              "id": "leaf-bar",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "leaf-top",
+                "slide-rails"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.44,
+              "y": 0.69,
+              "w": 0.88,
+              "h": 0.03
+            },
+            {
+              "id": "leg-0",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "legs",
+              "kind": "poly",
+              "points": [
+                [
+                  0.375,
+                  0.7
+                ],
+                [
+                  0.375,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.18
+            },
+            {
+              "id": "leg-1",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "legs",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.375,
+                  0.7
+                ],
+                [
+                  -0.375,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.18
+            }
+          ],
+          "plan": [
+            {
+              "id": "slab-left",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.8,
+              "h": 0.9
+            },
+            {
+              "id": "slab-right",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.8,
+              "y": -0.45,
+              "w": 0.8,
+              "h": 0.9
+            },
+            {
+              "id": "leaf-bar",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "leaf-top",
+                "slide-rails"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.5,
+              "y": -0.45,
+              "w": 0.6,
+              "h": 0.9
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Table sign 3.2 x 1.5 mm: one slab per half (top and apron merged), a leaf bar between and two leg strokes.",
-            "de": "Tischzeichen 3,2 x 1,5 mm: je Hälfte eine Platte (Platte und Zarge verschmolzen), ein Einlegebalken dazwischen und zwei Beinstriche."
+            "en": "Table sign 3.2 x 1.5 mm: one slab per half (top and apron merged), a leaf bar between and two leg strokes. Front view: the end of the table as one slab with the leaf bar and the two legs as lines. Plan: the two table halves and the leaf between them as three plates; the leaf stays hidden under the halves until they are pulled apart.",
+            "de": "Tischzeichen 3,2 x 1,5 mm: je Hälfte eine Platte (Platte und Zarge verschmolzen), ein Einlegebalken dazwischen und zwei Beinstriche. Vorderansicht: die Stirnseite des Tisches als eine Platte mit der Auszugsplatte und den zwei Beinen als Linien. Grundriss: die beiden Tischhälften und die Einlegeplatte dazwischen als drei Flächen; die Einlegeplatte bleibt unter den Hälften verborgen, bis diese auseinandergezogen werden."
           },
           "retained": {
             "en": "Top level 0.75 m, apron zone, leaf bar, legs.",
@@ -431,7 +605,7 @@
         "status": "authored",
         "denominator": 200,
         "validRange": {
-          "minDenominator": 151,
+          "minDenominator": 150,
           "maxDenominator": 350
         },
         "pens": {
@@ -574,12 +748,166 @@
               "region": "legs",
               "material": "oak-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "slab-left",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.64,
+              "w": 0.9,
+              "h": 0.11
+            },
+            {
+              "id": "leaf-bar",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "leaf-top",
+                "slide-rails"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.44,
+              "y": 0.69,
+              "w": 0.88,
+              "h": 0.03
+            },
+            {
+              "id": "leg-0",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "legs",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.4,
+                  0.0
+                ],
+                [
+                  0.35,
+                  0.0
+                ],
+                [
+                  0.34,
+                  0.64
+                ],
+                [
+                  0.41,
+                  0.64
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leg-1",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "legs",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.0
+                ],
+                [
+                  -0.35,
+                  0.0
+                ],
+                [
+                  -0.34,
+                  0.64
+                ],
+                [
+                  -0.41,
+                  0.64
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "slab-left",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.8,
+              "h": 0.9
+            },
+            {
+              "id": "slab-right",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.8,
+              "y": -0.45,
+              "w": 0.8,
+              "h": 0.9
+            },
+            {
+              "id": "leaf-bar",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "leaf-top",
+                "slide-rails"
+              ],
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.5,
+              "y": -0.45,
+              "w": 0.6,
+              "h": 0.9
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Table 8 x 3.8 mm: two slabs, leaf bar and two tapered legs.",
-            "de": "Tisch 8 x 3,8 mm: zwei Platten, Einlegebalken und zwei konische Beine."
+            "en": "Table 8 x 3.8 mm: two slabs, leaf bar and two tapered legs. Front view: the slab with the apron below it, the two tapered legs and the leaf bar that rises into the top. Plan: the two halves and the leaf plate with its edges; the leaf shows only in the gap.",
+            "de": "Tisch 8 x 3,8 mm: zwei Platten, Einlegebalken und zwei konische Beine. Vorderansicht: die Platte mit der Zarge darunter, die zwei verjüngten Beine und die Auszugsplatte, die in die Tischplatte hochfährt. Grundriss: die beiden Hälften und die Einlegeplatte mit ihren Kanten; die Einlegeplatte zeigt sich nur in der Lücke."
           },
           "retained": {
             "en": "Slabs, leaf bar and the tapered legs.",
@@ -615,7 +943,7 @@
         "status": "authored",
         "denominator": 100,
         "validRange": {
-          "minDenominator": 76,
+          "minDenominator": 75,
           "maxDenominator": 150
         },
         "pens": {
@@ -794,12 +1122,254 @@
               "region": "legs",
               "material": "oak-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "top-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.72,
+              "w": 0.9,
+              "h": 0.03
+            },
+            {
+              "id": "apron-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "apron",
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.38,
+              "y": 0.64,
+              "w": 0.76,
+              "h": 0.08
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "leaf-top",
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": -0.44,
+              "y": 0.69,
+              "w": 0.88,
+              "h": 0.03
+            },
+            {
+              "id": "leg-0",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "legs",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.4,
+                  0.0
+                ],
+                [
+                  0.35,
+                  0.0
+                ],
+                [
+                  0.34,
+                  0.64
+                ],
+                [
+                  0.41,
+                  0.64
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leg-1",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "legs",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.0
+                ],
+                [
+                  -0.35,
+                  0.0
+                ],
+                [
+                  -0.34,
+                  0.64
+                ],
+                [
+                  -0.41,
+                  0.64
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.8,
+              "h": 0.9
+            },
+            {
+              "id": "top-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.8,
+              "y": -0.45,
+              "w": 0.8,
+              "h": 0.9
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "leaf-top",
+              "material": "oak-timber",
+              "kind": "rect",
+              "x": 0.5,
+              "y": -0.45,
+              "w": 0.6,
+              "h": 0.9
+            },
+            {
+              "id": "plank-l-0",
+              "bone": "top-left",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  0.78,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-r-0",
+              "bone": "top-right",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.82,
+                  -0.15
+                ],
+                [
+                  1.58,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-l-1",
+              "bone": "top-left",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.15
+                ],
+                [
+                  0.78,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-r-1",
+              "bone": "top-right",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.82,
+                  0.15
+                ],
+                [
+                  1.58,
+                  0.15
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Table 16 x 7.5 mm: top halves, aprons, stored leaf, slide rails behind and tapered legs.",
-            "de": "Tisch 16 x 7,5 mm: Plattenhälften, Zargen, verstaute Einlegeplatte, Schienen dahinter und konische Beine."
+            "en": "Table 16 x 7.5 mm: top halves, aprons, stored leaf, slide rails behind and tapered legs. Front view: the end of the table with top, apron, the leaf under the top and the two tapered legs. Plan: the two table halves with their plank joints and the leaf plate in the gap, drawn below the halves.",
+            "de": "Tisch 16 x 7,5 mm: Plattenhälften, Zargen, verstaute Einlegeplatte, Schienen dahinter und konische Beine. Vorderansicht: die Stirnseite mit Platte, Zarge, der Auszugsplatte unter der Tischplatte und den zwei verjüngten Beinen. Grundriss: die beiden Tischhälften mit ihren Brettfugen und die Einlegeplatte in der Lücke, unterhalb der Hälften gezeichnet."
           },
           "retained": {
             "en": "Top planks (0.3 mm), aprons, leaf and rails as own shapes so the extension reads when it opens.",
@@ -1144,12 +1714,482 @@
               "closed": false,
               "region": "legs"
             }
+          ],
+          "front": [
+            {
+              "id": "top-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.728
+                ],
+                [
+                  -0.442,
+                  0.72
+                ],
+                [
+                  0.442,
+                  0.72
+                ],
+                [
+                  0.45,
+                  0.728
+                ],
+                [
+                  0.45,
+                  0.75
+                ],
+                [
+                  -0.45,
+                  0.75
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "apron-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "apron",
+              "material": "oak-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.38,
+              "y": 0.64,
+              "w": 0.76,
+              "h": 0.08
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "leaf-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.44,
+                  0.69
+                ],
+                [
+                  0.44,
+                  0.69
+                ],
+                [
+                  0.44,
+                  0.716
+                ],
+                [
+                  0.434,
+                  0.72
+                ],
+                [
+                  -0.434,
+                  0.72
+                ],
+                [
+                  -0.44,
+                  0.716
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leg-0",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "legs",
+              "material": "oak-timber",
+              "hatch": "grain-v",
+              "kind": "poly",
+              "points": [
+                [
+                  0.4,
+                  0.0
+                ],
+                [
+                  0.35,
+                  0.0
+                ],
+                [
+                  0.34,
+                  0.56
+                ],
+                [
+                  0.34,
+                  0.64
+                ],
+                [
+                  0.41,
+                  0.64
+                ],
+                [
+                  0.41,
+                  0.56
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "shoulder-0",
+              "bone": "top-left",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "legs",
+              "kind": "poly",
+              "points": [
+                [
+                  0.34,
+                  0.56
+                ],
+                [
+                  0.41,
+                  0.56
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-1",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "legs",
+              "material": "oak-timber",
+              "hatch": "grain-v",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.0
+                ],
+                [
+                  -0.35,
+                  0.0
+                ],
+                [
+                  -0.34,
+                  0.56
+                ],
+                [
+                  -0.34,
+                  0.64
+                ],
+                [
+                  -0.41,
+                  0.64
+                ],
+                [
+                  -0.41,
+                  0.56
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "shoulder-1",
+              "bone": "top-left",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "legs",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.34,
+                  0.56
+                ],
+                [
+                  -0.41,
+                  0.56
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.442
+                ],
+                [
+                  0.008,
+                  -0.45
+                ],
+                [
+                  0.792,
+                  -0.45
+                ],
+                [
+                  0.8,
+                  -0.442
+                ],
+                [
+                  0.8,
+                  0.442
+                ],
+                [
+                  0.792,
+                  0.45
+                ],
+                [
+                  0.008,
+                  0.45
+                ],
+                [
+                  0.0,
+                  0.442
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "top-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.8,
+                  -0.442
+                ],
+                [
+                  0.808,
+                  -0.45
+                ],
+                [
+                  1.592,
+                  -0.45
+                ],
+                [
+                  1.6,
+                  -0.442
+                ],
+                [
+                  1.6,
+                  0.442
+                ],
+                [
+                  1.592,
+                  0.45
+                ],
+                [
+                  0.808,
+                  0.45
+                ],
+                [
+                  0.8,
+                  0.442
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.65,
+              "region": "leaf-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.5,
+                  -0.45
+                ],
+                [
+                  1.1,
+                  -0.45
+                ],
+                [
+                  1.1,
+                  0.45
+                ],
+                [
+                  0.5,
+                  0.45
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plank-l-0",
+              "bone": "top-left",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  0.78,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-r-0",
+              "bone": "top-right",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.82,
+                  -0.15
+                ],
+                [
+                  1.58,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-leaf-0",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.52,
+                  -0.15
+                ],
+                [
+                  1.08,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-l-1",
+              "bone": "top-left",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.15
+                ],
+                [
+                  0.78,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-r-1",
+              "bone": "top-right",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "table-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.82,
+                  0.15
+                ],
+                [
+                  1.58,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-leaf-1",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-top",
+              "material": "oak-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.52,
+                  0.15
+                ],
+                [
+                  1.08,
+                  0.15
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Table 32 x 15 mm with all members: planks, aprons with grain, leaf, rails, tapered legs with vertical grain.",
-            "de": "Tisch 32 x 15 mm mit allen Bauteilen: Bohlen, Zargen mit Maserung, Einlegeplatte, Schienen, konische Beine mit senkrechter Maserung."
+            "en": "Table 32 x 15 mm with all members: planks, aprons with grain, leaf, rails, tapered legs with vertical grain. Front view: the end of the table with the chamfered top, the end apron, the leaf under the top and the two tapered legs with their shoulder lines. Plan: the two halves with chamfered edges and plank joints, and the leaf plate with its own joints in the gap.",
+            "de": "Tisch 32 x 15 mm mit allen Bauteilen: Bohlen, Zargen mit Maserung, Einlegeplatte, Schienen, konische Beine mit senkrechter Maserung. Vorderansicht: die Stirnseite mit der gefasten Platte, der Stirnzarge, der Auszugsplatte unter der Tischplatte und den zwei verjüngten Beinen mit ihren Schulterlinien. Grundriss: die beiden Hälften mit gefasten Kanten und Brettfugen und die Einlegeplatte mit eigenen Fugen in der Lücke."
           },
           "retained": {
             "en": "Chamfered underside edges of the top, bevelled leaf edges, stepped legs (square shoulder to 0.56 m, then tapering), joint at mid-span, aprons set back from the ends, leaf and rails as in 1:100 plus grain hatching.",
@@ -1184,14 +2224,14 @@
     },
     "symbols": [
       {
-        "id": "table-plan",
+        "id": "dining-table-symbol",
         "title": {
-          "en": "Dining table plan symbol",
-          "de": "Esstisch-Grundrisssymbol"
+          "en": "Table symbol, true extent",
+          "de": "Tischsymbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "Floor-plan sign of the closed table 1.60 x 0.90 m with the extension direction marked by the leaf outline (dashed in drawing practice, solid 0.13 mm here).",
-          "de": "Grundrisszeichen des geschlossenen Tisches 1,60 x 0,90 m mit der Auszugsrichtung durch die Kontur der Einlegeplatte."
+          "en": "The extending dining table closed in all three views: top 1.60 x 0.90 m at 0.75 m, aprons, four legs, centre rail and the 0.60 m leaf outline.",
+          "de": "Der Ausziehtisch geschlossen in allen drei Ansichten: Platte 1,60 x 0,90 m auf 0,75 m, Zargen, vier Beine, Mittelschiene und der Umriss der 0,60-m-Einlegeplatte."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -1209,7 +2249,162 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
+          "elevation": [
+            {
+              "id": "top",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.72,
+              "w": 1.6,
+              "h": 0.03
+            },
+            {
+              "id": "apron",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.1,
+              "y": 0.64,
+              "w": 1.4,
+              "h": 0.08
+            },
+            {
+              "id": "leg-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.1,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.72
+            },
+            {
+              "id": "leg-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.43,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.72
+            },
+            {
+              "id": "rail",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0.66
+                ],
+                [
+                  1.3,
+                  0.66
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leaf",
+              "bone": "ground",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.5,
+                  0.72
+                ],
+                [
+                  0.5,
+                  0.69
+                ],
+                [
+                  1.1,
+                  0.69
+                ],
+                [
+                  1.1,
+                  0.72
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "top",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.72,
+              "w": 0.9,
+              "h": 0.03
+            },
+            {
+              "id": "apron",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.38,
+              "y": 0.64,
+              "w": 0.76,
+              "h": 0.08
+            },
+            {
+              "id": "leg-left",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.34,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.64
+            },
+            {
+              "id": "leg-right",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.41,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.64
+            }
+          ],
           "plan": [
             {
               "id": "plan-top",
@@ -1217,27 +2412,12 @@
               "role": "body",
               "z": 1,
               "filled": true,
-              "tone": 0.9,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  1.6,
-                  0
-                ],
-                [
-                  1.6,
-                  0.9
-                ],
-                [
-                  0,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.45,
+              "w": 1.6,
+              "h": 0.9
             },
             {
               "id": "plan-leaf",
@@ -1250,28 +2430,68 @@
               "points": [
                 [
                   0.5,
-                  0.0
+                  -0.45
+                ],
+                [
+                  1.1,
+                  -0.45
+                ],
+                [
+                  1.1,
+                  0.45
                 ],
                 [
                   0.5,
-                  0.9
-                ],
-                [
-                  1.1,
-                  0.9
-                ],
-                [
-                  1.1,
-                  0.0
+                  0.45
                 ]
               ],
               "closed": true
+            },
+            {
+              "id": "plank-a",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  1.58,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "plank-b",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.15
+                ],
+                [
+                  1.58,
+                  0.15
+                ]
+              ],
+              "closed": false
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size: x along the table 0 to 1.60 m, y across 0 to 0.90 m; the leaf outline marks the 0.60 m extension.",
-          "de": "Modellmeter in Originalgröße: x entlang 0 bis 1,60 m, y quer 0 bis 0,90 m; die Kontur der Einlegeplatte markiert den 0,60 m langen Auszug."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. The leaf outline marks the 0.60 m extension at x 0.50 to 1.10 m.",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Der Umriss der Einlegeplatte markiert die 0,60-m-Verlängerung bei x 0,50 bis 1,10 m."
         }
       }
     ],
@@ -1289,30 +2509,32 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-left-l",
+          "leg-left-r",
+          "leg-right-l",
+          "leg-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "leaf-top": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             },
             "apron": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "slide-rails": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1342,30 +2564,32 @@
         },
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-left-l",
+          "leg-left-r",
+          "leg-right-l",
+          "leg-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.25
             },
             "leaf-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "apron": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "slide-rails": {
               "exposedFraction": 0.8,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1395,8 +2619,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-left-l",
+          "leg-left-r",
+          "leg-right-l",
+          "leg-right-r"
         ],
         "thermal": {
           "regions": {
@@ -1417,16 +2643,16 @@
               }
             },
             "apron": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "slide-rails": {
               "exposedFraction": 0.8,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1446,7 +2672,7 @@
               "wxNPerM": 0,
               "wyNPerM": -450
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1465,7 +2691,7 @@
               "wxNPerM": 0,
               "wyNPerM": -450
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1484,7 +2710,7 @@
               "wxNPerM": 0,
               "wyNPerM": -450
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1504,30 +2730,32 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-left-l",
+          "leg-left-r",
+          "leg-right-l",
+          "leg-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "leaf-top": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             },
             "apron": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "slide-rails": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1541,7 +2769,7 @@
               "de": "Senkrechte Prüflast am Rand (750 N)"
             },
             "anchor": "edge-right",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -750,
             "source": "authored-estimate",
             "reference": "en-1730"
@@ -1569,30 +2797,32 @@
         },
         "ground": "auto",
         "contacts": [
-          "leg-left",
-          "leg-right"
+          "leg-left-l",
+          "leg-left-r",
+          "leg-right-l",
+          "leg-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.25
             },
             "leaf-top": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             },
             "apron": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "legs": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "slide-rails": {
               "exposedFraction": 0.8,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1611,7 +2841,7 @@
           "en": "The halves are pulled apart on the slide rails, then the leaf is lifted into the gap.",
           "de": "Die Hälften werden auf den Schienen auseinandergezogen, dann wird die Einlegeplatte in die Lücke gehoben."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1632,21 +2862,31 @@
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "extended",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "leg-left",
+            "anchor": "leg-left-l",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "leg-right",
+            "anchor": "leg-left-r",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "leg-right-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "leg-right-r",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
@@ -1662,7 +2902,7 @@
           {
             "id": "lift",
             "fromS": 2.4,
-            "toS": 4.0,
+            "toS": 4,
             "title": {
               "en": "Lift the leaf",
               "de": "Einlegeplatte anheben"
@@ -1710,7 +2950,7 @@
           "en": "The leaf is lowered, then the halves are pushed together.",
           "de": "Die Einlegeplatte wird abgesenkt, dann werden die Hälften zusammengeschoben."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1721,7 +2961,7 @@
             "ease": "smooth"
           },
           {
-            "t": 1.0,
+            "t": 1,
             "pose": "pulled-apart-key",
             "ease": "smooth"
           },
@@ -1731,28 +2971,38 @@
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "closed",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "leg-left",
+            "anchor": "leg-left-l",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "leg-right",
+            "anchor": "leg-left-r",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "leg-right-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "leg-right-r",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
           {
             "id": "lower",
             "fromS": 0,
-            "toS": 1.0,
+            "toS": 1,
             "title": {
               "en": "Lower the leaf",
               "de": "Einlegeplatte absenken"
@@ -1760,7 +3010,7 @@
           },
           {
             "id": "push",
-            "fromS": 1.0,
+            "fromS": 1,
             "toS": 3.4,
             "title": {
               "en": "Push together",
@@ -1770,7 +3020,7 @@
         ],
         "events": [
           {
-            "t": 1.0,
+            "t": 1,
             "kind": "motion",
             "title": {
               "en": "Leaf is stored",
@@ -1788,11 +3038,11 @@
                 "v": 1
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 0
               }
             ]
@@ -1809,7 +3059,7 @@
           "en": "On the extended table the place settings arrive one after another (0.5 kN/m2 in total).",
           "de": "Auf dem ausgezogenen Tisch kommen die Gedecke nacheinander (insgesamt 0,5 kN/m2)."
         },
-        "durationS": 6.0,
+        "durationS": 6,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1820,28 +3070,38 @@
             "ease": "linear"
           },
           {
-            "t": 6.0,
+            "t": 6,
             "pose": "set-for-dinner",
             "ease": "linear"
           }
         ],
         "contacts": [
           {
-            "anchor": "leg-left",
+            "anchor": "leg-left-l",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
           },
           {
-            "anchor": "leg-right",
+            "anchor": "leg-left-r",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
+          },
+          {
+            "anchor": "leg-right-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "leg-right-r",
+            "fromS": 0,
+            "toS": 6
           }
         ],
         "phases": [
           {
             "id": "lay",
             "fromS": 0,
-            "toS": 6.0,
+            "toS": 6,
             "title": {
               "en": "Laying",
               "de": "Decken"
@@ -1850,7 +3110,7 @@
         ],
         "events": [
           {
-            "t": 1.0,
+            "t": 1,
             "kind": "load-on",
             "title": {
               "en": "First place settings",
@@ -1859,7 +3119,7 @@
             "target": "dinner-left"
           },
           {
-            "t": 3.0,
+            "t": 3,
             "kind": "load-on",
             "title": {
               "en": "Leaf settings",
@@ -1868,7 +3128,7 @@
             "target": "dinner-leaf"
           },
           {
-            "t": 5.0,
+            "t": 5,
             "kind": "load-on",
             "title": {
               "en": "Last settings",
@@ -1887,11 +3147,11 @@
                 "v": 0
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0
               },
               {
-                "t": 2.0,
+                "t": 2,
                 "v": 1
               }
             ]
@@ -1905,11 +3165,11 @@
                 "v": 0
               },
               {
-                "t": 3.0,
+                "t": 3,
                 "v": 0
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 1
               }
             ]
@@ -1923,11 +3183,11 @@
                 "v": 0
               },
               {
-                "t": 5.0,
+                "t": 5,
                 "v": 0
               },
               {
-                "t": 6.0,
+                "t": 6,
                 "v": 1
               }
             ]
@@ -2103,7 +3363,7 @@
               "kind": "metal",
               "material": "steel-slides",
               "thicknessM": 0.002,
-              "resistanceM2KW": 4e-05,
+              "resistanceM2KW": 0.00004,
               "heatCapacityJM2K": 7020,
               "source": "literature",
               "reference": "iso-10456-2007"
@@ -2139,13 +3399,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "leg-left",
-        "leg-right"
+        "leg-left-l",
+        "leg-left-r",
+        "leg-right-l",
+        "leg-right-r"
       ],
       "assumptions": [
         {
-          "en": "Each table half is a rigid body with its two leg pairs on the floor; the halves slide on the rails (prismatic joints 0.30 m), the leaf lifts by 0.03 m onto the rails.",
-          "de": "Jede Tischhälfte ist ein starrer Körper mit zwei Beinpaaren am Boden; die Hälften gleiten auf den Schienen (Schiebegelenke 0,30 m), die Einlegeplatte hebt sich um 0,03 m auf die Schienen."
+          "en": "Each table half is a rigid body with its two legs on the floor; the four legs are four contacts (x = 0.135 m and 0.665 m of the half, z = +-0.375 m); the halves slide on the rails (prismatic joints 0.30 m), the leaf lifts by 0.03 m onto the rails.",
+          "de": "Jede Tischhälfte ist ein starrer Körper mit ihren zwei Beinen am Boden; die vier Beine sind vier Kontakte (x = 0,135 m und 0,665 m der Hälfte, z = +-0,375 m); die Hälften gleiten auf den Schienen (Schiebegelenke 0,30 m), die Einlegeplatte hebt sich um 0,03 m auf die Schienen."
         },
         {
           "en": "Dinner load 0.5 kN/m2 on the top (authored-estimate, deliberately above place settings of six persons; EN 1991-1-1 category A floor loads of 1.5-2.0 kN/m2 describe floors, not tables).",
@@ -2161,10 +3423,7 @@
     "presentation": {
       "defaultPose": "closed",
       "defaultClip": "extend-table",
-      "defaultScale": 50,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 50
     },
     "exports": [
       "svg",

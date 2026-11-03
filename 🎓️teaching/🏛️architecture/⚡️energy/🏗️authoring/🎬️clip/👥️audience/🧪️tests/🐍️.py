@@ -79,7 +79,7 @@ class AudienceTest(unittest.TestCase):
                 clip = media / "v" / f"{segment['scene']}.mp4"
                 clip.parent.mkdir(parents=True)
                 clip.write_bytes(b"0" * 1200)
-                settings = {"quality": "-ql", "resolution": None, "fps": None, "audience": audience}
+                settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": None, "audience": audience}
                 with patch.object(runtime, "run_command") as command:
                     runtime.render_segment(segment, media, settings)
                 self.assertEqual(command.call_args.kwargs["env"]["SEMIO_TEACHING_AUDIENCE"], audience)
@@ -89,7 +89,7 @@ class AudienceTest(unittest.TestCase):
         segment = runtime.segment_plan()[0]["segment"]
         states, envelopes = [], []
         for audience in CASES["variants"]:
-            settings = {"quality": "-ql", "resolution": None, "fps": None, "audience": audience}
+            settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": None, "audience": audience}
             states.append(runtime.segment_state(segment, settings))
             envelopes.append(runtime.presentation_state("physical_fundamentals", settings, "de"))
         self.assertNotEqual(states[0], states[1])
@@ -119,7 +119,7 @@ class AudienceTest(unittest.TestCase):
                 "        self.wait(0.4)\n", encoding="utf-8")
             frames, clocks = {}, {}
             for audience in CASES["variants"]:
-                settings = {"quality": "-ql", "resolution": CASES["render"]["resolution"],
+                settings = {"language": "en", "quality": "-ql", "resolution": CASES["render"]["resolution"],
                             "fps": CASES["render"]["fps"], "audience": audience}
                 movie = runtime.render_segment({"script": str(script), "scene": "Fixture"}, folder / audience, settings)
                 with av.open(movie) as container:

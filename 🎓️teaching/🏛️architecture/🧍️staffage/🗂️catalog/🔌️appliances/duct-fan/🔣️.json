@@ -1,0 +1,1764 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "duct-fan",
+    "category": "appliances",
+    "title": {
+      "en": "Wall-Mounted Axial Extract Fan",
+      "de": "Axial-Wandventilator zur Abluft"
+    },
+    "summary": {
+      "en": "A 0.22 m square wall-mounted axial extract fan seen from the room: a rounded plate with a ring, five swept blades on a motor hub that turn, extracting 180 m3/h at 28 W.",
+      "de": "Ein quadratischer Axial-Wandventilator von 0,22 m zur Abluft, vom Raum aus gesehen: eine Platte mit Ring und fünf gepfeilten Flügeln auf einer Motornabe, die sich drehen; er saugt 180 m3/h bei 28 W ab."
+    },
+    "tags": [
+      "fan",
+      "axial-fan",
+      "extract-air",
+      "ventilation",
+      "wall-mounted",
+      "bathroom",
+      "appliance",
+      "internal-gain",
+      "electrical",
+      "rotating"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A10)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iso-5801-2017",
+          "citation": "ISO 5801:2017 Fans - Performance testing using standardized airways (volume flow, pressure and power of a fan; typical small axial wall fans of 100 to 150 mm nominal size reach 80 to 200 cubic metres per hour)."
+        },
+        {
+          "id": "din-18017-3-2020",
+          "citation": "DIN 18017-3:2020 Ventilation of bathrooms and toilets without outside windows with fans (extract flow 40 m3/h continuous, 120 m3/h demand-controlled)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A bathroom-class axial wall fan of the 200 mm nominal size seen face-on from the room: a plate of 0.22 m by 0.22 m with rounded corners, a round housing of 0.2 m and an opening of 0.176 m with five swept ABS blades on a 68 mm motor hub. It stands for the circle-with-blades symbol of the ventilation clips. The origin is the centre of the hub in the wall plane; the fan is 0.09 m deep (depthM). Dimensions and the mass of 0.9 kg are rounded from this product class (authored estimate). At level 1 the fan extracts 0.05 m3/s (180 m3/h) with a motor power of 28 W (6 W electronics and housing, 22 W motor), at level 0.5 half the flow and 14 W, which also follows a typical axial fan: power grows faster than the flow, so the linear model is a slight overestimate of the motor heat at the low stage. The rotor turns around the axis normal to the drawing; the clip shows the real 1400 rpm slowed to 180 and 360 degrees per second.",
+        "de": "Ein Axial-Wandventilator der Nenngröße 200 mm für Bäder, frontal vom Raum aus gesehen: eine Platte von 0,22 m mal 0,22 m mit gerundeten Ecken, ein rundes Gehäuse von 0,2 m und eine Öffnung von 0,176 m mit fünf gepfeilten ABS-Flügeln auf einer 68 mm großen Motornabe. Er steht für das Symbol aus Kreis mit Flügeln der Lüftungsclips. Der Ursprung ist die Mitte der Nabe in der Wandebene; der Ventilator ist 0,09 m tief (depthM). Maße und die Masse von 0,9 kg sind aus dieser Produktklasse gerundet (Schätzwert). Auf Stufe 1 saugt er 0,05 m3/s (180 m3/h) mit einer Motorleistung von 28 W ab (6 W Elektronik und Gehäuse, 22 W Motor), bei Stufe 0,5 den halben Strom und 14 W; das folgt auch einem üblichen Axialventilator: die Leistung wächst stärker als der Volumenstrom, das lineare Modell überschätzt die Motorwärme auf der kleinen Stufe also leicht. Das Laufrad dreht sich um die Achse senkrecht zur Zeichnung; der Clip zeigt die echten 1400 U/min verlangsamt auf 180 und 360 Grad je Sekunde."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.22,
+      "widthM": 0.22,
+      "depthM": 0.09,
+      "massKg": 0.9
+    },
+    "materials": [
+      {
+        "id": "abs-plastic",
+        "title": {
+          "en": "White ABS plastic",
+          "de": "Weißer ABS-Kunststoff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "motor-housing",
+        "title": {
+          "en": "Steel motor can",
+          "de": "Stahlbecher des Motors"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "plate",
+      "bones": [
+        {
+          "id": "plate",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Wall plate",
+            "de": "Wandplatte"
+          },
+          "lengthM": 0.22,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.5,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "ring",
+          "parent": "plate",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Housing ring with motor spider",
+            "de": "Gehäusering mit Motorstern"
+          },
+          "lengthM": 0.2,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.28,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rotor",
+          "parent": "ring",
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Rotor with blades",
+            "de": "Laufrad mit Flügeln"
+          },
+          "lengthM": 0.09,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 0.12,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-screw-top",
+        "bone": "plate",
+        "x": 0,
+        "y": 0.092,
+        "kind": "support",
+        "title": {
+          "en": "Upper screw in the wall",
+          "de": "Obere Schraube in der Wand"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016
+      },
+      {
+        "id": "wall-screw-bottom",
+        "bone": "plate",
+        "x": 0,
+        "y": -0.092,
+        "kind": "support",
+        "title": {
+          "en": "Lower screw in the wall",
+          "de": "Untere Schraube in der Wand"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "outlet",
+        "bone": "ring",
+        "x": 0,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Centre of the fan opening",
+          "de": "Mitte der Ventilatoröffnung"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.11,
+              "y": -0.11,
+              "w": 0.22,
+              "h": 0.22,
+              "r": 0.014,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-1",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": -0.092,
+              "cy": -0.092,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-2",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0.092,
+              "cy": -0.092,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-3",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": -0.092,
+              "cy": 0.092,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "screw-4",
+              "bone": "plate",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0.092,
+              "cy": 0.092,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.1,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "opening",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.088,
+              "ry": 0.088
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.02753 0.01193 L 0.03329 0.01753 L 0.03909 0.0228 L 0.04451 0.02855 L 0.04944 0.03487 L 0.05381 0.04178 L 0.05756 0.04925 L 0.06062 0.05725 L 0.06293 0.06573 L 0.08968 0.01542 L 0.08297 0.00819 L 0.07573 0.00192 L 0.06804 -0.00336 L 0.06002 -0.00758 L 0.05178 -0.0107 L 0.04344 -0.01266 L 0.03518 -0.01334 L 0.02753 -0.01193 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.00284 0.02987 L -0.00639 0.03708 L -0.0096 0.04422 L -0.0134 0.05115 L -0.01789 0.05779 L -0.0231 0.06409 L -0.02905 0.06996 L -0.03571 0.07534 L -0.04307 0.08016 L 0.01305 0.09006 L 0.01785 0.08144 L 0.02158 0.07261 L 0.02422 0.06367 L 0.02576 0.05474 L 0.02618 0.04594 L 0.02547 0.0374 L 0.02356 0.02933 L 0.01985 0.02249 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02928 0.00653 L -0.03724 0.00539 L -0.04502 0.00453 L -0.05279 0.00306 L -0.06049 0.00085 L -0.06809 -0.00217 L -0.07551 -0.00601 L -0.08269 -0.01068 L -0.08955 -0.01619 L -0.08162 0.04024 L -0.07194 0.04214 L -0.06239 0.04296 L -0.05307 0.04271 L -0.0441 0.04141 L -0.0356 0.0391 L -0.0277 0.03578 L -0.02062 0.03147 L -0.01526 0.02583 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-4",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.01526 -0.02583 L -0.01663 -0.03375 L -0.01822 -0.04142 L -0.01922 -0.04926 L -0.0195 -0.05727 L -0.01898 -0.06543 L -0.01762 -0.07367 L -0.01539 -0.08194 L -0.01228 -0.09017 L -0.06349 -0.06519 L -0.06231 -0.0554 L -0.06014 -0.04606 L -0.05702 -0.03728 L -0.05302 -0.02915 L -0.04818 -0.02178 L -0.04259 -0.01529 L -0.0363 -0.00988 L -0.02928 -0.00653 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-5",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.01985 -0.02249 L 0.02696 -0.02624 L 0.03376 -0.03013 L 0.0409 -0.0335 L 0.04844 -0.03624 L 0.05636 -0.03827 L 0.06462 -0.03952 L 0.07317 -0.03996 L 0.08196 -0.03954 L 0.04238 -0.08053 L 0.03343 -0.07638 L 0.02522 -0.07143 L 0.01783 -0.06575 L 0.01134 -0.05943 L 0.00582 -0.05255 L 0.00138 -0.04523 L -0.00182 -0.03758 L -0.00284 -0.02987 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.034,
+              "ry": 0.034,
+              "region": "hub",
+              "material": "motor-housing"
+            },
+            {
+              "id": "hub-cap",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.004,
+              "cy": 0.004,
+              "rx": 0.012,
+              "ry": 0.012,
+              "region": "hub",
+              "material": "motor-housing"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.11,
+              "y": -0.045,
+              "w": 0.22,
+              "h": 0.012,
+              "r": 0.003,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.1,
+              "y": -0.033,
+              "w": 0.2,
+              "h": 0.078,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "lip",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.104,
+              "y": 0.038,
+              "w": 0.208,
+              "h": 0.007,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "seam",
+              "bone": "ring",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  -0.015
+                ],
+                [
+                  0.1,
+                  -0.015
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.11,
+              "w": 0.012,
+              "h": 0.22,
+              "r": 0.003,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.033,
+              "y": -0.1,
+              "w": 0.078,
+              "h": 0.2,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "lip",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.038,
+              "y": -0.104,
+              "w": 0.007,
+              "h": 0.208,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "seam",
+              "bone": "ring",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.015,
+                  -0.1
+                ],
+                [
+                  -0.015,
+                  0.1
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.22 m square wall fan, 4.4 mm on paper: a rounded plate with four screws, a ring with a dark opening and five swept blades around a hub. Front and plan, 1.8 mm by 4.4 mm on paper, show the fan side-on: the thin plate on the room side, the round spigot behind it with a flared lip and one seam line. Blades, hub and opening are inside the spigot.",
+            "de": "Ein quadratischer Wandventilator von 0,22 m, auf Papier 4,4 mm: eine Platte mit gerundeten Ecken und vier Schrauben, ein Ring mit dunkler Öffnung und fünf gepfeilte Flügel um eine Nabe. Vorderansicht und Grundriss, 1,8 mm auf 4,4 mm, zeigen den Ventilator von der Seite: die dünne Platte auf der Raumseite, dahinter der runde Stutzen mit aufgeweiteter Lippe und einer Fugenlinie. Flügel, Nabe und Öffnung liegen im Stutzen."
+          },
+          "retained": {
+            "en": "Plate of 0.22 m, housing ring of 0.2 m, opening of 0.176 m, five blades with their sweep, the 68 mm hub with its off-centre cap, four screws of 16 mm.",
+            "de": "Platte von 0,22 m, Gehäusering von 0,2 m, Öffnung von 0,176 m, fünf Flügel mit ihrer Pfeilung, die 68 mm große Nabe mit der außermittigen Kappe, vier Schrauben von 16 mm."
+          },
+          "merged": {
+            "en": "The motor spider and the back-draught flap behind the blades are part of the dark opening.",
+            "de": "Der Motorstern und die Rückschlagklappe hinter den Flügeln gehen in der dunklen Öffnung auf."
+          },
+          "omitted": {
+            "en": "The cable gland, the label and the grille bars. Screws, blades and hub are hidden in front and plan.",
+            "de": "Die Kabeldurchführung, das Typenschild und die Gitterstäbe. Schrauben, Flügel und Nabe sind in Vorderansicht und Grundriss verdeckt."
+          },
+          "thinElements": {
+            "en": "The blades are 26 mm wide at the root (0.52 mm) and 60 mm at the tip; the cap is a 0.13 mm line pen.",
+            "de": "Die Flügel sind an der Wurzel 26 mm (0,52 mm) und an der Spitze 60 mm breit; die Kappe wird mit dem 0,13-mm-Detailstift gezeichnet."
+          },
+          "hatching": {
+            "en": "None; the opening is a dark tone.",
+            "de": "Keine; die Öffnung ist ein dunkler Ton."
+          },
+          "styles": {
+            "en": "Plate 0.88, ring 0.7, opening 0.12, blades 0.82, hub 0.55; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Platte 0,88, Ring 0,7, Öffnung 0,12, Flügel 0,82, Nabe 0,55; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Casing, blades and hub are three regions: in the thermal view the hub (motor) warms and the blades stay cool; the blades turn with the rotor bone.",
+            "de": "Gehäuse, Flügel und Nabe sind drei Regionen: in der Thermalansicht erwärmt sich die Nabe (Motor), die Flügel bleiben kühl; die Flügel drehen sich mit dem Rotorknochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.11,
+              "y": -0.11,
+              "w": 0.22,
+              "h": 0.22,
+              "r": 0.014,
+              "regions": [
+                "casing"
+              ],
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.1,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "opening",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.086,
+              "ry": 0.086
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.0261 0.01479 L 0.03218 0.0202 L 0.0383 0.02547 L 0.04402 0.03127 L 0.04924 0.03767 L 0.05389 0.04468 L 0.05788 0.05228 L 0.06117 0.06045 L 0.06369 0.06913 L 0.09293 0.01415 L 0.08575 0.00651 L 0.078 -0.00012 L 0.06977 -0.00569 L 0.06116 -0.01014 L 0.05231 -0.01342 L 0.04333 -0.01545 L 0.03441 -0.01613 L 0.0261 -0.01479 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.006 0.02939 L -0.00927 0.03685 L -0.01239 0.0443 L -0.01614 0.05153 L -0.02061 0.05847 L -0.02584 0.06506 L -0.03184 0.07121 L -0.03859 0.07686 L -0.04607 0.08194 L 0.01526 0.09275 L 0.02031 0.08357 L 0.02422 0.07414 L 0.02697 0.06459 L 0.02855 0.05504 L 0.02893 0.0456 L 0.02808 0.03643 L 0.02597 0.02774 L 0.02213 0.02025 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02981 0.00338 L -0.03791 0.00257 L -0.04596 0.0019 L -0.054 0.00058 L -0.06198 -0.00153 L -0.06986 -0.00447 L -0.07756 -0.00827 L -0.08502 -0.01295 L -0.09216 -0.01849 L -0.0835 0.04318 L -0.0732 0.04514 L -0.06303 0.04595 L -0.0531 0.04561 L -0.04352 0.04416 L -0.03443 0.0416 L -0.02597 0.03797 L -0.01836 0.03327 L -0.01242 0.02731 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-4",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.01242 -0.02731 L -0.01416 -0.03526 L -0.01601 -0.04312 L -0.01723 -0.05118 L -0.0177 -0.05942 L -0.01733 -0.06782 L -0.0161 -0.07632 L -0.01396 -0.08486 L -0.01089 -0.09337 L -0.06687 -0.06607 L -0.06555 -0.05567 L -0.06318 -0.04575 L -0.05979 -0.0364 L -0.05544 -0.02775 L -0.0502 -0.01989 L -0.04413 -0.01297 L -0.03732 -0.00718 L -0.02981 -0.00338 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-5",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.02213 -0.02025 L 0.02916 -0.02437 L 0.03606 -0.02856 L 0.04335 -0.0322 L 0.05104 -0.03519 L 0.05914 -0.03744 L 0.06761 -0.03889 L 0.07639 -0.0395 L 0.08543 -0.03921 L 0.04217 -0.08401 L 0.03269 -0.07954 L 0.02399 -0.07422 L 0.01615 -0.06811 L 0.00926 -0.06131 L 0.0034 -0.05389 L -0.00131 -0.04598 L -0.00471 -0.03771 L -0.006 -0.02939 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.036,
+              "ry": 0.036,
+              "region": "hub",
+              "material": "motor-housing"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.11,
+              "y": -0.045,
+              "w": 0.22,
+              "h": 0.014,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.1,
+              "y": -0.031,
+              "w": 0.2,
+              "h": 0.076,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.11,
+              "w": 0.014,
+              "h": 0.22,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "ring",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.05,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.031,
+              "y": -0.1,
+              "w": 0.076,
+              "h": 0.2,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.2 mm square with a ring and a five-bladed pinwheel. Front and plan, 0.9 mm by 2.2 mm: plate and spigot as two masses.",
+            "de": "Ein Quadrat von 2,2 mm mit einem Ring und einem fünfflügeligen Windrad. Vorderansicht und Grundriss, 0,9 mm auf 2,2 mm: Platte und Stutzen als zwei Massen."
+          },
+          "retained": {
+            "en": "Plate, ring, opening, five swept blades and the hub.",
+            "de": "Platte, Ring, Öffnung, fünf gepfeilte Flügel und die Nabe."
+          },
+          "merged": {
+            "en": "Screws and cap are dropped; the blades touch the ring so that they join it.",
+            "de": "Schrauben und Kappe entfallen; die Flügel berühren den Ring und gehen in ihm auf."
+          },
+          "omitted": {
+            "en": "Four screws, the hub cap, the spider and the flap. Lip and seam line in front and plan.",
+            "de": "Vier Schrauben, die Nabenkappe, der Stern und die Klappe. Lippe und Fugenlinie in Vorderansicht und Grundriss."
+          },
+          "thinElements": {
+            "en": "The blades are widened to 34 mm at the root (0.34 mm) and 66 mm at the tip so that they print as filled shapes.",
+            "de": "Die Flügel sind an der Wurzel auf 34 mm (0,34 mm) und an der Spitze auf 66 mm verbreitert, damit sie als Flächen drucken."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Plate 0.88, ring 0.7, opening 0.12, blades 0.82, hub 0.55; one body pen of 0.18 mm.",
+            "de": "Platte 0,88, Ring 0,7, Öffnung 0,12, Flügel 0,82, Nabe 0,55; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Casing, blades and hub stay three regions, the blades turn with the rotor.",
+            "de": "Gehäuse, Flügel und Nabe bleiben drei Regionen, die Flügel drehen sich mit dem Rotor."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plate",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.11,
+              "y": -0.11,
+              "w": 0.22,
+              "h": 0.22,
+              "r": 0.016,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "opening",
+              "bone": "ring",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.096,
+              "ry": 0.096,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-1",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.02121 0.02121 L 0.02733 0.02712 L 0.0334 0.03306 L 0.03902 0.03947 L 0.04405 0.04643 L 0.0484 0.05398 L 0.05201 0.0621 L 0.05479 0.07077 L 0.05668 0.07995 L 0.09758 0.00911 L 0.0895 0.00038 L 0.08069 -0.00714 L 0.07126 -0.01336 L 0.06136 -0.01819 L 0.05115 -0.02153 L 0.04082 -0.02329 L 0.03064 -0.02332 L 0.02121 -0.02121 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-2",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M -0.02898 0.00776 L -0.03715 0.01011 L -0.04534 0.0124 L -0.05369 0.01405 L -0.06223 0.01493 L -0.07095 0.01493 L -0.07978 0.01399 L -0.08868 0.01206 L -0.09758 0.00911 L -0.05668 0.07995 L -0.04508 0.07732 L -0.03416 0.07344 L -0.02406 0.06839 L -0.01493 0.06223 L -0.00693 0.05507 L -0.00024 0.047 L 0.00488 0.03819 L 0.00776 0.02898 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "blade-3",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.82,
+              "kind": "path",
+              "d": "M 0.00776 -0.02898 L 0.00982 -0.03723 L 0.01193 -0.04546 L 0.01467 -0.05353 L 0.01819 -0.06136 L 0.02254 -0.06891 L 0.02778 -0.07609 L 0.0339 -0.08283 L 0.04089 -0.08906 L -0.04089 -0.08906 L -0.04442 -0.0777 L -0.04652 -0.06631 L -0.0472 -0.05503 L -0.04643 -0.04405 L -0.04423 -0.03353 L -0.04058 -0.02371 L -0.03551 -0.01487 L -0.02898 -0.00776 Z",
+              "region": "blades",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.044,
+              "ry": 0.044,
+              "region": "hub",
+              "material": "motor-housing"
+            }
+          ],
+          "plan": [
+            {
+              "id": "body",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.045
+                ],
+                [
+                  -0.11,
+                  -0.03
+                ],
+                [
+                  -0.1,
+                  -0.03
+                ],
+                [
+                  -0.1,
+                  0.045
+                ],
+                [
+                  0.1,
+                  0.045
+                ],
+                [
+                  0.1,
+                  -0.03
+                ],
+                [
+                  0.11,
+                  -0.03
+                ],
+                [
+                  0.11,
+                  -0.045
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "body",
+              "bone": "plate",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  -0.11
+                ],
+                [
+                  -0.03,
+                  -0.11
+                ],
+                [
+                  -0.03,
+                  -0.1
+                ],
+                [
+                  0.045,
+                  -0.1
+                ],
+                [
+                  0.045,
+                  0.1
+                ],
+                [
+                  -0.03,
+                  0.1
+                ],
+                [
+                  -0.03,
+                  0.11
+                ],
+                [
+                  -0.045,
+                  0.11
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.1 mm square with a dark disc and a three-bladed pinwheel. Front and plan, 0.45 mm by 1.1 mm: one T-shaped mark of plate and spigot.",
+            "de": "Ein Quadrat von 1,1 mm mit einer dunklen Scheibe und einem dreiflügeligen Windrad. Vorderansicht und Grundriss, 0,45 mm auf 1,1 mm: ein T-förmiges Zeichen aus Platte und Stutzen."
+          },
+          "retained": {
+            "en": "Plate, dark opening, three broad swept blades and the hub.",
+            "de": "Platte, dunkle Öffnung, drei breite gepfeilte Flügel und die Nabe."
+          },
+          "merged": {
+            "en": "The housing ring joins the opening (it carries the casing region); five blades become three.",
+            "de": "Der Gehäusering geht in der Öffnung auf (sie trägt die Gehäuseregion); aus fünf Flügeln werden drei."
+          },
+          "omitted": {
+            "en": "Screws, hub cap, ring outline. Everything but the T silhouette in front and plan.",
+            "de": "Schrauben, Nabenkappe, Ringkontur. In Vorderansicht und Grundriss alles außer der T-Silhouette."
+          },
+          "thinElements": {
+            "en": "The three blades are 60 to 90 mm wide (0.3 to 0.45 mm) and the hub 88 mm, so that they stay above the feature width and read as a pinwheel when they turn.",
+            "de": "Die drei Flügel sind 60 bis 90 mm (0,3 bis 0,45 mm) und die Nabe 88 mm breit, damit sie über der Mindestbreite bleiben und sich beim Drehen als Windrad lesen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Plate 0.88, opening 0.12, blades 0.82, hub 0.55; one body pen of 0.13 mm.",
+            "de": "Platte 0,88, Öffnung 0,12, Flügel 0,82, Nabe 0,55; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "The opening carries the casing region; blades and hub keep their regions.",
+            "de": "Die Öffnung trägt die Gehäuseregion; Flügel und Nabe behalten ihre Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the fan is 0.44 mm by 0.44 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the mounting plate of 12 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist der Ventilator 0,44 mm mal 0,44 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, die Montageplatte von 12 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Mounting plate of 12 mm",
+          "de": "Montageplatte von 12 mm"
+        },
+        "limitingSizeM": 0.012,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The rotor stands still and the room air is at rest.",
+          "de": "Das Laufrad steht still und die Raumluft ruht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "blades": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hub": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "extract": 0
+          },
+          "operating": {
+            "fan": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "low",
+        "title": {
+          "en": "Low speed",
+          "de": "Kleine Stufe"
+        },
+        "description": {
+          "en": "The rotor runs at half speed and extracts 90 cubic metres per hour; the motor takes 14 W.",
+          "de": "Das Laufrad läuft mit halber Drehzahl und saugt 90 Kubikmeter je Stunde ab; der Motor nimmt 14 W auf."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 18
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "blades": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hub": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "extract": 0.5
+          },
+          "operating": {
+            "fan": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "high",
+        "title": {
+          "en": "High speed",
+          "de": "Große Stufe"
+        },
+        "description": {
+          "en": "The rotor runs at full speed and extracts 180 cubic metres per hour; the motor takes 28 W.",
+          "de": "Das Laufrad läuft mit voller Drehzahl und saugt 180 Kubikmeter je Stunde ab; der Motor nimmt 28 W auf."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 36
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "blades": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hub": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "extract": 1
+          },
+          "operating": {
+            "fan": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "spin",
+        "title": {
+          "en": "Spin up and speed up",
+          "de": "Hochlaufen und beschleunigen"
+        },
+        "description": {
+          "en": "The blades start from rest, reach the low stage after one second and the high stage after four; the shown turning rate is slowed to 180 and 360 degrees per second so that the blades stay readable.",
+          "de": "Die Flügel laufen aus dem Stillstand an, erreichen die kleine Stufe nach einer Sekunde und die große nach vier; die gezeigte Drehrate ist auf 180 und 360 Grad je Sekunde verlangsamt, damit die Flügel lesbar bleiben."
+        },
+        "durationS": 6,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "in"
+          },
+          {
+            "t": 1,
+            "pose": "low",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 90
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "low",
+            "ease": "in",
+            "bones": {
+              "rotor": {
+                "angleDeg": 450
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "high",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 810
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "high",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 1530
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "start",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Starting",
+              "de": "Anlaufen"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 1,
+            "toS": 3,
+            "title": {
+              "en": "Low stage",
+              "de": "Kleine Stufe"
+            }
+          },
+          {
+            "id": "high",
+            "fromS": 3,
+            "toS": 6,
+            "title": {
+              "en": "High stage",
+              "de": "Große Stufe"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "operating",
+            "title": {
+              "en": "Fan switched on",
+              "de": "Ventilator eingeschaltet"
+            },
+            "target": "fan"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.5
+              },
+              {
+                "t": 3,
+                "v": 0.5
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:extract",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.5
+              },
+              {
+                "t": 3,
+                "v": 0.5
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "speed-steps",
+        "title": {
+          "en": "Speed steps and switch off",
+          "de": "Stufen und Ausschalten"
+        },
+        "description": {
+          "en": "The fan is switched on at the low stage, goes to the high stage after one minute and is switched off after two more; the motor warms and cools.",
+          "de": "Der Ventilator wird auf der kleinen Stufe eingeschaltet, geht nach einer Minute auf die große Stufe und wird nach zwei weiteren ausgeschaltet; der Motor erwärmt sich und kühlt ab."
+        },
+        "durationS": 360,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "low",
+            "ease": "step"
+          },
+          {
+            "t": 65,
+            "pose": "high",
+            "ease": "step"
+          },
+          {
+            "t": 185,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 360,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 360
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 360
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 5,
+            "toS": 65,
+            "title": {
+              "en": "Low stage",
+              "de": "Kleine Stufe"
+            }
+          },
+          {
+            "id": "high",
+            "fromS": 65,
+            "toS": 185,
+            "title": {
+              "en": "High stage",
+              "de": "Große Stufe"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 185,
+            "toS": 360,
+            "title": {
+              "en": "Off, cooling",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 185,
+            "kind": "shutdown",
+            "title": {
+              "en": "Fan switched off",
+              "de": "Ventilator ausgeschaltet"
+            },
+            "target": "fan"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:fan",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.5
+              },
+              {
+                "t": 65,
+                "v": 1
+              },
+              {
+                "t": 185,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:extract",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0.5
+              },
+              {
+                "t": 65,
+                "v": 1
+              },
+              {
+                "t": 185,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "fan",
+          "title": {
+            "en": "Fan",
+            "de": "Ventilator"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Low stage (90 m3/h, 14 W)",
+                "de": "Kleine Stufe (90 m3/h, 14 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "High stage (180 m3/h, 28 W)",
+                "de": "Große Stufe (180 m3/h, 28 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Plate and housing ring",
+            "de": "Platte und Gehäusering"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "abs-plastic",
+          "areaM2": 0.07,
+          "characteristicLengthM": 0.22,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "ABS shell 2.5 mm",
+                "de": "ABS-Schale 2,5 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "operating": {
+            "key": "fan",
+            "heatW": 6
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "blades",
+          "title": {
+            "en": "Blades",
+            "de": "Flügel"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-plastic",
+          "areaM2": 0.015,
+          "characteristicLengthM": 0.06,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "blade",
+              "title": {
+                "en": "ABS blade 1.5 mm",
+                "de": "ABS-Flügel 1,5 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.007,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "hub",
+          "title": {
+            "en": "Motor hub",
+            "de": "Motornabe"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "motor-housing",
+          "areaM2": 0.009,
+          "characteristicLengthM": 0.068,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "can",
+              "title": {
+                "en": "Steel motor can 0.8 mm",
+                "de": "Stahlbecher des Motors 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "motor-housing",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 6300,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 6300,
+          "operating": {
+            "key": "fan",
+            "heatW": 5
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "extract",
+          "kind": "fan",
+          "title": {
+            "en": "Extract air through the fan opening",
+            "de": "Abluft durch die Ventilatoröffnung"
+          },
+          "anchor": "outlet",
+          "directionDeg": 0,
+          "diameterM": 0.176,
+          "operatingKey": "fan",
+          "volumeFlowM3S": 0.05,
+          "temperatureRiseK": 0.3,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "iso-5801-2017"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 28 W at full speed end entirely as heat: 5 W at the motor hub (about 65 degC) and 6 W at the plate and ring; the airstream carries the remaining 17 W as a temperature rise of 0.3 K (17 W / (0.05 m3/s x 1.2 kg/m3 x 1005 J/kgK) = 0.28 K, rounded).",
+          "de": "Die 28 W auf voller Stufe enden vollständig als Wärme: 5 W an der Motornabe (etwa 65 degC) und 6 W an Platte und Ring; der Luftstrom trägt die übrigen 17 W als Temperaturerhöhung von 0,3 K (17 W / (0,05 m3/s x 1,2 kg/m3 x 1005 J/kgK) = 0,28 K, gerundet)."
+        },
+        {
+          "en": "The real discharge leaves normal to the drawing plane (through the wall); the emitter carries a nominal in-plane direction of 0 degrees so that the transport layers show a stream, and a mirrored cast flips it.",
+          "de": "Die echte Ausblasrichtung steht senkrecht zur Zeichenebene (durch die Wand); der Emitter trägt eine nominelle Richtung von 0 Grad in der Ebene, damit die Transportebenen einen Strom zeigen, und ein gespiegelter Cast kehrt sie um."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-screw-top",
+        "wall-screw-bottom"
+      ],
+      "assumptions": [
+        {
+          "en": "The 0.9 kg fan hangs on the upper screw (pin) and leans against the wall at the lower screw (roller): the pair carries the weight and the small overturning moment of the 90 mm deep housing.",
+          "de": "Der 0,9 kg schwere Ventilator hängt an der oberen Schraube (Festlager) und lehnt an der unteren Schraube an der Wand (Rollenlager): das Paar trägt das Gewicht und das kleine Kippmoment des 90 mm tiefen Gehäuses."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "high",
+      "defaultClip": "spin",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

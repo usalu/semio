@@ -43,7 +43,7 @@ export function pickRepresentation(asset: Asset, requested: number): Picked {
   if (preset !== undefined) {
     const decision = asset.representations[`${preset}`];
     if (decision?.status === "authored") return { kind: "authored", requested, denominator: preset, exact: true, representation: decision };
-    if (decision?.status === "unavailable") return { kind: "unavailable", requested, reason: decision.reason, limitingFeature: decision.limitingFeature, limitingSizeM: decision.limitingSizeM, supported, alternatives: decision.alternatives };
+    if (decision?.status === "unavailable") return { kind: "unavailable", requested, cause: decision.cause, reason: decision.reason, limitingFeature: decision.limitingFeature, limitingSizeM: decision.limitingSizeM, supported, alternatives: decision.alternatives };
   }
   const inside = supported.filter((denominator) => {
     const range = (asset.representations[`${denominator}`] as AuthoredRepresentation).validRange;
@@ -55,6 +55,7 @@ export function pickRepresentation(asset: Asset, requested: number): Picked {
   }
   return {
     kind: "unavailable",
+    cause: "outside-valid-range",
     requested,
     reason: { en: `1:${requested} lies outside the valid range of every representation of this asset.`, de: `1:${requested} liegt außerhalb des Gültigkeitsbereichs jeder Darstellung dieses Assets.` },
     limitingFeature: null,

@@ -352,6 +352,50 @@
               "material": "equipment-housing"
             },
             {
+              "id": "l-sleeve",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
+              "id": "l-stage",
+              "bone": "stage-left",
+              "role": "body",
+              "z": 2.45,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.5,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "steel-desk",
+              "material": "steel-desk"
+            },
+            {
               "id": "l-column",
               "bone": "column-left",
               "role": "body",
@@ -411,6 +455,52 @@
               "material": "equipment-housing"
             },
             {
+              "id": "r-sleeve",
+              "bone": "foot-right",
+              "role": "body",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "penMm": 0.316
+            },
+            {
+              "id": "r-stage",
+              "bone": "stage-right",
+              "role": "body",
+              "z": 2.45,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.5,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "penMm": 0.316
+            },
+            {
               "id": "r-column",
               "bone": "column-right",
               "role": "body",
@@ -430,10 +520,9 @@
               ],
               "closed": false,
               "region": "steel-desk",
-              "material": "steel-desk"
-            ,
+              "material": "steel-desk",
               "penMm": 0.316
-             },
+            },
             {
               "id": "top-board",
               "bone": "top",
@@ -506,16 +595,259 @@
               ],
               "closed": false,
               "region": "laptop-lid",
-              "material": "equipment-housing"
-            ,
+              "material": "equipment-housing",
               "penMm": 0.317
-             }
+            }
+          ],
+          "front": [
+            {
+              "id": "l-plate",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.01
+                ],
+                [
+                  0.3,
+                  0.01
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "l-drive",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-left",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.16,
+              "y": 0.0,
+              "w": 0.12,
+              "h": 0.15
+            },
+            {
+              "id": "r-drive",
+              "bone": "foot-right",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-right",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.0,
+              "w": 0.12,
+              "h": 0.15
+            },
+            {
+              "id": "l-sleeve",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.4,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  0.4
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "l-stage",
+              "bone": "stage-left",
+              "role": "body",
+              "z": 2.45,
+              "filled": false,
+              "tone": 0.4,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.05
+                ],
+                [
+                  0.0,
+                  0.55
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "l-column",
+              "bone": "column-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  0.695
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": false,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.7075
+                ],
+                [
+                  0.4,
+                  0.7075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-rail",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.635,
+              "w": 0.06,
+              "h": 0.06
+            },
+            {
+              "id": "monitor-block",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0.72,
+              "w": 0.04,
+              "h": 0.46
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0.735
+                ],
+                [
+                  0.2,
+                  0.735
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.317
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.4,
+              "w": 1.6,
+              "h": 0.8
+            },
+            {
+              "id": "monitor-block",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.11,
+              "w": 0.6,
+              "h": 0.08
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.7,
+              "y": -0.15,
+              "w": 0.25,
+              "h": 0.35,
+              "penMm": 0.317
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Composed desk sign 3.2 x 2.4 mm: a top line on two column strokes with a solid monitor block above it; the leg space under the top (1.4 mm) stays open.",
-            "de": "Zusammengesetztes Tischzeichen 3,2 x 2,4 mm: eine Plattenlinie auf zwei Säulenstrichen mit einem Monitorblock darüber; der Beinraum unter der Platte (1,4 mm) bleibt offen."
+            "en": "Composed desk sign 3.2 x 2.4 mm: a top line on two column strokes with a solid monitor block above it; the leg space under the top (1.4 mm) stays open. Front view: the end of the desk with the foot plate, the single column, the two drive boxes side by side, the thin top, the rail under it, the monitor panel seen edge-on and the closed laptop. Plan: the top board as one plate with the monitor as a bar at the rear and the laptop in front of it; the legs are hidden below the top. The telescopic leg is drawn as sleeve, stage and column lines so it stays attached to the foot at every height.",
+            "de": "Zusammengesetztes Tischzeichen 3,2 x 2,4 mm: eine Plattenlinie auf zwei Säulenstrichen mit einem Monitorblock darüber; der Beinraum unter der Platte (1,4 mm) bleibt offen. Vorderansicht: die Stirnseite des Tisches mit Fußplatte, der einen Säule, den beiden Antriebskästen nebeneinander, der dünnen Platte, der Schiene darunter, dem Bildschirm von der Kante und dem geschlossenen Laptop. Grundriss: die Tischplatte als eine Fläche mit dem Bildschirm als Balken hinten und dem Laptop davor; die Beine verschwinden unter der Platte. Das Teleskopbein ist als Hülsen-, Stufen- und Säulenlinie gezeichnet, damit es in jeder Höhe am Fuß anschließt."
           },
           "retained": {
             "en": "Overall width and height, top height (0.72 m), monitor block, motor pods at the column feet, the laptop on the top.",
@@ -886,12 +1218,285 @@
               "region": "laptop-lid",
               "material": "equipment-housing"
             }
+          ],
+          "front": [
+            {
+              "id": "l-plate",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.008
+                ],
+                [
+                  0.3,
+                  0.008
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "l-sleeve",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.28,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.012,
+              "w": 0.07,
+              "h": 0.388,
+              "penMm": 0.13
+            },
+            {
+              "id": "l-drive",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-left",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.16,
+              "y": 0.012,
+              "w": 0.12,
+              "h": 0.138,
+              "penMm": 0.13
+            },
+            {
+              "id": "r-drive",
+              "bone": "foot-right",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-right",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.012,
+              "w": 0.12,
+              "h": 0.138,
+              "penMm": 0.13
+            },
+            {
+              "id": "l-stage",
+              "bone": "stage-left",
+              "role": "body",
+              "z": 3.0,
+              "filled": true,
+              "tone": 0.42,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.05
+                ],
+                [
+                  0.03,
+                  0.05
+                ],
+                [
+                  0.03,
+                  0.55
+                ],
+                [
+                  -0.03,
+                  0.55
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.13,
+              "followTip": true
+            },
+            {
+              "id": "l-column",
+              "bone": "column-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.025,
+                  0.25
+                ],
+                [
+                  0.025,
+                  0.25
+                ],
+                [
+                  0.025,
+                  0.695
+                ],
+                [
+                  -0.025,
+                  0.695
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.13,
+              "followTip": true
+            },
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "rect",
+              "x": -0.4,
+              "y": 0.695,
+              "w": 0.8,
+              "h": 0.03
+            },
+            {
+              "id": "top-rail",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.635,
+              "w": 0.05,
+              "h": 0.05,
+              "penMm": 0.13
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.15,
+                  0.725
+                ],
+                [
+                  0.15,
+                  0.835
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0.815,
+              "w": 0.04,
+              "h": 0.365
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0.735
+                ],
+                [
+                  0.2,
+                  0.735
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.4,
+              "w": 1.6,
+              "h": 0.8
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.13,
+              "w": 0.6,
+              "h": 0.04
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.7,
+              "y": -0.15,
+              "w": 0.25,
+              "h": 0.35
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Front elevation 8 x 5.9 mm: two columns with motor pods on foot lines, the top over a cross rail, a dark monitor panel on a stroke neck, a laptop stroke.",
-            "de": "Vorderansicht 8 x 5,9 mm: zwei Säulen mit Motorgehäusen auf Fußlinien, die Platte über einem Querträger, ein dunkles Monitorpaneel auf Halsstrich, ein Laptopstrich."
+            "en": "Front elevation 8 x 5.9 mm: two columns with motor pods on foot lines, the top over a cross rail, a dark monitor panel on a stroke neck, a laptop stroke. Front view: the end of the desk with the foot plate, the sleeve, the two drive boxes, the stage and the column that slide up, the top with the rail under it, the monitor panel on its neck and the laptop. Plan: the top board with the monitor bar and the laptop; the legs are hidden below.",
+            "de": "Vorderansicht 8 x 5,9 mm: zwei Säulen mit Motorgehäusen auf Fußlinien, die Platte über einem Querträger, ein dunkles Monitorpaneel auf Halsstrich, ein Laptopstrich. Vorderansicht: die Stirnseite mit Fußplatte, Hülse, den beiden Antriebskästen, Stufe und Säule, die nach oben fahren, der Platte mit der Schiene darunter, dem Bildschirm auf seinem Hals und dem Laptop. Grundriss: die Tischplatte mit dem Bildschirmbalken und dem Laptop; die Beine liegen verdeckt darunter."
           },
           "retained": {
             "en": "Overall size, both columns as three nested stages, motor pods, the top with the rail beneath, monitor panel, neck, laptop.",
@@ -1378,12 +1983,387 @@
               "material": "equipment-housing",
               "penMm": 0.25
             }
+          ],
+          "front": [
+            {
+              "id": "l-plate",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.008
+                ],
+                [
+                  0.3,
+                  0.008
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "l-sleeve",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.28,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": -0.032,
+              "y": 0.012,
+              "w": 0.064,
+              "h": 0.388,
+              "penMm": 0.25
+            },
+            {
+              "id": "l-drive",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-left",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.012,
+              "w": 0.1,
+              "h": 0.138
+            },
+            {
+              "id": "r-drive",
+              "bone": "foot-right",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-right",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.012,
+              "w": 0.1,
+              "h": 0.138
+            },
+            {
+              "id": "l-stage",
+              "bone": "stage-left",
+              "role": "body",
+              "z": 3.0,
+              "filled": true,
+              "tone": 0.42,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.027,
+                  0.05
+                ],
+                [
+                  0.027,
+                  0.05
+                ],
+                [
+                  0.027,
+                  0.55
+                ],
+                [
+                  -0.027,
+                  0.55
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.25,
+              "followTip": true
+            },
+            {
+              "id": "l-column",
+              "bone": "column-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.022,
+                  0.25
+                ],
+                [
+                  0.022,
+                  0.25
+                ],
+                [
+                  0.022,
+                  0.695
+                ],
+                [
+                  -0.022,
+                  0.695
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.25,
+              "followTip": true
+            },
+            {
+              "id": "l-bracket",
+              "bone": "column-left",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": -0.045,
+              "y": 0.66,
+              "w": 0.09,
+              "h": 0.035,
+              "penMm": 0.25
+            },
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "rect",
+              "x": -0.4,
+              "y": 0.695,
+              "w": 0.8,
+              "h": 0.025
+            },
+            {
+              "id": "top-rail",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.62,
+              "w": 0.05,
+              "h": 0.05,
+              "penMm": 0.25
+            },
+            {
+              "id": "top-cable-tray",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.62
+                ],
+                [
+                  0.2,
+                  0.58
+                ],
+                [
+                  0.3,
+                  0.58
+                ],
+                [
+                  0.3,
+                  0.62
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.72,
+              "w": 0.2,
+              "h": 0.012,
+              "penMm": 0.25
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.135,
+                  0.726
+                ],
+                [
+                  0.165,
+                  0.726
+                ],
+                [
+                  0.163,
+                  0.845
+                ],
+                [
+                  0.137,
+                  0.845
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0.815,
+              "w": 0.04,
+              "h": 0.365,
+              "r": 0.012
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.72,
+              "w": 0.35,
+              "h": 0.02,
+              "penMm": 0.25
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.4,
+              "w": 1.6,
+              "h": 0.8
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.26,
+              "y": 0.05,
+              "w": 0.18,
+              "h": 0.2
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.13,
+              "w": 0.6,
+              "h": 0.04,
+              "r": 0.012
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.7,
+              "y": -0.15,
+              "w": 0.25,
+              "h": 0.35,
+              "penMm": 0.25
+            },
+            {
+              "id": "laptop-seam",
+              "bone": "top",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.705,
+                  0.17
+                ],
+                [
+                  0.945,
+                  0.17
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Front elevation 16 x 11.8 mm: two columns on foot lines with motor pods, a cross rail and cable tray under the top, the top, a monitor on a neck and a closed laptop.",
-            "de": "Vorderansicht 16 x 11,8 mm: zwei Säulen auf Fußlinien mit Motorgehäusen, Querträger und Kabelwanne unter der Platte, die Platte, Monitor auf Hals und geschlossener Laptop."
+            "en": "Front elevation 16 x 11.8 mm: two columns on foot lines with motor pods, a cross rail and cable tray under the top, the top, a monitor on a neck and a closed laptop. Front view: the end of the desk with plate, sleeve, drive boxes, the stage and column with its bracket, the top with rail and cable tray, the monitor with base, neck and panel and the closed laptop. Plan: the top board, the monitor with its base footprint and its thin panel, and the laptop with its hinge line.",
+            "de": "Vorderansicht 16 x 11,8 mm: zwei Säulen auf Fußlinien mit Motorgehäusen, Querträger und Kabelwanne unter der Platte, die Platte, Monitor auf Hals und geschlossener Laptop. Vorderansicht: die Stirnseite mit Platte, Hülse, Antriebskästen, Stufe und Säule mit Konsole, der Platte mit Schiene und Kabelkanal, dem Bildschirm mit Fuß, Hals und Panel und dem geschlossenen Laptop. Grundriss: die Tischplatte, der Bildschirm mit der Standfläche seines Fußes und seinem dünnen Panel und der Laptop mit seiner Scharnierlinie."
           },
           "retained": {
             "en": "Both columns as three nested tubes with 0.25 mm outlines (the stage steps still show as joints), motor pods, bracket, rail, cable tray, top, monitor panel, neck and stand line, laptop.",
@@ -2256,12 +3236,661 @@
               "region": "laptop-lid",
               "material": "equipment-housing"
             }
+          ],
+          "front": [
+            {
+              "id": "l-plate",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "path",
+              "d": "M -0.3 0 L 0.3 0 L 0.3 0.008 C 0.3 0.016 0.25 0.016 0.15 0.016 L -0.15 0.016 C -0.25 0.016 -0.3 0.016 -0.3 0.008 Z"
+            },
+            {
+              "id": "l-sleeve",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.28,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": -0.032,
+              "y": 0.012,
+              "w": 0.064,
+              "h": 0.388,
+              "r": 0.004,
+              "penMm": 0.35
+            },
+            {
+              "id": "l-sleeve-collar",
+              "bone": "foot-left",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.18,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": -0.036,
+              "y": 0.385,
+              "w": 0.072,
+              "h": 0.02,
+              "r": 0.003
+            },
+            {
+              "id": "l-drive",
+              "bone": "foot-left",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-left",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.012,
+              "w": 0.1,
+              "h": 0.148,
+              "r": 0.012,
+              "penMm": 0.35
+            },
+            {
+              "id": "r-drive",
+              "bone": "foot-right",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "drive-right",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.012,
+              "w": 0.1,
+              "h": 0.148,
+              "r": 0.012,
+              "penMm": 0.35
+            },
+            {
+              "id": "l-drive-vent",
+              "bone": "foot-left",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "region": "drive-left",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  0.12
+                ],
+                [
+                  -0.07,
+                  0.12
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "r-drive-vent",
+              "bone": "foot-right",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "region": "drive-right",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.07,
+                  0.12
+                ],
+                [
+                  0.13,
+                  0.12
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "l-stage",
+              "bone": "stage-left",
+              "role": "body",
+              "z": 3.0,
+              "filled": true,
+              "tone": 0.42,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.027,
+                  0.05
+                ],
+                [
+                  0.027,
+                  0.05
+                ],
+                [
+                  0.027,
+                  0.55
+                ],
+                [
+                  -0.027,
+                  0.55
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "l-stage-groove",
+              "bone": "stage-left",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.46
+                ],
+                [
+                  0.0,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "l-stage-cap",
+              "bone": "stage-left",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.029,
+                  0.538
+                ],
+                [
+                  0.029,
+                  0.538
+                ],
+                [
+                  0.029,
+                  0.55
+                ],
+                [
+                  -0.029,
+                  0.55
+                ]
+              ],
+              "closed": true,
+              "followTip": true
+            },
+            {
+              "id": "l-column",
+              "bone": "column-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.022,
+                  0.25
+                ],
+                [
+                  0.022,
+                  0.25
+                ],
+                [
+                  0.022,
+                  0.695
+                ],
+                [
+                  -0.022,
+                  0.695
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.35,
+              "followTip": true
+            },
+            {
+              "id": "l-column-groove",
+              "bone": "column-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.27
+                ],
+                [
+                  0.0,
+                  0.64
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "l-bracket",
+              "bone": "column-left",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.22,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": -0.045,
+              "y": 0.66,
+              "w": 0.09,
+              "h": 0.035
+            },
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "hatch": "board-grain",
+              "kind": "rect",
+              "x": -0.4,
+              "y": 0.695,
+              "w": 0.8,
+              "h": 0.025,
+              "r": 0.004,
+              "penMm": 0.5
+            },
+            {
+              "id": "top-edge",
+              "bone": "top",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.396,
+                  0.7075
+                ],
+                [
+                  0.396,
+                  0.7075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-rail",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.62,
+              "w": 0.05,
+              "h": 0.05,
+              "r": 0.003,
+              "penMm": 0.5
+            },
+            {
+              "id": "top-cable-tray",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "region": "steel-desk",
+              "material": "steel-desk",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.62
+                ],
+                [
+                  0.2,
+                  0.58
+                ],
+                [
+                  0.3,
+                  0.58
+                ],
+                [
+                  0.3,
+                  0.62
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-keypad",
+              "bone": "top",
+              "role": "detail",
+              "z": 4.3,
+              "filled": true,
+              "tone": 0.15,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "rect",
+              "x": -0.4,
+              "y": 0.675,
+              "w": 0.02,
+              "h": 0.02,
+              "r": 0.003,
+              "penMm": 0.13
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.72,
+              "w": 0.2,
+              "h": 0.012,
+              "r": 0.005,
+              "penMm": 0.3
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.135,
+                  0.732
+                ],
+                [
+                  0.165,
+                  0.732
+                ],
+                [
+                  0.162,
+                  0.845
+                ],
+                [
+                  0.138,
+                  0.845
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.3
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0.815,
+              "w": 0.04,
+              "h": 0.365,
+              "r": 0.012,
+              "penMm": 0.4
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "top",
+              "role": "glazing",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.1,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.172,
+              "y": 0.83,
+              "w": 0.004,
+              "h": 0.335
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.72,
+              "w": 0.35,
+              "h": 0.02,
+              "r": 0.003,
+              "penMm": 0.3
+            },
+            {
+              "id": "laptop-seam",
+              "bone": "top",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.145,
+                  0.729
+                ],
+                [
+                  0.195,
+                  0.729
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-board",
+              "bone": "top",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.58,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "hatch": "board-grain",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.4,
+              "w": 1.6,
+              "h": 0.8,
+              "r": 0.004,
+              "penMm": 0.5
+            },
+            {
+              "id": "top-edge",
+              "bone": "top",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "top-board",
+              "material": "particleboard-laminate",
+              "kind": "poly",
+              "points": [
+                [
+                  0.004,
+                  -0.396
+                ],
+                [
+                  1.596,
+                  -0.396
+                ],
+                [
+                  1.596,
+                  0.396
+                ],
+                [
+                  0.004,
+                  0.396
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.26,
+              "y": 0.05,
+              "w": 0.18,
+              "h": 0.2,
+              "r": 0.005,
+              "penMm": 0.3
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "top",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.05,
+              "y": 0.13,
+              "w": 0.6,
+              "h": 0.04,
+              "r": 0.012,
+              "penMm": 0.4
+            },
+            {
+              "id": "monitor-screen-line",
+              "bone": "top",
+              "role": "detail",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.07,
+                  0.126
+                ],
+                [
+                  0.63,
+                  0.126
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "laptop",
+              "bone": "top",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "rect",
+              "x": 0.7,
+              "y": -0.15,
+              "w": 0.25,
+              "h": 0.35,
+              "r": 0.003,
+              "penMm": 0.3
+            },
+            {
+              "id": "laptop-seam",
+              "bone": "top",
+              "role": "detail",
+              "z": 5.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "laptop-lid",
+              "material": "equipment-housing",
+              "kind": "poly",
+              "points": [
+                [
+                  0.705,
+                  0.17
+                ],
+                [
+                  0.945,
+                  0.17
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Front elevation 32 x 23.6 mm: two T-foot lifting columns, each a foot sleeve with a motor pod, a middle stage and an inner column with bracket, a cross rail, the laminated top, and on it a monitor on its stand and a closed laptop.",
-            "de": "Vorderansicht 32 x 23,6 mm: zwei Hubsäulen auf T-Füßen, je mit Fußhülse und Motorgehäuse, Mittelstufe und Innensäule mit Konsole, Querträger, die laminierte Platte und darauf ein Monitor mit Fuß und ein geschlossener Laptop."
+            "en": "Front elevation 32 x 23.6 mm: two T-foot lifting columns, each a foot sleeve with a motor pod, a middle stage and an inner column with bracket, a cross rail, the laminated top, and on it a monitor on its stand and a closed laptop. Front view: the end of the desk with the foot plate, sleeve with collar, the two drive boxes with vents, the stage and the column with their grooves and bracket, the chamfered top with edge line, rail and cable tray, the keypad under the front edge, the monitor with base, neck, panel and screen and the closed laptop. Plan: the top board with its edge line, the keypad outline, the monitor base footprint and its thin panel with the bezel line, and the laptop with its hinge line.",
+            "de": "Vorderansicht 32 x 23,6 mm: zwei Hubsäulen auf T-Füßen, je mit Fußhülse und Motorgehäuse, Mittelstufe und Innensäule mit Konsole, Querträger, die laminierte Platte und darauf ein Monitor mit Fuß und ein geschlossener Laptop. Vorderansicht: die Stirnseite mit Fußplatte, Hülse mit Manschette, den beiden Antriebskästen mit Lüftungsschlitzen, Stufe und Säule mit Nuten und Konsole, der Platte mit Kantenlinie, Schiene und Kabelkanal, dem Bedienfeld unter der Vorderkante, dem Bildschirm mit Fuß, Hals, Panel und Schirm und dem geschlossenen Laptop. Grundriss: die Tischplatte mit ihrer Kantenlinie, der Umriss des Bedienfelds, die Standfläche des Bildschirmfußes und sein dünnes Panel mit der Blendenlinie und der Laptop mit seiner Scharnierlinie."
           },
           "retained": {
             "en": "Foot plates, the three telescoping stages with their grooves and collar, motor pods with vent slots, bracket, cross rail with line and cable tray, top with edge, keypad, monitor with stand, neck, bezel mark and glazed screen, laptop with seam.",
@@ -2281,7 +3910,7 @@
           },
           "hatching": {
             "en": "Laminate grain as horizontal lines every 0.6 mm only inside the 0.5 mm thick top (hatch fills the top once); the 0.025 m top is only 0.5 mm tall, so one grain line is visible at most.",
-            "de": "Dekormaserung als waagrechte Linien alle 0,6 mm nur in der 0,5 mm dicken Platte (höchstens eine Linie sichtbar)."
+            "de": "Dekormaserung als waagrechte Linien alle 0,6 mm nur in der 0,5 mm dicken Platte (0,025 m Tischplatte, nur 0,5 mm hoch: höchstens eine Linie sichtbar)."
           },
           "styles": {
             "en": "Top light (0.58), steel mid (0.28-0.55), drives dark (0.22), monitor dark (0.2) with a light glazed screen, laptop 0.4; body pen 0.35-0.4, detail 0.25.",
@@ -2903,7 +4532,7 @@
               "kind": "metal",
               "material": "steel-desk",
               "thicknessM": 0.002,
-              "resistanceM2KW": 4e-05,
+              "resistanceM2KW": 0.00004,
               "source": "literature",
               "heatCapacityJM2K": 7020,
               "reference": "iso-10456-2007"
@@ -3041,7 +4670,7 @@
               "kind": "metal",
               "material": "equipment-housing",
               "thicknessM": 0.0015,
-              "resistanceM2KW": 9e-06,
+              "resistanceM2KW": 0.000009,
               "source": "literature",
               "heatCapacityJM2K": 3696,
               "reference": "iso-10456-2007"
@@ -3091,9 +4720,6 @@
     "presentation": {
       "defaultPose": "seated-height",
       "defaultClip": "raise-and-lower",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

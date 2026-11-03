@@ -1,7 +1,7 @@
 """🌡️ Independent oracle of the radiation exchange: emitted flux εσT⁴, net longwave exchange with sky, ground and surroundings (view-factor weighted) and the secant coefficient,
 with the CODATA Stefan–Boltzmann constant of scipy and numpy.
 
-Run `uv run --with scipy python -I 🐍️.py [--write]`; without `--write` the fixture's `expected` block is verified, with it the fixture is regenerated.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`; without `--write` the fixture's `expected` block is verified, with it the fixture is regenerated.
 """
 import json
 import sys

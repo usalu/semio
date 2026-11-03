@@ -114,7 +114,7 @@ def test_rounded_skirting_stock_preserves_section_and_closed_native_material():
     from shapely.geometry import Polygon
     from jsonschema import Draft202012Validator
     Draft202012Validator(json.loads(Path(__file__).with_name("🔣️.schema.json").read_text())).validate(CASE)
-    backend=api._surface_finishes();spec=CASE["skirting"]["section"]
+    backend=api.surface_finishes();spec=CASE["skirting"]["section"]
     t,h,r,n=[spec[k] for k in ("thickness","height","round_radius","round_segments")]
     profile=[[0,0],[t,0]]+[[t-r+r*math.cos(i*math.pi/(2*n)),h-r+r*math.sin(i*math.pi/(2*n))] for i in range(n+1)]+[[0,h]]
     area=Polygon(profile).area
@@ -183,7 +183,7 @@ def test_skirting_ownership_cuts_keep_closed_positive_stock_and_independent_volu
     from scipy.spatial import ConvexHull
     from shapely.geometry import Polygon,box
     from collections import Counter
-    backend=api._surface_finishes();spec=CASE["skirting"]["section"]
+    backend=api.surface_finishes();spec=CASE["skirting"]["section"]
     stock=backend.skirting_stock([0,0,0],[2,0,0],[0,1,0],spec,"MAT-PAINTED-WOOD")
     n=len(stock["mesh"]["vertices"])//2;profile=Polygon([[v[1],v[2]] for v in stock["mesh"]["vertices"][:n]])
     expected={"diagonal_end":profile.area*(1-profile.centroid.x),"short_end":profile.area*.005,"half_height":profile.intersection(box(0,0,spec["thickness"],.045)).area*2}
@@ -257,7 +257,7 @@ def test_skirting_source_joint_is_upright_and_keeps_positive_nanometre_stock():
     import numpy as np
     from scipy.spatial import ConvexHull
     from shapely.geometry import Polygon
-    row=CASE["skirting"]["source_joint"];backend=api._surface_finishes()
+    row=CASE["skirting"]["source_joint"];backend=api.surface_finishes()
     stock=backend.skirting_stock(row["start"],row["end"],row["normal"],CASE["skirting"]["section"],"MAT-PAINTED-WOOD")
     assert stock["z0"]==0 and abs(stock["z1"]-.09)<1e-15
     station=row["station"]
@@ -277,7 +277,7 @@ def test_shared_skirting_mitre_planes_match_independent_convex_and_concave_offse
     import numpy as np
     from shapely.geometry import LineString,Polygon
     from shapely.ops import unary_union
-    backend=api._surface_finishes();spec=CASE["skirting"]["section"]
+    backend=api.surface_finishes();spec=CASE["skirting"]["section"]
     for case in CASE["skirting"]["joints"]:
         a,p,b=map(np.asarray,case["path"]);joint=backend.skirting_joint(a.tolist(),p.tolist(),b.tolist(),spec["thickness"])
         d0=(p-a)/np.linalg.norm(p-a);d1=(b-p)/np.linalg.norm(b-p);normal=lambda d:[d[1],-d[0],0.]
@@ -312,7 +312,7 @@ def test_nearly_coincident_stock_support_planes_replay_to_closed_material():
     from scipy.integrate import quad
     from shapely.geometry import Polygon,MultiPoint
     from collections import Counter
-    row=CASE["skirting"]["support_domain"];part=api._surface_finishes().clip_stock(row["stock"],row["planes"]);assert part is not None
+    row=CASE["skirting"]["support_domain"];part=api.surface_finishes().clip_stock(row["stock"],row["planes"]);assert part is not None
     edges=Counter(tuple(sorted((a,b))) for face in part["mesh"]["faces"] for a,b in zip(face,face[1:]+face[:1]));assert set(edges.values())=={2}
     api._polyhedron_part(part["mesh"]["vertices"],part["mesh"]["faces"])
     points=np.asarray(row["stock"]["mesh"]["vertices"]);hull=ConvexHull(points-points[0]);links={tuple(sorted((int(a),int(b)))) for face in hull.simplices for a,b in zip(face,np.roll(face,-1))};domain=Polygon(row["cell"])
@@ -333,7 +333,7 @@ def test_exact_stock_continuation_preserves_owned_rational_operands_and_json_pub
     from fractions import Fraction
     from scipy.spatial import ConvexHull
     import numpy as np
-    backend=api._surface_finishes();row=CASE["skirting"]["support_domain"];raw=deepcopy(row["stock"]);planes=deepcopy(row["planes"])
+    backend=api.surface_finishes();row=CASE["skirting"]["support_domain"];raw=deepcopy(row["stock"]);planes=deepcopy(row["planes"])
     state=backend.clip_stock(raw,[],exact=True)
     for plane in planes:state=backend.clip_stock(state,[plane])
     replay=backend.clip_stock(raw,planes,exact=True)
@@ -356,7 +356,7 @@ def test_stock_planes_and_overlength_retain_original_source_coordinate_relations
     from shapely.geometry import Polygon
     from scipy.spatial import ConvexHull
     import numpy as np
-    row=CASE["skirting"]["plane_provenance"];backend=api._surface_finishes()
+    row=CASE["skirting"]["plane_provenance"];backend=api.surface_finishes()
     stock=backend.skirting_stock(row["start"],row["end"],row["normal"],CASE["skirting"]["section"],"MAT-PAINTED-WOOD",extensions=row["extensions"])
     state=backend.clip_stock(stock,[{"normal":[-1,0,0],"offset":0,"point":row["start"]},{"normal":[1,0,0],"offset":1,"point":row["end"]}],exact=True)
     part=backend.clip_stock(state,[row["plane"]]);assert part is not None
@@ -372,7 +372,7 @@ def test_inferred_back_fitting_clearance_preserves_full_timber_section_and_floor
     from shapely.geometry import Polygon
     from scipy.spatial import ConvexHull
     import numpy as np
-    backend=api._surface_finishes();row=CASE["skirting"]["plane_provenance"];spec=CASE["skirting"]["section"]
+    backend=api.surface_finishes();row=CASE["skirting"]["plane_provenance"];spec=CASE["skirting"]["section"]
     raw=backend.skirting_stock(row["start"],row["end"],row["normal"],spec,"MAT-PAINTED-WOOD")
     fitted=backend.skirting_stock(row["start"],row["end"],row["normal"],spec,"MAT-PAINTED-WOOD",back_clearance=row["back_clearance"])
     assert raw["z0"]==fitted["z0"]==0 and fitted["z1"]==raw["z1"]
@@ -387,7 +387,7 @@ def test_authored_interface_fitting_planes_keep_exact_complements_and_independen
     from shapely.geometry import Polygon
     from scipy.spatial import ConvexHull
     import numpy as np
-    backend=api._surface_finishes();row=CASE["skirting"]["plane_provenance"];spec=CASE["skirting"]["section"]
+    backend=api.surface_finishes();row=CASE["skirting"]["plane_provenance"];spec=CASE["skirting"]["section"]
     raw=backend.skirting_stock(row["start"],row["end"],row["normal"],spec,"MAT-PAINTED-WOOD")
     plane={**row["plane"],"clearance":row["back_clearance"]}
     inside=backend.clip_stock(raw,[plane],exact=True)

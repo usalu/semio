@@ -1,7 +1,7 @@
 """🍃️ Independent oracle of the Penman–Monteith equation: FAO-56 example 18 (Uccle, 6 July, published ET0 = 3.88 mm/day) and further daily cases computed with pyet `pm_fao56`.
 
 The fixture stores the inputs of the FAO-56 reference-crop form (r_a = 208/u2, r_s = 70 s/m, net radiation, mean saturation deficit) and the library result in mm/day.
-Run `uv run --with pyet --with pandas python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import math

@@ -142,10 +142,33 @@ class ClipStyleTest(unittest.TestCase):
 
         runtime = importlib.import_module(MODULE + ".🎬️clip.⚙️runtime.🐍️")
         segment = runtime.load_manifest()[0]["chapters"][0]["segments"][0]
-        state = runtime.segment_state(segment, {"quality": "-ql", "resolution": None, "fps": None})
-        for path in self.theme.source_files():
+        state = runtime.segment_state(segment, {"language": "en", "quality": "-ql", "resolution": None, "fps": None})
+        visuals = Path(self.visuals.__file__).parent
+        for path in (*self.theme.source_files(), visuals / "🧍️staffage/🐍️.py", visuals / "🧍️staffage/🔣️.json", visuals / "🔣️icons/🔣️.json"):
             with self.subTest(source=str(path.relative_to(ROOT))):
                 self.assertEqual(state["sources"][path.resolve().as_posix()], sha256(path.read_bytes()).hexdigest())
+
+    def test_render_key_names_the_cast_keys_of_every_cast_a_clip_draws_and_follows_the_exporter_and_catalog(self):
+        from unittest import mock
+
+        runtime = importlib.import_module(MODULE + ".🎬️clip.⚙️runtime.🐍️")
+        staffage = importlib.import_module(MODULE + ".🎨️visuals.🧍️staffage.🐍️")
+        settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": None}
+        segments = [segment for video in runtime.load_manifest() for chapter in video["chapters"] for segment in chapter["segments"]]
+        drawing = {}
+        for segment in segments:
+            state = runtime.segment_state(segment, settings)
+            if state["casts"]:
+                drawing[segment["scene"]] = (segment, state)
+        self.assertGreaterEqual(len(drawing), 20)
+        segment, state = next(iter(drawing.values()))
+        self.assertTrue(all(key == staffage.cast_key(staffage._entry(cast)) for cast, key in state["casts"].items()))
+        with mock.patch.object(staffage, "_source_digest", lambda root=None: "exporter-changed"):
+            changed = runtime.segment_state(segment, settings)
+        self.assertEqual(sorted(changed["casts"]), sorted(state["casts"]))
+        self.assertTrue(all(changed["casts"][cast] != key for cast, key in state["casts"].items()))
+        self.assertNotEqual(changed, state)
+        self.assertFalse(runtime.reusable_clip(Path(tempfile.gettempdir()) / "absent.mp4", state))
 
     def test_window_frame_is_one_fused_square_corner_polygon(self):
         import numpy as np

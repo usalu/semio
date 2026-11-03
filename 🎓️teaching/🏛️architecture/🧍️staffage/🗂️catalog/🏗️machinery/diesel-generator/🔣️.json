@@ -137,7 +137,7 @@
      "mass": {
       "kg": 6554,
       "comX": 0,
-      "comY": 1.0,
+      "comY": 1,
       "distribution": "point",
       "source": "authored-estimate"
      }
@@ -260,42 +260,79 @@
   },
   "anchors": [
    {
-    "id": "contact-l",
+    "id": "contact-a-l",
     "bone": "container",
     "x": -2.9,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Corner casting support, left",
-     "de": "Eckbeschlag-Auflager links"
+     "en": "Corner casting support, end at the negative x of the drawing (left)",
+     "de": "Eckbeschlag-Auflager, Ende bei negativem x der Zeichnung (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.3,
-    "footprintWidthM": 2.0,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.3,
+    "frictionCoefficient": 0.6,
+    "z": 1.13
    },
    {
-    "id": "contact-r",
+    "id": "contact-a-r",
     "bone": "container",
-    "x": 2.9,
-    "y": 0.0,
+    "x": -2.9,
+    "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Corner casting support, right",
-     "de": "Eckbeschlag-Auflager rechts"
+     "en": "Corner casting support, end at the negative x of the drawing (right)",
+     "de": "Eckbeschlag-Auflager, Ende bei negativem x der Zeichnung (rechts)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.3,
-    "footprintWidthM": 2.0,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.3,
+    "frictionCoefficient": 0.6,
+    "z": -1.13
+   },
+   {
+    "id": "contact-b-l",
+    "bone": "container",
+    "x": 2.9,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Corner casting support, end at the positive x of the drawing (left)",
+     "de": "Eckbeschlag-Auflager, Ende bei positivem x der Zeichnung (links)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.3,
+    "frictionCoefficient": 0.6,
+    "z": 1.13
+   },
+   {
+    "id": "contact-b-r",
+    "bone": "container",
+    "x": 2.9,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Corner casting support, end at the positive x of the drawing (right)",
+     "de": "Eckbeschlag-Auflager, Ende bei positivem x der Zeichnung (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.3,
+    "frictionCoefficient": 0.6,
+    "z": -1.13
    },
    {
     "id": "stack-mouth",
-    "bone": "stack",
-    "x": 0.33,
-    "y": 0.0,
+    "bone": "container",
+    "x": -1.2,
+    "y": 3.47,
+    "z": -0.9,
     "kind": "emitter",
     "title": {
      "en": "Exhaust stack mouth",
@@ -316,7 +353,7 @@
    {
     "id": "fuel-cog",
     "bone": "container",
-    "x": 0.0,
+    "x": 0,
     "y": 0.1,
     "kind": "load",
     "title": {
@@ -326,1561 +363,6 @@
    }
   ],
   "representations": {
-   "500": {
-    "status": "authored",
-    "denominator": 500,
-    "validRange": {
-     "minDenominator": 350,
-     "maxDenominator": 1000
-    },
-    "pens": {
-     "body": 0.15,
-     "detail": null,
-     "texture": null,
-     "glazing": 0.13,
-     "ground": 0.25
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.03,
-         0.0
-        ],
-        [
-         3.03,
-         0.0
-        ],
-        [
-         3.03,
-         2.59
-        ],
-        [
-         -3.03,
-         2.59
-        ]
-       ],
-       "closed": true,
-       "id": "container-body",
-       "bone": "container",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.5,
-       "regions": [
-        "enclosure-walls",
-        "roof",
-        "inlet-louvres",
-        "skid-tank"
-       ],
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.2,
-         2.92
-        ],
-        [
-         0.1705,
-         3.03
-        ],
-        [
-         0.09,
-         3.1105
-        ],
-        [
-         -0.02,
-         3.14
-        ],
-        [
-         -1.78,
-         3.14
-        ],
-        [
-         -1.89,
-         3.1105
-        ],
-        [
-         -1.9705,
-         3.03
-        ],
-        [
-         -2.0,
-         2.92
-        ],
-        [
-         -2.0,
-         2.81
-        ],
-        [
-         -1.9705,
-         2.7
-        ],
-        [
-         -1.89,
-         2.6195
-        ],
-        [
-         -1.78,
-         2.59
-        ],
-        [
-         -0.02,
-         2.59
-        ],
-        [
-         0.09,
-         2.6195
-        ],
-        [
-         0.1705,
-         2.7
-        ],
-        [
-         0.2,
-         2.81
-        ]
-       ],
-       "closed": true,
-       "id": "silencer",
-       "bone": "silencer",
-       "role": "body",
-       "z": 2.5,
-       "filled": true,
-       "tone": 0.35,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.04,
-         0.1
-        ],
-        [
-         -0.04,
-         -0.1
-        ],
-        [
-         0.33,
-         -0.1
-        ],
-        [
-         0.33,
-         0.1
-        ]
-       ],
-       "closed": true,
-       "id": "exhaust-stack",
-       "bone": "stack",
-       "role": "body",
-       "z": 2.6,
-       "filled": true,
-       "tone": 0.2,
-       "region": "exhaust-stack",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         -0.1
-        ],
-        [
-         0.3,
-         -0.1
-        ],
-        [
-         0.3,
-         0.0
-        ],
-        [
-         0.0,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "id": "rain-cap",
-       "bone": "cap-flap",
-       "role": "body",
-       "z": 2.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rain-cap",
-       "material": "galvanised-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.9,
-         2.59
-        ],
-        [
-         3.03,
-         2.59
-        ],
-        [
-         3.03,
-         3.25
-        ],
-        [
-         2.2,
-         3.25
-        ],
-        [
-         1.9,
-         2.95
-        ]
-       ],
-       "closed": true,
-       "id": "discharge-hood",
-       "bone": "outlet-hood",
-       "role": "body",
-       "z": 2.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "discharge-hood",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         -0.1
-        ],
-        [
-         0.63,
-         -0.1
-        ],
-        [
-         0.63,
-         0.0
-        ],
-        [
-         0.0,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "id": "outlet-flap",
-       "bone": "outlet-flap",
-       "role": "body",
-       "z": 2.6,
-       "filled": true,
-       "tone": 0.3,
-       "region": "outlet-flap",
-       "material": "galvanised-steel"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "One closed container block, a roof silencer with its stack and rain cap flap, the discharge hood with its weather flap.",
-      "de": "Ein geschlossener Containerblock, ein Dachschalldämpfer mit Abgasrohr und Regenklappe, die Austrittshaube mit ihrer Wetterklappe."
-     },
-     "retained": {
-      "en": "The 6.06 x 2.59 m container, silencer, 0.2 m stack (0.4 mm), hood and both flaps (they rotate).",
-      "de": "Der Container von 6,06 x 2,59 m, Schalldämpfer, Abgasrohr von 0,2 m (0,4 mm), Haube und beide Klappen (sie drehen)."
-     },
-     "merged": {
-      "en": "Walls, roof, louvres and the base tank are one form.",
-      "de": "Wände, Dach, Lamellen und Grundtank sind eine Form."
-     },
-     "omitted": {
-      "en": "Door lines, louvre patterns, corner castings, clamps, lifting eyes.",
-      "de": "Türlinien, Lamellenmuster, Eckbeschläge, Schellen, Hebeösen."
-     },
-     "thinElements": {
-      "en": "The stack (0.4 mm) is at real width; the flaps are drawn 0.1 to 0.12 m thick (real about 0.05 m), the least thickening that stays above the 0.2 mm feature limit.",
-      "de": "Das Rohr (0,4 mm) ist in Realbreite; die Klappen sind 0,1 bis 0,12 m dick gezeichnet (real etwa 0,05 m), die geringste Verdickung über der Grenze von 0,2 mm."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Container mid-tone, silencer and stack dark, flaps light; pens 0.15 mm.",
-      "de": "Container mittlerer Ton, Schalldämpfer und Rohr dunkel, Klappen hell; Stifte 0,15 mm."
-     },
-     "overlays": {
-      "en": "The container form carries walls, roof, louvres and base tank (merged); every other region has its own form.",
-      "de": "Die Containerform trägt Wände, Dach, Lamellen und Grundtank (zusammengefasst); jede andere Region hat eine eigene Form."
-     }
-    }
-   },
-   "200": {
-    "status": "authored",
-    "denominator": 200,
-    "validRange": {
-     "minDenominator": 150,
-     "maxDenominator": 350
-    },
-    "pens": {
-     "body": 0.18,
-     "detail": 0.13,
-     "texture": null,
-     "glazing": 0.13,
-     "ground": 0.25
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.0294999999999996,
-         0.0
-        ],
-        [
-         3.0305,
-         0.0
-        ],
-        [
-         3.0305,
-         0.2
-        ],
-        [
-         -3.0294999999999996,
-         0.2
-        ]
-       ],
-       "closed": true,
-       "id": "skid-tank",
-       "bone": "container",
-       "role": "body",
-       "z": 1.9,
-       "filled": true,
-       "tone": 0.3,
-       "region": "skid-tank",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.0294999999999996,
-         0.2
-        ],
-        [
-         3.0305,
-         0.2
-        ],
-        [
-         3.0305,
-         2.59
-        ],
-        [
-         -3.0294999999999996,
-         2.59
-        ]
-       ],
-       "closed": true,
-       "id": "wall",
-       "bone": "container",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.55,
-       "region": "enclosure-walls",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.0294999999999996,
-         2.49
-        ],
-        [
-         3.0305,
-         2.49
-        ],
-        [
-         3.0305,
-         2.59
-        ],
-        [
-         -3.0294999999999996,
-         2.59
-        ]
-       ],
-       "closed": true,
-       "id": "roof-band",
-       "bone": "container",
-       "role": "body",
-       "z": 2.1,
-       "filled": true,
-       "tone": 0.4,
-       "region": "roof",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -2.7994999999999997,
-         0.55
-        ],
-        [
-         -1.4995,
-         0.55
-        ],
-        [
-         -1.4995,
-         2.05
-        ],
-        [
-         -2.7994999999999997,
-         2.05
-        ]
-       ],
-       "closed": true,
-       "id": "inlet-louvre-1",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.25,
-       "region": "inlet-louvres",
-       "material": "aluminium"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.1995,
-         0.55
-        ],
-        [
-         1.1005,
-         0.55
-        ],
-        [
-         1.1005,
-         2.05
-        ],
-        [
-         -0.1995,
-         2.05
-        ]
-       ],
-       "closed": true,
-       "id": "inlet-louvre-2",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.25,
-       "region": "inlet-louvres",
-       "material": "aluminium"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.5005,
-         0.45
-        ],
-        [
-         2.2505,
-         0.45
-        ],
-        [
-         2.2505,
-         2.15
-        ],
-        [
-         1.5005,
-         2.15
-        ]
-       ],
-       "closed": true,
-       "id": "door-line",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": false,
-       "tone": 0.5,
-       "region": "enclosure-walls",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.2005,
-         2.87
-        ],
-        [
-         0.1873,
-         2.9534
-        ],
-        [
-         0.1489,
-         3.0287
-        ],
-        [
-         0.0892,
-         3.0884
-        ],
-        [
-         0.013900000000000001,
-         3.1268
-        ],
-        [
-         -0.0695,
-         3.14
-        ],
-        [
-         -1.7295,
-         3.14
-        ],
-        [
-         -1.8129,
-         3.1268
-        ],
-        [
-         -1.8882,
-         3.0884
-        ],
-        [
-         -1.9479,
-         3.0287
-        ],
-        [
-         -1.9863,
-         2.9534
-        ],
-        [
-         -1.9995,
-         2.87
-        ],
-        [
-         -1.9995,
-         2.86
-        ],
-        [
-         -1.9863,
-         2.7766
-        ],
-        [
-         -1.9479,
-         2.7013
-        ],
-        [
-         -1.8882,
-         2.6416
-        ],
-        [
-         -1.8129,
-         2.6032
-        ],
-        [
-         -1.7295,
-         2.59
-        ],
-        [
-         -0.0695,
-         2.59
-        ],
-        [
-         0.013900000000000001,
-         2.6032
-        ],
-        [
-         0.0892,
-         2.6416
-        ],
-        [
-         0.1489,
-         2.7013
-        ],
-        [
-         0.1873,
-         2.7766
-        ],
-        [
-         0.2005,
-         2.86
-        ]
-       ],
-       "closed": true,
-       "id": "silencer",
-       "bone": "silencer",
-       "role": "body",
-       "z": 2.5,
-       "filled": true,
-       "tone": 0.35,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.0395,
-         0.1
-        ],
-        [
-         -0.0395,
-         -0.1
-        ],
-        [
-         0.3305,
-         -0.1
-        ],
-        [
-         0.3305,
-         0.1
-        ]
-       ],
-       "closed": true,
-       "id": "exhaust-stack",
-       "bone": "stack",
-       "role": "body",
-       "z": 2.6,
-       "filled": true,
-       "tone": 0.2,
-       "region": "exhaust-stack",
-       "material": "exhaust-steel"
-      ,
-       "penMm": 0.24
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.0005,
-         -0.1
-        ],
-        [
-         0.3005,
-         -0.1
-        ],
-        [
-         0.3005,
-         0.0
-        ],
-        [
-         0.0005,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "id": "rain-cap",
-       "bone": "cap-flap",
-       "role": "body",
-       "z": 2.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rain-cap",
-       "material": "galvanised-steel"
-      ,
-       "penMm": 0.24
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.9004999999999999,
-         2.59
-        ],
-        [
-         3.0305,
-         2.59
-        ],
-        [
-         3.0305,
-         3.25
-        ],
-        [
-         2.2005000000000003,
-         3.25
-        ],
-        [
-         1.9004999999999999,
-         2.95
-        ]
-       ],
-       "closed": true,
-       "id": "discharge-hood",
-       "bone": "outlet-hood",
-       "role": "body",
-       "z": 2.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "discharge-hood",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.0005,
-         -0.06
-        ],
-        [
-         0.6305,
-         -0.06
-        ],
-        [
-         0.6305,
-         0.0
-        ],
-        [
-         0.0005,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "id": "outlet-flap",
-       "bone": "outlet-flap",
-       "role": "body",
-       "z": 2.6,
-       "filled": true,
-       "tone": 0.3,
-       "region": "outlet-flap",
-       "material": "galvanised-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         2.3505000000000003,
-         0.45
-        ],
-        [
-         2.8505000000000003,
-         0.45
-        ],
-        [
-         2.8505000000000003,
-         2.15
-        ],
-        [
-         2.3505000000000003,
-         2.15
-        ]
-       ],
-       "closed": true,
-       "id": "door-line-2",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": false,
-       "tone": 0.5,
-       "region": "enclosure-walls",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -1.5995000000000001,
-         2.59
-        ],
-        [
-         -1.4795,
-         2.59
-        ],
-        [
-         -1.4795,
-         3.14
-        ],
-        [
-         -1.5995000000000001,
-         3.14
-        ]
-       ],
-       "closed": true,
-       "id": "silencer-clamp",
-       "bone": "silencer",
-       "role": "detail",
-       "z": 2.55,
-       "filled": true,
-       "tone": 0.2,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.4995,
-         2.59
-        ],
-        [
-         -0.3795,
-         2.59
-        ],
-        [
-         -0.3795,
-         3.14
-        ],
-        [
-         -0.4995,
-         3.14
-        ]
-       ],
-       "closed": true,
-       "id": "silencer-clamp-2",
-       "bone": "silencer",
-       "role": "detail",
-       "z": 2.55,
-       "filled": true,
-       "tone": 0.2,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.0294999999999996,
-         0.0
-        ],
-        [
-         -2.7794999999999996,
-         0.0
-        ],
-        [
-         -2.7794999999999996,
-         0.2
-        ],
-        [
-         -3.0294999999999996,
-         0.2
-        ]
-       ],
-       "closed": true,
-       "id": "corner-casting-l",
-       "bone": "container",
-       "role": "detail",
-       "z": 1.95,
-       "filled": true,
-       "tone": 0.2,
-       "region": "skid-tank",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         2.7805,
-         0.0
-        ],
-        [
-         3.0305,
-         0.0
-        ],
-        [
-         3.0305,
-         0.2
-        ],
-        [
-         2.7805,
-         0.2
-        ]
-       ],
-       "closed": true,
-       "id": "corner-casting-r",
-       "bone": "container",
-       "role": "detail",
-       "z": 1.95,
-       "filled": true,
-       "tone": 0.2,
-       "region": "skid-tank",
-       "material": "container-steel"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "Base frame, wall, roof band, two inlet louvre fields, a door outline, silencer, stack with rain cap, hood with flap.",
-      "de": "Grundrahmen, Wand, Dachband, zwei Eintrittslamellenfelder, ein Türumriss, Schalldämpfer, Abgasrohr mit Regenklappe, Haube mit Klappe."
-     },
-     "retained": {
-      "en": "The louvre fields and the door outline; flaps at 0.07 and 0.06 m (0.35 and 0.3 mm).",
-      "de": "Die Lamellenfelder und der Türumriss; Klappen mit 0,07 und 0,06 m (0,35 und 0,3 mm)."
-     },
-     "merged": {
-      "en": "Corner castings and clamps are not drawn separately.",
-      "de": "Eckbeschläge und Schellen sind nicht einzeln gezeichnet."
-     },
-     "omitted": {
-      "en": "Clamps, castings, handles, lifting eyes, louvre blades.",
-      "de": "Schellen, Beschläge, Griffe, Hebeösen, Lamellenblätter."
-     },
-     "thinElements": {
-      "en": "Flaps are 0.3 to 0.35 mm at about real thickness.",
-      "de": "Klappen sind 0,3 bis 0,35 mm in etwa Realdicke."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Wall mid-tone, louvres dark, roof band and base darker.",
-      "de": "Wand mittlerer Ton, Lamellen dunkel, Dachband und Sockel dunkler."
-     },
-     "overlays": {
-      "en": "Every region has its own form.",
-      "de": "Jede Region hat eine eigene Form."
-     }
-    }
-   },
-   "100": {
-    "status": "authored",
-    "denominator": 100,
-    "validRange": {
-     "minDenominator": 75,
-     "maxDenominator": 150
-    },
-    "pens": {
-     "body": 0.25,
-     "detail": 0.18,
-     "texture": null,
-     "glazing": 0.13,
-     "ground": 0.35
-    },
-    "hatches": [
-     {
-      "id": "louvre",
-      "title": {
-       "en": "Louvre blades",
-       "de": "Lamellenblätter"
-      },
-      "pattern": "lines",
-      "angleDeg": 0,
-      "spacingMm": 0.5,
-      "penMm": 0.13
-     }
-    ],
-    "geometry": {
-     "elevation": [
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.03,
-         0.0
-        ],
-        [
-         3.03,
-         0.0
-        ],
-        [
-         3.03,
-         0.2
-        ],
-        [
-         -3.03,
-         0.2
-        ]
-       ],
-       "closed": true,
-       "id": "skid-tank",
-       "bone": "container",
-       "role": "body",
-       "z": 1.9,
-       "filled": true,
-       "tone": 0.3,
-       "region": "skid-tank",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.03,
-         0.2
-        ],
-        [
-         3.03,
-         0.2
-        ],
-        [
-         3.03,
-         2.59
-        ],
-        [
-         -3.03,
-         2.59
-        ]
-       ],
-       "closed": true,
-       "id": "wall",
-       "bone": "container",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.55,
-       "region": "enclosure-walls",
-       "material": "container-steel"
-      ,
-       "penMm": 0.306
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.03,
-         2.49
-        ],
-        [
-         3.03,
-         2.49
-        ],
-        [
-         3.03,
-         2.59
-        ],
-        [
-         -3.03,
-         2.59
-        ]
-       ],
-       "closed": true,
-       "id": "roof-band",
-       "bone": "container",
-       "role": "body",
-       "z": 2.1,
-       "filled": true,
-       "tone": 0.4,
-       "region": "roof",
-       "material": "container-steel"
-      ,
-       "penMm": 0.306
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -2.8,
-         0.55
-        ],
-        [
-         -1.5,
-         0.55
-        ],
-        [
-         -1.5,
-         2.05
-        ],
-        [
-         -2.8,
-         2.05
-        ]
-       ],
-       "closed": true,
-       "id": "inlet-louvre-1",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.25,
-       "region": "inlet-louvres",
-       "material": "aluminium",
-       "hatch": "louvre"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.2,
-         0.55
-        ],
-        [
-         1.1,
-         0.55
-        ],
-        [
-         1.1,
-         2.05
-        ],
-        [
-         -0.2,
-         2.05
-        ]
-       ],
-       "closed": true,
-       "id": "inlet-louvre-2",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.25,
-       "region": "inlet-louvres",
-       "material": "aluminium",
-       "hatch": "louvre"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.5,
-         0.45
-        ],
-        [
-         2.25,
-         0.45
-        ],
-        [
-         2.25,
-         2.15
-        ],
-        [
-         1.5,
-         2.15
-        ]
-       ],
-       "closed": true,
-       "id": "door-line",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": false,
-       "tone": 0.5,
-       "region": "enclosure-walls",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.2,
-         2.87
-        ],
-        [
-         0.1868,
-         2.9534
-        ],
-        [
-         0.1484,
-         3.0287
-        ],
-        [
-         0.0887,
-         3.0884
-        ],
-        [
-         0.0134,
-         3.1268
-        ],
-        [
-         -0.07,
-         3.14
-        ],
-        [
-         -1.73,
-         3.14
-        ],
-        [
-         -1.8134,
-         3.1268
-        ],
-        [
-         -1.8887,
-         3.0884
-        ],
-        [
-         -1.9484,
-         3.0287
-        ],
-        [
-         -1.9868,
-         2.9534
-        ],
-        [
-         -2.0,
-         2.87
-        ],
-        [
-         -2.0,
-         2.86
-        ],
-        [
-         -1.9868,
-         2.7766
-        ],
-        [
-         -1.9484,
-         2.7013
-        ],
-        [
-         -1.8887,
-         2.6416
-        ],
-        [
-         -1.8134,
-         2.6032
-        ],
-        [
-         -1.73,
-         2.59
-        ],
-        [
-         -0.07,
-         2.59
-        ],
-        [
-         0.0134,
-         2.6032
-        ],
-        [
-         0.0887,
-         2.6416
-        ],
-        [
-         0.1484,
-         2.7013
-        ],
-        [
-         0.1868,
-         2.7766
-        ],
-        [
-         0.2,
-         2.86
-        ]
-       ],
-       "closed": true,
-       "id": "silencer",
-       "bone": "silencer",
-       "role": "body",
-       "z": 2.5,
-       "filled": true,
-       "tone": 0.35,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.04,
-         0.1
-        ],
-        [
-         -0.04,
-         -0.1
-        ],
-        [
-         0.33,
-         -0.1
-        ],
-        [
-         0.33,
-         0.1
-        ]
-       ],
-       "closed": true,
-       "id": "exhaust-stack",
-       "bone": "stack",
-       "role": "body",
-       "z": 2.6,
-       "filled": true,
-       "tone": 0.2,
-       "region": "exhaust-stack",
-       "material": "exhaust-steel"
-      ,
-       "penMm": 0.293
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         -0.1
-        ],
-        [
-         0.3,
-         -0.1
-        ],
-        [
-         0.3,
-         0.0
-        ],
-        [
-         0.0,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "id": "rain-cap",
-       "bone": "cap-flap",
-       "role": "body",
-       "z": 2.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rain-cap",
-       "material": "galvanised-steel"
-      ,
-       "penMm": 0.293
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.9,
-         2.59
-        ],
-        [
-         3.03,
-         2.59
-        ],
-        [
-         3.03,
-         3.25
-        ],
-        [
-         2.2,
-         3.25
-        ],
-        [
-         1.9,
-         2.95
-        ]
-       ],
-       "closed": true,
-       "id": "discharge-hood",
-       "bone": "outlet-hood",
-       "role": "body",
-       "z": 2.5,
-       "filled": true,
-       "tone": 0.4,
-       "region": "discharge-hood",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         0.0,
-         -0.06
-        ],
-        [
-         0.63,
-         -0.06
-        ],
-        [
-         0.63,
-         0.0
-        ],
-        [
-         0.0,
-         0.0
-        ]
-       ],
-       "closed": true,
-       "id": "outlet-flap",
-       "bone": "outlet-flap",
-       "role": "body",
-       "z": 2.6,
-       "filled": true,
-       "tone": 0.3,
-       "region": "outlet-flap",
-       "material": "galvanised-steel"
-      ,
-       "penMm": 0.362
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         2.35,
-         0.45
-        ],
-        [
-         2.85,
-         0.45
-        ],
-        [
-         2.85,
-         2.15
-        ],
-        [
-         2.35,
-         2.15
-        ]
-       ],
-       "closed": true,
-       "id": "door-line-2",
-       "bone": "container",
-       "role": "detail",
-       "z": 2.2,
-       "filled": false,
-       "tone": 0.5,
-       "region": "enclosure-walls",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -1.6,
-         2.59
-        ],
-        [
-         -1.48,
-         2.59
-        ],
-        [
-         -1.48,
-         3.14
-        ],
-        [
-         -1.6,
-         3.14
-        ]
-       ],
-       "closed": true,
-       "id": "silencer-clamp",
-       "bone": "silencer",
-       "role": "detail",
-       "z": 2.55,
-       "filled": true,
-       "tone": 0.2,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.5,
-         2.59
-        ],
-        [
-         -0.38,
-         2.59
-        ],
-        [
-         -0.38,
-         3.14
-        ],
-        [
-         -0.5,
-         3.14
-        ]
-       ],
-       "closed": true,
-       "id": "silencer-clamp-2",
-       "bone": "silencer",
-       "role": "detail",
-       "z": 2.55,
-       "filled": true,
-       "tone": 0.2,
-       "region": "silencer",
-       "material": "exhaust-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -3.03,
-         0.0
-        ],
-        [
-         -2.78,
-         0.0
-        ],
-        [
-         -2.78,
-         0.2
-        ],
-        [
-         -3.03,
-         0.2
-        ]
-       ],
-       "closed": true,
-       "id": "corner-casting-l",
-       "bone": "container",
-       "role": "detail",
-       "z": 1.95,
-       "filled": true,
-       "tone": 0.2,
-       "region": "skid-tank",
-       "material": "container-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         2.78,
-         0.0
-        ],
-        [
-         3.03,
-         0.0
-        ],
-        [
-         3.03,
-         0.2
-        ],
-        [
-         2.78,
-         0.2
-        ]
-       ],
-       "closed": true,
-       "id": "corner-casting-r",
-       "bone": "container",
-       "role": "detail",
-       "z": 1.95,
-       "filled": true,
-       "tone": 0.2,
-       "region": "skid-tank",
-       "material": "container-steel"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "As 1:200 with a second door, silencer clamps, corner castings and louvre blade hatching.",
-      "de": "Wie 1:200 mit zweiter Tür, Schalldämpferschellen, Eckbeschlägen und Lamellenschraffur."
-     },
-     "retained": {
-      "en": "Both doors, clamps, castings.",
-      "de": "Beide Türen, Schellen, Beschläge."
-     },
-     "merged": {
-      "en": "Louvre blades are a hatch at 0.5 mm spacing (real 0.05 m pitch).",
-      "de": "Lamellenblätter sind eine Schraffur mit 0,5 mm Abstand (real 0,05 m Teilung)."
-     },
-     "omitted": {
-      "en": "Handles, lifting eyes.",
-      "de": "Griffe, Hebeösen."
-     },
-     "thinElements": {
-      "en": "Flaps 0.06 and 0.07 m (0.6 and 0.7 mm).",
-      "de": "Klappen 0,06 und 0,07 m (0,6 und 0,7 mm)."
-     },
-     "hatching": {
-      "en": "Louvre hatch only.",
-      "de": "Nur die Lamellenschraffur."
-     },
-     "styles": {
-      "en": "As 1:200, detail pen 0.18 mm.",
-      "de": "Wie 1:200, Detailstift 0,18 mm."
-     },
-     "overlays": {
-      "en": "As 1:200; castings carry the skid-tank region.",
-      "de": "Wie 1:200; Beschläge tragen die Grundtank-Region."
-     }
-    }
-   },
    "50": {
     "status": "authored",
     "denominator": 50,
@@ -1904,7 +386,7 @@
       },
       "pattern": "lines",
       "angleDeg": 0,
-      "spacingMm": 1.0,
+      "spacingMm": 1,
       "penMm": 0.13
      }
     ],
@@ -1915,11 +397,11 @@
        "points": [
         [
          -3.03,
-         0.0
+         0
         ],
         [
          3.03,
-         0.0
+         0
         ],
         [
          3.03,
@@ -2140,11 +622,11 @@
          2.9534
         ],
         [
-         -2.0,
+         -2,
          2.87
         ],
         [
-         -2.0,
+         -2,
          2.86
         ],
         [
@@ -2236,7 +718,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.1
         ],
         [
@@ -2245,11 +727,11 @@
         ],
         [
          0.3,
-         0.0
+         0
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -2300,7 +782,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.06
         ],
         [
@@ -2309,11 +791,11 @@
         ],
         [
          0.63,
-         0.0
+         0
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -2420,7 +902,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          2.59
         ],
         [
@@ -2432,7 +914,7 @@
          3.14
         ],
         [
-         0.0,
+         0,
          3.14
         ]
        ],
@@ -2446,6 +928,494 @@
        "region": "silencer",
        "material": "exhaust-steel"
       }
+     ],
+     "front": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "outlet-mouth",
+       "bone": "outlet-hood",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.85,
+       "y": 2.65,
+       "w": 1.7,
+       "h": 0.55,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 2.59,
+       "w": 1.8,
+       "h": 0.66,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1,
+       "y": 3.14,
+       "w": 0.2,
+       "h": 0.33,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "ellipse",
+       "cx": -0.9,
+       "cy": 2.865,
+       "rx": 0.275,
+       "ry": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "end-door",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.45,
+       "w": 1,
+       "h": 1.7,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-left",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.97,
+       "y": 0,
+       "w": 0.25,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-right",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0,
+       "w": 0.25,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 2.49,
+       "w": 2.44,
+       "h": 0.1,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0.2,
+       "w": 2.44,
+       "h": 2.29,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0,
+       "w": 2.44,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.65,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.2,
+       "cy": -0.9,
+       "rx": 0.1,
+       "ry": 0.1,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 1.9,
+       "y": -0.9,
+       "w": 1.13,
+       "h": 1.8,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "hood-ridge",
+       "bone": "outlet-hood",
+       "role": "detail",
+       "z": 2.55,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         2.2,
+         -0.9
+        ],
+        [
+         2.2,
+         0.9
+        ]
+       ],
+       "closed": false,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -2,
+       "y": -1.175,
+       "w": 2.2,
+       "h": 0.55,
+       "r": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer-clamp-1",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1.6,
+       "y": -1.185,
+       "w": 0.12,
+       "h": 0.57,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer-clamp-2",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.5,
+       "y": -1.185,
+       "w": 0.12,
+       "h": 0.57,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "roof-edge",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -2.93,
+       "y": -1.12,
+       "w": 5.86,
+       "h": 2.24,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "id": "roof",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3.03,
+       "y": -1.22,
+       "w": 6.06,
+       "h": 2.44,
+       "regions": [
+        "roof"
+       ],
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -3.03,
+       "y": -1.22,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 2.78,
+       "y": -1.22,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-3",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -3.03,
+       "y": 0.97,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-4",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 2.78,
+       "y": 0.97,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
      ]
     },
     "decisions": {
@@ -2454,16 +1424,16 @@
       "de": "Alle 1:100-Teile plus Türgriff, Tankstutzen, Hebeöse und Schalldämpferflansch."
      },
      "retained": {
-      "en": "Louvre blades at the real 0.05 m pitch (1 mm).",
-      "de": "Lamellenblätter in der realen Teilung von 0,05 m (1 mm)."
+      "en": "Louvre blades at the real 0.05 m pitch (1 mm). Front view from the discharge-hood end: skid, wall with an end door outline and corner castings, roof band, the hood with its dark mouth, the outlet flap as a plate that shortens towards the hinge as it swings out, the silencer peeking out beside the hood, the stack and the rain cap plate that rises when the cap opens. Plan: roof with its edge outline and four castings, silencer with two clamps and the stack circle, hood with its ridge, the rain cap and the outlet flap as plates (extruded side-view profiles) that shorten towards their hinges as they open.",
+      "de": "Lamellenblätter in der realen Teilung von 0,05 m (1 mm). Vorderansicht vom Ausblasende: Rahmen, Wand mit Stirntür-Umriss und Eckbeschlägen, Dachband, die Haube mit dunkler Mündung, die Ausblasklappe als Platte, die beim Ausschwenken zum Scharnier hin kürzer wird, der Schalldämpfer, der neben der Haube hervorschaut, das Rohr und die Regenkappenplatte, die sich beim Öffnen aufstellt. Grundriss: Dach mit Randumriss und vier Beschlägen, Schalldämpfer mit zwei Schellen und dem Rohrkreis, Haube mit Firstlinie, die Regenkappe und die Ausblasklappe als Platten (extrudierte Seitenansichtsprofile), die beim Öffnen zum Scharnier hin kürzer werden."
      },
      "merged": {
       "en": "Nothing merged.",
       "de": "Nichts zusammengefasst."
      },
      "omitted": {
-      "en": "Corrugation of the walls, hinges.",
-      "de": "Wellung der Wände, Scharniere."
+      "en": "Corrugation of the walls, hinges. The inlet louvre fields sit on the long sides and are edge-on in the front view and plan; the front rain cap is drawn 0.1 m thick at every scale.",
+      "de": "Wellung der Wände, Scharniere. Die Zuluft-Lamellenfelder liegen an den Längsseiten und stehen in Vorderansicht und Grundriss auf der Kante; die Regenkappe ist in der Vorderansicht in jedem Maßstab 0,1 m dick gezeichnet."
      },
      "thinElements": {
       "en": "Handle 0.06 m (1.2 mm).",
@@ -2480,6 +1450,2617 @@
      "overlays": {
       "en": "As 1:100.",
       "de": "Wie 1:100."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "louvre",
+      "title": {
+       "en": "Louvre blades",
+       "de": "Lamellenblätter"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.5,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0
+        ],
+        [
+         3.03,
+         0
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         -3.03,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.2
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "enclosure-walls",
+       "material": "container-steel",
+       "penMm": 0.306
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         2.49
+        ],
+        [
+         3.03,
+         2.49
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "roof",
+       "material": "container-steel",
+       "penMm": 0.306
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.8,
+         0.55
+        ],
+        [
+         -1.5,
+         0.55
+        ],
+        [
+         -1.5,
+         2.05
+        ],
+        [
+         -2.8,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium",
+       "hatch": "louvre"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.2,
+         0.55
+        ],
+        [
+         1.1,
+         0.55
+        ],
+        [
+         1.1,
+         2.05
+        ],
+        [
+         -0.2,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium",
+       "hatch": "louvre"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.5,
+         0.45
+        ],
+        [
+         2.25,
+         0.45
+        ],
+        [
+         2.25,
+         2.15
+        ],
+        [
+         1.5,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         2.87
+        ],
+        [
+         0.1868,
+         2.9534
+        ],
+        [
+         0.1484,
+         3.0287
+        ],
+        [
+         0.0887,
+         3.0884
+        ],
+        [
+         0.0134,
+         3.1268
+        ],
+        [
+         -0.07,
+         3.14
+        ],
+        [
+         -1.73,
+         3.14
+        ],
+        [
+         -1.8134,
+         3.1268
+        ],
+        [
+         -1.8887,
+         3.0884
+        ],
+        [
+         -1.9484,
+         3.0287
+        ],
+        [
+         -1.9868,
+         2.9534
+        ],
+        [
+         -2,
+         2.87
+        ],
+        [
+         -2,
+         2.86
+        ],
+        [
+         -1.9868,
+         2.7766
+        ],
+        [
+         -1.9484,
+         2.7013
+        ],
+        [
+         -1.8887,
+         2.6416
+        ],
+        [
+         -1.8134,
+         2.6032
+        ],
+        [
+         -1.73,
+         2.59
+        ],
+        [
+         -0.07,
+         2.59
+        ],
+        [
+         0.0134,
+         2.6032
+        ],
+        [
+         0.0887,
+         2.6416
+        ],
+        [
+         0.1484,
+         2.7013
+        ],
+        [
+         0.1868,
+         2.7766
+        ],
+        [
+         0.2,
+         2.86
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.1
+        ],
+        [
+         -0.04,
+         -0.1
+        ],
+        [
+         0.33,
+         -0.1
+        ],
+        [
+         0.33,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "penMm": 0.293
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "penMm": 0.293
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         2.59
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         3.03,
+         3.25
+        ],
+        [
+         2.2,
+         3.25
+        ],
+        [
+         1.9,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "penMm": 0.362
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.35,
+         0.45
+        ],
+        [
+         2.85,
+         0.45
+        ],
+        [
+         2.85,
+         2.15
+        ],
+        [
+         2.35,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.6,
+         2.59
+        ],
+        [
+         -1.48,
+         2.59
+        ],
+        [
+         -1.48,
+         3.14
+        ],
+        [
+         -1.6,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.5,
+         2.59
+        ],
+        [
+         -0.38,
+         2.59
+        ],
+        [
+         -0.38,
+         3.14
+        ],
+        [
+         -0.5,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp-2",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0
+        ],
+        [
+         -2.78,
+         0
+        ],
+        [
+         -2.78,
+         0.2
+        ],
+        [
+         -3.03,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-l",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.78,
+         0
+        ],
+        [
+         3.03,
+         0
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         2.78,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-r",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ],
+     "front": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "outlet-mouth",
+       "bone": "outlet-hood",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.85,
+       "y": 2.65,
+       "w": 1.7,
+       "h": 0.55,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 2.59,
+       "w": 1.8,
+       "h": 0.66,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1,
+       "y": 3.14,
+       "w": 0.2,
+       "h": 0.33,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "ellipse",
+       "cx": -0.9,
+       "cy": 2.865,
+       "rx": 0.275,
+       "ry": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "end-door",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.45,
+       "w": 1,
+       "h": 1.7,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-left",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.97,
+       "y": 0,
+       "w": 0.25,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-right",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0,
+       "w": 0.25,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 2.49,
+       "w": 2.44,
+       "h": 0.1,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0.2,
+       "w": 2.44,
+       "h": 2.29,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0,
+       "w": 2.44,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.65,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.2,
+       "cy": -0.9,
+       "rx": 0.1,
+       "ry": 0.1,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 1.9,
+       "y": -0.9,
+       "w": 1.13,
+       "h": 1.8,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -2,
+       "y": -1.175,
+       "w": 2.2,
+       "h": 0.55,
+       "r": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer-clamp-1",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1.6,
+       "y": -1.185,
+       "w": 0.12,
+       "h": 0.57,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer-clamp-2",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.5,
+       "y": -1.185,
+       "w": 0.12,
+       "h": 0.57,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "roof-edge",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -2.93,
+       "y": -1.12,
+       "w": 5.86,
+       "h": 2.24,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "id": "roof",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3.03,
+       "y": -1.22,
+       "w": 6.06,
+       "h": 2.44,
+       "regions": [
+        "roof"
+       ],
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -3.03,
+       "y": -1.22,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 2.78,
+       "y": -1.22,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-3",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -3.03,
+       "y": 0.97,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "id": "corner-casting-4",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 2.78,
+       "y": 0.97,
+       "w": 0.25,
+       "h": 0.25,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "As 1:200 with a second door, silencer clamps, corner castings and louvre blade hatching.",
+      "de": "Wie 1:200 mit zweiter Tür, Schalldämpferschellen, Eckbeschlägen und Lamellenschraffur."
+     },
+     "retained": {
+      "en": "Both doors, clamps, castings. Front view: skid, wall with end door outline and castings, roof band, hood with mouth, outlet flap plate, silencer, stack and rain cap plate. Plan: roof with edge outline and castings, silencer with clamps, stack circle, hood, the rain cap and outlet flap plates.",
+      "de": "Beide Türen, Schellen, Beschläge. Vorderansicht: Rahmen, Wand mit Stirntür-Umriss und Beschlägen, Dachband, Haube mit Mündung, Ausblasklappenplatte, Schalldämpfer, Rohr und Regenkappenplatte. Grundriss: Dach mit Randumriss und Beschlägen, Schalldämpfer mit Schellen, Rohrkreis, Haube, Regenkappenbalken und der Rahmen der Ausblasklappe."
+     },
+     "merged": {
+      "en": "Louvre blades are a hatch at 0.5 mm spacing (real 0.05 m pitch).",
+      "de": "Lamellenblätter sind eine Schraffur mit 0,5 mm Abstand (real 0,05 m Teilung)."
+     },
+     "omitted": {
+      "en": "Handles, lifting eyes. Louvre fields (edge-on), clamps in the front view.",
+      "de": "Griffe, Hebeösen. Lamellenfelder (auf der Kante), Schellen in der Vorderansicht."
+     },
+     "thinElements": {
+      "en": "Flaps 0.06 and 0.07 m (0.6 and 0.7 mm).",
+      "de": "Klappen 0,06 und 0,07 m (0,6 und 0,7 mm)."
+     },
+     "hatching": {
+      "en": "Louvre hatch only.",
+      "de": "Nur die Lamellenschraffur."
+     },
+     "styles": {
+      "en": "As 1:200, detail pen 0.18 mm.",
+      "de": "Wie 1:200, Detailstift 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200; castings carry the skid-tank region.",
+      "de": "Wie 1:200; Beschläge tragen die Grundtank-Region."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         0
+        ],
+        [
+         3.0305,
+         0
+        ],
+        [
+         3.0305,
+         0.2
+        ],
+        [
+         -3.0294999999999996,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         0.2
+        ],
+        [
+         3.0305,
+         0.2
+        ],
+        [
+         3.0305,
+         2.59
+        ],
+        [
+         -3.0294999999999996,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         2.49
+        ],
+        [
+         3.0305,
+         2.49
+        ],
+        [
+         3.0305,
+         2.59
+        ],
+        [
+         -3.0294999999999996,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.7994999999999997,
+         0.55
+        ],
+        [
+         -1.4995,
+         0.55
+        ],
+        [
+         -1.4995,
+         2.05
+        ],
+        [
+         -2.7994999999999997,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1995,
+         0.55
+        ],
+        [
+         1.1005,
+         0.55
+        ],
+        [
+         1.1005,
+         2.05
+        ],
+        [
+         -0.1995,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.5005,
+         0.45
+        ],
+        [
+         2.2505,
+         0.45
+        ],
+        [
+         2.2505,
+         2.15
+        ],
+        [
+         1.5005,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2005,
+         2.87
+        ],
+        [
+         0.1873,
+         2.9534
+        ],
+        [
+         0.1489,
+         3.0287
+        ],
+        [
+         0.0892,
+         3.0884
+        ],
+        [
+         0.013900000000000001,
+         3.1268
+        ],
+        [
+         -0.0695,
+         3.14
+        ],
+        [
+         -1.7295,
+         3.14
+        ],
+        [
+         -1.8129,
+         3.1268
+        ],
+        [
+         -1.8882,
+         3.0884
+        ],
+        [
+         -1.9479,
+         3.0287
+        ],
+        [
+         -1.9863,
+         2.9534
+        ],
+        [
+         -1.9995,
+         2.87
+        ],
+        [
+         -1.9995,
+         2.86
+        ],
+        [
+         -1.9863,
+         2.7766
+        ],
+        [
+         -1.9479,
+         2.7013
+        ],
+        [
+         -1.8882,
+         2.6416
+        ],
+        [
+         -1.8129,
+         2.6032
+        ],
+        [
+         -1.7295,
+         2.59
+        ],
+        [
+         -0.0695,
+         2.59
+        ],
+        [
+         0.013900000000000001,
+         2.6032
+        ],
+        [
+         0.0892,
+         2.6416
+        ],
+        [
+         0.1489,
+         2.7013
+        ],
+        [
+         0.1873,
+         2.7766
+        ],
+        [
+         0.2005,
+         2.86
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0395,
+         0.1
+        ],
+        [
+         -0.0395,
+         -0.1
+        ],
+        [
+         0.3305,
+         -0.1
+        ],
+        [
+         0.3305,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel",
+       "penMm": 0.24
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         -0.1
+        ],
+        [
+         0.3005,
+         -0.1
+        ],
+        [
+         0.3005,
+         0
+        ],
+        [
+         0.0005,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "penMm": 0.24
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9004999999999999,
+         2.59
+        ],
+        [
+         3.0305,
+         2.59
+        ],
+        [
+         3.0305,
+         3.25
+        ],
+        [
+         2.2005000000000003,
+         3.25
+        ],
+        [
+         1.9004999999999999,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         -0.06
+        ],
+        [
+         0.6305,
+         -0.06
+        ],
+        [
+         0.6305,
+         0
+        ],
+        [
+         0.0005,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.3505000000000003,
+         0.45
+        ],
+        [
+         2.8505000000000003,
+         0.45
+        ],
+        [
+         2.8505000000000003,
+         2.15
+        ],
+        [
+         2.3505000000000003,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.5995000000000001,
+         2.59
+        ],
+        [
+         -1.4795,
+         2.59
+        ],
+        [
+         -1.4795,
+         3.14
+        ],
+        [
+         -1.5995000000000001,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.4995,
+         2.59
+        ],
+        [
+         -0.3795,
+         2.59
+        ],
+        [
+         -0.3795,
+         3.14
+        ],
+        [
+         -0.4995,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp-2",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         0
+        ],
+        [
+         -2.7794999999999996,
+         0
+        ],
+        [
+         -2.7794999999999996,
+         0.2
+        ],
+        [
+         -3.0294999999999996,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-l",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.7805,
+         0
+        ],
+        [
+         3.0305,
+         0
+        ],
+        [
+         3.0305,
+         0.2
+        ],
+        [
+         2.7805,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-r",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ],
+     "front": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.07
+        ],
+        [
+         0.63,
+         -0.07
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "outlet-mouth",
+       "bone": "outlet-hood",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.85,
+       "y": 2.65,
+       "w": 1.7,
+       "h": 0.55,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 2.59,
+       "w": 1.8,
+       "h": 0.66,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.07
+        ],
+        [
+         0.3,
+         -0.07
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1,
+       "y": 3.14,
+       "w": 0.2,
+       "h": 0.33,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "ellipse",
+       "cx": -0.9,
+       "cy": 2.865,
+       "rx": 0.275,
+       "ry": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 2.49,
+       "w": 2.44,
+       "h": 0.1,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0.2,
+       "w": 2.44,
+       "h": 2.29,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0,
+       "w": 2.44,
+       "h": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.07
+        ],
+        [
+         0.63,
+         -0.07
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.07
+        ],
+        [
+         0.3,
+         -0.07
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.65,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.2,
+       "cy": -0.9,
+       "rx": 0.1,
+       "ry": 0.1,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 1.9,
+       "y": -0.9,
+       "w": 1.13,
+       "h": 1.8,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -2,
+       "y": -1.175,
+       "w": 2.2,
+       "h": 0.55,
+       "r": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "roof",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -3.03,
+       "y": -1.22,
+       "w": 6.06,
+       "h": 2.44,
+       "regions": [
+        "roof",
+        "enclosure-walls",
+        "skid-tank"
+       ],
+       "material": "container-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Base frame, wall, roof band, two inlet louvre fields, a door outline, silencer, stack with rain cap, hood with flap.",
+      "de": "Grundrahmen, Wand, Dachband, zwei Eintrittslamellenfelder, ein Türumriss, Schalldämpfer, Abgasrohr mit Regenklappe, Haube mit Klappe."
+     },
+     "retained": {
+      "en": "The louvre fields and the door outline; flaps at 0.07 and 0.06 m (0.35 and 0.3 mm). Front view: base, wall, roof band, hood with mouth, outlet flap plate, silencer, stack and rain cap plate. Plan: roof block, silencer, stack circle, hood, the rain cap and outlet flap plates.",
+      "de": "Die Lamellenfelder und der Türumriss; Klappen mit 0,07 und 0,06 m (0,35 und 0,3 mm). Vorderansicht: Sockel, Wand, Dachband, Haube mit Mündung, Ausblasklappenplatte, Schalldämpfer, Rohr und Regenkappenplatte. Grundriss: Dachblock, Schalldämpfer, Rohrkreis, Haube, die Platten von Regenkappe und Ausblasklappe."
+     },
+     "merged": {
+      "en": "Corner castings and clamps are not drawn separately.",
+      "de": "Eckbeschläge und Schellen sind nicht einzeln gezeichnet."
+     },
+     "omitted": {
+      "en": "Clamps, castings, handles, lifting eyes, louvre blades. Door outline, castings and clamps.",
+      "de": "Schellen, Beschläge, Griffe, Hebeösen, Lamellenblätter. Türumriss, Beschläge und Schellen."
+     },
+     "thinElements": {
+      "en": "Flaps are 0.3 to 0.35 mm at about real thickness.",
+      "de": "Klappen sind 0,3 bis 0,35 mm in etwa Realdicke."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Wall mid-tone, louvres dark, roof band and base darker.",
+      "de": "Wand mittlerer Ton, Lamellen dunkel, Dachband und Sockel dunkler."
+     },
+     "overlays": {
+      "en": "Every region has its own form.",
+      "de": "Jede Region hat eine eigene Form."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0
+        ],
+        [
+         3.03,
+         0
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "container-body",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "enclosure-walls",
+        "roof",
+        "inlet-louvres",
+        "skid-tank"
+       ],
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         2.92
+        ],
+        [
+         0.1705,
+         3.03
+        ],
+        [
+         0.09,
+         3.1105
+        ],
+        [
+         -0.02,
+         3.14
+        ],
+        [
+         -1.78,
+         3.14
+        ],
+        [
+         -1.89,
+         3.1105
+        ],
+        [
+         -1.9705,
+         3.03
+        ],
+        [
+         -2,
+         2.92
+        ],
+        [
+         -2,
+         2.81
+        ],
+        [
+         -1.9705,
+         2.7
+        ],
+        [
+         -1.89,
+         2.6195
+        ],
+        [
+         -1.78,
+         2.59
+        ],
+        [
+         -0.02,
+         2.59
+        ],
+        [
+         0.09,
+         2.6195
+        ],
+        [
+         0.1705,
+         2.7
+        ],
+        [
+         0.2,
+         2.81
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.1
+        ],
+        [
+         -0.04,
+         -0.1
+        ],
+        [
+         0.33,
+         -0.1
+        ],
+        [
+         0.33,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         2.59
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         3.03,
+         3.25
+        ],
+        [
+         2.2,
+         3.25
+        ],
+        [
+         1.9,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.63,
+         -0.1
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel"
+      }
+     ],
+     "front": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.63,
+         -0.1
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.9,
+       "y": 2.59,
+       "w": 1.8,
+       "h": 0.66,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -1,
+       "y": 3.14,
+       "w": 0.2,
+       "h": 0.33,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "ellipse",
+       "cx": -0.9,
+       "cy": 2.865,
+       "rx": 0.275,
+       "ry": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "container-body",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -1.22,
+       "y": 0,
+       "w": 2.44,
+       "h": 2.59,
+       "regions": [
+        "enclosure-walls",
+        "roof",
+        "inlet-louvres",
+        "skid-tank"
+       ],
+       "material": "container-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.63,
+         -0.1
+        ],
+        [
+         0.63,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "outlet-flap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
+       }
+      },
+      {
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.05,
+        "z1": -0.75
+       }
+      },
+      {
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.65,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -1.2,
+       "cy": -0.9,
+       "rx": 0.1,
+       "ry": 0.1,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 1.9,
+       "y": -0.9,
+       "w": 1.13,
+       "h": 1.8,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -2,
+       "y": -1.175,
+       "w": 2.2,
+       "h": 0.55,
+       "r": 0.275,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "container-body",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -3.03,
+       "y": -1.22,
+       "w": 6.06,
+       "h": 2.44,
+       "regions": [
+        "enclosure-walls",
+        "roof",
+        "inlet-louvres",
+        "skid-tank"
+       ],
+       "material": "container-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One closed container block, a roof silencer with its stack and rain cap flap, the discharge hood with its weather flap.",
+      "de": "Ein geschlossener Containerblock, ein Dachschalldämpfer mit Abgasrohr und Regenklappe, die Austrittshaube mit ihrer Wetterklappe."
+     },
+     "retained": {
+      "en": "The 6.06 x 2.59 m container, silencer, 0.2 m stack (0.4 mm), hood and both flaps (they rotate). Front view: one container block, the silencer disc beside the hood, the hood, the stack and the two moving flap plates. Plan: one container block, silencer, stack circle, hood, the rain cap and outlet flap plates.",
+      "de": "Der Container von 6,06 x 2,59 m, Schalldämpfer, Abgasrohr von 0,2 m (0,4 mm), Haube und beide Klappen (sie drehen). Vorderansicht: ein Containerblock, die Schalldämpferscheibe neben der Haube, die Haube, das Rohr und die zwei beweglichen Klappenplatten. Grundriss: ein Containerblock, Schalldämpfer, Rohrkreis, Haube, die Platten von Regenkappe und Ausblasklappe."
+     },
+     "merged": {
+      "en": "Walls, roof, louvres and the base tank are one form.",
+      "de": "Wände, Dach, Lamellen und Grundtank sind eine Form."
+     },
+     "omitted": {
+      "en": "Door lines, louvre patterns, corner castings, clamps, lifting eyes. In both views walls, louvres, base tank, castings and clamps merge into the container block.",
+      "de": "Türlinien, Lamellenmuster, Eckbeschläge, Schellen, Hebeösen. In beiden Ansichten gehen Wände, Lamellen, Sockeltank, Beschläge und Schellen im Containerblock auf."
+     },
+     "thinElements": {
+      "en": "The stack (0.4 mm) is at real width; the flaps are drawn 0.1 to 0.12 m thick (real about 0.05 m), the least thickening that stays above the 0.2 mm feature limit.",
+      "de": "Das Rohr (0,4 mm) ist in Realbreite; die Klappen sind 0,1 bis 0,12 m dick gezeichnet (real etwa 0,05 m), die geringste Verdickung über der Grenze von 0,2 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Container mid-tone, silencer and stack dark, flaps light; pens 0.15 mm.",
+      "de": "Container mittlerer Ton, Schalldämpfer und Rohr dunkel, Klappen hell; Stifte 0,15 mm."
+     },
+     "overlays": {
+      "en": "The container form carries walls, roof, louvres and base tank (merged); every other region has its own form.",
+      "de": "Die Containerform trägt Wände, Dach, Lamellen und Grundtank (zusammengefasst); jede andere Region hat eine eigene Form."
      }
     }
    }
@@ -2511,8 +4092,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-l",
-     "contact-r"
+     "contact-a-l",
+     "contact-a-r",
+     "contact-b-l",
+     "contact-b-r"
     ],
     "thermal": {
      "operating": {
@@ -2526,7 +4109,7 @@
       },
       "roof": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "inlet-louvres": {
        "exposedFraction": 1,
@@ -2550,7 +4133,7 @@
       },
       "rain-cap": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "discharge-hood": {
        "exposedFraction": 1,
@@ -2606,8 +4189,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-l",
-     "contact-r"
+     "contact-a-l",
+     "contact-a-r",
+     "contact-b-l",
+     "contact-b-r"
     ],
     "thermal": {
      "operating": {
@@ -2621,7 +4206,7 @@
       },
       "roof": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "inlet-louvres": {
        "exposedFraction": 1,
@@ -2645,7 +4230,7 @@
       },
       "rain-cap": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "discharge-hood": {
        "exposedFraction": 1,
@@ -2701,8 +4286,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-l",
-     "contact-r"
+     "contact-a-l",
+     "contact-a-r",
+     "contact-b-l",
+     "contact-b-r"
     ],
     "thermal": {
      "operating": {
@@ -2716,7 +4303,7 @@
       },
       "roof": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "inlet-louvres": {
        "exposedFraction": 1,
@@ -2740,7 +4327,7 @@
       },
       "rain-cap": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "discharge-hood": {
        "exposedFraction": 1,
@@ -2796,8 +4383,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-l",
-     "contact-r"
+     "contact-a-l",
+     "contact-a-r",
+     "contact-b-l",
+     "contact-b-r"
     ],
     "thermal": {
      "operating": {
@@ -2811,7 +4400,7 @@
       },
       "roof": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "inlet-louvres": {
        "exposedFraction": 1,
@@ -2835,7 +4424,7 @@
       },
       "rain-cap": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "discharge-hood": {
        "exposedFraction": 1,
@@ -2892,8 +4481,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-l",
-     "contact-r"
+     "contact-a-l",
+     "contact-a-r",
+     "contact-b-l",
+     "contact-b-r"
     ],
     "thermal": {
      "operating": {
@@ -2907,7 +4498,7 @@
       },
       "roof": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "inlet-louvres": {
        "exposedFraction": 1,
@@ -2931,7 +4522,7 @@
       },
       "rain-cap": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "discharge-hood": {
        "exposedFraction": 1,
@@ -3002,12 +4593,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-l",
+      "anchor": "contact-a-l",
       "fromS": 0,
       "toS": 12
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-a-r",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-b-l",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-b-r",
       "fromS": 0,
       "toS": 12
      }
@@ -3187,12 +4788,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-l",
+      "anchor": "contact-a-l",
       "fromS": 0,
       "toS": 26
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-a-r",
+      "fromS": 0,
+      "toS": 26
+     },
+     {
+      "anchor": "contact-b-l",
+      "fromS": 0,
+      "toS": 26
+     },
+     {
+      "anchor": "contact-b-r",
       "fromS": 0,
       "toS": 26
      }
@@ -3237,7 +4848,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "ignition",
       "title": {
        "en": "Engine starts",
@@ -3246,7 +4857,7 @@
       "target": "exhaust-stack-jet"
      },
      {
-      "t": 8.0,
+      "t": 8,
       "kind": "operating",
       "title": {
        "en": "Load step to prime power",
@@ -3255,7 +4866,7 @@
       "target": "engine-load"
      },
      {
-      "t": 24.0,
+      "t": 24,
       "kind": "shutdown",
       "title": {
        "en": "Engine stops",
@@ -3508,7 +5119,7 @@
        "kind": "metal",
        "material": "container-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3534,7 +5145,7 @@
      "areaM2": 14,
      "characteristicLengthM": 2.4,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [
       {
        "id": "sheet",
@@ -3545,7 +5156,7 @@
        "kind": "metal",
        "material": "container-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3578,7 +5189,7 @@
        "kind": "metal",
        "material": "aluminium",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 4860,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3630,7 +5241,7 @@
      "kind": "exhaust",
      "model": "operating",
      "material": "exhaust-steel",
-     "areaM2": 3.0,
+     "areaM2": 3,
      "characteristicLengthM": 0.55,
      "geometry": "cylinder",
      "skyViewFactor": 0.9,
@@ -3670,7 +5281,7 @@
      "areaM2": 0.3,
      "characteristicLengthM": 0.2,
      "geometry": "cylinder",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [
       {
        "id": "pipe",
@@ -3681,7 +5292,7 @@
        "kind": "metal",
        "material": "exhaust-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3707,7 +5318,7 @@
      "areaM2": 0.1,
      "characteristicLengthM": 0.3,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [
       {
        "id": "flap",
@@ -3718,7 +5329,7 @@
        "kind": "metal",
        "material": "galvanised-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3751,7 +5362,7 @@
        "kind": "metal",
        "material": "container-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3788,7 +5399,7 @@
        "kind": "metal",
        "material": "galvanised-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -3828,9 +5439,9 @@
      "directionDeg": 0,
      "diameterM": 1.2,
      "operatingKey": "cooling-fan",
-     "volumeFlowM3S": 9.0,
+     "volumeFlowM3S": 9,
      "temperatureRiseK": 30,
-     "vapourKgPerKg": 0.0,
+     "vapourKgPerKg": 0,
      "source": "authored-estimate"
     }
    ],
@@ -3855,8 +5466,8 @@
    "supports": [],
    "assumptions": [
     {
-     "en": "The container rests on two corner-casting supports; the fuel in the base tank is a point load; gravity only.",
-     "de": "Der Container ruht auf zwei Eckbeschlag-Auflagern; der Kraftstoff im Grundtank ist eine Einzellast; nur Schwerkraft."
+     "en": "The container rests on four corner-casting supports (two at each end, left and right); the fuel in the base tank is a point load; gravity only.",
+     "de": "Der Container ruht auf vier Eckbeschlag-Auflagern; der Kraftstoff im Grundtank ist eine Einzellast; nur Schwerkraft."
     }
    ],
    "clinical": false
@@ -3864,10 +5475,7 @@
   "presentation": {
    "defaultPose": "off",
    "defaultClip": "load-cycle",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

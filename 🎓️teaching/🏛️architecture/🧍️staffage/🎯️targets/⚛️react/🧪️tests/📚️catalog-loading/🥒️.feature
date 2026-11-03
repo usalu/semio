@@ -17,7 +17,7 @@ Feature: Lazy, validated catalog
   Scenario: The authored archive is ready
     Given the manifest and every catalog asset file
     When the archive is loaded
-    Then one hundred seven rows are ready and the manifest check is empty
+    Then every manifest entry is one ready row and the manifest check is empty
 
   Scenario: Cancelling leaves the category retryable
     Given a category load in flight

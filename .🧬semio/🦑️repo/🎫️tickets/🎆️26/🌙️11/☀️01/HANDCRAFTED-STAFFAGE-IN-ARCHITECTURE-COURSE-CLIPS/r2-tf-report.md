@@ -1,0 +1,11 @@
+# r2-tf: test gap fixes (2026-11-01)
+
+S = `🎓️teaching/🏛️architecture/🧍️staffage`, E = `🎓️teaching/🏛️architecture/⚡️energy`.
+
+1. **Thermal span per Scene (vitest).** `S/🧪️tests/🌡️thermal-span/🟦️.ts`: new helpers `mixesSpans` / `mixedScenes`, driven by new fixture vectors `sceneRule` in `S/🧫️fixtures/🌡️thermal-span/🔣️.json` (scenes of uniform, wide, single, mixed 25/78, 25/absolute, 25/26 spans; clips where different scenes differ and pass, and clips where one or every scene mixes and are named). The manifest case now also requires every thermal cast to carry a positive `thermalSpanK` and more than one span value to exist. Mixed scenes make the new cases fail. The scene-to-cast mapping of the real clips stays in the Python guard (`staffage_only.py` `scene_spans`, language-specific AST). `🥒️.feature` scenarios updated.
+2. **`contract.md`:** lines 137-138 already carry the per-scene rule (written by dw: 77 casts at 25 K, 70/78 K on 9, one span per Scene). No stale "all 25 K" text remains in `contract.md` or `summary.md`.
+3. **Ventilation radiator close-up** (`E/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py`): measured bottom of both radiator casts is exactly 0.04 m above the floor (anchor), so the bottom delta is now `0.1 * floor_clearance_m * k` (0.0032) against a clearance of 0.032; ap's height/top/left checks were left as they were.
+4. **Occupant `_stand`:** `person.height` is the family extent including the breathing plume (2.244 vs the 1.638 figure), so an upper bound on it cannot be tight. Now: the figure (`get_points_defining_boundary`) equals `occupant_ratio*(h-t)` within 2 %; the full extent is at least 0.95 and at most 1.5 times that target (cast bounds 1.44x); bottom within 1 % of the target. Code is correct, no code change.
+5. **`cast-export`:** the three `if (!hasBun) skip()` became `requireBun()`, which throws a clear environment error. The win32 `skipIf` on the SIGTERM case stays (POSIX signal semantics; the `--parent` case covers hard kills on every OS).
+
+Results: library vitest (`q2-vitest-alias.config.ts`) `thermal-span` + `cast-export`: 2 files, 92 passed, 1 skipped (the win32 SIGTERM case). Ventilation architecture unittest: 5 tests OK (after the tightening). Probe script: `🧰️tf/probe.py`.

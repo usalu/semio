@@ -48,7 +48,7 @@
       ],
       "notes": {
         "en": "Side elevation, mass 68 kg and a flow of 3 L/min are class values (authored estimates). The jet is a bone that retracts 0.25 m behind the basin when the tap is off, so it is not drawn as running water in the idle poses. The jet emitter releases air saturated at the 12 degC supply temperature (humidity ratio 0.0087 kg/kg, 14 K below the 26 degC ambient of the reference case, here applied as a 4 K cooling of the entrained air) at 0.0003 m3/s: an authored estimate of the entrained boundary-layer air of a 0.012 m jet (evaporating surface about 0.006 m2).",
-        "de": "Seitenansicht, Masse 68 kg und ein Durchfluss von 3 L/min sind Klassenwerte (Schätzwerte). Der Strahl ist ein Knochen, der sich bei geschlossenem Hahn 0,25 m hinter dem Becken zurückzieht, damit er in den Ruheposen nicht als fließendes Wasser gezeichnet wird. Der Strahl-Emitter gibt bei 0,0003 m3/s Luft ab, die bei der Zulauftemperatur von 12 degC gesättigt ist (Feuchtegrad 0,0087 kg/kg): eine Schätzung der mitgerissenen Grenzschichtluft eines 0,012 m dicken Strahls (verdunstende Fläche etwa 0,006 m2)."
+        "de": "Seitenansicht, Masse 68 kg und ein Durchfluss von 3 L/min sind Klassenwerte (Schätzwerte). Der Strahl ist ein Knochen, der sich bei geschlossenem Hahn 0,25 m hinter dem Becken zurückzieht, damit er in den Ruheposen nicht als fließendes Wasser gezeichnet wird. Der Strahl-Emitter gibt bei 0,0003 m3/s Luft ab, die bei der Zulauftemperatur von 12 degC gesättigt ist (Feuchtegrad 0,0087 kg/kg, 14 K unter der 26 degC Umgebung des Referenzfalls, hier als 4 K Abkühlung der mitgerissenen Luft angesetzt): eine Schätzung der mitgerissenen Grenzschichtluft eines 0,012 m dicken Strahls (verdunstende Fläche etwa 0,006 m2)."
       }
     },
     "dimensions": {
@@ -339,14 +339,13 @@
               "filled": true,
               "tone": 0.8,
               "kind": "rect",
-              "x": -0.012,
+              "x": -0.02,
               "y": -0.04,
-              "w": 0.025,
+              "w": 0.04,
               "h": 0.08,
-              "region": "bubbler-brass"
-            ,
+              "region": "bubbler-brass",
               "penMm": 0.138
-             },
+            },
             {
               "id": "jet",
               "bone": "jet",
@@ -359,12 +358,109 @@
               "region": "water-jet",
               "penMm": 0.13
             }
+          ],
+          "front": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.12 L 0.14 0.12 L 0.1 0.72 L -0.1 0.72 L -0.14 0.12 L -0.2 0.12 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.865 C -0.2 0.78 -0.12 0.72 0 0.72 C 0.12 0.72 0.2 0.78 0.2 0.865 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler-column",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.855,
+              "w": 0.06,
+              "h": 0.145,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.989
+                ],
+                [
+                  0,
+                  0.87
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "water-jet"
+            }
+          ],
+          "plan": [
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.2,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "x0": -0.14,
+              "y0": 0,
+              "x1": -0.07,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.03,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A fountain sign 0.8 mm wide and 2 mm high: a flared pedestal with a basin disc and a bubbler block rising at the left.",
-            "de": "Ein Brunnenzeichen, 0,8 mm breit und 2 mm hoch: ein ausgestellter Sockel mit Beckenscheibe und ein links aufsteigender Sprudlerblock."
+            "en": "A fountain sign 0.8 mm wide and 2 mm high: a flared pedestal with a basin disc and a bubbler block rising at the left. Front: the turned pedestal and basin profile as in the side view with the bubbler column in front of the bowl and the jet as a vertical stroke; plan: the basin disc with the bubbler head.",
+            "de": "Ein Brunnenzeichen, 0,8 mm breit und 2 mm hoch: ein ausgestellter Sockel mit Beckenscheibe und ein links aufsteigender Sprudlerblock. Vorderansicht: das gedrehte Sockel- und Beckenprofil wie in der Seitenansicht mit der Spendersäule vor der Schale und dem Strahl als senkrechtem Strich; Draufsicht: die Beckenscheibe mit dem Spenderkopf."
           },
           "retained": {
             "en": "Height 1.0 m and basin width 0.40 m exactly; pedestal flare, basin, bubbler and the jet hairline.",
@@ -375,12 +471,12 @@
             "de": "Fußflansch und Säule sind ein ausgestellter Pfad; Schwanenhals und Kopf sind ein Block; der Taster ist ein kleiner Balken."
           },
           "omitted": {
-            "en": "Column mouldings, rim bead, nozzle, drain.",
-            "de": "Säulenprofile, Randwulst, Düse, Ablauf."
+            "en": "Column mouldings, rim bead, nozzle, drain. The pedestal is covered by the basin in plan, the button and the jet are not drawn in plan (the jet stroke would show in every pose).",
+            "de": "Säulenprofile, Randwulst, Düse, Ablauf. Der Sockel ist in der Draufsicht vom Becken verdeckt, Taster und Strahl werden in der Draufsicht nicht gezeichnet (der Strahlstrich würde in jeder Pose erscheinen)."
           },
           "thinElements": {
-            "en": "The 0.03 m neck would be 0.06 mm: widened to a 0.15 m (0.3 mm) block; the 0.012 m jet is a 0.13 mm hairline (inflation 11 times); the basin is 0.02 m lower than real.",
-            "de": "Der 0,03 m dicke Hals wäre 0,06 mm: auf einen Block von 0,15 m (0,3 mm) verbreitert; der 0,012 m dicke Strahl ist eine 0,13-mm-Haarlinie (Aufblähung 11-fach); das Becken liegt 0,02 m tiefer als real."
+            "en": "The 0.03 m neck would be 0.06 mm: widened to a 0.15 m (0.3 mm) block; the 0.012 m jet is a 0.13 mm hairline (inflation 11 times); the basin is 0.02 m lower than real. The button is drawn 0.04 m wide (instead of 0.025 m) so its feature width stays above 0.2 mm.",
+            "de": "Der 0,03 m dicke Hals wäre 0,06 mm: auf einen Block von 0,15 m (0,3 mm) verbreitert; der 0,012 m dicke Strahl ist eine 0,13-mm-Haarlinie (Aufblähung 11-fach); das Becken liegt 0,02 m tiefer als real. Der Taster ist 0,04 m breit gezeichnet (statt 0,025 m), damit seine Merkmalsbreite über 0,2 mm bleibt."
           },
           "hatching": {
             "en": "None.",
@@ -496,12 +592,131 @@
               "region": "water-jet",
               "penMm": 0.13
             }
+          ],
+          "front": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.07 L 0.15 0.07 L 0.1 0.7 L 0.09 0.745 L -0.09 0.745 L -0.1 0.7 L -0.15 0.07 L -0.2 0.07 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.865 C -0.2 0.79 -0.12 0.74 0 0.74 C 0.12 0.74 0.2 0.79 0.2 0.865 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler-column",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.855,
+              "w": 0.06,
+              "h": 0.145,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "collar",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.115,
+                  0.55
+                ],
+                [
+                  0.115,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.989
+                ],
+                [
+                  0,
+                  0.87
+                ]
+              ],
+              "penMm": 0.13,
+              "closed": false,
+              "region": "water-jet"
+            }
+          ],
+          "plan": [
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.2,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "x0": -0.14,
+              "y0": 0,
+              "x1": -0.07,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.03,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A fountain 2 mm wide and 5 mm high: a baluster pedestal with a flange, a basin and a hooked bubbler neck with a jet arc.",
-            "de": "Ein Brunnen 2 mm breit und 5 mm hoch: ein Baluster-Sockel mit Flansch, ein Becken und ein gekrümmter Sprudlerhals mit Strahlbogen."
+            "en": "A fountain 2 mm wide and 5 mm high: a baluster pedestal with a flange, a basin and a hooked bubbler neck with a jet arc. Front: turned pedestal with its collar, the basin, the bubbler column and the jet; plan: basin disc with the bubbler head capsule.",
+            "de": "Ein Brunnen 2 mm breit und 5 mm hoch: ein Baluster-Sockel mit Flansch, ein Becken und ein gekrümmter Sprudlerhals mit Strahlbogen. Vorderansicht: gedrehter Sockel mit Kragen, Becken, Spendersäule und Strahl; Draufsicht: Beckenscheibe mit der Kapsel des Spenderkopfs."
           },
           "retained": {
             "en": "Flange, baluster profile, collar line, basin, hooked neck, button, jet.",
@@ -512,8 +727,8 @@
             "de": "Die Sockelprofile gehen in der Balusterkontur auf."
           },
           "omitted": {
-            "en": "Nozzle detail, rim bead, bolt holes, drain.",
-            "de": "Düsendetail, Randwulst, Schraublöcher, Ablauf."
+            "en": "Nozzle detail, rim bead, bolt holes, drain. Button and jet are not drawn in plan.",
+            "de": "Düsendetail, Randwulst, Schraublöcher, Ablauf. Taster und Strahl werden in der Draufsicht nicht gezeichnet."
           },
           "thinElements": {
             "en": "The neck is 0.05 m (0.25 mm) wide, real 0.03 m; the jet is a 0.13 mm hairline for a 0.012 m stream.",
@@ -675,12 +890,235 @@
               "region": "water-jet",
               "penMm": 0.18
             }
+          ],
+          "front": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.05 L 0.17 0.06 L 0.15 0.08 L 0.1 0.7 L 0.09 0.745 L -0.09 0.745 L -0.1 0.7 L -0.15 0.08 L -0.17 0.06 L -0.2 0.05 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.865 C -0.2 0.79 -0.12 0.74 0 0.74 C 0.12 0.74 0.2 0.79 0.2 0.865 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.84
+                ],
+                [
+                  0.19,
+                  0.84
+                ]
+              ],
+              "closed": false,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler-column",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.027,
+              "y": 0.855,
+              "w": 0.054,
+              "h": 0.145,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.958,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "button",
+              "bone": "button",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.66,
+              "rx": 0.02,
+              "ry": 0.025,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "collar-0",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.3
+                ],
+                [
+                  0.12,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "collar-1",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.55
+                ],
+                [
+                  0.12,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.989
+                ],
+                [
+                  0,
+                  0.87
+                ]
+              ],
+              "penMm": 0.18,
+              "closed": false,
+              "region": "water-jet"
+            }
+          ],
+          "plan": [
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.2,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.19,
+              "ry": 0.19,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "x0": -0.14,
+              "y0": 0,
+              "x1": -0.07,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.025,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.05,
+              "cy": 0,
+              "rx": 0.016,
+              "ry": 0.016,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A fountain 4 mm wide and 10 mm high: a flanged baluster pedestal with two collar lines, a basin with rim line, a goose-neck bubbler with a round button.",
-            "de": "Ein Brunnen 4 mm breit und 10 mm hoch: ein Baluster-Sockel mit Flansch und zwei Kragenlinien, ein Becken mit Randlinie, ein Schwanenhals-Sprudler mit rundem Taster."
+            "en": "A fountain 4 mm wide and 10 mm high: a flanged baluster pedestal with two collar lines, a basin with rim line, a goose-neck bubbler with a round button. Front: turned pedestal and basin with the rim line, the bubbler column with its nozzle ring, the push button on the front of the pedestal and the jet; plan: basin disc with rim ring, the bubbler head and its nozzle ring.",
+            "de": "Ein Brunnen 4 mm breit und 10 mm hoch: ein Baluster-Sockel mit Flansch und zwei Kragenlinien, ein Becken mit Randlinie, ein Schwanenhals-Sprudler mit rundem Taster. Vorderansicht: gedrehter Sockel und Becken mit Randlinie, Spendersäule mit Düsenring, Taster an der Sockelvorderseite und Strahl; Draufsicht: Beckenscheibe mit Randring, der Spenderkopf und sein Düsenring."
           },
           "retained": {
             "en": "Stepped flange, baluster, collars, basin and rim, neck with head, button, jet arc.",
@@ -691,8 +1129,8 @@
             "de": "Die gegossenen Profile der Säule sind als zwei Kragen gezeichnet."
           },
           "omitted": {
-            "en": "Nozzle detail, drain, flutes, bolt holes.",
-            "de": "Düsendetail, Ablauf, Kannelüren, Schraublöcher."
+            "en": "Nozzle detail, drain, flutes, bolt holes. The pushed button sits below the basin and the jet is not drawn in plan.",
+            "de": "Düsendetail, Ablauf, Kannelüren, Schraublöcher. Der gedrückte Taster liegt unter dem Becken und der Strahl wird in der Draufsicht nicht gezeichnet."
           },
           "thinElements": {
             "en": "The neck is the real 0.03 m (0.3 mm) plus 0.015 m; the jet is a 0.18 mm line for a 0.012 m stream.",
@@ -969,12 +1407,426 @@
               "ry": 0.007,
               "region": "water-jet"
             }
+          ],
+          "front": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.04 L 0.17 0.055 L 0.16 0.075 L 0.15 0.08 L 0.1 0.7 L 0.11 0.72 L 0.09 0.745 L -0.09 0.745 L -0.11 0.72 L -0.1 0.7 L -0.15 0.08 L -0.16 0.075 L -0.17 0.055 L -0.2 0.04 Z",
+              "hatch": "flutes",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "collar-0",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13226,
+                  0.2
+                ],
+                [
+                  0.13226,
+                  0.2
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "collar-1",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11807,
+                  0.42
+                ],
+                [
+                  0.11807,
+                  0.42
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "collar-2",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.10516,
+                  0.62
+                ],
+                [
+                  0.10516,
+                  0.62
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "bolt-0",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.1792,
+              "cy": 0.02,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "bolt-1",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.1792,
+              "cy": 0.02,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.865 C -0.2 0.79 -0.12 0.74 0 0.74 C 0.12 0.74 0.2 0.79 0.2 0.865 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.84
+                ],
+                [
+                  0.19,
+                  0.84
+                ]
+              ],
+              "closed": false,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim-bead",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.205 0.865 C -0.2 0.872 0.2 0.872 0.205 0.865",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler-column",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.027,
+              "y": 0.855,
+              "w": 0.054,
+              "h": 0.145,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "bubbler-collar",
+              "bone": "bubbler",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.027,
+                  0.9
+                ],
+                [
+                  0.027,
+                  0.9
+                ]
+              ],
+              "closed": false,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle-ring",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.958,
+              "rx": 0.02,
+              "ry": 0.02,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle-bore",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.958,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "button",
+              "bone": "button",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.66,
+              "rx": 0.02,
+              "ry": 0.025,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "button-ring",
+              "bone": "button",
+              "role": "body",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.66,
+              "rx": 0.027,
+              "ry": 0.032,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.989
+                ],
+                [
+                  0,
+                  0.87
+                ]
+              ],
+              "penMm": 0.25,
+              "closed": false,
+              "region": "water-jet"
+            },
+            {
+              "id": "drop-0",
+              "bone": "jet",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.915,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "water-jet"
+            }
+          ],
+          "plan": [
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.2,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.19,
+              "ry": 0.19,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim-bead",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.2,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "drain",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": 0,
+              "rx": 0.022,
+              "ry": 0.022,
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "capsule",
+              "x0": -0.14,
+              "y0": 0,
+              "x1": -0.07,
+              "y1": 0,
+              "r0": 0.03,
+              "r1": 0.025,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "bubbler-collar",
+              "bone": "bubbler",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.14,
+              "cy": 0,
+              "rx": 0.018,
+              "ry": 0.018,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle-ring",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.05,
+              "cy": 0,
+              "rx": 0.016,
+              "ry": 0.016,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle-bore",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.05,
+              "cy": 0,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A fountain 8 mm wide and 20 mm high with cast detail: stepped flange with bolt heads, fluted baluster with three collars, basin with rim bead, goose-neck bubbler with a nozzle ring, push button and the jet arc with two drops.",
-            "de": "Ein Brunnen 8 mm breit und 20 mm hoch mit Gussdetail: gestufter Flansch mit Schraubenköpfen, kannelierter Baluster mit drei Kragen, Becken mit Randwulst, Schwanenhals-Sprudler mit Düsenring, Drucktaster und der Strahlbogen mit zwei Tropfen."
+            "en": "A fountain 8 mm wide and 20 mm high with cast detail: stepped flange with bolt heads, fluted baluster with three collars, basin with rim bead, goose-neck bubbler with a nozzle ring, push button and the jet arc with two drops. Front: fluted pedestal with three collars and base bolts, the basin with rim line and bead, the bubbler column with collar and nozzle ring and bore, the push button with its escutcheon ring and the jet with a drop; plan: the basin with rim ring, bead, drain and the bubbler with collar and nozzle.",
+            "de": "Ein Brunnen 8 mm breit und 20 mm hoch mit Gussdetail: gestufter Flansch mit Schraubenköpfen, kannelierter Baluster mit drei Kragen, Becken mit Randwulst, Schwanenhals-Sprudler mit Düsenring, Drucktaster und der Strahlbogen mit zwei Tropfen. Vorderansicht: kannelierter Sockel mit drei Kragen und Fußschrauben, das Becken mit Randlinie und Wulst, die Spendersäule mit Kragen sowie Düsenring und Bohrung, der Taster mit Blendenring und der Strahl mit einem Tropfen; Draufsicht: das Becken mit Randring, Wulst, Abfluss und der Spender mit Kragen und Düse."
           },
           "retained": {
             "en": "All visible parts at real size; the button moves 10 mm in with the button bone, the jet sinks with the jet bone.",
@@ -985,8 +1837,8 @@
             "de": "Der ferne Schraubenkopf ist vom nahen Flansch verdeckt."
           },
           "omitted": {
-            "en": "Maker plate, drain grid, cast ornament.",
-            "de": "Typenschild, Ablaufgitter, Gussornament."
+            "en": "Maker plate, drain grid, cast ornament. The pedestal lies under the basin and the jet is not drawn in plan, because it would show in every pose.",
+            "de": "Typenschild, Ablaufgitter, Gussornament. Der Sockel liegt unter dem Becken und der Strahl wird in der Draufsicht nicht gezeichnet, weil er in jeder Pose erschiene."
           },
           "thinElements": {
             "en": "The jet is a 0.25 mm line for the 0.012 m stream (0.24 mm real); drops are 0.014 m (0.28 mm) circles; the nozzle ring is 0.56 mm.",
@@ -1678,10 +2530,7 @@
     "presentation": {
       "defaultPose": "drinking",
       "defaultClip": "press-and-drink",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

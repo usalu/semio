@@ -227,29 +227,54 @@
      }
     },
     {
-     "id": "rear-door",
+     "id": "rear-door-r",
      "parent": "chassis",
      "title": {
-      "en": "Rear door leaf (projected swing)",
-      "de": "Hecktürflügel (projizierter Schwenk)"
+      "en": "Rear door leaf, right, vertical hinge",
+      "de": "Hecktürflügel rechts, senkrechtes Scharnier"
      },
      "x": -2.67,
-     "y": 0.5,
-     "angleDeg": 0,
-     "lengthM": 0.95,
+     "y": 0.55,
+     "angleDeg": 90,
+     "lengthM": 1.35,
      "joint": {
-      "type": "prismatic",
-      "axisDeg": 180,
-      "minM": 0,
-      "maxM": 0.95
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 0
      },
      "mass": {
-      "kg": 42,
-      "comX": -0.45,
-      "comY": 0.7,
+      "kg": 21,
+      "comX": 0.675,
+      "comY": 0.45,
       "distribution": "point",
       "source": "authored-estimate"
-     }
+     },
+     "z": -0.88
+    },
+    {
+     "id": "rear-door-l",
+     "parent": "chassis",
+     "title": {
+      "en": "Rear door leaf, left, vertical hinge",
+      "de": "Hecktürflügel links, senkrechtes Scharnier"
+     },
+     "x": -2.67,
+     "y": 0.55,
+     "angleDeg": 90,
+     "lengthM": 1.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 21,
+      "comX": 0.675,
+      "comY": 0.45,
+      "distribution": "point",
+      "source": "authored-estimate"
+     },
+     "z": 0.88
     },
     {
      "id": "axle-f",
@@ -351,36 +376,72 @@
   },
   "anchors": [
    {
-    "id": "contact-f",
+    "id": "contact-f-l",
     "bone": "axle-f",
     "x": 0,
     "y": -0.356,
     "kind": "contact",
     "title": {
-     "en": "Front tyre patches",
-     "de": "Vorderreifenaufstandsflächen"
+     "en": "Front tyre patches (left)",
+     "de": "Vorderreifenaufstandsflächen (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.11,
-    "footprintWidthM": 0.47,
-    "frictionCoefficient": 0.8
+    "footprintWidthM": 0.235,
+    "frictionCoefficient": 0.8,
+    "z": 0.84
    },
    {
-    "id": "contact-r",
+    "id": "contact-f-r",
+    "bone": "axle-f",
+    "x": 0,
+    "y": -0.356,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre patches (right)",
+     "de": "Vorderreifenaufstandsflächen (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.11,
+    "footprintWidthM": 0.235,
+    "frictionCoefficient": 0.8,
+    "z": -0.84
+   },
+   {
+    "id": "contact-r-l",
     "bone": "axle-r",
     "x": 0,
     "y": -0.356,
     "kind": "contact",
     "title": {
-     "en": "Rear tyre patches",
-     "de": "Hinterreifenaufstandsflächen"
+     "en": "Rear tyre patches (left)",
+     "de": "Hinterreifenaufstandsflächen (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.11,
-    "footprintWidthM": 0.47,
-    "frictionCoefficient": 0.8
+    "footprintWidthM": 0.235,
+    "frictionCoefficient": 0.8,
+    "z": 0.84
+   },
+   {
+    "id": "contact-r-r",
+    "bone": "axle-r",
+    "x": 0,
+    "y": -0.356,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre patches (right)",
+     "de": "Hinterreifenaufstandsflächen (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.11,
+    "footprintWidthM": 0.235,
+    "frictionCoefficient": 0.8,
+    "z": -0.84
    },
    {
     "id": "tailpipe",
@@ -391,7 +452,8 @@
     "title": {
      "en": "Tailpipe mouth",
      "de": "Auspuffmündung"
-    }
+    },
+    "z": -0.31
    },
    {
     "id": "cargo-floor",
@@ -829,30 +891,72 @@
        "points": [
         [
          0,
-         0.4
+         0
         ],
         [
-         0.95,
-         0.4
+         1.35,
+         0
         ],
         [
-         0.95,
-         1.4
+         1.35,
+         0.9
         ],
         [
          0,
-         1.4
+         0.9
         ]
        ],
        "closed": true,
-       "id": "rear-leaf",
-       "bone": "rear-door",
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
        "tone": 0.6,
        "region": "rear-doors",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.905,
+        "z1": -0.855
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.45,
+       "filled": true,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.855,
+        "z1": 0.905
+       }
       },
       {
        "kind": "poly",
@@ -1082,12 +1186,778 @@
        "tone": 0.2,
        "material": "plastic-trim"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.356
+        ],
+        [
+         0.9,
+         0.356
+        ],
+        [
+         0.91,
+         0.5
+        ],
+        [
+         0.91,
+         1.1
+        ],
+        [
+         0.88,
+         1.8
+        ],
+        [
+         0.83,
+         1.97
+        ],
+        [
+         0.78,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         -0.78,
+         1.99
+        ],
+        [
+         -0.83,
+         1.97
+        ],
+        [
+         -0.88,
+         1.8
+        ],
+        [
+         -0.91,
+         1.1
+        ],
+        [
+         -0.91,
+         0.5
+        ],
+        [
+         -0.9,
+         0.356
+        ],
+        [
+         0,
+         0.356
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.93,
+       "w": 1.6,
+       "h": 0.06,
+       "r": 0.02,
+       "id": "roof-cap",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.86,
+       "y": 0.95,
+       "w": 1.72,
+       "h": 0.17,
+       "r": 0.04,
+       "id": "bonnet-top",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bonnet",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.9,
+       "y": 0.36,
+       "w": 1.8,
+       "h": 0.18,
+       "r": 0.05,
+       "id": "bumper",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.45,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.46,
+       "y": 0.6,
+       "w": 0.92,
+       "h": 0.28,
+       "r": 0.03,
+       "id": "grille",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "engine-bay",
+       "material": "engine-metal"
+      },
+      {
+       "kind": "rect",
+       "x": 0.55,
+       "y": 0.68,
+       "w": 0.3,
+       "h": 0.16,
+       "r": 0.04,
+       "id": "headlamp-l",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -0.85,
+       "y": 0.68,
+       "w": 0.3,
+       "h": 0.16,
+       "r": 0.04,
+       "id": "headlamp-r",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         1.13
+        ],
+        [
+         0.84,
+         1.13
+        ],
+        [
+         0.79,
+         1.93
+        ],
+        [
+         -0.79,
+         1.93
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.91,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -0.995,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": 0.74,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": 0.74,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.67,
+         0
+        ],
+        [
+         -2.67,
+         0.82
+        ],
+        [
+         -2.6,
+         0.91
+        ],
+        [
+         1.8,
+         0.91
+        ],
+        [
+         2.35,
+         0.88
+        ],
+        [
+         2.6,
+         0.8
+        ],
+        [
+         2.67,
+         0.65
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         -0.65
+        ],
+        [
+         2.6,
+         -0.8
+        ],
+        [
+         2.35,
+         -0.88
+        ],
+        [
+         1.8,
+         -0.91
+        ],
+        [
+         -2.6,
+         -0.91
+        ],
+        [
+         -2.67,
+         -0.82
+        ],
+        [
+         -2.67,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.91,
+       "w": 1.05,
+       "h": 0.05,
+       "id": "slider-panel",
+       "bone": "slider",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "slider-door",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -1.7,
+       "y": -0.945,
+       "w": 2,
+       "h": 0.04,
+       "id": "slider-track",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.45,
+       "filled": true,
+       "tone": 0.4,
+       "region": "slider-door",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.905,
+        "z1": -0.855
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.855,
+        "z1": 0.905
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -2.6,
+       "y": -0.86,
+       "w": 3.74,
+       "h": 1.72,
+       "r": 0.05,
+       "id": "roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.14,
+         -0.84
+        ],
+        [
+         1.8,
+         -0.8
+        ],
+        [
+         1.8,
+         0.8
+        ],
+        [
+         1.14,
+         0.84
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.8,
+         0
+        ],
+        [
+         1.8,
+         0.88
+        ],
+        [
+         2.35,
+         0.86
+        ],
+        [
+         2.6,
+         0.79
+        ],
+        [
+         2.67,
+         0.65
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         -0.65
+        ],
+        [
+         2.6,
+         -0.79
+        ],
+        [
+         2.35,
+         -0.86
+        ],
+        [
+         1.8,
+         -0.88
+        ],
+        [
+         1.8,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "bonnet",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bonnet",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 2.5,
+       "y": 0.5,
+       "w": 0.14,
+       "h": 0.28,
+       "r": 0.03,
+       "id": "headlamp-l",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 2.5,
+       "y": -0.78,
+       "w": 0.14,
+       "h": 0.28,
+       "r": 0.03,
+       "id": "headlamp-r",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -2.67,
+       "y": 0.7,
+       "w": 0.05,
+       "h": 0.14,
+       "r": 0.01,
+       "id": "tail-lamp-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -2.67,
+       "y": -0.84,
+       "w": 0.05,
+       "h": 0.14,
+       "r": 0.01,
+       "id": "tail-lamp-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": 0.91,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": -0.995,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -2.66,
+       "y": -0.35,
+       "w": 0.3,
+       "h": 0.08,
+       "r": 0.03,
+       "id": "exhaust-tip",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Full side elevation with arches, glazing, sliding door with handle, rear leaf, door gaps, lamps, mirror, rub strip, tail pipe and wheels with ring rim, five holes, brake disc and hub.",
-      "de": "Vollständige Seitenansicht mit Radläufen, Verglasung, Schiebetür mit Griff, Hecktürflügel, Türfugen, Leuchten, Spiegel, Scheuerleiste, Endrohr und Rädern mit Felgenring, fünf Löchern, Bremsscheibe und Nabe."
+      "en": "Full side elevation with arches, glazing, sliding door with handle, rear leaf, door gaps, lamps, mirror, rub strip, tail pipe and wheels with ring rim, five holes, brake disc and hub. Front: cab and cargo body outline with bumper, grille, bonnet, headlamps, windscreen, roof cap, mirrors and the four tyres behind each other; top: roof, windscreen, bonnet, body outline, lamps, mirrors, the slider and both rear door leaves and the tyre treads beside the body.",
+      "de": "Vollständige Seitenansicht mit Radläufen, Verglasung, Schiebetür mit Griff, Hecktürflügel, Türfugen, Leuchten, Spiegel, Scheuerleiste, Endrohr und Rädern mit Felgenring, fünf Löchern, Bremsscheibe und Nabe. Vorn: Umriss von Fahrerhaus und Laderaum mit Stoßfänger, Kühlergrill, Haube, Scheinwerfern, Windschutzscheibe, Dachkappe, Spiegeln und den vier Reifen hintereinander; oben: Dach, Windschutzscheibe, Haube, Karosserieumriss, Leuchten, Spiegel, Schiebetür und beide Hecktürflügel und die Reifenlaufflächen neben dem Aufbau."
      },
      "retained": {
       "en": "All printable parts.",
@@ -1114,8 +1984,8 @@
       "de": "Aufbau mittlerer Ton, Türen eine Stufe heller, Glas am hellsten, Reifen fast schwarz."
      },
      "overlays": {
-      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed.",
-      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt."
+      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed. Front and top shapes carry the regions of the side view. The slider and the two rear door leaves are bound to their prismatic bones and sit under the roof outline while closed; opened, they slide out beside and behind the body exactly as in the side view. Rear doors: each leaf hangs on its own vertical hinge bone at the rear corner; the closed poses turn the leaves 90 degrees about the hinge and the open pose leaves them out, so front and top swing the leaves like the real doors.",
+      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt. Vorder- und Draufsichtformen tragen die Regionen der Seitenansicht. Schiebetür und beide Hecktürflügel sind an ihre prismatischen Knochen gebunden und liegen geschlossen unter dem Dachumriss; geöffnet gleiten sie wie in der Seitenansicht neben und hinter den Aufbau. Hecktüren: Jeder Flügel hängt an einem eigenen senkrechten Scharnierknochen an der hinteren Ecke; die geschlossenen Posen drehen die Flügel um 90 Grad um das Scharnier, die offene Pose lässt sie ausgeschwenkt, sodass Vorder- und Draufsicht die Flügel wie die echten Türen schwenken."
      }
     }
    },
@@ -1531,30 +2401,72 @@
        "points": [
         [
          0,
-         0.4
+         0
         ],
         [
-         0.95,
-         0.4
+         1.35,
+         0
         ],
         [
-         0.95,
-         1.4
+         1.35,
+         0.9
         ],
         [
          0,
-         1.4
+         0.9
         ]
        ],
        "closed": true,
-       "id": "rear-leaf",
-       "bone": "rear-door",
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
        "tone": 0.6,
        "region": "rear-doors",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.905,
+        "z1": -0.855
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.45,
+       "filled": true,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.855,
+        "z1": 0.905
+       }
       },
       {
        "kind": "poly",
@@ -1747,20 +2659,719 @@
        "tone": 0.3,
        "material": "plastic-trim"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.15,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.15,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.07,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.356
+        ],
+        [
+         0.9,
+         0.356
+        ],
+        [
+         0.91,
+         0.5
+        ],
+        [
+         0.91,
+         1.1
+        ],
+        [
+         0.88,
+         1.8
+        ],
+        [
+         0.83,
+         1.97
+        ],
+        [
+         0.78,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         -0.78,
+         1.99
+        ],
+        [
+         -0.83,
+         1.97
+        ],
+        [
+         -0.88,
+         1.8
+        ],
+        [
+         -0.91,
+         1.1
+        ],
+        [
+         -0.91,
+         0.5
+        ],
+        [
+         -0.9,
+         0.356
+        ],
+        [
+         0,
+         0.356
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": 1.93,
+       "w": 1.6,
+       "h": 0.06,
+       "r": 0.02,
+       "id": "roof-cap",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.86,
+       "y": 0.95,
+       "w": 1.72,
+       "h": 0.17,
+       "r": 0.04,
+       "id": "bonnet-top",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bonnet",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.6,
+       "w": 1.4,
+       "h": 0.28,
+       "r": 0.04,
+       "id": "grille",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "engine-bay",
+        "body-panels"
+       ],
+       "material": "engine-metal"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         1.13
+        ],
+        [
+         0.84,
+         1.13
+        ],
+        [
+         0.79,
+         1.93
+        ],
+        [
+         -0.79,
+         1.93
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.91,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -0.995,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": 0.74,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": 0.74,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 0.2,
+       "r": 0.02,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.67,
+         0
+        ],
+        [
+         -2.67,
+         0.82
+        ],
+        [
+         -2.6,
+         0.91
+        ],
+        [
+         1.8,
+         0.91
+        ],
+        [
+         2.35,
+         0.88
+        ],
+        [
+         2.6,
+         0.8
+        ],
+        [
+         2.67,
+         0.65
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         -0.65
+        ],
+        [
+         2.6,
+         -0.8
+        ],
+        [
+         2.35,
+         -0.88
+        ],
+        [
+         1.8,
+         -0.91
+        ],
+        [
+         -2.6,
+         -0.91
+        ],
+        [
+         -2.67,
+         -0.82
+        ],
+        [
+         -2.67,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.91,
+       "w": 1.05,
+       "h": 0.05,
+       "id": "slider-panel",
+       "bone": "slider",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "slider-door",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -1.7,
+       "y": -0.945,
+       "w": 2,
+       "h": 0.04,
+       "id": "slider-track",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.45,
+       "filled": true,
+       "tone": 0.4,
+       "region": "slider-door",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.905,
+        "z1": -0.855
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.855,
+        "z1": 0.905
+       }
+      },
+      {
+       "kind": "rect",
+       "x": -2.6,
+       "y": -0.86,
+       "w": 3.74,
+       "h": 1.72,
+       "r": 0.05,
+       "id": "roof",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.75,
+       "regions": [
+        "roof",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.14,
+         -0.84
+        ],
+        [
+         1.8,
+         -0.8
+        ],
+        [
+         1.8,
+         0.8
+        ],
+        [
+         1.14,
+         0.84
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.8,
+         0
+        ],
+        [
+         1.8,
+         0.88
+        ],
+        [
+         2.35,
+         0.86
+        ],
+        [
+         2.6,
+         0.79
+        ],
+        [
+         2.67,
+         0.65
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         -0.65
+        ],
+        [
+         2.6,
+         -0.79
+        ],
+        [
+         2.35,
+         -0.86
+        ],
+        [
+         1.8,
+         -0.88
+        ],
+        [
+         1.8,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "bonnet",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "regions": [
+        "bonnet",
+        "engine-bay"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 2.5,
+       "y": 0.5,
+       "w": 0.14,
+       "h": 0.28,
+       "r": 0.03,
+       "id": "headlamp-l",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 2.5,
+       "y": -0.78,
+       "w": 0.14,
+       "h": 0.28,
+       "r": 0.03,
+       "id": "headlamp-r",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": 0.91,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": -0.995,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -2.66,
+       "y": -0.35,
+       "w": 0.3,
+       "h": 0.08,
+       "r": 0.03,
+       "id": "exhaust-tip",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Body with arches, glazing in two parts, sliding door panel, rear leaf, door gaps front and rear, lamps, mirror, tail pipe, wheels with rim, brake disc and hub.",
-      "de": "Aufbau mit Radläufen, Verglasung in zwei Teilen, Schiebetürtafel, Hecktürflügel, Türfugen vorn und hinten, Leuchten, Spiegel, Endrohr, Räder mit Felge, Bremsscheibe und Nabe."
+      "en": "Body with arches, glazing in two parts, sliding door panel, rear leaf, door gaps front and rear, lamps, mirror, tail pipe, wheels with rim, brake disc and hub. Front and top as articulated masses: tyres, body outline, roof, bonnet, windscreen, mirrors, slider and both rear door leaves.",
+      "de": "Aufbau mit Radläufen, Verglasung in zwei Teilen, Schiebetürtafel, Hecktürflügel, Türfugen vorn und hinten, Leuchten, Spiegel, Endrohr, Räder mit Felge, Bremsscheibe und Nabe. Vorder- und Draufsicht als gegliederte Massen: Reifen, Karosserieumriss, Dach, Haube, Windschutzscheibe, Spiegel, Schiebetür und beide Hecktürflügel."
      },
      "retained": {
       "en": "Everything above 0.05 m.",
       "de": "Alles über 0,05 m."
      },
      "merged": {
-      "en": "Engine bay and exhaust share the body shell; rim holes are not drawn.",
-      "de": "Motorraum und Abgasanlage teilen die Aufbauhülle; Felgenlöcher werden nicht gezeichnet."
+      "en": "Engine bay and exhaust share the body shell; rim holes are not drawn. Bumper, grille and headlamps are one front face; the exhaust tip and the engine bay belong to the roof and bonnet shapes in plan.",
+      "de": "Motorraum und Abgasanlage teilen die Aufbauhülle; Felgenlöcher werden nicht gezeichnet. Stoßfänger, Grill und Scheinwerfer sind eine Frontfläche; Endrohr und Motorraum gehören oben zu den Dach- und Haubenformen."
      },
      "omitted": {
       "en": "Handles, rub strips, wipers, tread.",
@@ -1779,8 +3390,8 @@
       "de": "Aufbau mittlerer Ton, Türen eine Stufe heller, Glas am hellsten, Reifen fast schwarz."
      },
      "overlays": {
-      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed.",
-      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt."
+      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed. Rear doors: each leaf hangs on its own vertical hinge bone at the rear corner; the closed poses turn the leaves 90 degrees about the hinge and the open pose leaves them out, so front and top swing the leaves like the real doors.",
+      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt. Hecktüren: Jeder Flügel hängt an einem eigenen senkrechten Scharnierknochen an der hinteren Ecke; die geschlossenen Posen drehen die Flügel um 90 Grad um das Scharnier, die offene Pose lässt sie ausgeschwenkt, sodass Vorder- und Draufsicht die Flügel wie die echten Türen schwenken."
      }
     }
    },
@@ -2168,30 +3779,72 @@
        "points": [
         [
          0,
-         0.4
+         0
         ],
         [
-         0.95,
-         0.4
+         1.35,
+         0
         ],
         [
-         0.95,
-         1.4
+         1.35,
+         0.9
         ],
         [
          0,
-         1.4
+         0.9
         ]
        ],
        "closed": true,
-       "id": "rear-leaf",
-       "bone": "rear-door",
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
        "role": "body",
        "z": 1.5,
-       "filled": true,
+       "filled": false,
        "tone": 0.6,
        "region": "rear-doors",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.91,
+        "z1": -0.85
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.45,
+       "filled": false,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.85,
+        "z1": 0.91
+       }
       },
       {
        "kind": "poly",
@@ -2253,20 +3906,551 @@
        "region": "cab-glazing",
        "material": "glass"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.05,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.05,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.05,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.05,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.356
+        ],
+        [
+         0.9,
+         0.356
+        ],
+        [
+         0.91,
+         0.5
+        ],
+        [
+         0.91,
+         1.1
+        ],
+        [
+         0.88,
+         1.8
+        ],
+        [
+         0.83,
+         1.97
+        ],
+        [
+         0.78,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         -0.78,
+         1.99
+        ],
+        [
+         -0.83,
+         1.97
+        ],
+        [
+         -0.88,
+         1.8
+        ],
+        [
+         -0.91,
+         1.1
+        ],
+        [
+         -0.91,
+         0.5
+        ],
+        [
+         -0.9,
+         0.356
+        ],
+        [
+         0,
+         0.356
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "body-panels",
+        "roof",
+        "bonnet",
+        "engine-bay",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         1.13
+        ],
+        [
+         0.84,
+         1.13
+        ],
+        [
+         0.79,
+         1.93
+        ],
+        [
+         -0.79,
+         1.93
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.91,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -0.995,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": 0.74,
+       "w": 0.712,
+       "h": 0.2,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": 0.74,
+       "w": 0.712,
+       "h": 0.2,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 0.2,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 0.2,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.67,
+         0
+        ],
+        [
+         -2.67,
+         0.82
+        ],
+        [
+         -2.6,
+         0.91
+        ],
+        [
+         1.8,
+         0.91
+        ],
+        [
+         2.35,
+         0.88
+        ],
+        [
+         2.6,
+         0.8
+        ],
+        [
+         2.67,
+         0.65
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         -0.65
+        ],
+        [
+         2.6,
+         -0.8
+        ],
+        [
+         2.35,
+         -0.88
+        ],
+        [
+         1.8,
+         -0.91
+        ],
+        [
+         -2.6,
+         -0.91
+        ],
+        [
+         -2.67,
+         -0.82
+        ],
+        [
+         -2.67,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "body-panels",
+        "roof",
+        "bonnet",
+        "engine-bay",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.91,
+       "w": 1.05,
+       "h": 0.05,
+       "id": "slider-panel",
+       "bone": "slider",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "slider-door",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.91,
+        "z1": -0.85
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.85,
+        "z1": 0.91
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.14,
+         -0.84
+        ],
+        [
+         1.8,
+         -0.8
+        ],
+        [
+         1.8,
+         0.8
+        ],
+        [
+         1.14,
+         0.84
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": 0.91,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": -0.995,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -2.66,
+       "y": -0.35,
+       "w": 0.3,
+       "h": 0.08,
+       "r": 0.03,
+       "id": "exhaust-tip",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "Body with wheel arches 0.124 m (0.62 mm) clear of the tyres, windscreen and door glass, sliding door panel, rear leaf, wheel discs with brake disc and hub.",
-      "de": "Aufbau mit Radläufen im Abstand von 0,124 m (0,62 mm) zu den Reifen, Windschutz- und Türscheibe, Schiebetürtafel, Hecktürflügel, Radscheiben mit Bremsscheibe und Nabe."
+      "en": "Body with wheel arches 0.124 m (0.62 mm) clear of the tyres, windscreen and door glass, sliding door panel, rear leaf, wheel discs with brake disc and hub. Front and top keep main masses only: tyre blocks, one body shape, the windscreen and, in plan, the slider and both rear door leaves as strips.",
+      "de": "Aufbau mit Radläufen im Abstand von 0,124 m (0,62 mm) zu den Reifen, Windschutz- und Türscheibe, Schiebetürtafel, Hecktürflügel, Radscheiben mit Bremsscheibe und Nabe. Vorder- und Draufsicht behalten nur die Hauptmassen: Reifenblöcke, eine Karosserieform, die Windschutzscheibe und oben Schiebetür und beide Hecktürflügel als Streifen."
      },
      "retained": {
       "en": "All main masses and both door bones.",
       "de": "Alle Hauptmassen und beide Türbones."
      },
      "merged": {
-      "en": "Roof, panels, bonnet, engine bay and exhaust share the body shell.",
-      "de": "Dach, Bleche, Haube, Motorraum und Abgasanlage teilen die Aufbauhülle."
+      "en": "Roof, panels, bonnet, engine bay and exhaust share the body shell. Roof, bonnet, bumper, grille and lamps are one body shape; mirrors are dropped.",
+      "de": "Dach, Bleche, Haube, Motorraum und Abgasanlage teilen die Aufbauhülle. Dach, Haube, Stoßfänger, Grill und Leuchten sind eine Karosserieform; die Spiegel entfallen."
      },
      "omitted": {
       "en": "Handles, mirror, lamps, door gaps, spokes.",
@@ -2285,8 +4469,8 @@
       "de": "Aufbau mittlerer Ton, Türen eine Stufe heller, Glas am hellsten, Reifen fast schwarz."
      },
      "overlays": {
-      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed.",
-      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt."
+      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed. Rear doors: each leaf hangs on its own vertical hinge bone at the rear corner; the closed poses turn the leaves 90 degrees about the hinge and the open pose leaves them out, so front and top swing the leaves like the real doors.",
+      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt. Hecktüren: Jeder Flügel hängt an einem eigenen senkrechten Scharnierknochen an der hinteren Ecke; die geschlossenen Posen drehen die Flügel um 90 Grad um das Scharnier, die offene Pose lässt sie ausgeschwenkt, sodass Vorder- und Draufsicht die Flügel wie die echten Türen schwenken."
      }
     }
    },
@@ -2450,30 +4634,72 @@
        "points": [
         [
          0,
-         0.4
+         0
         ],
         [
-         0.95,
-         0.4
+         1.35,
+         0
         ],
         [
-         0.95,
-         1.4
+         1.35,
+         0.9
         ],
         [
          0,
-         1.4
+         0.9
         ]
        ],
        "closed": true,
-       "id": "rear-leaf",
-       "bone": "rear-door",
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
        "role": "body",
        "z": 1.5,
-       "filled": true,
+       "filled": false,
        "tone": 0.6,
        "region": "rear-doors",
-       "material": "paint"
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.95,
+        "z1": -0.81
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.45,
+       "filled": false,
+       "tone": 0.6,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.81,
+        "z1": 0.95
+       }
       },
       {
        "kind": "poly",
@@ -2505,12 +4731,491 @@
        "region": "cab-glazing",
        "material": "glass"
       }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.04,
+       "id": "tyre-rl",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.25,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.04,
+       "id": "tyre-fl",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.25,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.04,
+       "id": "tyre-rr",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.25,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.712,
+       "r": 0.04,
+       "id": "tyre-fr",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.25,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.356
+        ],
+        [
+         0.9,
+         0.356
+        ],
+        [
+         0.91,
+         0.5
+        ],
+        [
+         0.91,
+         1.1
+        ],
+        [
+         0.88,
+         1.8
+        ],
+        [
+         0.83,
+         1.97
+        ],
+        [
+         0.78,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         0,
+         1.99
+        ],
+        [
+         -0.78,
+         1.99
+        ],
+        [
+         -0.83,
+         1.97
+        ],
+        [
+         -0.88,
+         1.8
+        ],
+        [
+         -0.91,
+         1.1
+        ],
+        [
+         -0.91,
+         0.5
+        ],
+        [
+         -0.9,
+         0.356
+        ],
+        [
+         0,
+         0.356
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "body-panels",
+        "roof",
+        "bonnet",
+        "engine-bay",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         1.13
+        ],
+        [
+         0.84,
+         1.13
+        ],
+        [
+         0.79,
+         1.93
+        ],
+        [
+         -0.79,
+         1.93
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.91,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": -0.995,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -1.956,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 1.88,
+       "id": "tyres-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": 1.344,
+       "y": -0.94,
+       "w": 0.712,
+       "h": 1.88,
+       "id": "tyres-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.67,
+         0
+        ],
+        [
+         -2.67,
+         0.82
+        ],
+        [
+         -2.6,
+         0.91
+        ],
+        [
+         1.8,
+         0.91
+        ],
+        [
+         2.35,
+         0.88
+        ],
+        [
+         2.6,
+         0.8
+        ],
+        [
+         2.67,
+         0.65
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         0
+        ],
+        [
+         2.67,
+         -0.65
+        ],
+        [
+         2.6,
+         -0.8
+        ],
+        [
+         2.35,
+         -0.88
+        ],
+        [
+         1.8,
+         -0.91
+        ],
+        [
+         -2.6,
+         -0.91
+        ],
+        [
+         -2.67,
+         -0.82
+        ],
+        [
+         -2.67,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "body-panels",
+        "roof",
+        "bonnet",
+        "engine-bay",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.91,
+       "w": 1.05,
+       "h": 0.05,
+       "id": "slider-panel",
+       "bone": "slider",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "slider-door",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-r",
+       "bone": "rear-door-r",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.95,
+        "z1": -0.81
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.35,
+         0
+        ],
+        [
+         1.35,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "rear-leaf-l",
+       "bone": "rear-door-l",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "rear-doors",
+       "material": "paint",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.81,
+        "z1": 0.95
+       }
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.14,
+         -0.84
+        ],
+        [
+         1.8,
+         -0.8
+        ],
+        [
+         1.8,
+         0.8
+        ],
+        [
+         1.14,
+         0.84
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": 0.91,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-l",
+       "bone": "chassis",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": -0.995,
+       "w": 0.14,
+       "h": 0.085,
+       "r": 0.03,
+       "id": "mirror-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "One composed body silhouette without arches (the tyres overlap the sill), one glass band, a sliding door panel, a rear leaf and two wheel discs.",
-      "de": "Eine zusammengesetzte Karosseriesilhouette ohne Radläufe (die Reifen überlappen den Schweller), ein Glasband, eine Schiebetürtafel, ein Hecktürflügel und zwei Radscheiben."
+      "en": "One composed body silhouette without arches (the tyres overlap the sill), one glass band, a sliding door panel, a rear leaf and two wheel discs. Front and top are composed silhouettes: one body outline with windscreen, tyre blocks beside it, and in plan the slider and both rear door leaves as strips.",
+      "de": "Eine zusammengesetzte Karosseriesilhouette ohne Radläufe (die Reifen überlappen den Schweller), ein Glasband, eine Schiebetürtafel, ein Hecktürflügel und zwei Radscheiben. Vorder- und Draufsicht sind komponierte Silhouetten: ein Karosserieumriss mit Windschutzscheibe, daneben Reifenblöcke, oben Schiebetür und beide Hecktürflügel als Streifen."
      },
      "retained": {
       "en": "Body, glass band, both doors and wheels.",
@@ -2537,22 +5242,22 @@
       "de": "Aufbau mittlerer Ton, Türen eine Stufe heller, Glas am hellsten, Reifen fast schwarz."
      },
      "overlays": {
-      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed.",
-      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt."
+      "en": "Regions map onto their own shapes; merged shapes list their regions; the rear leaf is hidden behind the rear panel when closed. Rear doors: each leaf hangs on its own vertical hinge bone at the rear corner; the closed poses turn the leaves 90 degrees about the hinge and the open pose leaves them out, so front and top swing the leaves like the real doors.",
+      "de": "Regionen bilden sich auf eigene Formen ab; zusammengefasste Formen führen ihre Regionen; der Hecktürflügel liegt geschlossen hinter der Heckwand verdeckt. Hecktüren: Jeder Flügel hängt an einem eigenen senkrechten Scharnierknochen an der hinteren Ecke; die geschlossenen Posen drehen die Flügel um 90 Grad um das Scharnier, die offene Pose lässt sie ausgeschwenkt, sodass Vorder- und Draufsicht die Flügel wie die echten Türen schwenken."
      }
     }
    }
   },
   "symbols": [
    {
-    "id": "van-plan",
+    "id": "van-symbol",
     "title": {
-     "en": "Delivery van plan symbol",
-     "de": "Lieferwagen-Grundrisszeichen"
+     "en": "Delivery van symbol",
+     "de": "Lieferwagenzeichen"
     },
     "description": {
-     "en": "True-extent plan: body outline, cab and the right-hand wheels beside the body.",
-     "de": "Grundriss in wahrer Ausdehnung: Aufbaukontur, Fahrerhaus und die rechten Räder neben dem Aufbau."
+     "en": "True-extent symbol of the van in side, front and top view: body outline, cab glazing, wheels, mirrors and the sliding door on the right-hand side.",
+     "de": "Zeichen des Lieferwagens in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Karosserieumriss, Kabinenverglasung, Räder, Spiegel und die Schiebetür auf der rechten Seite."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -2569,146 +5274,366 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.67,
+         0.36
+        ],
+        [
+         -2.67,
+         1.99
+        ],
+        [
+         1.15,
+         1.99
+        ],
+        [
+         1.85,
+         1.35
+        ],
+        [
+         2.67,
+         1.2
+        ],
+        [
+         2.67,
+         0.36
+        ]
+       ],
+       "closed": true,
+       "id": "elevation-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "ellipse",
+       "cx": 1.7,
+       "cy": 0.355,
+       "rx": 0.36,
+       "ry": 0.355,
+       "id": "elevation-wheel-f",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": -1.6,
+       "cy": 0.355,
+       "rx": 0.36,
+       "ry": 0.355,
+       "id": "elevation-wheel-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.14,
+         1.13
+        ],
+        [
+         1.8,
+         1.13
+        ],
+        [
+         1.14,
+         1.93
+        ]
+       ],
+       "closed": true,
+       "id": "elevation-windscreen",
+       "bone": "chassis",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": 0.45,
+       "y": 1.2,
+       "w": 1.15,
+       "h": 0.58,
+       "id": "elevation-door-window",
+       "bone": "chassis",
+       "role": "body",
+       "z": 5,
+       "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": 0.36,
+       "w": 1.05,
+       "h": 1.44,
+       "id": "elevation-slider",
+       "bone": "chassis",
+       "role": "body",
+       "z": 6,
+       "filled": false,
+       "tone": 0.4
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.91,
+       "y": 0.36,
+       "w": 1.82,
+       "h": 1.63,
+       "id": "front-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": 0.74,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.71,
+       "id": "front-tyre-l",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.94,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.71,
+       "id": "front-tyre-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.84,
+       "y": 1.13,
+       "w": 1.68,
+       "h": 0.8,
+       "id": "front-windscreen",
+       "bone": "chassis",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": 0.91,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "id": "front-mirror-l",
+       "bone": "chassis",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": -0.995,
+       "y": 1.19,
+       "w": 0.085,
+       "h": 0.22,
+       "id": "front-mirror-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3
+      }
+     ],
      "plan": [
       {
        "kind": "poly",
        "points": [
         [
          -2.67,
-         -0.97
+         -0.91
         ],
         [
          2.3,
-         -0.97
+         -0.91
         ],
         [
          2.67,
-         -0.8
+         -0.75
         ],
         [
          2.67,
-         0.8
+         0.75
         ],
         [
          2.3,
-         0.97
+         0.91
         ],
         [
          -2.67,
-         0.97
+         0.91
         ]
        ],
        "closed": true,
        "id": "plan-body",
        "bone": "chassis",
        "role": "body",
-       "z": 3,
+       "z": 1,
        "filled": true,
-       "tone": 0.6,
-       "material": "paint"
+       "tone": 0.6
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         0.4,
-         -0.9
-        ],
-        [
-         1.55,
-         -0.9
-        ],
-        [
-         2.1,
-         -0.8
-        ],
-        [
-         2.1,
-         0.8
-        ],
-        [
-         1.55,
-         0.9
-        ],
-        [
-         0.4,
-         0.9
-        ]
-       ],
-       "closed": false,
-       "id": "plan-cab",
+       "kind": "rect",
+       "x": 1.34,
+       "y": 0.74,
+       "w": 0.72,
+       "h": 0.2,
+       "id": "plan-tyre-fl",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": 1.34,
+       "y": -0.94,
+       "w": 0.72,
+       "h": 0.2,
+       "id": "plan-tyre-fr",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -1.96,
+       "y": 0.74,
+       "w": 0.72,
+       "h": 0.2,
+       "id": "plan-tyre-rl",
        "bone": "chassis",
        "role": "body",
        "z": 4,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -1.96,
+       "y": -0.94,
+       "w": 0.72,
+       "h": 0.2,
+       "id": "plan-tyre-rr",
+       "bone": "chassis",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": 1.14,
+       "y": -0.84,
+       "w": 0.66,
+       "h": 1.68,
+       "id": "plan-windscreen",
+       "bone": "chassis",
+       "role": "body",
+       "z": 6,
        "filled": false,
-       "tone": 0.9,
-       "material": "glass",
-       "penMm": 0.13
+       "tone": 0.9
+      },
+      {
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.91,
+       "w": 1.05,
+       "h": 0.05,
+       "id": "plan-slider",
+       "bone": "chassis",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.4
       },
       {
        "kind": "poly",
        "points": [
         [
-         1.34,
-         0.97
+         -2.67,
+         -0.88
         ],
         [
-         2.06,
-         0.97
-        ],
-        [
-         2.06,
-         1.13
-        ],
-        [
-         1.34,
-         1.13
+         -2.67,
+         0.88
         ]
        ],
-       "closed": true,
-       "id": "plan-wheel-f",
+       "closed": false,
+       "id": "plan-rear-doors",
        "bone": "chassis",
        "role": "body",
-       "z": 5,
-       "filled": true,
-       "tone": 0.1,
-       "material": "rubber"
+       "z": 8,
+       "filled": false,
+       "tone": 0.4
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         -1.96,
-         0.97
-        ],
-        [
-         -1.24,
-         0.97
-        ],
-        [
-         -1.24,
-         1.13
-        ],
-        [
-         -1.96,
-         1.13
-        ]
-       ],
-       "closed": true,
-       "id": "plan-wheel-r",
+       "kind": "rect",
+       "x": 1.91,
+       "y": 0.91,
+       "w": 0.14,
+       "h": 0.085,
+       "id": "plan-mirror-l",
        "bone": "chassis",
        "role": "body",
-       "z": 5,
+       "z": 9,
        "filled": true,
-       "tone": 0.1,
-       "material": "rubber"
+       "tone": 0.3
+      },
+      {
+       "kind": "rect",
+       "x": 1.91,
+       "y": -0.995,
+       "w": 0.14,
+       "h": 0.085,
+       "id": "plan-mirror-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 10,
+       "filled": true,
+       "tone": 0.3
       }
      ]
     },
     "dimensionalNote": {
-     "en": "Model metres: length 5.34 m, body width 1.99 m.",
-     "de": "Modellmeter: Länge 5,34 m, Aufbaubreite 1,99 m."
+     "en": "Model metres: length 5.34 m, width over the mirrors 1.99 m, height 1.99 m; side, front and top view.",
+     "de": "Modellmeter: Länge 5,34 m, Breite über die Spiegel 1,99 m, Höhe 1,99 m; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -2723,7 +5648,14 @@
      "en": "Engine off and cold, all doors closed, wheels on level ground.",
      "de": "Motor aus und kalt, alle Türen geschlossen, Räder auf ebenem Grund."
     },
-    "bones": {},
+    "bones": {
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
+     }
+    },
     "root": {
      "x": 0,
      "y": 0,
@@ -2731,8 +5663,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -2805,6 +5739,12 @@
     "bones": {
      "slider": {
       "dx": -0.85
+     },
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
      }
     },
     "root": {
@@ -2814,8 +5754,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -2895,14 +5837,10 @@
      "de": "Hecktüren offen, Beladen"
     },
     "description": {
-     "en": "Both rear leaves swung 90 degrees (projected 0.95 m behind the rear panel), engine off, 350 kg of cargo.",
-     "de": "Beide Hecktürflügel um 90 Grad geschwenkt (projiziert 0,95 m hinter der Heckwand), Motor aus, 350 kg Ladung."
+     "en": "Both rear leaves swung 90 degrees (0.9 m behind the rear panel), engine off, 350 kg of cargo.",
+     "de": "Beide Hecktürflügel um 90 Grad geschwenkt (0,9 m hinter der Heckwand), Motor aus, 350 kg Ladung."
     },
-    "bones": {
-     "rear-door": {
-      "dx": -0.95
-     }
-    },
+    "bones": {},
     "root": {
      "x": 0,
      "y": 0,
@@ -2910,8 +5848,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -2994,7 +5934,14 @@
      "en": "Steady urban drive with 400 kg of cargo: diesel at part load, warm exhaust, tyres rolling.",
      "de": "Gleichmäßige Stadtfahrt mit 400 kg Ladung: Diesel im Teillastbetrieb, warmes Abgas, rollende Reifen."
     },
-    "bones": {},
+    "bones": {
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
+     }
+    },
     "root": {
      "x": 0,
      "y": 0,
@@ -3002,8 +5949,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3092,6 +6041,12 @@
      },
      "axle-r": {
       "dy": -0.04
+     },
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
      }
     },
     "root": {
@@ -3101,8 +6056,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3179,7 +6136,7 @@
     "id": "loop-start",
     "title": {
      "en": "Drive loop start",
-     "de": "Fahrschleife start"
+     "de": "Fahrschleife Start"
     },
     "description": {
      "en": "Technical key of the drive loop: wheels have turned theta = -x / r.",
@@ -3192,6 +6149,12 @@
      },
      "wheel-r": {
       "angleDeg": 0
+     },
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
      }
     },
     "root": {
@@ -3201,8 +6164,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3292,6 +6257,12 @@
      },
      "wheel-r": {
       "angleDeg": -900
+     },
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
      }
     },
     "root": {
@@ -3301,8 +6272,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3392,6 +6365,12 @@
      },
      "wheel-r": {
       "angleDeg": -1800
+     },
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
      }
     },
     "root": {
@@ -3401,8 +6380,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3486,7 +6467,14 @@
      "de": "Technische Schlüsselstellung: Einfahrt in den Halt-Clip mit 30 km/h und 400 kg Ladung."
     },
     "key": true,
-    "bones": {},
+    "bones": {
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
+     }
+    },
     "root": {
      "x": 0,
      "y": 0,
@@ -3494,8 +6482,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3585,6 +6575,12 @@
      },
      "wheel-r": {
       "angleDeg": -2011.7900109930592
+     },
+     "rear-door-r": {
+      "twistDeg": -90
+     },
+     "rear-door-l": {
+      "twistDeg": 90
      }
     },
     "root": {
@@ -3594,8 +6590,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3703,12 +6701,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f",
+      "anchor": "contact-f-l",
       "fromS": 0,
       "toS": 1.0076
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-f-r",
+      "fromS": 0,
+      "toS": 1.0076
+     },
+     {
+      "anchor": "contact-r-l",
+      "fromS": 0,
+      "toS": 1.0076
+     },
+     {
+      "anchor": "contact-r-r",
       "fromS": 0,
       "toS": 1.0076
      }
@@ -3853,12 +6861,22 @@
     ],
     "contacts": [
      {
-      "anchor": "contact-f",
+      "anchor": "contact-f-l",
       "fromS": 0,
       "toS": 12
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-f-r",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r-l",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r-r",
       "fromS": 0,
       "toS": 12
      }
@@ -4574,10 +7592,7 @@
   "presentation": {
    "defaultPose": "parked",
    "defaultClip": "drive-loop",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

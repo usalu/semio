@@ -1,0 +1,4 @@
+    const roundIds = new Map<string, any>();
+    for (const view of ["elevation", "front", "plan"]) for (const q of g[view]) if (q.bone === bone && S.round.test(q.id) && !roundIds.has(q.id)) roundIds.set(q.id, q);
+    const elev = g.elevation.filter((s: any) => s.bone === bone && !S.round.test(s.id));
+    if (!elev.length && !roundIds.size) continue;

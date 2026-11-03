@@ -1,0 +1,3976 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "bookshelf",
+  "category": "furniture",
+  "title": {
+   "en": "Bookshelf with adjustable shelves",
+   "de": "Bücherregal mit verstellbaren Böden"
+  },
+  "summary": {
+   "en": "A 0.80 x 1.80 m chipboard bookshelf with five adjustable shelves on 32 mm pin holes; the loaded pose bends every board by its computed beam deflection, the clips load the shelves and re-pin one.",
+   "de": "Ein Bücherregal aus Spanplatte, 0,80 x 1,80 m, mit fünf verstellbaren Böden im 32-mm-Lochraster; die beladene Pose biegt jeden Boden um die berechnete Balkendurchbiegung, die Clips beladen die Böden und stecken einen um."
+  },
+  "tags": [
+   "bookshelf",
+   "storage",
+   "shelf",
+   "chipboard",
+   "adjustable",
+   "interior"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (NW-F)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values (conductivity, specific heat capacity, density of timber, wood-based boards, steel, aluminium, flexible polyurethane foam, rubber)."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: General actions - densities, self-weight, imposed loads for buildings (Table 6.2 category A floors 1.5-2.0 kN/m2, category C tables 3.0 kN/m2, Table 6.7/6.8 storage, Annex A densities of stored materials)."
+    },
+    {
+     "id": "en-312",
+     "citation": "EN 312:2010 Particleboards - Specifications (type P5 load-bearing board in humid conditions: bending strength 15 MPa, modulus of elasticity 2.55-3.2 GPa)."
+    },
+    {
+     "id": "en-14749",
+     "citation": "EN 14749:2016 Furniture - Domestic and kitchen storage units and worktops - Safety requirements and test methods (shelf load tests with a uniformly distributed load)."
+    },
+    {
+     "id": "system-32",
+     "citation": "System 32 (Lochreihen-System): 32 mm hole pitch, 37 mm to the front edge, 5 mm pin diameter, the European standard for adjustable shelf pins in carcass furniture (DIN 68861-8 / industry standard)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface radiative properties, convection correlations, thermal penetration depth)."
+    },
+    {
+     "id": "semio-nwf",
+     "citation": "Semio staffage content NW-F: dimensions and masses are authored from typical market products (see provenance notes); parameters tagged authored-estimate are not taken from a datasheet."
+    }
+   ],
+   "notes": {
+    "en": "Front elevation 0.80 x 1.80 m, depth 0.30 m. Shelf deflection 5.8 mm computed from beam theory (see structure). Books are loads and not drawn so that the empty and loaded states differ only physically.",
+    "de": "Vorderansicht 0,80 x 1,80 m, Tiefe 0,30 m. Fachbodendurchbiegung 5.8 mm aus der Balkentheorie (siehe Tragwerk). Bücher sind Lasten und nicht gezeichnet, damit sich leerer und beladener Zustand nur physikalisch unterscheiden."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.8,
+   "widthM": 0.8,
+   "depthM": 0.3,
+   "massKg": 34.9
+  },
+  "materials": [
+   {
+    "id": "melamine-chipboard",
+    "title": {
+     "en": "Melamine-faced chipboard P5, 18 mm",
+     "de": "Melaminbeschichtete Spanplatte P5, 18 mm"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 650,
+    "conductivityWmK": 0.14,
+    "specificHeatJKgK": 1700,
+    "elasticModulusPa": 2550000000.0,
+    "strengthPa": 15000000.0,
+    "source": "literature",
+    "reference": "en-312"
+   },
+   {
+    "id": "hardboard-back",
+    "title": {
+     "en": "Hardboard back panel, 3 mm",
+     "de": "Hartfaser-Rückwand, 3 mm"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.3,
+    "densityKgM3": 900,
+    "conductivityWmK": 0.18,
+    "specificHeatJKgK": 1700,
+    "elasticModulusPa": 3000000000.0,
+    "strengthPa": 30000000.0,
+    "source": "authored-estimate",
+    "reference": "iso-10456-2007"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "ground",
+   "bones": [
+    {
+     "id": "ground",
+     "parent": null,
+     "title": {
+      "en": "Floor reference",
+      "de": "Bodenbezug"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "frame",
+     "parent": "ground",
+     "title": {
+      "en": "Carcass, plinth and back panel",
+      "de": "Korpus, Sockel und Rückwand"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 22.4,
+      "comX": 0.4,
+      "comY": 0.9,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     }
+    },
+    {
+     "id": "shelf-1",
+     "parent": "frame",
+     "title": {
+      "en": "Adjustable shelf 1 (pin height)",
+      "de": "Verstellbarer Fachboden 1 (Stiftlage)"
+     },
+     "x": 0.018,
+     "y": 0.36,
+     "angleDeg": 0,
+     "lengthM": 0.764,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.2,
+      "maxM": 0.2
+     }
+    },
+    {
+     "id": "shelf-1-l",
+     "parent": "shelf-1",
+     "title": {
+      "en": "Shelf 1 left half",
+      "de": "Fachboden 1 linke Hälfte"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": 0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-1-r",
+     "parent": "shelf-1",
+     "title": {
+      "en": "Shelf 1 right half",
+      "de": "Fachboden 1 rechte Hälfte"
+     },
+     "x": 0.764,
+     "y": 0,
+     "angleDeg": 180,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": -0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-2",
+     "parent": "frame",
+     "title": {
+      "en": "Adjustable shelf 2 (pin height)",
+      "de": "Verstellbarer Fachboden 2 (Stiftlage)"
+     },
+     "x": 0.018,
+     "y": 0.66,
+     "angleDeg": 0,
+     "lengthM": 0.764,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.2,
+      "maxM": 0.2
+     }
+    },
+    {
+     "id": "shelf-2-l",
+     "parent": "shelf-2",
+     "title": {
+      "en": "Shelf 2 left half",
+      "de": "Fachboden 2 linke Hälfte"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": 0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-2-r",
+     "parent": "shelf-2",
+     "title": {
+      "en": "Shelf 2 right half",
+      "de": "Fachboden 2 rechte Hälfte"
+     },
+     "x": 0.764,
+     "y": 0,
+     "angleDeg": 180,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": -0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-3",
+     "parent": "frame",
+     "title": {
+      "en": "Adjustable shelf 3 (pin height)",
+      "de": "Verstellbarer Fachboden 3 (Stiftlage)"
+     },
+     "x": 0.018,
+     "y": 0.96,
+     "angleDeg": 0,
+     "lengthM": 0.764,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.2,
+      "maxM": 0.2
+     }
+    },
+    {
+     "id": "shelf-3-l",
+     "parent": "shelf-3",
+     "title": {
+      "en": "Shelf 3 left half",
+      "de": "Fachboden 3 linke Hälfte"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": 0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-3-r",
+     "parent": "shelf-3",
+     "title": {
+      "en": "Shelf 3 right half",
+      "de": "Fachboden 3 rechte Hälfte"
+     },
+     "x": 0.764,
+     "y": 0,
+     "angleDeg": 180,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": -0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-4",
+     "parent": "frame",
+     "title": {
+      "en": "Adjustable shelf 4 (pin height)",
+      "de": "Verstellbarer Fachboden 4 (Stiftlage)"
+     },
+     "x": 0.018,
+     "y": 1.26,
+     "angleDeg": 0,
+     "lengthM": 0.764,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.2,
+      "maxM": 0.2
+     }
+    },
+    {
+     "id": "shelf-4-l",
+     "parent": "shelf-4",
+     "title": {
+      "en": "Shelf 4 left half",
+      "de": "Fachboden 4 linke Hälfte"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": 0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-4-r",
+     "parent": "shelf-4",
+     "title": {
+      "en": "Shelf 4 right half",
+      "de": "Fachboden 4 rechte Hälfte"
+     },
+     "x": 0.764,
+     "y": 0,
+     "angleDeg": 180,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": -0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-5",
+     "parent": "frame",
+     "title": {
+      "en": "Adjustable shelf 5 (pin height)",
+      "de": "Verstellbarer Fachboden 5 (Stiftlage)"
+     },
+     "x": 0.018,
+     "y": 1.56,
+     "angleDeg": 0,
+     "lengthM": 0.764,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.2,
+      "maxM": 0.2
+     }
+    },
+    {
+     "id": "shelf-5-l",
+     "parent": "shelf-5",
+     "title": {
+      "en": "Shelf 5 left half",
+      "de": "Fachboden 5 linke Hälfte"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": 0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    },
+    {
+     "id": "shelf-5-r",
+     "parent": "shelf-5",
+     "title": {
+      "en": "Shelf 5 right half",
+      "de": "Fachboden 5 rechte Hälfte"
+     },
+     "x": 0.764,
+     "y": 0,
+     "angleDeg": 180,
+     "lengthM": 0.382,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 1.25,
+      "comX": 0.191,
+      "comY": -0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312"
+     },
+     "section": {
+      "areaM2": 0.00504,
+      "secondMomentM4": 1.3608e-07,
+      "extremeFibreM": 0.009,
+      "material": "melamine-chipboard",
+      "title": {
+       "en": "Shelf 280 x 18 mm",
+       "de": "Fachboden 280 x 18 mm"
+      }
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "plinth-left",
+    "bone": "frame",
+    "x": 0.06,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Left plinth foot",
+     "de": "Linker Sockelfuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.28,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "plinth-right",
+    "bone": "frame",
+    "x": 0.74,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Right plinth foot",
+     "de": "Rechter Sockelfuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.28,
+    "frictionCoefficient": 0.5
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 351,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.06,
+       "w": 0.8,
+       "h": 1.74,
+       "regions": [
+        "carcass",
+        "back-panel"
+       ],
+       "material": "melamine-chipboard"
+      },
+      {
+       "id": "plinth",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.04,
+       "y": 0.0,
+       "w": 0.72,
+       "h": 0.08,
+       "region": "plinth",
+       "material": "melamine-chipboard"
+      },
+      {
+       "id": "shelf-1-l",
+       "bone": "shelf-1-l",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-1-r",
+       "bone": "shelf-1-r",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-2-l",
+       "bone": "shelf-2-l",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-2-r",
+       "bone": "shelf-2-r",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-3-l",
+       "bone": "shelf-3-l",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-3-r",
+       "bone": "shelf-3-r",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-4-l",
+       "bone": "shelf-4-l",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-4-r",
+       "bone": "shelf-4-r",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-5-l",
+       "bone": "shelf-5-l",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-5-r",
+       "bone": "shelf-5-r",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves",
+       "penMm": 0.13
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Shelf sign 1.6 x 3.6 mm: one carcass block, a plinth and five shelf strokes.",
+      "de": "Regalzeichen 1,6 x 3,6 mm: ein Korpusblock, ein Sockel und fünf Fachbodenstriche."
+     },
+     "retained": {
+      "en": "Overall height 1.80 m, the five-shelf rhythm, plinth.",
+      "de": "Gesamthöhe 1,80 m, der Rhythmus der fünf Böden, Sockel."
+     },
+     "merged": {
+      "en": "Sides, top, bottom and back panel are one filled block.",
+      "de": "Seiten, Deckel, Boden und Rückwand sind ein gefüllter Block."
+     },
+     "omitted": {
+      "en": "Shelf pins, panel thickness, edge banding.",
+      "de": "Bodenträger, Plattenstärke, Kanten."
+     },
+     "thinElements": {
+      "en": "The 0.018 m shelves (0.036 mm) are 0.13 mm strokes (0.065 m real) so that the compartments stay readable.",
+      "de": "Die 0,018 m starken Böden (0,036 mm) sind 0,13-mm-Striche (0,065 m real), damit die Fächer lesbar bleiben."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Block tone 0.8, plinth 0.4.",
+      "de": "Blockton 0,8, Sockel 0,4."
+     },
+     "overlays": {
+      "en": "Block lists carcass and back-panel as merged; shelves carry shelves; sag (0.9 deg, 6 mm) is far below 0.1 mm and invisible.",
+      "de": "Der Block führt carcass und back-panel zusammen; Striche tragen shelves; die Durchbiegung (0,9 Grad, 6 mm) liegt weit unter 0,1 mm und ist unsichtbar."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 151,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "body",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.06,
+       "w": 0.8,
+       "h": 1.74,
+       "regions": [
+        "carcass",
+        "back-panel"
+       ],
+       "material": "melamine-chipboard"
+      },
+      {
+       "id": "plinth",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.03,
+       "y": 0.0,
+       "w": 0.74,
+       "h": 0.08,
+       "region": "plinth",
+       "material": "melamine-chipboard"
+      },
+      {
+       "id": "shelf-1-l",
+       "bone": "shelf-1-l",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-1-r",
+       "bone": "shelf-1-r",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-2-l",
+       "bone": "shelf-2-l",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-2-r",
+       "bone": "shelf-2-r",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-3-l",
+       "bone": "shelf-3-l",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-3-r",
+       "bone": "shelf-3-r",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-4-l",
+       "bone": "shelf-4-l",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-4-r",
+       "bone": "shelf-4-r",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-5-l",
+       "bone": "shelf-5-l",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.009
+        ],
+        [
+         0.387,
+         0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      },
+      {
+       "id": "shelf-5-r",
+       "bone": "shelf-5-r",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         -0.009
+        ],
+        [
+         -0.004,
+         -0.009
+        ]
+       ],
+       "closed": false,
+       "region": "shelves"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Shelf 4 x 9 mm: carcass block with five shelf strokes per half and a plinth.",
+      "de": "Regal 4 x 9 mm: Korpusblock mit fünf Fachbodenstrichen je Hälfte und Sockel."
+     },
+     "retained": {
+      "en": "Five boards, each as two half-span strokes that follow the sag and the re-pinning.",
+      "de": "Fünf Böden, jeder als zwei Halbfeldstriche, die Durchbiegung und Umstecken folgen."
+     },
+     "merged": {
+      "en": "Carcass panels and back panel are one block.",
+      "de": "Korpusplatten und Rückwand sind ein Block."
+     },
+     "omitted": {
+      "en": "Panel thickness, pins.",
+      "de": "Plattenstärke, Bodenträger."
+     },
+     "thinElements": {
+      "en": "Boards (0.09 mm) are 0.13 mm detail lines.",
+      "de": "Böden (0,09 mm) sind 0,13-mm-Detaillinien."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Block 0.85, plinth 0.4.",
+      "de": "Block 0,85, Sockel 0,4."
+     },
+     "overlays": {
+      "en": "Block merges carcass and back-panel; strokes carry shelves.",
+      "de": "Der Block führt carcass und back-panel zusammen; Striche tragen shelves."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 76,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "back",
+       "bone": "frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.022,
+       "y": 0.07,
+       "w": 0.756,
+       "h": 1.708,
+       "region": "back-panel",
+       "material": "hardboard-back"
+      },
+      {
+       "id": "side-l",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.06,
+       "w": 0.022,
+       "h": 1.74,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "side-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.778,
+       "y": 0.06,
+       "w": 0.022,
+       "h": 1.74,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "top",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 1.778,
+       "w": 0.8,
+       "h": 0.022,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "bottom",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.06,
+       "w": 0.8,
+       "h": 0.022,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "plinth",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.018,
+       "y": 0.0,
+       "w": 0.764,
+       "h": 0.075,
+       "region": "plinth",
+       "material": "melamine-chipboard"
+      },
+      {
+       "id": "shelf-1-l",
+       "bone": "shelf-1-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.022,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-1-r",
+       "bone": "shelf-1-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.022
+        ],
+        [
+         0.387,
+         -0.022
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-2-l",
+       "bone": "shelf-2-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.022,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-2-r",
+       "bone": "shelf-2-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.022
+        ],
+        [
+         0.387,
+         -0.022
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-3-l",
+       "bone": "shelf-3-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.022,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-3-r",
+       "bone": "shelf-3-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.022
+        ],
+        [
+         0.387,
+         -0.022
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-4-l",
+       "bone": "shelf-4-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.022,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-4-r",
+       "bone": "shelf-4-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.022
+        ],
+        [
+         0.387,
+         -0.022
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-5-l",
+       "bone": "shelf-5-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.022,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-5-r",
+       "bone": "shelf-5-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.022
+        ],
+        [
+         0.387,
+         -0.022
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Shelf 8 x 18 mm: separate side, top and bottom panels, back panel, ten shelf halves and plinth.",
+      "de": "Regal 8 x 18 mm: getrennte Seiten, Deckel und Boden, Rückwand, zehn Fachbodenhälften und Sockel."
+     },
+     "retained": {
+      "en": "Every board and panel as its own filled shape; the halves overlap at mid-span so that the sag does not open a gap.",
+      "de": "Jedes Brett und jede Platte als eigene gefüllte Form; die Hälften überlappen in Feldmitte, damit die Durchbiegung keine Lücke öffnet."
+     },
+     "merged": {
+      "en": "Edge banding is merged into the panels.",
+      "de": "Kanten gehen in den Platten auf."
+     },
+     "omitted": {
+      "en": "Shelf pins and the 3 mm back panel thickness.",
+      "de": "Bodenträger und die 3-mm-Rückwandstärke."
+     },
+     "thinElements": {
+      "en": "Panels 0.018 m are drawn 0.022 m (0.22 mm) so that they pass the 0.2 mm feature limit; the thickening of 4 mm stays inside the outline tolerance.",
+      "de": "Platten von 0,018 m sind 0,022 m (0,22 mm) stark gezeichnet, damit sie die 0,2-mm-Grenze einhalten; die Verdickung von 4 mm bleibt innerhalb der Konturtoleranz."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Panels 0.7, back 0.9, plinth 0.4; panel outlines 0.25 mm.",
+      "de": "Platten 0,7, Rückwand 0,9, Sockel 0,4; Plattenkonturen 0,25 mm."
+     },
+     "overlays": {
+      "en": "One shape per panel; shelf halves carry shelves.",
+      "de": "Eine Form je Platte; Fachbodenhälften tragen shelves."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.5,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.7
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "back",
+       "bone": "frame",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.018,
+       "y": 0.07,
+       "w": 0.764,
+       "h": 1.712,
+       "region": "back-panel",
+       "material": "hardboard-back"
+      },
+      {
+       "id": "side-l",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.06,
+       "w": 0.018,
+       "h": 1.74,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "side-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.782,
+       "y": 0.06,
+       "w": 0.018,
+       "h": 1.74,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "top",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 1.782,
+       "w": 0.8,
+       "h": 0.018,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "bottom",
+       "bone": "frame",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.06,
+       "w": 0.8,
+       "h": 0.018,
+       "region": "carcass",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "plinth",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.014,
+       "y": 0.0,
+       "w": 0.772,
+       "h": 0.075,
+       "region": "plinth",
+       "material": "melamine-chipboard"
+      },
+      {
+       "id": "shelf-1-l",
+       "bone": "shelf-1-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.018,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-1-r",
+       "bone": "shelf-1-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.018
+        ],
+        [
+         0.387,
+         -0.018
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "pin-1-l",
+       "bone": "shelf-1",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "pin-1-r",
+       "bone": "shelf-1",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.744,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-2-l",
+       "bone": "shelf-2-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.018,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-2-r",
+       "bone": "shelf-2-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.018
+        ],
+        [
+         0.387,
+         -0.018
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "pin-2-l",
+       "bone": "shelf-2",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "pin-2-r",
+       "bone": "shelf-2",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.744,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-3-l",
+       "bone": "shelf-3-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.018,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-3-r",
+       "bone": "shelf-3-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.018
+        ],
+        [
+         0.387,
+         -0.018
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "pin-3-l",
+       "bone": "shelf-3",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "pin-3-r",
+       "bone": "shelf-3",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.744,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-4-l",
+       "bone": "shelf-4-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.018,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-4-r",
+       "bone": "shelf-4-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.018
+        ],
+        [
+         0.387,
+         -0.018
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "pin-4-l",
+       "bone": "shelf-4",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "pin-4-r",
+       "bone": "shelf-4",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.744,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "shelf-5-l",
+       "bone": "shelf-5-l",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.004,
+       "y": 0.0,
+       "w": 0.391,
+       "h": 0.018,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "shelf-5-r",
+       "bone": "shelf-5-r",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.387,
+         0.0
+        ],
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.018
+        ],
+        [
+         0.387,
+         -0.018
+        ]
+       ],
+       "closed": true,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.25
+      },
+      {
+       "id": "pin-5-l",
+       "bone": "shelf-5",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      },
+      {
+       "id": "pin-5-r",
+       "bone": "shelf-5",
+       "role": "body",
+       "z": 5.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.744,
+       "y": -0.012,
+       "w": 0.02,
+       "h": 0.013,
+       "region": "shelves",
+       "material": "melamine-chipboard",
+       "penMm": 0.13
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Shelf 16 x 36 mm with real 18 mm panels, five boards in two halves each, shelf pins and recessed plinth.",
+      "de": "Regal 16 x 36 mm mit echten 18-mm-Platten, fünf Böden in je zwei Hälften, Bodenträgern und zurückgesetztem Sockel."
+     },
+     "retained": {
+      "en": "Real panel thickness, back panel, the pin under each board end that moves with the board when it is re-pinned.",
+      "de": "Echte Plattenstärke, Rückwand, der Stift unter jedem Brettende, der beim Umstecken mit dem Brett wandert."
+     },
+     "merged": {
+      "en": "Edge banding is merged into the panels.",
+      "de": "Kanten gehen in den Platten auf."
+     },
+     "omitted": {
+      "en": "Pin holes (5 mm), the 32 mm hole grid, back-panel joints.",
+      "de": "Stiftlöcher (5 mm), das 32-mm-Lochraster, Rückwandstöße."
+     },
+     "thinElements": {
+      "en": "Pins 0.02 x 0.013 m are filled at 0.4 x 0.26 mm.",
+      "de": "Stifte 0,02 x 0,013 m sind mit 0,4 x 0,26 mm gefüllt."
+     },
+     "hatching": {
+      "en": "None; laminate is shown by tone.",
+      "de": "Keine; Laminat wird durch Ton gezeigt."
+     },
+     "styles": {
+      "en": "Panels 0.7 with 0.25 mm outlines.",
+      "de": "Platten 0,7 mit Konturen 0,25 mm."
+     },
+     "overlays": {
+      "en": "One shape per panel, board half and pin.",
+      "de": "Eine Form je Platte, Brettzhälfte und Stift."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "shelf-plan",
+    "title": {
+     "en": "Shelf unit plan symbol",
+     "de": "Regal-Grundrisssymbol"
+    },
+    "description": {
+     "en": "Floor-plan sign of the shelf unit: footprint 0.80 x 0.30 m with the back panel marked by a line.",
+     "de": "Grundrisszeichen des Regals: Grundfläche 0,80 x 0,30 m, die Rückwand ist durch eine Linie markiert."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     200,
+     100,
+     50
+    ],
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "id": "plan-body",
+       "bone": "ground",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.8,
+         0
+        ],
+        [
+         0.8,
+         0.3
+        ],
+        [
+         0,
+         0.3
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "plan-back",
+       "bone": "ground",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.285
+        ],
+        [
+         0.8,
+         0.285
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres at real size: x along the shelf 0 to 0.80 m, y from the front (0) to the back (0.30 m).",
+     "de": "Modellmeter in Originalgröße: x entlang des Regals 0 bis 0,80 m, y von der Front (0) bis zur Rückseite (0,30 m)."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "empty",
+    "title": {
+     "en": "Empty",
+     "de": "Leer"
+    },
+    "description": {
+     "en": "Unloaded shelves: all five boards straight.",
+     "de": "Unbelastete Regalböden: alle fünf Böden gerade."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "plinth-left",
+     "plinth-right"
+    ],
+    "thermal": {
+     "regions": {
+      "carcass": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.15
+      },
+      "shelves": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "back-panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "plinth": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loaded",
+    "title": {
+     "en": "Fully loaded with books",
+     "de": "Voll mit Büchern beladen"
+    },
+    "description": {
+     "en": "Every compartment filled with books (454 N/m = 35 kg per shelf): each board sags 5.8 mm at mid-span.",
+     "de": "Jedes Fach mit Büchern gefüllt (454 N/m = 35 kg je Boden): jeder Boden hängt in Feldmitte 5.8 mm durch."
+    },
+    "bones": {
+     "shelf-1-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-1-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-2-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-2-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-3-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-3-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-4-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-4-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-5-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-5-r": {
+      "angleDeg": 0.8705
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "plinth-left",
+     "plinth-right"
+    ],
+    "thermal": {
+     "regions": {
+      "carcass": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.15
+      },
+      "shelves": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.85,
+        "tempC": 21
+       }
+      },
+      "back-panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "plinth": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "books-1-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 1, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 1, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-1-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-1-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 1, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 1, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-1-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-2-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 2, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 2, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-2-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-2-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 2, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 2, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-2-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-3-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 3, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 3, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-3-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-3-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 3, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 3, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-3-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-4-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 4, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 4, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-4-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-4-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 4, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 4, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-4-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-5-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 5, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 5, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-5-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-5-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 5, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 5, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-5-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-base",
+      "kind": "carried",
+      "title": {
+       "en": "Books on the bottom panel (454 N/m)",
+       "de": "Bücher auf dem Boden (454 N/m)"
+      },
+      "distributed": {
+       "bone": "frame",
+       "fromM": 0.018,
+       "toM": 0.782,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "shelf-adjusted",
+    "title": {
+     "en": "Third shelf moved up four holes",
+     "de": "Dritter Boden vier Löcher höher"
+    },
+    "description": {
+     "en": "Shelf 3 re-pinned 4 x 32 mm = 128 mm higher (System 32); loaded and sagging.",
+     "de": "Boden 3 um 4 x 32 mm = 128 mm höher gesteckt (System 32); beladen und durchgebogen."
+    },
+    "bones": {
+     "shelf-1-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-1-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-2-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-2-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-3-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-3-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-4-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-4-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-5-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-5-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-3": {
+      "dy": 0.128
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "plinth-left",
+     "plinth-right"
+    ],
+    "thermal": {
+     "regions": {
+      "carcass": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.15
+      },
+      "shelves": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.85,
+        "tempC": 21
+       }
+      },
+      "back-panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "plinth": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "books-1-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 1, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 1, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-1-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-1-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 1, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 1, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-1-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-2-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 2, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 2, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-2-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-2-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 2, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 2, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-2-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-3-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 3, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 3, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-3-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-3-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 3, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 3, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-3-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-4-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 4, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 4, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-4-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-4-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 4, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 4, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-4-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-5-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 5, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 5, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-5-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-5-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 5, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 5, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-5-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-base",
+      "kind": "carried",
+      "title": {
+       "en": "Books on the bottom panel (454 N/m)",
+       "de": "Bücher auf dem Boden (454 N/m)"
+      },
+      "distributed": {
+       "bone": "frame",
+       "fromM": 0.018,
+       "toM": 0.782,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "top-two-loaded-key",
+    "title": {
+     "en": "Lower two shelves loaded (key)",
+     "de": "Untere zwei Böden beladen (Schlüssel)"
+    },
+    "description": {
+     "en": "Key pose of the loading clip.",
+     "de": "Schlüsselpose des Beladens."
+    },
+    "key": true,
+    "bones": {
+     "shelf-1-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-1-r": {
+      "angleDeg": 0.8705
+     },
+     "shelf-2-l": {
+      "angleDeg": -0.8705
+     },
+     "shelf-2-r": {
+      "angleDeg": 0.8705
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "plinth-left",
+     "plinth-right"
+    ],
+    "thermal": {
+     "regions": {
+      "carcass": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.15
+      },
+      "shelves": {
+       "exposedFraction": 0.55,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.4,
+        "tempC": 21
+       }
+      },
+      "back-panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "plinth": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "books-1-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 1, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 1, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-1-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-1-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 1, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 1, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-1-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-2-l",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 2, left half (454 N/m)",
+       "de": "Bücher auf Fachboden 2, linke Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-2-l",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-2-r",
+      "kind": "carried",
+      "title": {
+       "en": "Books on shelf 2, right half (454 N/m)",
+       "de": "Bücher auf Fachboden 2, rechte Hälfte (454 N/m)"
+      },
+      "distributed": {
+       "bone": "shelf-2-r",
+       "fromM": 0,
+       "toM": 0.382,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "books-base",
+      "kind": "carried",
+      "title": {
+       "en": "Books on the bottom panel (454 N/m)",
+       "de": "Bücher auf dem Boden (454 N/m)"
+      },
+      "distributed": {
+       "bone": "frame",
+       "fromM": 0.018,
+       "toM": 0.782,
+       "wxNPerM": 0,
+       "wyNPerM": -454.0
+      },
+      "fxN": 0.0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "load-the-shelves",
+    "title": {
+     "en": "Load the shelves",
+     "de": "Regal beladen"
+    },
+    "description": {
+     "en": "The shelves are filled from the bottom up; every board sags by up to 5.8 mm as its books arrive.",
+     "de": "Die Böden werden von unten nach oben gefüllt; jeder Boden hängt mit den Büchern bis zu 5.8 mm durch."
+    },
+    "durationS": 5.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "empty",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-1-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-1-r": {
+        "angleDeg": 0.8705
+       }
+      }
+     },
+     {
+      "t": 2.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-1-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-1-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-2-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-2-r": {
+        "angleDeg": 0.8705
+       }
+      }
+     },
+     {
+      "t": 3.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-1-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-1-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-2-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-2-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-3-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-3-r": {
+        "angleDeg": 0.8705
+       }
+      }
+     },
+     {
+      "t": 4.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-1-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-1-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-2-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-2-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-3-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-3-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-4-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-4-r": {
+        "angleDeg": 0.8705
+       }
+      }
+     },
+     {
+      "t": 5.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-1-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-1-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-2-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-2-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-3-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-3-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-4-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-4-r": {
+        "angleDeg": 0.8705
+       },
+       "shelf-5-l": {
+        "angleDeg": -0.8705
+       },
+       "shelf-5-r": {
+        "angleDeg": 0.8705
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "plinth-left",
+      "fromS": 0,
+      "toS": 5.0
+     },
+     {
+      "anchor": "plinth-right",
+      "fromS": 0,
+      "toS": 5.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "fill",
+      "fromS": 0,
+      "toS": 5.0,
+      "title": {
+       "en": "Filling",
+       "de": "Befüllen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Shelf 1 filled",
+       "de": "Boden 1 gefüllt"
+      },
+      "target": "books-1-l"
+     },
+     {
+      "t": 2.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Shelf 2 filled",
+       "de": "Boden 2 gefüllt"
+      },
+      "target": "books-2-l"
+     },
+     {
+      "t": 3.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Shelf 3 filled",
+       "de": "Boden 3 gefüllt"
+      },
+      "target": "books-3-l"
+     },
+     {
+      "t": 4.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Shelf 4 filled",
+       "de": "Boden 4 gefüllt"
+      },
+      "target": "books-4-l"
+     },
+     {
+      "t": 5.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Shelf 5 filled",
+       "de": "Boden 5 gefüllt"
+      },
+      "target": "books-5-l"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:books-1-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-1-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-2-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.0,
+        "v": 0
+       },
+       {
+        "t": 2.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-2-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.0,
+        "v": 0
+       },
+       {
+        "t": 2.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-3-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2.0,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-3-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2.0,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-4-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       },
+       {
+        "t": 4.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-4-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       },
+       {
+        "t": 4.0,
+        "v": 1
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-5-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 4.0,
+        "v": 0
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:books-5-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 4.0,
+        "v": 0
+       },
+       {
+        "t": 5.0,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "re-pin-shelf",
+    "title": {
+     "en": "Re-pin the third shelf",
+     "de": "Dritten Boden umstecken"
+    },
+    "description": {
+     "en": "The empty shelf 3 is lifted off its pins and re-pinned four holes (128 mm) higher.",
+     "de": "Der leere Boden 3 wird von den Stiften genommen und vier Löcher (128 mm) höher gesteckt."
+    },
+    "durationS": 4.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "empty",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-3": {
+        "dy": 0.04
+       }
+      }
+     },
+     {
+      "t": 2.5,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-3": {
+        "dy": 0.128
+       }
+      }
+     },
+     {
+      "t": 4.0,
+      "pose": "empty",
+      "ease": "smooth",
+      "bones": {
+       "shelf-3": {
+        "dy": 0.128
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "plinth-left",
+      "fromS": 0,
+      "toS": 4.0
+     },
+     {
+      "anchor": "plinth-right",
+      "fromS": 0,
+      "toS": 4.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "lift",
+      "fromS": 0,
+      "toS": 2.5,
+      "title": {
+       "en": "Lift and move",
+       "de": "Anheben und umsetzen"
+      }
+     },
+     {
+      "id": "pin",
+      "fromS": 2.5,
+      "toS": 4.0,
+      "title": {
+       "en": "Pinned",
+       "de": "Eingesteckt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.5,
+      "kind": "motion",
+      "title": {
+       "en": "Shelf rests on the new pins",
+       "de": "Boden liegt auf den neuen Stiften"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "unload-shelves",
+    "title": {
+     "en": "Unload the shelves",
+     "de": "Regal leeren"
+    },
+    "description": {
+     "en": "All books are taken out at once; the boards spring back from the sag.",
+     "de": "Alle Bücher werden auf einmal entnommen; die Böden federn aus der Durchbiegung zurück."
+    },
+    "durationS": 3.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "loaded",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.0,
+      "pose": "empty",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "empty",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "plinth-left",
+      "fromS": 0,
+      "toS": 3.0
+     },
+     {
+      "anchor": "plinth-right",
+      "fromS": 0,
+      "toS": 3.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "spring",
+      "fromS": 0,
+      "toS": 1.0,
+      "title": {
+       "en": "Springing back",
+       "de": "Zurückfedern"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.5,
+      "kind": "load-off",
+      "title": {
+       "en": "Books taken out",
+       "de": "Bücher entnommen"
+      },
+      "target": "books-1-l"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:books-1-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-1-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-2-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-2-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-3-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-3-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-4-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-4-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-5-l",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:books-5-r",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 3.0,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 21,
+    "meanRadiantTempC": 21,
+    "relativeHumidity": 0.5,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 350,
+    "diffuseFraction": 0.15,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "carcass",
+     "title": {
+      "en": "Side panels, top and bottom panel",
+      "de": "Seitenwände, Deckel und Boden"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "melamine-chipboard",
+     "areaM2": 1.9,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "carcass-board",
+       "title": {
+        "en": "Chipboard 18 mm",
+        "de": "Spanplatte 18 mm"
+       },
+       "kind": "timber",
+       "material": "melamine-chipboard",
+       "thicknessM": 0.018,
+       "resistanceM2KW": 0.128571,
+       "heatCapacityJM2K": 19890,
+       "source": "literature",
+       "reference": "en-312"
+      }
+     ],
+     "heatCapacityJM2K": 19890,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "shelves",
+     "title": {
+      "en": "Adjustable shelves",
+      "de": "Verstellbare Fachböden"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "melamine-chipboard",
+     "areaM2": 1.07,
+     "characteristicLengthM": 0.28,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.35,
+     "layers": [
+      {
+       "id": "shelf-board",
+       "title": {
+        "en": "Chipboard 18 mm",
+        "de": "Spanplatte 18 mm"
+       },
+       "kind": "timber",
+       "material": "melamine-chipboard",
+       "thicknessM": 0.018,
+       "resistanceM2KW": 0.128571,
+       "heatCapacityJM2K": 19890,
+       "source": "literature",
+       "reference": "en-312"
+      }
+     ],
+     "heatCapacityJM2K": 19890,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "back-panel",
+     "title": {
+      "en": "Back panel",
+      "de": "Rückwand"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "hardboard-back",
+     "areaM2": 1.4,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "back-board",
+       "title": {
+        "en": "Hardboard 3 mm",
+        "de": "Hartfaserplatte 3 mm"
+       },
+       "kind": "timber",
+       "material": "hardboard-back",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.016667,
+       "heatCapacityJM2K": 4590,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 4590,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "plinth",
+     "title": {
+      "en": "Plinth",
+      "de": "Sockel"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "melamine-chipboard",
+     "areaM2": 0.12,
+     "characteristicLengthM": 0.06,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.1,
+     "layers": [
+      {
+       "id": "plinth-board",
+       "title": {
+        "en": "Chipboard 18 mm",
+        "de": "Spanplatte 18 mm"
+       },
+       "kind": "timber",
+       "material": "melamine-chipboard",
+       "thicknessM": 0.018,
+       "resistanceM2KW": 0.128571,
+       "heatCapacityJM2K": 19890,
+       "source": "literature",
+       "reference": "en-312"
+      }
+     ],
+     "heatCapacityJM2K": 19890,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "Passive melamine-faced chipboard (650 kg/m3, 0.14 W/mK, 1700 J/kgK after ISO 10456 / EN 312 data) and 3 mm hardboard; heat capacity from the penetration depth of one hour (18 mm board: 20 kJ/m2K).",
+     "de": "Passive melaminbeschichtete Spanplatte (650 kg/m3, 0,14 W/mK, 1700 J/kgK nach ISO 10456 / EN 312) und 3 mm Hartfaser; Wärmekapazität aus der Eindringtiefe einer Stunde (18-mm-Platte: 20 kJ/m2K)."
+    },
+    {
+     "en": "Loaded poses cover 85 % of the shelf tops with books at room temperature (conductive contact at 21 degC, exposed fraction 0.1); the books themselves are not a region.",
+     "de": "Beladene Posen bedecken 85 % der Fachbodenoberseiten mit Büchern bei Raumtemperatur (Kontakt bei 21 degC, freie Fläche 0,1); die Bücher selbst sind keine Region."
+    },
+    {
+     "en": "Reference case: 350 W/m2 window sun patch behind glazing falling on the left carcass side (15 percent), 21 degC, still air.",
+     "de": "Referenzfall: 350 W/m2 Fensterlichtfleck hinter Verglasung auf der linken Korpusseite (15 Prozent), 21 degC, ruhige Luft."
+    }
+   ],
+   "passengers": []
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "plinth-left",
+    "plinth-right"
+   ],
+   "assumptions": [
+    {
+     "en": "Each adjustable shelf is a simply supported beam on shelf pins (two half-span bones hinged at the supports and at mid-span); loaded sag delta = 5 w L^4 / (384 E I) with w = 454 N/m (books 6.0 kN/m3 x 0.28 m x 0.27 m, EN 1991-1-1 Annex A), L = 0.764 m, E = 2.55 GPa (EN 312 P5), I = 1.361e-07 m4 gives 5.8 mm = L/132; bending stress 2.2 MPa of 15 MPa.",
+     "de": "Jeder verstellbare Fachboden ist ein Einfeldträger auf Bodenträgern (zwei Halbfeld-Knochen, an den Auflagern und in Feldmitte gelenkig); Durchbiegung delta = 5 w L^4 / (384 E I) mit w = 454 N/m (Bücher 6,0 kN/m3 x 0,28 m x 0,27 m, EN 1991-1-1 Anhang A), L = 0,764 m, E = 2,55 GPa (EN 312 P5), I = 1.361e-07 m4 ergibt 5.8 mm = L/132; Biegespannung 2.2 MPa von 15 MPa."
+    },
+    {
+     "en": "The book density 612 kg/m3 (6.0 kN/m3) is rounded from EN 1991-1-1 Annex A and an authored-estimate; the creep of chipboard over years (factor about 2) is not modelled.",
+     "de": "Die Buchdichte 612 kg/m3 (6,0 kN/m3) ist aus EN 1991-1-1 Anhang A gerundet und ein Schätzwert; das Kriechen der Spanplatte über Jahre (Faktor etwa 2) ist nicht modelliert."
+    },
+    {
+     "en": "The carcass is a rigid body on the plinth feet; EN 14749 shelf tests (uniformly distributed shelf loads) are the scope of the load case.",
+     "de": "Der Korpus ist ein starrer Körper auf den Sockelfüßen; die Fachbodenprüfungen nach EN 14749 (gleichmäßig verteilte Last) sind der Rahmen des Lastfalls."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "empty",
+   "defaultClip": "load-the-shelves",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

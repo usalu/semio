@@ -1,0 +1,63 @@
+{
+  "index": { "version": 1, "cast": "case", "asset": "case-asset", "view": "dark-line", "viewpoint": "elevation", "fps": 10, "durationS": 0.3, "loop": true, "mmPerMetre": 20, "originMm": [50, 90], "heightM": 4.0,
+             "boundsM": { "minX": -2.5, "minY": -0.5, "maxX": 2.5, "maxY": 4.5 },
+             "provenance": { "version": 1, "asset": { "id": "case-asset", "category": "humans", "revision": "sha256:0000000000000000000000000000000000000000000000000000000000000000" },
+                             "view": { "style": "dark-line", "viewpoint": "elevation", "theme": "dark", "mirror": false }, "scale": { "denominator": 50 }, "state": { "kind": "clip", "id": "walk" },
+                             "clock": { "fps": 10, "durationS": 0.3, "loop": true, "offsetS": 0, "frames": 3 }, "scenario": { "kind": "geometry" } } },
+  "width": 100,
+  "height": 100,
+  "frames": [
+    "<path d=\"M40 40 L60 40 L60 90 L40 90 Z\" fill=\"none\" stroke=\"#000000\" stroke-width=\"0.5\"/><path d=\"M45 10 L55 10\" fill=\"none\" stroke=\"#ff0000\" stroke-width=\"0.5\"/>",
+    "<path d=\"M40 40 L60 40 L60 90 L40 90 Z\" fill=\"none\" stroke=\"#000000\" stroke-width=\"0.5\"/><path d=\"M45 20 L55 20\" fill=\"none\" stroke=\"#ff0000\" stroke-width=\"0.5\"/>",
+    "<path d=\"M40 40 L60 40 L60 90 L40 90 Z\" fill=\"none\" stroke=\"#000000\" stroke-width=\"0.5\"/><path d=\"M45 30 L55 30\" fill=\"none\" stroke=\"#ff0000\" stroke-width=\"0.5\"/>"
+  ],
+  "placement": { "unit": 0.8, "anchor": [1, 2, 0] },
+  "expected": {
+    "rectangle": { "x": [0.6, 1.4], "y": [2.0, 4.0] },
+    "lineY": [5.2, 4.8, 4.4],
+    "lineX": [0.8, 1.2],
+    "strokeWidth": 2.0
+  },
+  "steps": [
+    { "advance": 0.04, "rate": 1, "frame": 0 },
+    { "advance": 0.1, "rate": 1, "frame": 1 },
+    { "advance": 0.1, "rate": 1, "frame": 2 },
+    { "advance": 0.1, "rate": 1, "frame": 0 },
+    { "advance": 0.05, "rate": 2, "frame": 1 }
+  ],
+  "fit": {
+    "worldMetres": { "width": 1.0, "height": 4.0 },
+    "cases": [
+      { "width": 2.0, "height": null, "unit": 2.0 },
+      { "width": null, "height": 2.0, "unit": 0.5 },
+      { "width": 2.0, "height": 2.0, "unit": 0.5 },
+      { "width": 0.25, "height": 8.0, "unit": 0.25 }
+    ],
+    "motion": [
+      { "rate": 1.0, "loop": false, "castLoops": true, "loops": true },
+      { "rate": 1.0, "loop": true, "castLoops": false, "loops": true },
+      { "rate": 1.0, "loop": false, "castLoops": false, "loops": false },
+      { "rate": 2.0, "loop": false, "castLoops": true, "loops": true }
+    ]
+  },
+  "rates": [
+    { "rate": 1.0, "advance": 0.1, "frame": 1 },
+    { "rate": 2.0, "advance": 0.1, "frame": 2 },
+    { "rate": 0.5, "advance": 0.1, "frame": 0 },
+    { "rate": 0.5, "advance": 0.2, "frame": 1 }
+  ],
+  "viewpoints": { "valid": ["elevation", "front", "plan"], "invalid": "side", "forms": [{ "name": "elevation", "viewpoint": "elevation" }, { "name": "front", "viewpoint": "front" }, { "name": "plan", "viewpoint": "plan" }] },
+  "key": { "entry": { "asset": "case-asset", "pose": "standing", "viewpoint": "elevation", "view": "dark-line", "theme": "dark", "scale": 50 }, "length": 32, "lineEndings": { "lf": "{\n  \"a\": 1\n}\n", "crlf": "{\r\n  \"a\": 1\r\n}\r\n" }, "order": { "files": ["B.ts", "a.ts", "c.ts"] }, "bundled": ["🗂️catalog/🖨️print-profiles/🔣️.json"] },
+  "environments": {
+    "presets": { "cold": 5, "warm": 25, "hot": 35 },
+    "used": "cold",
+    "unused": "hot",
+    "constant": { "asset": "case-asset", "pose": "standing", "viewpoint": "elevation", "view": "thermal", "theme": "dark", "scale": 50, "environment": "cold" },
+    "timeline": { "asset": "case-asset", "pose": "standing", "viewpoint": "elevation", "view": "thermal", "theme": "dark", "scale": 50, "fps": 15, "timeline": [{ "t": 0, "environment": "cold", "ease": "step" }, { "t": 4, "environment": "hot", "ease": "linear" }] },
+    "plain": { "asset": "case-asset", "pose": "standing", "viewpoint": "elevation", "view": "dark-line", "theme": "dark", "scale": 50 }
+  },
+  "publish": { "failures": 3 },
+  "prune": { "live": ["current"], "folders": { "current": 500, "stale-old": 25, "stale-young": 2, ".tmp-crashed": 48, ".tmp-running": 1 }, "kept": ["current", "file.txt", "stale-young", ".tmp-running"] },
+  "exclusive": { "processes": 2, "exporterCalls": 1, "exportS": 1.5, "waitPrefix": "[wait] ", "ownerDeathRecoveredWithinS": 15, "ownerReleaseAfterS": 0.5, "index": { "version": 1, "cast": "shared", "viewpoint": "elevation", "frames": [] } },
+  "fade": { "opacity": 1.0, "unfilledFillOpacity": 0.0, "strokeOpacity": 1.0 }
+}

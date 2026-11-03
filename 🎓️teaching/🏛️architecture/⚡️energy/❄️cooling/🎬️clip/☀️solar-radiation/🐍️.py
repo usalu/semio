@@ -16,7 +16,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
@@ -45,12 +44,13 @@ highlight_param = _manim_module.highlight_param
 math_label = _manim_module.math_label
 math_readout = _manim_module.math_readout
 math_panel = _manim_module.math_panel
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 room_section = _manim_module.room_section
@@ -126,13 +126,6 @@ def _house_sun_rays(house, sun_c):
     return sets, paths
 
 
-def _bell(x, x0, x1, amp):
-    """📈 Half-sine daily irradiance profile between sunrise x0 and sunset x1."""
-    if x <= x0 or x >= x1:
-        return 0.0
-    return amp * np.sin(PI * (x - x0) / (x1 - x0))
-
-
 #region 3D sun path
 # One solar model drives both halves of Beat 1: the sun's 3D position over the
 # cube house AND the orientation power curves on the chart — the curves are
@@ -143,7 +136,7 @@ def _cav_proj(x, y, z):
 
 
 def _sun_angles(h: float):
-    """🌞 Solar elevation α and azimuth φ (0 = Süd, −Ost/+West) for hour ``h``."""
+    """🧭 Solar elevation α and azimuth φ (0 = Süd, −Ost/+West) for hour ``h``."""
     t = np.clip((h - 6.0) / 12.0, 0.0, 1.0)
     alpha = np.radians(62.0) * np.sin(np.pi * t)
     phi = np.radians((h - 12.0) / 6.0 * 90.0)
@@ -151,7 +144,7 @@ def _sun_angles(h: float):
 
 
 def _facade_direct(name: str, h: float) -> float:
-    """☀️ Direct-beam share (0–1) on one orientation at hour ``h``."""
+    """🧮 Direct-beam share (0–1) on one orientation at hour ``h``."""
     if h <= 6.0 or h >= 18.0:
         return 0.0
     a, p = _sun_angles(h)
@@ -200,7 +193,7 @@ class Beat1_SolarIrradiance(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Direkte Sonnenstrahlung")
+        subtitle = section_heading(tr("Direct solar radiation", "Direkte Sonnenstrahlung"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -217,7 +210,7 @@ class Beat1_SolarIrradiance(Scene):
         def sunshine(rt):
             return [pulse_flashes(ray_paths, P_YELLOW, repeats=max(1, int(rt / 1.6)))]
 
-        irr_anchor = watt_anchor(800, compare="vacuum", title="Bestrahlungsstärke je m²")
+        irr_anchor = watt_anchor(800, compare="sun", title=tr("Irradiance per m²", "Bestrahlungsstärke je m²"))
         irr_anchor.scale(0.6).move_to(np.array([-0.55, -0.1, 0.0]))
 
         axes = Axes(
@@ -239,10 +232,9 @@ class Beat1_SolarIrradiance(Scene):
         ])
         y_axis_name = math_label(r"\mathrm{W/m^{2}}", size=BODY_FONT_SIZE, color=P_PRIMARY)
         y_axis_name.next_to(axes.c2p(6, 900), UP, buff=0.16).shift(LEFT * 0.15)
-        x_axis_name = Text("Sonnenzeit", font_size=BODY_FONT_SIZE, color=P_PRIMARY)
+        x_axis_name = Text(tr("Solar time", "Sonnenzeit"), font_size=BODY_FONT_SIZE, color=P_PRIMARY)
         x_axis_name.next_to(axes.c2p(12, 0), DOWN, buff=0.36)
 
-        # ── 3D-Sonnenbahn über dem Würfelhaus (Kavalierprojektion) ──
         cube_c = np.array([-4.2, -1.3, 0.0])
         cs, ch = 0.95, 1.15
 
@@ -267,11 +259,9 @@ class Beat1_SolarIrradiance(Scene):
             DashedLine(p, q, color=P_WHITE, stroke_width=1.4, dash_length=0.1, stroke_opacity=0.45)
             for p, q in ((c0, d0), (d0, a0), (d0, d1))
         ])
-        # Only the two visible facades carry a tag; W and N face away from the
-        # viewer and are named by the compass instead.
         face_tags = VGroup(
             Text("S", font_size=BODY_FONT_SIZE, color=P_CYAN).move_to((a0 + b0) / 2 + RIGHT * 0.45 + UP * 0.24),
-            Text("O", font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to((b0 + c0 + c1 + b1) / 4),
+            Text(tr("E", "O"), font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to((b0 + c0 + c1 + b1) / 4),
         )
         north_dir = _cav_proj(0, 1, 0)
         north_dir = north_dir / np.linalg.norm(north_dir)
@@ -295,10 +285,9 @@ class Beat1_SolarIrradiance(Scene):
             ),
             num_dashes=40,
         )
-        # Tags sit clear of the sun disc even when the sun parks on an end point.
         path_tags = VGroup(
-            Text("Ost", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(sun_screen(6.0), DOWN, buff=0.48),
-            Text("Süd", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(sun_screen(12.0), UP, buff=0.48),
+            Text(tr("East", "Ost"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(sun_screen(6.0), DOWN, buff=0.48),
+            Text(tr("South", "Süd"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(sun_screen(12.0), UP, buff=0.48),
             Text("West", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(sun_screen(18.0), DOWN, buff=0.48),
         )
 
@@ -325,7 +314,7 @@ class Beat1_SolarIrradiance(Scene):
         ))
         label_spots = {"Horiz": (12, 860), "O": (6.6, 650), "S": (12, 540), "W": (17.4, 650), "N": (9.0, 210)}
         curve_labels = VGroup(*[
-            Text(n, font_size=BODY_FONT_SIZE, color=colors[n]).move_to(axes.c2p(*label_spots[n]))
+            Text({"O": tr("E", "O"), "Horiz": tr("Horizontal", "Horiz")}.get(n, n), font_size=BODY_FONT_SIZE, color=colors[n]).move_to(axes.c2p(*label_spots[n]))
             for n in colors
         ])
 
@@ -333,7 +322,7 @@ class Beat1_SolarIrradiance(Scene):
         peak_tr = ValueTracker(0.0)
         eq_row, eq_box, eq_items = math_panel([
             ("i", r"I_{S,max}", P_YELLOW), (None, "=", P_WHITE),
-            (None, rf"{de_num(south_peak)}", P_YELLOW), (None, r"\;[\mathrm{W/m^{2}}]", P_PRIMARY),
+            (None, rf"{label_number(south_peak)}", P_YELLOW), (None, r"\;[\mathrm{W/m^{2}}]", P_PRIMARY),
         ], size=BODY_FONT_SIZE, color=P_YELLOW)
 
         self.play(Create(building), run_time=1.6)
@@ -350,7 +339,6 @@ class Beat1_SolarIrradiance(Scene):
             LaggedStart(*[FadeIn(m) for m in (*x_labels, *y_labels, y_axis_name, x_axis_name)], lag_ratio=0.06),
             run_time=0.9,
         )
-        # Facade morphs into the cube house; the sun shrinks onto its 3D path.
         self.play(FadeOut(light_beam), FadeOut(irr_anchor), run_time=0.5)
         freeze_drawables(building)
         self.play(
@@ -361,7 +349,7 @@ class Beat1_SolarIrradiance(Scene):
         self.play(FadeIn(path_tags), FadeIn(compass), run_time=0.5)
         sun.add_updater(lambda m: m.move_to(sun_screen(h_tr.get_value())))
         i_read = math_readout(
-            lambda: rf"I_{{S,max}} = {de_num(peak_tr.get_value())}",
+            lambda: rf"I_{{S,max}} = {label_number(peak_tr.get_value())}",
             np.array([2.15, 2.28, 0.0]),
             size=LABEL_FONT_SIZE, color=P_CYAN, edge="left",
         )
@@ -422,7 +410,7 @@ class Beat5_SolarCoolingLoad(Scene):
         apply_scene_style(self)
         example = solar_cooling_example()
 
-        subtitle = section_heading("Solare Kühllast")
+        subtitle = section_heading(tr("Solar cooling load", "Solare Kühllast"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -482,15 +470,15 @@ class Beat5_SolarCoolingLoad(Scene):
         def _factor_read(src, color):
             return math_readout(src, read_at, size=BODY_FONT_SIZE, color=color, edge="right")
 
-        area = math_label(rf"A = {de_num(example['area'], 2)}\,\mathrm{{m^2}}", read_at + UP * 0.6, size=BODY_FONT_SIZE, color=P_BLUE, edge="right")
+        area = math_label(rf"A = {label_number(example['area'], 2)}\,\mathrm{{m^2}}", read_at + UP * 0.6, size=BODY_FONT_SIZE, color=P_BLUE, edge="right")
         self.play(FadeIn(area), run_time=0.5)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "result"))
         self.play(Create(eq_box), FadeIn(eq_row), Indicate(room["glass"], color=P_BLUE), *solar_load(0.8), run_time=0.8)
-        ff_read = _factor_read(lambda: rf"F_{{f}} = {de_num(ff_tr.get_value(), 2)}", P_WHITE)
+        ff_read = _factor_read(lambda: rf"F_{{f}} = {label_number(ff_tr.get_value(), 2)}", P_WHITE)
         self.add(ff_read)
         self.play(Create(frame), ff_tr.animate.set_value(ff_target), *solar_load(1.0), run_time=1.0)
         self.play(FadeOut(ff_read), run_time=0.2)
-        fv_read = _factor_read(lambda: rf"F_{{sh}} = {de_num(fv_tr.get_value(), 2)}", P_TEAL)
+        fv_read = _factor_read(lambda: rf"F_{{sh}} = {label_number(fv_tr.get_value(), 2)}", P_TEAL)
         self.add(fv_read)
         slats.shift(UP * 1.1).set_opacity(0)
         self.add(slats)
@@ -501,7 +489,7 @@ class Beat5_SolarCoolingLoad(Scene):
             run_time=1.2,
         )
         self.play(FadeOut(fv_read), run_time=0.2)
-        g_read = _factor_read(lambda: rf"g = {de_num(g_tr.get_value(), 2)}", P_RED)
+        g_read = _factor_read(lambda: rf"g = {label_number(g_tr.get_value(), 2)}", P_RED)
         self.add(g_read)
         self.play(
             room["glass"].animate.set_fill(P_ORANGE, opacity=0.45),
@@ -510,11 +498,11 @@ class Beat5_SolarCoolingLoad(Scene):
             run_time=1.0,
         )
         self.play(FadeOut(g_read), run_time=0.2)
-        i_read = _factor_read(lambda: rf"I_{{S,max}} = {de_num(i_tr.get_value())}", P_YELLOW)
+        i_read = _factor_read(lambda: rf"I_{{S,max}} = {label_number(i_tr.get_value())}", P_YELLOW)
         self.add(i_read)
         self.play(Indicate(sun, color=P_YELLOW), i_tr.animate.set_value(example["irradiance"]), *solar_load(1.0), run_time=1.0)
         self.play(FadeOut(i_read), run_time=0.2)
-        result = math_label(rf"\dot{{Q}}_{{S,tr}} = {de_num(example['load'], 1)}\,\mathrm{{W}}", read_at + DOWN * 0.7, size=BODY_FONT_SIZE, color=P_YELLOW, edge="right")
+        result = math_label(rf"\dot{{Q}}_{{S,tr}} = {label_number(example['load'], 1)}\,\mathrm{{W}}", read_at + DOWN * 0.7, size=BODY_FONT_SIZE, color=P_YELLOW, edge="right")
         self.play(FadeIn(result), run_time=0.5)
         ring = highlight_param(eq_items, "q", color=P_YELLOW)
         self.play(Create(ring), room["air"].animate.set_fill(P_RED, opacity=0.16), *solar_load(0.8), run_time=0.8)

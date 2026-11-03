@@ -79,9 +79,9 @@ describe("🧬️ schema conformance", () => {
     expect(schema.$defs.AssetDocument.properties.version.const).toBe(twin.SCHEMA_VERSION);
   });
 
-  it("builds Shape from exactly the five geometries", () => {
+  it("builds Shape from exactly the six geometries (the five planar ones and the member)", () => {
     const kinds = schema.$defs.Shape.oneOf.map((branch: any) => branch.properties.kind.const);
-    expect(kinds).toEqual(["capsule", "ellipse", "rect", "poly", "path"]);
+    expect(kinds).toEqual(["capsule", "ellipse", "rect", "poly", "path", "member"]);
     for (const branch of schema.$defs.Shape.oneOf) for (const common of ["id", "bone", "role", "z", "filled", "tone"]) expect(branch.required).toContain(common);
   });
 });

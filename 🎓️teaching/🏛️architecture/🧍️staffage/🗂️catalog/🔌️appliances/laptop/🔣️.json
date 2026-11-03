@@ -1,0 +1,1854 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "laptop",
+    "category": "appliances",
+    "title": {
+      "en": "Laptop Computer",
+      "de": "Laptop"
+    },
+    "summary": {
+      "en": "A 14-inch aluminium laptop, 0.218 m deep, 13 mm thick with the lid open at 105 degrees: it releases 60 W of electrical power as heat at full office load, from the underside, the keyboard deck and the lid hinge, 1.8 W asleep with the lid closed.",
+      "de": "Ein 14-Zoll-Laptop aus Aluminium, 0,218 m tief, 13 mm dick und mit auf 105 Grad geöffnetem Deckel: unter voller Büroauslastung gibt er 60 W elektrische Leistung als Wärme ab, über Unterseite, Tastaturdeck und Deckelscharnier, geschlossen im Ruhezustand 1,8 W."
+    },
+    "tags": [
+      "laptop",
+      "computer",
+      "office-equipment",
+      "internal-gain",
+      "electrical",
+      "heat-source"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A3)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "wilkins-hosni-2011",
+          "citation": "Wilkins, C. K., Hosni, M. H. (2011). Plug load design factors. ASHRAE Journal 53(5), 30-34 (measured heat gains of laptops, displays and other office equipment in active, idle and sleep states)."
+        },
+        {
+          "id": "hosni-1999",
+          "citation": "Hosni, M. H., Jones, B. W., Xu, H. (1999). Experimental results for heat gain and radiant/convective split from equipment in buildings. ASHRAE Transactions 105(2), 527-539."
+        },
+        {
+          "id": "vdi-2078-2015",
+          "citation": "VDI 2078:2015 Calculation of thermal loads and room temperatures (internal heat sources of office equipment and lighting)."
+        },
+        {
+          "id": "energy-star-computers-v8",
+          "citation": "ENERGY STAR Program Requirements for Computers, Version 8.0 (2020) (idle, sleep and off mode power classes of notebook computers)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of a 14-inch aluminium unibody laptop of the common thin-and-light class: 0.313 m wide, 0.218 m deep, 13 mm thick base and 6.5 mm lid, 1.30 kg with battery; all measures are rounded from that product class (authored estimate, no single product). Electrical power at level 1 is 45 W (peak of the 30 to 60 W class of Wilkins and Hosni 2011), idle 11 W and sleep 1.4 W (authored estimates for the same class). All electrical power ends as heat in the room: 17 W at the keyboard deck, 24 W at the underside above the processor and the battery, 4 W at the lid and the display backlight. The split between the deck and the underside is an authored estimate; the radiative share of the equipment follows Hosni et al. 1999.",
+        "de": "Seitenansicht eines 14-Zoll-Laptops aus Aluminium (Unibody) der gängigen flachen Leichtklasse: 0,313 m breit, 0,218 m tief, 13 mm dicke Basis und 6,5 mm Deckel, 1,30 kg mit Akku; alle Maße sind aus dieser Produktklasse gerundet (Schätzwert, kein einzelnes Produkt). Die elektrische Leistung auf Stufe 1 beträgt 45 W (Spitze der Klasse von 30 bis 60 W nach Wilkins und Hosni 2011), im Leerlauf 11 W und im Ruhezustand 1,4 W (Schätzwerte für dieselbe Klasse). Die gesamte elektrische Leistung endet als Wärme im Raum: 17 W am Tastaturdeck, 24 W an der Unterseite über Prozessor und Akku, 4 W am Deckel und an der Displayhintergrundbeleuchtung. Die Aufteilung auf Deck und Unterseite ist ein Schätzwert; der Strahlungsanteil der Geräte folgt Hosni et al. 1999."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.218,
+      "widthM": 0.275,
+      "depthM": 0.313,
+      "massKg": 1.3
+    },
+    "materials": [
+      {
+        "id": "alu-anodised",
+        "title": {
+          "en": "Anodised aluminium",
+          "de": "Eloxiertes Aluminium"
+        },
+        "emissivity": 0.77,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 2700,
+        "conductivityWmK": 177,
+        "specificHeatJKgK": 875,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "display-glass",
+        "title": {
+          "en": "Display cover glass",
+          "de": "Display-Deckglas"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1.4,
+        "specificHeatJKgK": 840,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "rubber-foot",
+        "title": {
+          "en": "Rubber foot",
+          "de": "Gummifuß"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.15,
+        "specificHeatJKgK": 1800,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "title": {
+            "en": "Base with keyboard, battery and board",
+            "de": "Basis mit Tastatur, Akku und Platine"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.218,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.82,
+            "comX": 0,
+            "comY": 0.0065,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "lid",
+          "parent": "base",
+          "title": {
+            "en": "Lid with display",
+            "de": "Deckel mit Display"
+          },
+          "x": -0.104,
+          "y": 0.0125,
+          "angleDeg": 0,
+          "lengthM": 0.213,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 135
+          },
+          "mass": {
+            "kg": 0.48,
+            "comX": 0.106,
+            "comY": 0.003,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "feet-contact",
+        "bone": "base",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Rubber feet on the desk",
+          "de": "Gummifüße auf dem Tisch"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.19,
+        "footprintWidthM": 0.28,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "deck-top",
+        "bone": "base",
+        "x": 0.01,
+        "y": 0.0125,
+        "kind": "emitter",
+        "title": {
+          "en": "Warm air above the keyboard deck",
+          "de": "Warme Luft über dem Tastaturdeck"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.18,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-front",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.08,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0,
+              "w": 0.02,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "base-lower",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.109,
+              "y": 0.002,
+              "w": 0.218,
+              "h": 0.0046,
+              "r": 0.0012,
+              "region": "underside",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "base-upper",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.109 0.0066 L 0.109 0.0066 L 0.109 0.0092 L 0.078 0.0125 L -0.106 0.0125 C -0.108 0.0125 -0.109 0.0115 -0.109 0.0105 Z",
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "hinge-shoulder",
+              "bone": "base",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.109,
+              "y": 0.0066,
+              "w": 0.034,
+              "h": 0.0105,
+              "r": 0.003,
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "keys",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.09,
+                  0.0125
+                ],
+                [
+                  -0.09,
+                  0.0137
+                ],
+                [
+                  -0.079,
+                  0.0137
+                ],
+                [
+                  -0.079,
+                  0.0125
+                ],
+                [
+                  -0.0765,
+                  0.0125
+                ],
+                [
+                  -0.0765,
+                  0.0137
+                ],
+                [
+                  -0.0655,
+                  0.0137
+                ],
+                [
+                  -0.0655,
+                  0.0125
+                ],
+                [
+                  -0.063,
+                  0.0125
+                ],
+                [
+                  -0.063,
+                  0.0137
+                ],
+                [
+                  -0.052,
+                  0.0137
+                ],
+                [
+                  -0.052,
+                  0.0125
+                ],
+                [
+                  -0.0495,
+                  0.0125
+                ],
+                [
+                  -0.0495,
+                  0.0137
+                ],
+                [
+                  -0.0385,
+                  0.0137
+                ],
+                [
+                  -0.0385,
+                  0.0125
+                ],
+                [
+                  -0.036,
+                  0.0125
+                ],
+                [
+                  -0.036,
+                  0.0137
+                ],
+                [
+                  -0.025,
+                  0.0137
+                ],
+                [
+                  -0.025,
+                  0.0125
+                ],
+                [
+                  -0.0225,
+                  0.0125
+                ],
+                [
+                  -0.0225,
+                  0.0137
+                ],
+                [
+                  -0.0115,
+                  0.0137
+                ],
+                [
+                  -0.0115,
+                  0.0125
+                ],
+                [
+                  -0.009,
+                  0.0125
+                ],
+                [
+                  -0.009,
+                  0.0137
+                ],
+                [
+                  0.002,
+                  0.0137
+                ],
+                [
+                  0.002,
+                  0.0125
+                ],
+                [
+                  0.0045,
+                  0.0125
+                ],
+                [
+                  0.0045,
+                  0.0137
+                ],
+                [
+                  0.0155,
+                  0.0137
+                ],
+                [
+                  0.0155,
+                  0.0125
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.213,
+              "h": 0.0065,
+              "r": 0.0022,
+              "region": "lid",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "display",
+              "bone": "lid",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.005,
+              "y": 0.0003,
+              "w": 0.203,
+              "h": 0.0023,
+              "region": "lid",
+              "material": "display-glass"
+            },
+            {
+              "id": "hinge",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0.002,
+              "cy": 0.00325,
+              "rx": 0.0048,
+              "ry": 0.0048,
+              "region": "lid",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "vent-slot",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.103,
+                  0.0098
+                ],
+                [
+                  -0.083,
+                  0.0098
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "port-strip",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.005
+                ],
+                [
+                  0.068,
+                  0.005
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "lid-bezel",
+              "bone": "lid",
+              "role": "detail",
+              "z": 3.8,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0054
+                ],
+                [
+                  0.213,
+                  0.0054
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.005,
+              "y": 0,
+              "w": 0.218,
+              "h": 0.0065,
+              "r": 0.0022,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
+              }
+            },
+            {
+              "id": "plan-deck",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.109,
+              "y": -0.1565,
+              "w": 0.218,
+              "h": 0.313,
+              "r": 0.008,
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "plan-key-row-1",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.068,
+              "y": -0.115,
+              "w": 0.017,
+              "h": 0.23
+            },
+            {
+              "id": "plan-key-row-2",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.047,
+              "y": -0.115,
+              "w": 0.017,
+              "h": 0.23
+            },
+            {
+              "id": "plan-key-row-3",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.026,
+              "y": -0.115,
+              "w": 0.017,
+              "h": 0.23
+            },
+            {
+              "id": "plan-key-row-4",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.005,
+              "y": -0.115,
+              "w": 0.017,
+              "h": 0.23
+            },
+            {
+              "id": "plan-key-row-5",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.016,
+              "y": -0.115,
+              "w": 0.017,
+              "h": 0.23
+            },
+            {
+              "id": "plan-trackpad",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.056,
+              "y": -0.04,
+              "w": 0.036,
+              "h": 0.08,
+              "r": 0.002
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.1,
+              "y": 0.0,
+              "w": 0.02,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0.0,
+              "w": 0.02,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1565,
+                  0.001
+                ],
+                [
+                  0.1565,
+                  0.001
+                ],
+                [
+                  0.1565,
+                  0.0092
+                ],
+                [
+                  0.14,
+                  0.0125
+                ],
+                [
+                  -0.14,
+                  0.0125
+                ],
+                [
+                  -0.1565,
+                  0.0105
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "deck",
+                "underside"
+              ],
+              "material": "alu-anodised"
+            },
+            {
+              "id": "lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.213,
+              "h": 0.0065,
+              "r": 0.0022,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
+              }
+            },
+            {
+              "id": "display",
+              "bone": "lid",
+              "role": "glazing",
+              "z": 2.95,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.005,
+              "y": 0.0003,
+              "w": 0.203,
+              "h": 0.0023,
+              "region": "lid",
+              "material": "display-glass",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.145,
+                "z1": 0.145
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.275 m by 0.218 m side view, 5.5 mm by 4.4 mm on paper: a wedge-fronted base slab on two rubber feet with a raised hinge shoulder at the rear and a tall lid leaning back by 15 degrees, joined by a 9.6 mm hinge barrel. Front view: the 0.313 m wide base with its two front feet and chamfered front edge as one block of deck and underside, and the lid as a slab behind it whose top edge rises with the lid angle; the dark display fills its face. Top view: the base with five key rows and trackpad, covered by the lid, which draws back over the hinge as it opens.",
+            "de": "Eine Seitenansicht von 0,275 m mal 0,218 m, auf Papier 5,5 mm mal 4,4 mm: eine Basisplatte mit keilförmiger Vorderkante auf zwei Gummifüßen und erhöhter Scharnierschulter hinten sowie ein hoher, um 15 Grad nach hinten geneigter Deckel, verbunden durch eine Scharniertrommel von 9,6 mm. Vorderansicht: die 0,313 m breite Basis mit ihren zwei vorderen Füßen und der abgeschrägten Vorderkante als ein Block aus Deck und Unterseite und der Deckel als Platte dahinter, deren Oberkante mit dem Deckelwinkel steigt; das dunkle Display füllt seine Fläche. Draufsicht: die Basis mit fünf Tastenreihen und Touchpad, vom Deckel bedeckt, der sich beim Öffnen über das Scharnier zurückzieht."
+          },
+          "retained": {
+            "en": "Overall height 0.218 m with the lid open at 105 degrees, base depth 0.218 m, base thickness 12.5 mm, lid thickness 6.5 mm, both feet, the wedge front, the hinge barrel, the glass of the display and a row of key tops.",
+            "de": "Gesamthöhe 0,218 m bei 105 Grad geöffnetem Deckel, Basistiefe 0,218 m, Basisdicke 12,5 mm, Deckeldicke 6,5 mm, beide Füße, die Keilkante, die Scharniertrommel, das Displayglas und eine Reihe Tastenköpfe."
+          },
+          "merged": {
+            "en": "The anodised shell of the underside and the one of the deck are two stacked slabs; the lid shell, bezel and back cover are one shape.",
+            "de": "Die eloxierte Unterschale und die Deckschale bilden zwei gestapelte Platten; Deckelschale, Rahmen und Rückwand sind eine Form."
+          },
+          "omitted": {
+            "en": "Ports, vents, the touchpad recess, the camera and the speaker slots, which lie outside the side view. Front and top view omit the keycap relief, hinge barrels and the rear feet.",
+            "de": "Anschlüsse, Lüftungsschlitze, die Touchpad-Mulde, die Kamera und die Lautsprecherschlitze, die außerhalb der Seitenansicht liegen. Vorder- und Draufsicht lassen das Tastenrelief, die Scharnierwalzen und die hinteren Füße weg."
+          },
+          "thinElements": {
+            "en": "The 2.3 mm display glass is drawn as a 0.046 mm glass slab inside the lid; the 2 mm feet stay real and rely on the pen weight to reach the feature width.",
+            "de": "Das 2,3 mm dicke Displayglas ist als 0,046-mm-Glasplatte im Deckel gezeichnet; die 2 mm hohen Füße bleiben real und erreichen die Mindestbreite durch die Strichstärke."
+          },
+          "hatching": {
+            "en": "None; the key tops are one detail polyline.",
+            "de": "Keine; die Tastenköpfe sind ein Detailzug."
+          },
+          "styles": {
+            "en": "Slabs 0.5 to 0.62, lid 0.55, display 0.1 dark, feet 0.15; body pen 0.18 mm, detail 0.13 mm, glazing 0.18 mm, ground 0.18 mm so the 12.5 mm base is not swallowed by the desk line.",
+            "de": "Platten 0,5 bis 0,62, Deckel 0,55, Display 0,1 dunkel, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm, Glas 0,18 mm, Boden 0,18 mm, damit die 12,5 mm dicke Basis nicht von der Tischlinie verschluckt wird."
+          },
+          "overlays": {
+            "en": "The keyboard deck, the underside and the lid are separate regions, so the thermal view paints the hot underside and deck apart from the cooler lid.",
+            "de": "Tastaturdeck, Unterseite und Deckel sind getrennte Regionen, sodass die Thermalansicht die heiße Unterseite und das Deck vom kühleren Deckel trennt."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base-lower",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.109,
+              "y": 0,
+              "w": 0.218,
+              "h": 0.0066,
+              "r": 0.0012,
+              "region": "underside",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "base-upper",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.109 0.0066 L 0.109 0.0066 L 0.109 0.0092 L 0.078 0.0125 L -0.106 0.0125 C -0.108 0.0125 -0.109 0.0115 -0.109 0.0105 Z",
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.213,
+              "h": 0.0065,
+              "r": 0.002,
+              "region": "lid",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "screen-line",
+              "bone": "lid",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.006,
+                  0.0021
+                ],
+                [
+                  0.207,
+                  0.0021
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.213,
+              "h": 0.0065,
+              "r": 0.002,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
+              }
+            },
+            {
+              "id": "plan-deck",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.109,
+              "y": -0.1565,
+              "w": 0.218,
+              "h": 0.313,
+              "r": 0.008,
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "plan-keys",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.07,
+              "y": -0.115,
+              "w": 0.12,
+              "h": 0.23
+            }
+          ],
+          "front": [
+            {
+              "id": "base-lower",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.1565,
+              "y": 0.0,
+              "w": 0.313,
+              "h": 0.0066,
+              "r": 0.0012,
+              "region": "underside",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "base-upper",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1565,
+                  0.0066
+                ],
+                [
+                  0.1565,
+                  0.0066
+                ],
+                [
+                  0.1565,
+                  0.0092
+                ],
+                [
+                  0.14,
+                  0.0125
+                ],
+                [
+                  -0.14,
+                  0.0125
+                ],
+                [
+                  -0.1565,
+                  0.0105
+                ]
+              ],
+              "closed": true,
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.213,
+              "h": 0.0065,
+              "r": 0.002,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "An L-shaped side sign 2.8 mm by 2.2 mm: a sloped-front base slab with the lid leaning back from its rear edge. Front view: base and a lid slab whose top edge rises with the lid angle. Top view: the base with one key field, covered by the lid, which draws back over the hinge as it opens.",
+            "de": "Ein L-förmiges Seitenzeichen von 2,8 mm mal 2,2 mm: eine Basisplatte mit geneigter Vorderkante, von deren Hinterkante sich der Deckel nach hinten lehnt. Vorderansicht: Basis und eine Deckelplatte, deren Oberkante mit dem Deckelwinkel steigt. Draufsicht: die Basis mit einem Tastenfeld, vom Deckel bedeckt, der sich beim Öffnen über das Scharnier zurückzieht."
+          },
+          "retained": {
+            "en": "Overall height 0.218 m, base depth 0.218 m, the wedge front, the base slab height and the lid thickness; the screen face as one line.",
+            "de": "Gesamthöhe 0,218 m, Basistiefe 0,218 m, die Keilkante, die Höhe der Basisplatte und die Deckeldicke; die Bildschirmseite als ein Strich."
+          },
+          "merged": {
+            "en": "The feet join the underside slab, the hinge barrel joins the lid shell, glass and bezel join the lid.",
+            "de": "Die Füße gehen in der Unterplatte auf, die Scharniertrommel in der Deckelschale, Glas und Rahmen im Deckel."
+          },
+          "omitted": {
+            "en": "Key tops, hinge barrel as a separate form, ports, vents, camera. Front and top view omit the feet, the display, the key rows and the trackpad.",
+            "de": "Tastenköpfe, die Scharniertrommel als eigene Form, Anschlüsse, Lüftung, Kamera. Vorder- und Draufsicht lassen Füße, Display, Tastenreihen und Touchpad weg."
+          },
+          "thinElements": {
+            "en": "The 12.5 mm base is 0.125 mm of paper; the 0.18 mm pen outline lifts the slab to the feature width, so the two base slabs read as one dark block with a lighter deck line.",
+            "de": "Die 12,5 mm dicke Basis sind 0,125 mm Papier; die 0,18-mm-Umrisslinie hebt die Platte auf die Mindestbreite, sodass die beiden Basisplatten als ein dunkler Block mit hellerer Decklinie lesen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Underside 0.5, deck 0.62, lid 0.5; body pen 0.18 mm, the screen line 0.13 mm.",
+            "de": "Unterseite 0,5, Deck 0,62, Deckel 0,5; Körperstift 0,18 mm, der Bildschirmstrich 0,13 mm."
+          },
+          "overlays": {
+            "en": "Deck, underside and lid keep their own regions, so the heat of the underside and the keyboard deck reads separately from the lid.",
+            "de": "Deck, Unterseite und Deckel behalten ihre eigenen Regionen, sodass die Wärme von Unterseite und Tastaturdeck getrennt vom Deckel lesbar bleibt."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.109,
+              "y": 0,
+              "w": 0.218,
+              "h": 0.0125,
+              "r": 0.002,
+              "regions": [
+                "deck",
+                "underside"
+              ],
+              "material": "alu-anodised"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.003,
+              "y": -0.003,
+              "w": 0.219,
+              "h": 0.0095,
+              "r": 0.002,
+              "region": "lid",
+              "material": "alu-anodised"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.003,
+              "y": -0.003,
+              "w": 0.219,
+              "h": 0.0095,
+              "r": 0.002,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
+              }
+            },
+            {
+              "id": "plan-base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.109,
+              "y": -0.1565,
+              "w": 0.218,
+              "h": 0.313,
+              "r": 0.004,
+              "regions": [
+                "deck",
+                "underside"
+              ],
+              "material": "alu-anodised"
+            }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.1565,
+              "y": 0.0,
+              "w": 0.313,
+              "h": 0.0125,
+              "r": 0.002,
+              "regions": [
+                "deck",
+                "underside"
+              ],
+              "material": "alu-anodised"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.003,
+              "y": -0.003,
+              "w": 0.219,
+              "h": 0.0095,
+              "r": 0.002,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Two bars, 1.4 mm by 1.1 mm on paper: a base bar and a lid bar leaning back from its rear end. Front view: base block and a lid slab raised with the lid angle. Top view: the base covered by the lid, which draws back over the hinge as it opens.",
+            "de": "Zwei Balken, auf Papier 1,4 mm mal 1,1 mm: ein Basisbalken und ein Deckelbalken, der sich von dessen hinterem Ende nach hinten lehnt. Vorderansicht: Basisblock und eine mit dem Deckelwinkel gehobene Deckelplatte. Draufsicht: die vom Deckel bedeckte Basis, wobei sich der Deckel beim Öffnen über das Scharnier zurückzieht."
+          },
+          "retained": {
+            "en": "Overall height 0.218 m, depth 0.218 m, the lid angle and the hinge at the rear edge of the base.",
+            "de": "Gesamthöhe 0,218 m, Tiefe 0,218 m, der Deckelwinkel und das Scharnier an der Hinterkante der Basis."
+          },
+          "merged": {
+            "en": "Deck and underside merge into one base bar; hinge, shell, bezel and glass merge into one lid bar.",
+            "de": "Deck und Unterseite gehen in einem Basisbalken auf; Scharnier, Schale, Rahmen und Glas in einem Deckelbalken."
+          },
+          "omitted": {
+            "en": "Feet, wedge front, key tops, display line and every port. Front and top view carry no detail beyond the two plates.",
+            "de": "Füße, Keilkante, Tastenköpfe, Displaylinie und alle Anschlüsse. Vorder- und Draufsicht tragen keine Einzelheiten außer den zwei Platten."
+          },
+          "thinElements": {
+            "en": "The 6.5 mm lid is widened to 9.5 mm (0.0475 mm paper) so that pen and fill reach the feature width; the base keeps its real 12.5 mm.",
+            "de": "Der 6,5 mm dicke Deckel ist auf 9,5 mm verbreitert (0,0475 mm Papier), damit Strich und Füllung die Mindestbreite erreichen; die Basis behält ihre realen 12,5 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Base 0.55, lid 0.5; one body pen of 0.18 mm.",
+            "de": "Basis 0,55, Deckel 0,5; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The base bar lists deck and underside as merged regions; the lid bar is the lid region.",
+            "de": "Der Basisbalken führt Deck und Unterseite als zusammengeführte Regionen; der Deckelbalken ist die Deckelregion."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the whole laptop is 0.55 mm wide and its lid is a 0.013 mm sliver, below every print profile; only a dot would remain.",
+          "de": "Bei 1:500 ist der ganze Laptop 0,55 mm breit und sein Deckel ein 0,013 mm dünner Span, unter jedem Druckprofil; es bliebe nur ein Punkt."
+        },
+        "limitingFeature": {
+          "en": "Lid thickness of 6.5 mm",
+          "de": "Deckeldicke von 6,5 mm"
+        },
+        "limitingSizeM": 0.0065,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "open",
+        "title": {
+          "en": "Open, working",
+          "de": "Offen, in Arbeit"
+        },
+        "description": {
+          "en": "Lid open at 105 degrees, full office load of 60 W: the underside and the deck are warm, the lid is a little warm, a plume rises behind the keyboard.",
+          "de": "Deckel auf 105 Grad geöffnet, volle Büroauslastung von 60 W: Unterseite und Deck sind warm, der Deckel leicht warm, hinter der Tastatur steigt eine Fahne auf."
+        },
+        "bones": {
+          "lid": {
+            "angleDeg": 105
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "deck": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "underside": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.06,
+                "tempC": 21
+              }
+            },
+            "lid": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "deck-plume": 1
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "open-idle",
+        "title": {
+          "en": "Open, idle",
+          "de": "Offen, im Leerlauf"
+        },
+        "description": {
+          "en": "Lid open, screen on and nothing computed: 15 W, a faint warmth.",
+          "de": "Deckel offen, Bildschirm an und keine Rechenlast: 15 W, eine schwache Wärme."
+        },
+        "bones": {
+          "lid": {
+            "angleDeg": 105
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "deck": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "underside": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.06,
+                "tempC": 21
+              }
+            },
+            "lid": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "deck-plume": 0.4
+          },
+          "operating": {
+            "power": 0.25
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "closed",
+        "title": {
+          "en": "Closed, asleep",
+          "de": "Geschlossen, im Ruhezustand"
+        },
+        "description": {
+          "en": "Lid closed, the machine sleeps at about 1.8 W: the deck and the screen face are covered, the shell is at room temperature.",
+          "de": "Deckel geschlossen, die Maschine ruht bei etwa 1,8 W: Deck und Bildschirmseite sind verdeckt, die Schale hat Raumtemperatur."
+        },
+        "bones": {
+          "lid": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "feet-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "deck": {
+              "exposedFraction": 0.1,
+              "sunlitFraction": 0
+            },
+            "underside": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.06,
+                "tempC": 21
+              }
+            },
+            "lid": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "deck-plume": 0
+          },
+          "operating": {
+            "power": 0.03
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "open-lid",
+        "title": {
+          "en": "Open the lid",
+          "de": "Deckel öffnen"
+        },
+        "description": {
+          "en": "The lid swings from closed to 105 degrees in two seconds and the machine wakes from sleep to idle.",
+          "de": "Der Deckel schwenkt in zwei Sekunden von geschlossen auf 105 Grad und die Maschine erwacht aus dem Ruhezustand in den Leerlauf."
+        },
+        "durationS": 2.4,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.4,
+            "pose": "open-idle",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "feet-contact",
+            "fromS": 0,
+            "toS": 2.4
+          }
+        ],
+        "phases": [
+          {
+            "id": "closed",
+            "fromS": 0,
+            "toS": 0.4,
+            "title": {
+              "en": "Closed",
+              "de": "Geschlossen"
+            }
+          },
+          {
+            "id": "opening",
+            "fromS": 0.4,
+            "toS": 2.4,
+            "title": {
+              "en": "Opening",
+              "de": "Öffnet"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.4,
+            "kind": "motion",
+            "title": {
+              "en": "The lid starts to rise",
+              "de": "Der Deckel beginnt sich zu heben"
+            },
+            "target": "lid"
+          },
+          {
+            "t": 1.6,
+            "kind": "operating",
+            "title": {
+              "en": "The machine wakes up",
+              "de": "Die Maschine erwacht"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.03
+              },
+              {
+                "t": 1.6,
+                "v": 0.03
+              },
+              {
+                "t": 2.4,
+                "v": 0.25
+              }
+            ]
+          },
+          {
+            "target": "emitter:deck-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2.4,
+                "v": 0.4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "work-and-sleep",
+        "title": {
+          "en": "Work, then close the lid",
+          "de": "Arbeiten, dann Deckel schließen"
+        },
+        "description": {
+          "en": "Ten minutes of heat: the open machine idles, works at full load from the tenth second and goes to sleep with the lid closed after five minutes, so the shell cools down.",
+          "de": "Zehn Minuten Wärme: die offene Maschine läuft im Leerlauf, arbeitet ab der zehnten Sekunde unter Volllast und geht nach fünf Minuten mit geschlossenem Deckel in den Ruhezustand, sodass die Schale abkühlt."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "open-idle",
+            "ease": "step"
+          },
+          {
+            "t": 10,
+            "pose": "open",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "closed",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "closed",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "feet-contact",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "idle",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Idle",
+              "de": "Leerlauf"
+            }
+          },
+          {
+            "id": "working",
+            "fromS": 10,
+            "toS": 300,
+            "title": {
+              "en": "Full load",
+              "de": "Volllast"
+            }
+          },
+          {
+            "id": "asleep",
+            "fromS": 300,
+            "toS": 600,
+            "title": {
+              "en": "Asleep, cooling",
+              "de": "Ruhezustand, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 10,
+            "kind": "operating",
+            "title": {
+              "en": "Full load starts",
+              "de": "Volllast beginnt"
+            },
+            "target": "power"
+          },
+          {
+            "t": 300,
+            "kind": "shutdown",
+            "title": {
+              "en": "Lid closed, the machine sleeps",
+              "de": "Deckel zu, die Maschine ruht"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.25
+              },
+              {
+                "t": 10,
+                "v": 1
+              },
+              {
+                "t": 300,
+                "v": 0.03
+              }
+            ]
+          },
+          {
+            "target": "emitter:deck-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.4
+              },
+              {
+                "t": 10,
+                "v": 1
+              },
+              {
+                "t": 300,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "power",
+          "title": {
+            "en": "Electrical power",
+            "de": "Elektrische Leistung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.03,
+              "title": {
+                "en": "Sleep (1.8 W)",
+                "de": "Ruhezustand (1,8 W)"
+              }
+            },
+            {
+              "v": 0.25,
+              "title": {
+                "en": "Idle (15 W)",
+                "de": "Leerlauf (15 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full office load (60 W)",
+                "de": "Volle Büroauslastung (60 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "deck",
+          "title": {
+            "en": "Keyboard deck and palm rests",
+            "de": "Tastaturdeck und Handballenauflage"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "alu-anodised",
+          "areaM2": 0.068,
+          "characteristicLengthM": 0.22,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "deck-shell",
+              "title": {
+                "en": "Anodised aluminium deck 1.2 mm",
+                "de": "Eloxiertes Aluminiumdeck 1,2 mm"
+              },
+              "kind": "metal",
+              "material": "alu-anodised",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 0.000007,
+              "heatCapacityJM2K": 4700,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4700,
+          "operating": {
+            "key": "power",
+            "heatW": 22.8
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "underside",
+          "title": {
+            "en": "Underside with CPU hot spot",
+            "de": "Unterseite mit CPU-Wärmefleck"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "alu-anodised",
+          "areaM2": 0.068,
+          "characteristicLengthM": 0.22,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0,
+          "layers": [
+            {
+              "id": "bottom-shell",
+              "title": {
+                "en": "Anodised aluminium bottom plate 1.2 mm",
+                "de": "Eloxierte Aluminium-Bodenplatte 1,2 mm"
+              },
+              "kind": "metal",
+              "material": "alu-anodised",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 0.000007,
+              "heatCapacityJM2K": 4700,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4700,
+          "operating": {
+            "key": "power",
+            "heatW": 18.6
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "lid",
+          "title": {
+            "en": "Lid with display panel",
+            "de": "Deckel mit Displaypanel"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "alu-anodised",
+          "areaM2": 0.137,
+          "characteristicLengthM": 0.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "lid-shell",
+              "title": {
+                "en": "Anodised aluminium lid 1 mm with display stack",
+                "de": "Eloxierter Aluminiumdeckel 1 mm mit Displayaufbau"
+              },
+              "kind": "metal",
+              "material": "alu-anodised",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.000006,
+              "heatCapacityJM2K": 2900,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2900,
+          "operating": {
+            "key": "power",
+            "heatW": 18.6
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "deck-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Free convection above the warm deck",
+            "de": "Freie Konvektion über dem warmen Deck"
+          },
+          "anchor": "deck-top",
+          "directionDeg": 90,
+          "diameterM": 0.2,
+          "region": "deck",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Every watt of electrical power ends as heat in the room: the three regions release 22.8 W, 18.6 W and 18.6 W at level 1 (60 W together: a laptop under load with its charger, class of 30 to 60 W) and lose it by convection and radiation; the underside runs near 55 degC and the lid carries the heat of the hinge and the fan exhaust.",
+          "de": "Jedes Watt elektrischer Leistung endet als Wärme im Raum: die drei Regionen geben bei Stufe 1 22,8 W, 18,6 W und 18,6 W ab (zusammen 60 W: ein Laptop unter Last mit Netzteil, Klasse von 30 bis 60 W) und verlieren sie durch Konvektion und Strahlung; die Unterseite liegt bei etwa 55 degC und der Deckel trägt die Wärme des Scharniers und des Lüfterauslasses."
+        },
+        {
+          "en": "The closed lid covers the deck and the screen face, so the closed pose binds a small exposed fraction to them; the underside rests on four rubber feet with 6 % conductive contact to the desk at room temperature.",
+          "de": "Der geschlossene Deckel verdeckt Deck und Bildschirmseite, daher bindet die geschlossene Pose einen kleinen freien Anteil an sie; die Unterseite steht auf vier Gummifüßen mit 6 % Wärmeleitkontakt zum Tisch bei Raumtemperatur."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "feet-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid base on four rubber feet with the lid as a rotated rigid plate; open at 105 degrees the lid overhangs the rear of the base, and the centre of pressure moves 5 cm back, still inside the feet.",
+          "de": "Eine starre Basis auf vier Gummifüßen mit dem Deckel als gedrehte starre Platte; bei 105 Grad geöffnet überragt der Deckel die Hinterkante der Basis, und der Druckmittelpunkt wandert 5 cm nach hinten, bleibt aber innerhalb der Füße."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "open",
+      "defaultClip": "open-lid",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

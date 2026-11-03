@@ -29,7 +29,7 @@ describe("inertial consistency", () => {
     expect(near(result.reactions.reduce((a, r) => a + r.fxN, 0), need.x, 1e-9)).toBe(true);
     expect(near(need.y, values["moving"]!["expectedSumFyN"]!, 1e-9)).toBe(true);
     expect(Math.hypot(result.residual.fxN, result.residual.fyN)).toBeLessThan(1e-9 * need.y);
-    expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * need.y * 2);
+    expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * need.y * 2);
   });
   it("matches the numpy foot reactions of the moving body", () => {
     const v = values["moving"]!;
@@ -63,7 +63,7 @@ describe("inertial consistency", () => {
     const result = solve("flight");
     expect(result.reactions).toHaveLength(0);
     expect(Math.hypot(result.residual.fxN, result.residual.fyN)).toBeLessThan(1e-9 * 1000);
-    expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * 1000);
+    expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * 1000);
   });
   it("states the unsupported flight phase honestly", () => {
     const result = solve("flight");

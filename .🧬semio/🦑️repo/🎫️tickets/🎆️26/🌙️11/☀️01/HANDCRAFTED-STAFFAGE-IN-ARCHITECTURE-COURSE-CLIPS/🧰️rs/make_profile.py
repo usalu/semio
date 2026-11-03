@@ -1,0 +1,36 @@
+import sys
+from pathlib import Path
+src = Path(sys.argv[1]).read_text(encoding="utf-8")
+here = sys.argv[2]
+def rep(a, b, count=1):
+    global src
+    assert a in src, a
+    src = src.replace(a, b, count)
+rep('import {launchBrowser} from "./🧰️tools.mjs";', 'import {launchBrowser} from "file:///' + here + '/🧰️tools.mjs";\nconst __T0=performance.now(),__M={};const __m=(k)=>{const n=performance.now();__M[k]=(__M[k]??0)+(n-(__last??n));__last=n};let __last=performance.now();const __mark=(k)=>{const n=performance.now();console.error("[PROFILE] "+k+" "+(n-__T0).toFixed(0)+"ms")};')
+rep('const here=path.dirname(fileURLToPath(import.meta.url));', 'const here="' + here + '";')
+rep('const adapterBundle=await build(', '__mark("pre-esbuild");const adapterBundle=await build(')
+rep('const compiler=await compile(', '__mark("adapter-built");const compiler=await compile(')
+rep('const scanner=new Scanner(', '__mark("tailwind-compiled");const scanner=new Scanner(')
+rep('const css=compiler.build(scanner.scan())', '__mark("scanner-made");const css=compiler.build(scanner.scan())')
+rep('const bundle=await build(', '__mark("css-built");const bundle=await build(')
+rep('const presentation=path.dirname(here);', '__mark("ui-bundle-built");const presentation=path.dirname(here);')
+rep('  const {chromium}=await loadPlaywrightV1(root);', '  __mark("pre-playwright");const {chromium}=await loadPlaywrightV1(root);__mark("playwright-loaded");')
+rep('  cancellation.signal.throwIfAborted();\n  const page=', '  __mark("browser-launched");cancellation.signal.throwIfAborted();\n  const page=')
+rep('  await page.evaluate(()=>{window.semioPresentation.pointerEvents=[]', '  __mark("page-configured");await page.evaluate(()=>{window.semioPresentation.pointerEvents=[]')
+rep('  let down=false,previousHierarchy=null;', '  __mark("loop-start");let down=false,previousHierarchy=null;__last=performance.now();')
+rep('    await page.evaluate(()=>window.semioPresentation.contentCamera(null));\n', '    __m("gap");await page.evaluate(()=>window.semioPresentation.contentCamera(null));__m("camera-reset");\n')
+rep('    await page.evaluate(value=>window.semioPresentation.render(value),frame);\n', '    await page.evaluate(value=>window.semioPresentation.render(value),frame);__m("render");\n')
+rep('    const canonical=', '    __m("fonts-decode");const canonical=')
+rep('    await page.clock.runFor(0);', '    __m("canonical");await page.clock.runFor(0);')
+rep('    const point=frame.cursor?.point;', '    __m("menu-wait");const point=frame.cursor?.point;')
+rep('    await page.clock.runFor(frame.transition_elapsed??1000);', '    __m("mouse");await page.clock.runFor(frame.transition_elapsed??1000);__m("clock-run");console.error("[PROFILE] f"+index+" te="+(frame.transition_elapsed??1000)+" clock="+(__M["clock-run"]|0));')
+rep('    for(let attempt=0;', '    __m("anim-seek");for(let attempt=0;')
+rep('    if(errors.length)', '    __m("settle");if(errors.length)')
+rep('    const actualCursor=', '    __m("fonts-check");const actualCursor=')
+rep('    const info=await', '    __m("cursor");const info=await')
+rep('    info.content_camera=', '    __m("info");info.content_camera=')
+rep('    await page.screenshot(', '    __m("content-camera");await page.screenshot(')
+rep('    outputs.push(frame.output);', '    __m("screenshot");outputs.push(frame.output);')
+rep('  const result={schema:batch.schema,outputs', '  console.error("[PROFILE] per-frame totals(ms): "+JSON.stringify(Object.fromEntries(Object.entries(__M).map(([k,v])=>[k,Math.round(v)]))));__mark("loop-done");const result={schema:batch.schema,outputs')
+rep('  console.log(JSON.stringify(result));\n}finally{\n  process', '  __mark("result");console.log(JSON.stringify(result).length);\n}finally{\n  process')
+Path(sys.argv[3]).write_text(src, encoding="utf-8")

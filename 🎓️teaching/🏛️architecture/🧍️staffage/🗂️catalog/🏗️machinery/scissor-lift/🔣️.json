@@ -235,7 +235,7 @@
       "type": "prismatic",
       "axisDeg": 0,
       "minM": -0.6,
-      "maxM": 0.0
+      "maxM": 0
      },
      "mass": {
       "kg": 20,
@@ -514,36 +514,72 @@
   },
   "anchors": [
    {
-    "id": "contact-f",
+    "id": "contact-f-l",
     "bone": "chassis",
     "x": 0.55,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Front tyre contact",
-     "de": "Vorderreifen-Aufstandspunkt"
+     "en": "Front tyre contact (left)",
+     "de": "Vorderreifen-Aufstandspunkt (links)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.08,
-    "footprintWidthM": 0.18,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.09,
+    "frictionCoefficient": 0.6,
+    "z": 0.325
    },
    {
-    "id": "contact-r",
+    "id": "contact-f-r",
     "bone": "chassis",
-    "x": -0.55,
-    "y": 0.0,
+    "x": 0.55,
+    "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Rear tyre contact",
-     "de": "Hinterreifen-Aufstandspunkt"
+     "en": "Front tyre contact (right)",
+     "de": "Vorderreifen-Aufstandspunkt (rechts)"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.08,
-    "footprintWidthM": 0.18,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.09,
+    "frictionCoefficient": 0.6,
+    "z": -0.325
+   },
+   {
+    "id": "contact-r-l",
+    "bone": "chassis",
+    "x": -0.55,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre contact (left)",
+     "de": "Hinterreifen-Aufstandspunkt (links)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.09,
+    "frictionCoefficient": 0.6,
+    "z": 0.325
+   },
+   {
+    "id": "contact-r-r",
+    "bone": "chassis",
+    "x": -0.55,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre contact (right)",
+     "de": "Hinterreifen-Aufstandspunkt (rechts)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.09,
+    "frictionCoefficient": 0.6,
+    "z": -0.325
    },
    {
     "id": "motor-outlet",
@@ -602,1823 +638,6 @@
    }
   ],
   "representations": {
-   "500": {
-    "status": "unavailable",
-    "denominator": 500,
-    "reason": {
-     "en": "Seen from the side the stowed scissor stack is five stages of 0.11 m (0.22 mm at 1:500) that merge into one block, while the raised scissors need ten crossing arms of 0.12 m (0.24 mm) and a guard rail of 0.04 to 0.05 m tubes (0.1 mm); at 1:500 neither state can be drawn as the same articulated rig without arms closer than the 0.15 mm gap limit.",
-     "de": "Von der Seite ist das eingefahrene Scherenpaket fünf Stufen von je 0,11 m (0,22 mm bei 1:500), die zu einem Block verschmelzen, während die gehobene Schere zehn kreuzende Arme von 0,12 m (0,24 mm) und ein Geländer aus Rohren von 0,04 bis 0,05 m (0,1 mm) braucht; bei 1:500 lässt sich keiner der beiden Zustände mit demselben gegliederten Rig zeichnen, ohne dass Arme näher als die Grenzlücke von 0,15 mm liegen."
-    },
-    "limitingFeature": {
-     "en": "Scissor stage pitch of the stowed stack and the 0.05 m guard rail tubes",
-     "de": "Stufenabstand des eingefahrenen Scherenpakets und die 0,05-m-Geländerrohre"
-    },
-    "limitingSizeM": 0.11,
-    "alternatives": [
-     {
-      "kind": "scale",
-      "denominator": 200
-     },
-     {
-      "kind": "symbol",
-      "symbol": "site-plan-footprint"
-     }
-    ]
-   },
-   "200": {
-    "status": "authored",
-    "denominator": 200,
-    "validRange": {
-     "minDenominator": 150,
-     "maxDenominator": 350
-    },
-    "pens": {
-     "body": 0.18,
-     "detail": 0.13,
-     "texture": null,
-     "glazing": 0.13,
-     "ground": 0.25
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a1",
-       "bone": "A1",
-       "role": "body",
-       "z": 3.05,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -3.71,
-       "id": "pin-a1",
-       "bone": "A1",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b1",
-       "bone": "B1",
-       "role": "body",
-       "z": 3.07,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": -0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -176.29,
-       "id": "pin-b1",
-       "bone": "B1",
-       "role": "detail",
-       "z": 3.57,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a2",
-       "bone": "A2",
-       "role": "body",
-       "z": 3.1,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -3.71,
-       "id": "pin-a2",
-       "bone": "A2",
-       "role": "detail",
-       "z": 3.6,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b2",
-       "bone": "B2",
-       "role": "body",
-       "z": 3.12,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -176.29,
-       "id": "pin-b2",
-       "bone": "B2",
-       "role": "detail",
-       "z": 3.62,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a3",
-       "bone": "A3",
-       "role": "body",
-       "z": 3.15,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -3.71,
-       "id": "pin-a3",
-       "bone": "A3",
-       "role": "detail",
-       "z": 3.65,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b3",
-       "bone": "B3",
-       "role": "body",
-       "z": 3.17,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -176.29,
-       "id": "pin-b3",
-       "bone": "B3",
-       "role": "detail",
-       "z": 3.67,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a4",
-       "bone": "A4",
-       "role": "body",
-       "z": 3.2,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -3.71,
-       "id": "pin-a4",
-       "bone": "A4",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b4",
-       "bone": "B4",
-       "role": "body",
-       "z": 3.22,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -176.29,
-       "id": "pin-b4",
-       "bone": "B4",
-       "role": "detail",
-       "z": 3.72,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a5",
-       "bone": "A5",
-       "role": "body",
-       "z": 3.25,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -3.71,
-       "id": "pin-a5",
-       "bone": "A5",
-       "role": "detail",
-       "z": 3.75,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b5",
-       "bone": "B5",
-       "role": "body",
-       "z": 3.27,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.055,
-       "ry": 0.055,
-       "rotationDeg": -176.29,
-       "id": "pin-b5",
-       "bone": "B5",
-       "role": "detail",
-       "z": 3.77,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.925,
-         0.14
-        ],
-        [
-         -0.9,
-         0.1
-        ],
-        [
-         0.9,
-         0.1
-        ],
-        [
-         0.925,
-         0.14
-        ],
-        [
-         0.925,
-         0.45
-        ],
-        [
-         -0.925,
-         0.45
-        ]
-       ],
-       "closed": true,
-       "id": "chassis-body",
-       "bone": "chassis",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.45,
-       "region": "chassis",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.62,
-         0.17
-        ],
-        [
-         -0.17,
-         0.17
-        ],
-        [
-         -0.17,
-         0.4
-        ],
-        [
-         -0.62,
-         0.4
-        ]
-       ],
-       "closed": true,
-       "id": "battery-cover",
-       "bone": "chassis",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.3,
-       "region": "battery-box",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.08,
-         0.17
-        ],
-        [
-         0.32,
-         0.17
-        ],
-        [
-         0.32,
-         0.4
-        ],
-        [
-         -0.08,
-         0.4
-        ]
-       ],
-       "closed": true,
-       "id": "pump-cover",
-       "bone": "chassis",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.35,
-       "region": "motor-pump",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.27,
-       "ry": 0.27,
-       "id": "tyre-f",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "region": "tyres",
-       "material": "rubber"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.11,
-       "ry": 0.11,
-       "id": "hub-f",
-       "bone": "wheel-f",
-       "role": "detail",
-       "z": 4.2,
-       "filled": true,
-       "tone": 0.6,
-       "region": "tyres",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.27,
-       "ry": 0.27,
-       "id": "tyre-r",
-       "bone": "wheel-r",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "region": "tyres",
-       "material": "rubber"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.11,
-       "ry": 0.11,
-       "id": "hub-r",
-       "bone": "wheel-r",
-       "role": "detail",
-       "z": 4.2,
-       "filled": true,
-       "tone": 0.6,
-       "region": "tyres",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.9,
-         0.01
-        ],
-        [
-         0.0,
-         0.01
-        ],
-        [
-         0.0,
-         0.09
-        ],
-        [
-         -0.9,
-         0.09
-        ]
-       ],
-       "closed": true,
-       "id": "deck-ext",
-       "bone": "deck-ext",
-       "role": "body",
-       "z": 2.9,
-       "filled": true,
-       "tone": 0.55,
-       "region": "deck",
-       "material": "deck-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.0
-        ],
-        [
-         1.775,
-         0.0
-        ],
-        [
-         1.775,
-         0.1
-        ],
-        [
-         -0.075,
-         0.1
-        ]
-       ],
-       "closed": true,
-       "id": "deck",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.6,
-       "filled": true,
-       "tone": 0.5,
-       "region": "deck",
-       "material": "deck-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         1.13
-        ],
-        [
-         1.775,
-         1.13
-        ],
-        [
-         1.775,
-         1.2
-        ],
-        [
-         -0.075,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "top-rail",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.62
-        ],
-        [
-         1.775,
-         0.62
-        ],
-        [
-         1.775,
-         0.69
-        ],
-        [
-         -0.075,
-         0.69
-        ]
-       ],
-       "closed": true,
-       "id": "mid-rail",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.1
-        ],
-        [
-         1.775,
-         0.1
-        ],
-        [
-         1.775,
-         0.3
-        ],
-        [
-         -0.075,
-         0.3
-        ]
-       ],
-       "closed": true,
-       "id": "toe-board",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.1
-        ],
-        [
-         -0.005,
-         0.1
-        ],
-        [
-         -0.005,
-         1.2
-        ],
-        [
-         -0.075,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "post-rear",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.705,
-         0.1
-        ],
-        [
-         1.775,
-         0.1
-        ],
-        [
-         1.775,
-         1.2
-        ],
-        [
-         1.705,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "post-front",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "Ten scissor arms as 0.12 m bars (0.6 mm) that stack to a block when stowed and cross when raised, a chassis block with two cover fields, two tyres, the deck with its extension and a rail frame of top rail, mid rail, toe board and two posts.",
-      "de": "Zehn Scherenarme als Leisten von 0,12 m (0,6 mm), die sich eingefahren zum Block stapeln und gehoben kreuzen, ein Fahrgestellblock mit zwei Abdeckfeldern, zwei Reifen, der Boden mit Verlängerung und ein Geländerrahmen aus Handlauf, Knieleiste, Fußleiste und zwei Pfosten."
-     },
-     "retained": {
-      "en": "All ten arms individually (they are the moving mechanism), battery and pump covers, the rail frame windows.",
-      "de": "Alle zehn Arme einzeln (sie sind der Bewegungsmechanismus), Batterie- und Pumpenabdeckung, die Fenster des Geländerrahmens."
-     },
-     "merged": {
-      "en": "The extension deck hides under the deck when retracted; no pins or rollers are drawn.",
-      "de": "Die Verlängerung verschwindet eingefahren unter dem Boden; Bolzen und Rollen sind nicht gezeichnet."
-     },
-     "omitted": {
-      "en": "Pins, rollers, mesh infill, hydraulic cylinders, hubs.",
-      "de": "Bolzen, Rollen, Gitterfüllung, Hydraulikzylinder, Naben."
-     },
-     "thinElements": {
-      "en": "Rails 0.07 m (0.35 mm), arms 0.12 m (0.6 mm): at real size.",
-      "de": "Geländer 0,07 m (0,35 mm), Arme 0,12 m (0,6 mm): in Realgröße."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "Arms dark, chassis mid-tone, deck mid-dark, rails dark; arms at 0.18 mm outline.",
-      "de": "Arme dunkel, Fahrgestell mittlerer Ton, Boden mitteldunkel, Geländer dunkel; Arme mit 0,18-mm-Kontur."
-     },
-     "overlays": {
-      "en": "Every region has its own form.",
-      "de": "Jede Region hat eine eigene Form."
-     }
-    }
-   },
-   "100": {
-    "status": "authored",
-    "denominator": 100,
-    "validRange": {
-     "minDenominator": 75,
-     "maxDenominator": 150
-    },
-    "pens": {
-     "body": 0.25,
-     "detail": 0.18,
-     "texture": null,
-     "glazing": 0.13,
-     "ground": 0.35
-    },
-    "hatches": [],
-    "geometry": {
-     "elevation": [
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a1",
-       "bone": "A1",
-       "role": "body",
-       "z": 3.05,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -3.71,
-       "id": "pin-a1",
-       "bone": "A1",
-       "role": "detail",
-       "z": 3.55,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b1",
-       "bone": "B1",
-       "role": "body",
-       "z": 3.07,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": -0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -176.29,
-       "id": "pin-b1",
-       "bone": "B1",
-       "role": "detail",
-       "z": 3.57,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a2",
-       "bone": "A2",
-       "role": "body",
-       "z": 3.1,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -3.71,
-       "id": "pin-a2",
-       "bone": "A2",
-       "role": "detail",
-       "z": 3.6,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b2",
-       "bone": "B2",
-       "role": "body",
-       "z": 3.12,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -176.29,
-       "id": "pin-b2",
-       "bone": "B2",
-       "role": "detail",
-       "z": 3.62,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a3",
-       "bone": "A3",
-       "role": "body",
-       "z": 3.15,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -3.71,
-       "id": "pin-a3",
-       "bone": "A3",
-       "role": "detail",
-       "z": 3.65,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b3",
-       "bone": "B3",
-       "role": "body",
-       "z": 3.17,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -176.29,
-       "id": "pin-b3",
-       "bone": "B3",
-       "role": "detail",
-       "z": 3.67,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a4",
-       "bone": "A4",
-       "role": "body",
-       "z": 3.2,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -3.71,
-       "id": "pin-a4",
-       "bone": "A4",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b4",
-       "bone": "B4",
-       "role": "body",
-       "z": 3.22,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -176.29,
-       "id": "pin-b4",
-       "bone": "B4",
-       "role": "detail",
-       "z": 3.72,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-a5",
-       "bone": "A5",
-       "role": "body",
-       "z": 3.25,
-       "filled": true,
-       "tone": 0.4,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -3.71,
-       "id": "pin-a5",
-       "bone": "A5",
-       "role": "detail",
-       "z": 3.75,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.07,
-         -0.06
-        ],
-        [
-         1.77,
-         -0.06
-        ],
-        [
-         1.77,
-         0.06
-        ],
-        [
-         -0.07,
-         0.06
-        ]
-       ],
-       "closed": true,
-       "id": "arm-b5",
-       "bone": "B5",
-       "role": "body",
-       "z": 3.27,
-       "filled": true,
-       "tone": 0.5,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.85,
-       "cy": 0.0,
-       "rx": 0.045,
-       "ry": 0.045,
-       "rotationDeg": -176.29,
-       "id": "pin-b5",
-       "bone": "B5",
-       "role": "detail",
-       "z": 3.77,
-       "filled": true,
-       "tone": 0.1,
-       "region": "arms",
-       "material": "scissor-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.925,
-         0.14
-        ],
-        [
-         -0.9,
-         0.1
-        ],
-        [
-         0.9,
-         0.1
-        ],
-        [
-         0.925,
-         0.14
-        ],
-        [
-         0.925,
-         0.45
-        ],
-        [
-         -0.925,
-         0.45
-        ]
-       ],
-       "closed": true,
-       "id": "chassis-body",
-       "bone": "chassis",
-       "role": "body",
-       "z": 2,
-       "filled": true,
-       "tone": 0.45,
-       "region": "chassis",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.62,
-         0.17
-        ],
-        [
-         -0.17,
-         0.17
-        ],
-        [
-         -0.17,
-         0.4
-        ],
-        [
-         -0.62,
-         0.4
-        ]
-       ],
-       "closed": true,
-       "id": "battery-cover",
-       "bone": "chassis",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.3,
-       "region": "battery-box",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.08,
-         0.17
-        ],
-        [
-         0.32,
-         0.17
-        ],
-        [
-         0.32,
-         0.4
-        ],
-        [
-         -0.08,
-         0.4
-        ]
-       ],
-       "closed": true,
-       "id": "pump-cover",
-       "bone": "chassis",
-       "role": "detail",
-       "z": 2.2,
-       "filled": true,
-       "tone": 0.35,
-       "region": "motor-pump",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.27,
-       "ry": 0.27,
-       "id": "tyre-f",
-       "bone": "wheel-f",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "region": "tyres",
-       "material": "rubber"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.11,
-       "ry": 0.11,
-       "id": "hub-f",
-       "bone": "wheel-f",
-       "role": "detail",
-       "z": 4.2,
-       "filled": true,
-       "tone": 0.6,
-       "region": "tyres",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.27,
-       "ry": 0.27,
-       "id": "tyre-r",
-       "bone": "wheel-r",
-       "role": "body",
-       "z": 4,
-       "filled": true,
-       "tone": 0.12,
-       "region": "tyres",
-       "material": "rubber"
-      },
-      {
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.11,
-       "ry": 0.11,
-       "id": "hub-r",
-       "bone": "wheel-r",
-       "role": "detail",
-       "z": 4.2,
-       "filled": true,
-       "tone": 0.6,
-       "region": "tyres",
-       "material": "chassis-paint"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.9,
-         0.01
-        ],
-        [
-         0.0,
-         0.01
-        ],
-        [
-         0.0,
-         0.09
-        ],
-        [
-         -0.9,
-         0.09
-        ]
-       ],
-       "closed": true,
-       "id": "deck-ext",
-       "bone": "deck-ext",
-       "role": "body",
-       "z": 2.9,
-       "filled": true,
-       "tone": 0.55,
-       "region": "deck",
-       "material": "deck-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.0
-        ],
-        [
-         1.775,
-         0.0
-        ],
-        [
-         1.775,
-         0.1
-        ],
-        [
-         -0.075,
-         0.1
-        ]
-       ],
-       "closed": true,
-       "id": "deck",
-       "bone": "platform",
-       "role": "body",
-       "z": 3.6,
-       "filled": true,
-       "tone": 0.5,
-       "region": "deck",
-       "material": "deck-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         1.15
-        ],
-        [
-         1.775,
-         1.15
-        ],
-        [
-         1.775,
-         1.2
-        ],
-        [
-         -0.075,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "top-rail",
-       "bone": "platform",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.62
-        ],
-        [
-         1.775,
-         0.62
-        ],
-        [
-         1.775,
-         0.67
-        ],
-        [
-         -0.075,
-         0.67
-        ]
-       ],
-       "closed": true,
-       "id": "mid-rail",
-       "bone": "platform",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.1
-        ],
-        [
-         1.775,
-         0.1
-        ],
-        [
-         1.775,
-         0.25
-        ],
-        [
-         -0.075,
-         0.25
-        ]
-       ],
-       "closed": true,
-       "id": "toe-board",
-       "bone": "platform",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.1
-        ],
-        [
-         -0.025,
-         0.1
-        ],
-        [
-         -0.025,
-         1.2
-        ],
-        [
-         -0.075,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "post-rear",
-       "bone": "platform",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         1.725,
-         0.1
-        ],
-        [
-         1.775,
-         0.1
-        ],
-        [
-         1.775,
-         1.2
-        ],
-        [
-         1.725,
-         1.2
-        ]
-       ],
-       "closed": true,
-       "id": "post-front",
-       "bone": "platform",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      },
-      {
-       "kind": "poly",
-       "points": [
-        [
-         -0.075,
-         0.9
-        ],
-        [
-         1.775,
-         0.9
-        ],
-        [
-         1.775,
-         0.95
-        ],
-        [
-         -0.075,
-         0.95
-        ]
-       ],
-       "closed": true,
-       "id": "mid-rail-2",
-       "bone": "platform",
-       "role": "detail",
-       "z": 3.7,
-       "filled": true,
-       "tone": 0.3,
-       "region": "rails",
-       "material": "rail-steel"
-      }
-     ]
-    },
-    "decisions": {
-     "silhouette": {
-      "en": "As 1:200 with hubs on the tyres, pivot pins on every arm and a second mid rail.",
-      "de": "Wie 1:200 mit Naben an den Reifen, Gelenkbolzen an jedem Arm und einer zweiten Knieleiste."
-     },
-     "retained": {
-      "en": "Ten pivot pins at the arm centres, hubs.",
-      "de": "Zehn Gelenkbolzen in den Armmitten, Naben."
-     },
-     "merged": {
-      "en": "Rail tubes 0.05 m (0.5 mm) are drawn at real size.",
-      "de": "Geländerrohre von 0,05 m (0,5 mm) sind in Realgröße gezeichnet."
-     },
-     "omitted": {
-      "en": "End pins, rollers, cylinders.",
-      "de": "Endbolzen, Rollen, Zylinder."
-     },
-     "thinElements": {
-      "en": "Pins 0.09 m (0.9 mm).",
-      "de": "Bolzen 0,09 m (0,9 mm)."
-     },
-     "hatching": {
-      "en": "None.",
-      "de": "Keine."
-     },
-     "styles": {
-      "en": "As 1:200, detail pen 0.18 mm.",
-      "de": "Wie 1:200, Detailstift 0,18 mm."
-     },
-     "overlays": {
-      "en": "As 1:200; hubs and pins carry the tyres and arms regions.",
-      "de": "Wie 1:200; Naben und Bolzen tragen die Reifen- und Armregionen."
-     }
-    }
-   },
    "50": {
     "status": "authored",
     "denominator": 50,
@@ -2836,8 +1055,8 @@
       },
       {
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.27,
        "ry": 0.27,
        "id": "tyre-f",
@@ -2851,8 +1070,8 @@
       },
       {
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.27,
        "ry": 0.27,
        "id": "tyre-r",
@@ -2872,11 +1091,11 @@
          0.01
         ],
         [
-         0.0,
+         0,
          0.01
         ],
         [
-         0.0,
+         0,
          0.09
         ],
         [
@@ -2899,11 +1118,11 @@
        "points": [
         [
          -0.075,
-         0.0
+         0
         ],
         [
          1.775,
-         0.0
+         0
         ],
         [
          1.775,
@@ -3147,11 +1366,11 @@
         ],
         [
          1.62,
-         1.0
+         1
         ],
         [
          1.4,
-         1.0
+         1
         ]
        ],
        "closed": true,
@@ -3164,12 +1383,1447 @@
        "region": "rails",
        "material": "chassis-paint"
       }
+     ],
+     "front": [
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 0.1,
+       "w": 0.74,
+       "h": 0.35,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.245,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.54,
+       "r": 0.06,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.405,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.54,
+       "r": 0.06,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "arm-a1-l",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.31,
+        "z1": 0.37
+       }
+      },
+      {
+       "id": "arm-a1-r",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.31
+       }
+      },
+      {
+       "id": "arm-b1-l",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.28
+       }
+      },
+      {
+       "id": "arm-b1-r",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "arm-a2-l",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.31,
+        "z1": 0.37
+       }
+      },
+      {
+       "id": "arm-a2-r",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.31
+       }
+      },
+      {
+       "id": "arm-b2-l",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.28
+       }
+      },
+      {
+       "id": "arm-b2-r",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "arm-a3-l",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.31,
+        "z1": 0.37
+       }
+      },
+      {
+       "id": "arm-a3-r",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.31
+       }
+      },
+      {
+       "id": "arm-b3-l",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.28
+       }
+      },
+      {
+       "id": "arm-b3-r",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "arm-a4-l",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.31,
+        "z1": 0.37
+       }
+      },
+      {
+       "id": "arm-a4-r",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.31
+       }
+      },
+      {
+       "id": "arm-b4-l",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.28
+       }
+      },
+      {
+       "id": "arm-b4-r",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "arm-a5-l",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.31,
+        "z1": 0.37
+       }
+      },
+      {
+       "id": "arm-a5-r",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.37,
+        "z1": -0.31
+       }
+      },
+      {
+       "id": "arm-b5-l",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.22,
+        "z1": 0.28
+       }
+      },
+      {
+       "id": "arm-b5-r",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.28,
+        "z1": -0.22
+       }
+      },
+      {
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1,
+       "w": 0.74,
+       "h": 0.1,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.74,
+       "h": 0.15,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 2.15,
+       "w": 0.74,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.62,
+       "w": 0.74,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "mid-rail-2",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.9,
+       "w": 0.74,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "post-l",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.32,
+       "y": 1.1,
+       "w": 0.05,
+       "h": 1.1,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "post-r",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.05,
+       "h": 1.1,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "control-box",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.405,
+       "y": 1.75,
+       "w": 0.095,
+       "h": 0.25,
+       "region": "rails",
+       "material": "chassis-paint"
+      }
+     ],
+     "plan": [
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.405,
+       "w": 1.85,
+       "h": 0.81,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.28,
+       "y": 0.245,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.28,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.82,
+       "y": 0.245,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.82,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "arm-a1-l",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": 0.34,
+       "x1": 0.84644,
+       "y1": 0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a1-r",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": -0.34,
+       "x1": 0.84644,
+       "y1": -0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b1-l",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": 0.25,
+       "x1": -0.85004,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b1-r",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": -0.25,
+       "x1": -0.85004,
+       "y1": -0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a2-l",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": 0.34,
+       "x1": 0.8464,
+       "y1": 0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a2-r",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": -0.34,
+       "x1": 0.8464,
+       "y1": -0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b2-l",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": 0.25,
+       "x1": -0.85,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b2-r",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": -0.25,
+       "x1": -0.85,
+       "y1": -0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a3-l",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": 0.34,
+       "x1": 0.84644,
+       "y1": 0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a3-r",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": -0.34,
+       "x1": 0.84644,
+       "y1": -0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b3-l",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": 0.25,
+       "x1": -0.85004,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b3-r",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": -0.25,
+       "x1": -0.85004,
+       "y1": -0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a4-l",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": 0.34,
+       "x1": 0.8464,
+       "y1": 0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a4-r",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": -0.34,
+       "x1": 0.8464,
+       "y1": -0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b4-l",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": 0.25,
+       "x1": -0.85,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b4-r",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": -0.25,
+       "x1": -0.85,
+       "y1": -0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a5-l",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": 0.34,
+       "x1": 0.84644,
+       "y1": 0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a5-r",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": -0.34,
+       "x1": 0.84644,
+       "y1": -0.34,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b5-l",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": 0.25,
+       "x1": -0.85004,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b5-r",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": -0.25,
+       "x1": -0.85004,
+       "y1": -0.25,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.74,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.85,
+       "y": -0.35,
+       "w": 0.9,
+       "h": 0.7,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "rail-l",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": 0.32,
+       "w": 1.85,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-r",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-front",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.875,
+       "y": -0.37,
+       "w": 0.05,
+       "h": 0.74,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-rear",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 0.05,
+       "h": 0.74,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "control-box",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.55,
+       "y": -0.405,
+       "w": 0.22,
+       "h": 0.095,
+       "region": "rails",
+       "material": "chassis-paint"
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "All 1:100 parts plus a centre post and the control box on the rail frame.",
-      "de": "Alle 1:100-Teile plus ein Mittelpfosten und der Steuerkasten am Geländerrahmen."
+      "en": "All 1:100 parts plus a centre post and the control box on the rail frame. Front and top views: the chassis block, the two front tyres and the platform with its rail frame, toe board and control box are seen from the front; every arm is a pair of rect strips, one per scissor stack, that stretches with its bone so the stack grows as the lift rises. From above the deck and the rail ring cover the arms and chassis, the tyres peek out at both sides and each arm hides below the deck as a stretching capsule.",
+      "de": "Alle 1:100-Teile plus ein Mittelpfosten und der Steuerkasten am Geländerrahmen. Vorder- und Draufsicht: gesehen werden von vorn der Fahrgestellblock, die beiden vorderen Reifen und die Bühne mit Geländerrahmen, Fußleiste und Steuerkasten; jeder Arm ist ein Paar Leisten, je eine pro Scherenpaket, die mit ihrem Knochen mitwächst, sodass das Paket beim Heben hochwächst. Von oben decken Boden und Geländerring Arme und Fahrgestell ab, die Reifen ragen an beiden Seiten hervor und jeder Arm liegt als sich streckende Kapsel unter dem Boden."
      },
      "retained": {
       "en": "Pins with 0.11 m diameter, control box, centre post.",
@@ -3200,18 +2854,4271 @@
       "de": "Wie 1:100."
      }
     }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a1",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a1",
+       "bone": "A1",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b1",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b1",
+       "bone": "B1",
+       "role": "detail",
+       "z": 3.57,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a2",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a2",
+       "bone": "A2",
+       "role": "detail",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b2",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b2",
+       "bone": "B2",
+       "role": "detail",
+       "z": 3.62,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a3",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a3",
+       "bone": "A3",
+       "role": "detail",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b3",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b3",
+       "bone": "B3",
+       "role": "detail",
+       "z": 3.67,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a4",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a4",
+       "bone": "A4",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b4",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b4",
+       "bone": "B4",
+       "role": "detail",
+       "z": 3.72,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a5",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a5",
+       "bone": "A5",
+       "role": "detail",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b5",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b5",
+       "bone": "B5",
+       "role": "detail",
+       "z": 3.77,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         0.14
+        ],
+        [
+         -0.9,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.925,
+         0.14
+        ],
+        [
+         0.925,
+         0.45
+        ],
+        [
+         -0.925,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.62,
+         0.17
+        ],
+        [
+         -0.17,
+         0.17
+        ],
+        [
+         -0.17,
+         0.4
+        ],
+        [
+         -0.62,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "battery-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "battery-box",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.08,
+         0.17
+        ],
+        [
+         0.32,
+         0.17
+        ],
+        [
+         0.32,
+         0.4
+        ],
+        [
+         -0.08,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "pump-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "motor-pump",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         0.01
+        ],
+        [
+         0,
+         0.01
+        ],
+        [
+         0,
+         0.09
+        ],
+        [
+         -0.9,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0
+        ],
+        [
+         1.775,
+         0
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         -0.075,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         1.15
+        ],
+        [
+         1.775,
+         1.15
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.62
+        ],
+        [
+         1.775,
+         0.62
+        ],
+        [
+         1.775,
+         0.67
+        ],
+        [
+         -0.075,
+         0.67
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         0.25
+        ],
+        [
+         -0.075,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         -0.025,
+         0.1
+        ],
+        [
+         -0.025,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-rear",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.725,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         1.725,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-front",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.9
+        ],
+        [
+         1.775,
+         0.9
+        ],
+        [
+         1.775,
+         0.95
+        ],
+        [
+         -0.075,
+         0.95
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail-2",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ],
+     "front": [
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 0.1,
+       "w": 0.74,
+       "h": 0.35,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.245,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.54,
+       "r": 0.06,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.405,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.54,
+       "r": 0.06,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "arm-a1-l",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.3,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "arm-a1-r",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": -0.3
+       }
+      },
+      {
+       "id": "arm-b1-l",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.26
+       }
+      },
+      {
+       "id": "arm-b1-r",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "arm-a2-l",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.3,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "arm-a2-r",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": -0.3
+       }
+      },
+      {
+       "id": "arm-b2-l",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.26
+       }
+      },
+      {
+       "id": "arm-b2-r",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "arm-a3-l",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.3,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "arm-a3-r",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": -0.3
+       }
+      },
+      {
+       "id": "arm-b3-l",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.26
+       }
+      },
+      {
+       "id": "arm-b3-r",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "arm-a4-l",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.3,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "arm-a4-r",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": -0.3
+       }
+      },
+      {
+       "id": "arm-b4-l",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.26
+       }
+      },
+      {
+       "id": "arm-b4-r",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "arm-a5-l",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.3,
+        "z1": 0.38
+       }
+      },
+      {
+       "id": "arm-a5-r",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.38,
+        "z1": -0.3
+       }
+      },
+      {
+       "id": "arm-b5-l",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.18,
+        "z1": 0.26
+       }
+      },
+      {
+       "id": "arm-b5-r",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.26,
+        "z1": -0.18
+       }
+      },
+      {
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1,
+       "w": 0.74,
+       "h": 0.1,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.74,
+       "h": 0.15,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 2.15,
+       "w": 0.74,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.62,
+       "w": 0.74,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "mid-rail-2",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.9,
+       "w": 0.74,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "post-l",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.32,
+       "y": 1.1,
+       "w": 0.05,
+       "h": 1.1,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "post-r",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.05,
+       "h": 1.1,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.405,
+       "w": 1.85,
+       "h": 0.81,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.28,
+       "y": 0.245,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.28,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.82,
+       "y": 0.245,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.82,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "arm-a1-l",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": 0.34,
+       "x1": 0.84644,
+       "y1": 0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a1-r",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": -0.34,
+       "x1": 0.84644,
+       "y1": -0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b1-l",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": 0.22,
+       "x1": -0.85004,
+       "y1": 0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b1-r",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": -0.22,
+       "x1": -0.85004,
+       "y1": -0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a2-l",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": 0.34,
+       "x1": 0.8464,
+       "y1": 0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a2-r",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": -0.34,
+       "x1": 0.8464,
+       "y1": -0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b2-l",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": 0.22,
+       "x1": -0.85,
+       "y1": 0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b2-r",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": -0.22,
+       "x1": -0.85,
+       "y1": -0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a3-l",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": 0.34,
+       "x1": 0.84644,
+       "y1": 0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a3-r",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": -0.34,
+       "x1": 0.84644,
+       "y1": -0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b3-l",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": 0.22,
+       "x1": -0.85004,
+       "y1": 0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b3-r",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": -0.22,
+       "x1": -0.85004,
+       "y1": -0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a4-l",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": 0.34,
+       "x1": 0.8464,
+       "y1": 0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a4-r",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85004,
+       "y0": -0.34,
+       "x1": 0.8464,
+       "y1": -0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b4-l",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": 0.22,
+       "x1": -0.85,
+       "y1": 0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b4-r",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.84644,
+       "y0": -0.22,
+       "x1": -0.85,
+       "y1": -0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a5-l",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": 0.34,
+       "x1": 0.84644,
+       "y1": 0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-a5-r",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -0.85,
+       "y0": -0.34,
+       "x1": 0.84644,
+       "y1": -0.34,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b5-l",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": 0.22,
+       "x1": -0.85004,
+       "y1": 0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "arm-b5-r",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "capsule",
+       "x0": 0.8464,
+       "y0": -0.22,
+       "x1": -0.85004,
+       "y1": -0.22,
+       "r0": 0.04,
+       "r1": 0.04,
+       "region": "arms",
+       "material": "scissor-steel",
+       "followTip": true
+      },
+      {
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.74,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.85,
+       "y": -0.35,
+       "w": 0.9,
+       "h": 0.7,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "rail-l",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": 0.32,
+       "w": 1.85,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-r",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.05,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-front",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.875,
+       "y": -0.37,
+       "w": 0.05,
+       "h": 0.74,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-rear",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 0.05,
+       "h": 0.74,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "As 1:200 with hubs on the tyres, pivot pins on every arm and a second mid rail. Front and top views: as at 1:50 without the control box, with arm strips 80 mm wide; the arms stay individually stretching strips in front and capsules under the deck in the top view.",
+      "de": "Wie 1:200 mit Naben an den Reifen, Gelenkbolzen an jedem Arm und einer zweiten Knieleiste. Vorder- und Draufsicht: wie bei 1:50 ohne Steuerkasten und mit 80 mm breiten Armleisten; die Arme bleiben einzeln mitwachsende Leisten vorn und Kapseln unter dem Boden in der Draufsicht."
+     },
+     "retained": {
+      "en": "Ten pivot pins at the arm centres, hubs.",
+      "de": "Zehn Gelenkbolzen in den Armmitten, Naben."
+     },
+     "merged": {
+      "en": "Rail tubes 0.05 m (0.5 mm) are drawn at real size.",
+      "de": "Geländerrohre von 0,05 m (0,5 mm) sind in Realgröße gezeichnet."
+     },
+     "omitted": {
+      "en": "End pins, rollers, cylinders.",
+      "de": "Endbolzen, Rollen, Zylinder."
+     },
+     "thinElements": {
+      "en": "Pins 0.09 m (0.9 mm).",
+      "de": "Bolzen 0,09 m (0,9 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:200, detail pen 0.18 mm.",
+      "de": "Wie 1:200, Detailstift 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200; hubs and pins carry the tyres and arms regions.",
+      "de": "Wie 1:200; Naben und Bolzen tragen die Reifen- und Armregionen."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a1",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a1",
+       "bone": "A1",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b1",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b1",
+       "bone": "B1",
+       "role": "detail",
+       "z": 3.57,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a2",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a2",
+       "bone": "A2",
+       "role": "detail",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b2",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b2",
+       "bone": "B2",
+       "role": "detail",
+       "z": 3.62,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a3",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a3",
+       "bone": "A3",
+       "role": "detail",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b3",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b3",
+       "bone": "B3",
+       "role": "detail",
+       "z": 3.67,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a4",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a4",
+       "bone": "A4",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b4",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b4",
+       "bone": "B4",
+       "role": "detail",
+       "z": 3.72,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a5",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a5",
+       "bone": "A5",
+       "role": "detail",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b5",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b5",
+       "bone": "B5",
+       "role": "detail",
+       "z": 3.77,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         0.14
+        ],
+        [
+         -0.9,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.925,
+         0.14
+        ],
+        [
+         0.925,
+         0.45
+        ],
+        [
+         -0.925,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.62,
+         0.17
+        ],
+        [
+         -0.17,
+         0.17
+        ],
+        [
+         -0.17,
+         0.4
+        ],
+        [
+         -0.62,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "battery-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "battery-box",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.08,
+         0.17
+        ],
+        [
+         0.32,
+         0.17
+        ],
+        [
+         0.32,
+         0.4
+        ],
+        [
+         -0.08,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "pump-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "motor-pump",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         0.01
+        ],
+        [
+         0,
+         0.01
+        ],
+        [
+         0,
+         0.09
+        ],
+        [
+         -0.9,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0
+        ],
+        [
+         1.775,
+         0
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         -0.075,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         1.13
+        ],
+        [
+         1.775,
+         1.13
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.62
+        ],
+        [
+         1.775,
+         0.62
+        ],
+        [
+         1.775,
+         0.69
+        ],
+        [
+         -0.075,
+         0.69
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         0.3
+        ],
+        [
+         -0.075,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         -0.005,
+         0.1
+        ],
+        [
+         -0.005,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-rear",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.705,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         1.705,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-front",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ],
+     "front": [
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 0.1,
+       "w": 0.74,
+       "h": 0.35,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.245,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.54,
+       "r": 0.06,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.405,
+       "y": 0,
+       "w": 0.16,
+       "h": 0.54,
+       "r": 0.06,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "arm-a1-l",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.27,
+        "z1": 0.39
+       }
+      },
+      {
+       "id": "arm-a1-r",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.39,
+        "z1": -0.27
+       }
+      },
+      {
+       "id": "arm-b1-l",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.09,
+        "z1": 0.21
+       }
+      },
+      {
+       "id": "arm-b1-r",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.21,
+        "z1": -0.09
+       }
+      },
+      {
+       "id": "arm-a2-l",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.27,
+        "z1": 0.39
+       }
+      },
+      {
+       "id": "arm-a2-r",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.39,
+        "z1": -0.27
+       }
+      },
+      {
+       "id": "arm-b2-l",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.09,
+        "z1": 0.21
+       }
+      },
+      {
+       "id": "arm-b2-r",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.21,
+        "z1": -0.09
+       }
+      },
+      {
+       "id": "arm-a3-l",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.27,
+        "z1": 0.39
+       }
+      },
+      {
+       "id": "arm-a3-r",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.39,
+        "z1": -0.27
+       }
+      },
+      {
+       "id": "arm-b3-l",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.09,
+        "z1": 0.21
+       }
+      },
+      {
+       "id": "arm-b3-r",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.21,
+        "z1": -0.09
+       }
+      },
+      {
+       "id": "arm-a4-l",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.27,
+        "z1": 0.39
+       }
+      },
+      {
+       "id": "arm-a4-r",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.39,
+        "z1": -0.27
+       }
+      },
+      {
+       "id": "arm-b4-l",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.09,
+        "z1": 0.21
+       }
+      },
+      {
+       "id": "arm-b4-r",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.21,
+        "z1": -0.09
+       }
+      },
+      {
+       "id": "arm-a5-l",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.27,
+        "z1": 0.39
+       }
+      },
+      {
+       "id": "arm-a5-r",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.39,
+        "z1": -0.27
+       }
+      },
+      {
+       "id": "arm-b5-l",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.09,
+        "z1": 0.21
+       }
+      },
+      {
+       "id": "arm-b5-r",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "region": "arms",
+       "material": "scissor-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.21,
+        "z1": -0.09
+       }
+      },
+      {
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1,
+       "w": 0.74,
+       "h": 0.1,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.74,
+       "h": 0.15,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 2.13,
+       "w": 0.74,
+       "h": 0.07,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.62,
+       "w": 0.74,
+       "h": 0.07,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "post-l",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.3,
+       "y": 1.1,
+       "w": 0.07,
+       "h": 1.1,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "post-r",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.07,
+       "h": 1.1,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.405,
+       "w": 1.85,
+       "h": 0.81,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "id": "tyre-f-l",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.28,
+       "y": 0.245,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-f-r",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": 0.28,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-l",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.82,
+       "y": 0.245,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.82,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.16,
+       "r": 0.05,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.74,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": -0.85,
+       "y": -0.35,
+       "w": 0.9,
+       "h": 0.7,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "id": "rail-l",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": 0.3,
+       "w": 1.85,
+       "h": 0.07,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-r",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.07,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-front",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.855,
+       "y": -0.37,
+       "w": 0.07,
+       "h": 0.74,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "id": "rail-rear",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 0.07,
+       "h": 0.74,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Ten scissor arms as 0.12 m bars (0.6 mm) that stack to a block when stowed and cross when raised, a chassis block with two cover fields, two tyres, the deck with its extension and a rail frame of top rail, mid rail, toe board and two posts. Front and top views: front: ten arms as 120 mm strips in two stacks that stretch with their bones, chassis, tyres and rail frame; top: chassis, tyres, deck and rail ring (the arms lie hidden below the deck and are not drawn).",
+      "de": "Zehn Scherenarme als Leisten von 0,12 m (0,6 mm), die sich eingefahren zum Block stapeln und gehoben kreuzen, ein Fahrgestellblock mit zwei Abdeckfeldern, zwei Reifen, der Boden mit Verlängerung und ein Geländerrahmen aus Handlauf, Knieleiste, Fußleiste und zwei Pfosten. Vorder- und Draufsicht: vorn: zehn Arme als 120-mm-Leisten in zwei Paketen, die mit ihren Knochen mitwachsen, Fahrgestell, Reifen und Geländerrahmen; oben: Fahrgestell, Reifen, Boden und Geländerring (die Arme liegen verdeckt unter dem Boden und sind nicht gezeichnet)."
+     },
+     "retained": {
+      "en": "All ten arms individually (they are the moving mechanism), battery and pump covers, the rail frame windows.",
+      "de": "Alle zehn Arme einzeln (sie sind der Bewegungsmechanismus), Batterie- und Pumpenabdeckung, die Fenster des Geländerrahmens."
+     },
+     "merged": {
+      "en": "The extension deck hides under the deck when retracted; no pins or rollers are drawn.",
+      "de": "Die Verlängerung verschwindet eingefahren unter dem Boden; Bolzen und Rollen sind nicht gezeichnet."
+     },
+     "omitted": {
+      "en": "Pins, rollers, mesh infill, hydraulic cylinders, hubs.",
+      "de": "Bolzen, Rollen, Gitterfüllung, Hydraulikzylinder, Naben."
+     },
+     "thinElements": {
+      "en": "Rails 0.07 m (0.35 mm), arms 0.12 m (0.6 mm): at real size.",
+      "de": "Geländer 0,07 m (0,35 mm), Arme 0,12 m (0,6 mm): in Realgröße."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Arms dark, chassis mid-tone, deck mid-dark, rails dark; arms at 0.18 mm outline.",
+      "de": "Arme dunkel, Fahrgestell mittlerer Ton, Boden mitteldunkel, Geländer dunkel; Arme mit 0,18-mm-Kontur."
+     },
+     "overlays": {
+      "en": "Every region has its own form.",
+      "de": "Jede Region hat eine eigene Form."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "cause": "below-printable-feature",
+    "denominator": 500,
+    "reason": {
+     "en": "At 1:500 the stowed scissor stack is five stages of 0.11 m (0.22 mm) and the raised scissors need ten crossing arms of 0.12 m (0.24 mm) with guard rails of 0.04 to 0.05 m tubes (0.1 mm): the articulated rig cannot be drawn physically without arms closer than the 0.15 mm gap limit, so no scaled drawing of the moving scissors exists at this scale. The 4.4 mm true-extent silhouette of the stowed lift is offered as a symbol in all three views.",
+     "de": "Bei 1:500 ist das eingefahrene Scherenpaket fünf Stufen von je 0,11 m (0,22 mm), und die gehobene Schere braucht zehn kreuzende Arme von 0,12 m (0,24 mm) mit Geländerrohren von 0,04 bis 0,05 m (0,1 mm): das gegliederte Rig lässt sich nicht massstäblich zeichnen, ohne dass Arme näher als die Grenzlücke von 0,15 mm liegen, daher gibt es bei diesem Massstab keine massstäbliche Zeichnung der bewegten Schere. Die wahre Umrissform des eingefahrenen Hubwagens mit 4,4 mm wird als Symbol in allen drei Ansichten angeboten."
+    },
+    "limitingFeature": {
+     "en": "Scissor stage pitch of the stowed stack and the 0.05 m guard rail tubes",
+     "de": "Stufenabstand des eingefahrenen Scherenpakets und die 0,05-m-Geländerrohre"
+    },
+    "limitingSizeM": 0.11,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     },
+     {
+      "kind": "symbol",
+      "symbol": "scissor-lift-symbol"
+     }
+    ]
    }
   },
   "symbols": [
    {
-    "id": "site-plan-footprint",
+    "id": "scissor-lift-symbol",
     "title": {
-     "en": "Site-plan footprint with deck extension",
-     "de": "Baustellenplan-Grundriss mit Bühnenverlängerung"
+     "en": "Scissor lift symbol",
+     "de": "Scherenarbeitsbühnenzeichen"
     },
     "description": {
-     "en": "Plan symbol of the 1.85 x 0.81 m lift with the 0.9 m deck extension outlined.",
-     "de": "Planzeichen der Hubbühne von 1,85 x 0,81 m mit umrissener Bühnenverlängerung von 0,9 m."
+     "en": "True-extent symbol of the stowed scissor lift in side, front and top view: chassis, tyres, folded scissor stack, platform with guard rails.",
+     "de": "Zeichen der eingefahrenen Scherenarbeitsbühne in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Fahrgestell, Reifen, zusammengefaltetes Scherenpaket, Plattform mit Geländer."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -3228,30 +7135,14 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
-     "plan": [
+     "elevation": [
       {
-       "kind": "poly",
-       "points": [
-        [
-         -0.925,
-         -0.405
-        ],
-        [
-         0.925,
-         -0.405
-        ],
-        [
-         0.925,
-         0.405
-        ],
-        [
-         -0.925,
-         0.405
-        ]
-       ],
-       "closed": true,
-       "id": "footprint",
+       "kind": "rect",
+       "x": -0.925,
+       "y": 0.1,
+       "w": 1.85,
+       "h": 0.35,
+       "id": "elevation-chassis",
        "bone": "chassis",
        "role": "body",
        "z": 1,
@@ -3259,66 +7150,391 @@
        "tone": 0.6
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         -0.925,
-         -0.405
-        ],
-        [
-         0.925,
-         -0.405
-        ],
-        [
-         0.925,
-         0.405
-        ],
-        [
-         -0.925,
-         0.405
-        ]
-       ],
-       "closed": true,
-       "id": "platform-outline",
+       "kind": "ellipse",
+       "cx": 0.55,
+       "cy": 0.27,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "elevation-tyre-f",
        "bone": "chassis",
-       "role": "detail",
+       "role": "body",
        "z": 2,
-       "filled": false,
-       "tone": 0.3
+       "filled": true,
+       "tone": 0.1
       },
       {
-       "kind": "poly",
-       "points": [
-        [
-         0.925,
-         -0.405
-        ],
-        [
-         1.825,
-         -0.405
-        ],
-        [
-         1.825,
-         0.405
-        ],
-        [
-         0.925,
-         0.405
-        ]
-       ],
-       "closed": true,
-       "id": "extension-outline",
+       "kind": "ellipse",
+       "cx": -0.55,
+       "cy": 0.27,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "elevation-tyre-r",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.92,
+       "y": 0.45,
+       "w": 1.84,
+       "h": 0.55,
+       "id": "elevation-stack",
        "bone": "chassis",
        "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": 1,
+       "w": 1.85,
+       "h": 0.1,
+       "id": "elevation-deck",
+       "bone": "chassis",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": 1.1,
+       "w": 1.85,
+       "h": 0.2,
+       "id": "elevation-toe-board",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 6,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": 1.62,
+       "w": 1.85,
+       "h": 0.07,
+       "id": "elevation-mid-rail",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": 2.13,
+       "w": 1.85,
+       "h": 0.07,
+       "id": "elevation-top-rail",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": 1.1,
+       "w": 0.07,
+       "h": 1.1,
+       "id": "elevation-post-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 9,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 0.85,
+       "y": 1.1,
+       "w": 0.075,
+       "h": 1.1,
+       "id": "elevation-post-f",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 10,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "front": [
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 0.1,
+       "w": 0.74,
+       "h": 0.35,
+       "id": "front-chassis",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": 0.24,
+       "y": 0,
+       "w": 0.17,
+       "h": 0.54,
+       "id": "front-tyre-l",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.41,
+       "y": 0,
+       "w": 0.17,
+       "h": 0.54,
+       "id": "front-tyre-r",
+       "bone": "chassis",
+       "role": "body",
        "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.39,
+       "y": 0.45,
+       "w": 0.78,
+       "h": 0.55,
+       "id": "front-stack",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1,
+       "w": 0.74,
+       "h": 0.1,
+       "id": "front-deck",
+       "bone": "chassis",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.74,
+       "h": 0.15,
+       "id": "front-toe-board",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 6,
+       "filled": false,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.62,
+       "w": 0.74,
+       "h": 0.07,
+       "id": "front-mid-rail",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 2.13,
+       "w": 0.74,
+       "h": 0.07,
+       "id": "front-top-rail",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 0.3,
+       "y": 1.1,
+       "w": 0.07,
+       "h": 1.1,
+       "id": "front-post-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 9,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.37,
+       "y": 1.1,
+       "w": 0.07,
+       "h": 1.1,
+       "id": "front-post-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 10,
+       "filled": true,
+       "tone": 0.4
+      }
+     ],
+     "plan": [
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.405,
+       "w": 1.85,
+       "h": 0.81,
+       "id": "plan-chassis",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "rect",
+       "x": 0.28,
+       "y": 0.24,
+       "w": 0.54,
+       "h": 0.165,
+       "id": "plan-tyre-fl",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": 0.28,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.165,
+       "id": "plan-tyre-fr",
+       "bone": "chassis",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.82,
+       "y": 0.24,
+       "w": 0.54,
+       "h": 0.165,
+       "id": "plan-tyre-rl",
+       "bone": "chassis",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.82,
+       "y": -0.405,
+       "w": 0.54,
+       "h": 0.165,
+       "id": "plan-tyre-rr",
+       "bone": "chassis",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.1
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.74,
+       "id": "plan-deck",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 6,
        "filled": false,
        "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": 0.3,
+       "w": 1.85,
+       "h": 0.07,
+       "id": "plan-rail-l",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 1.85,
+       "h": 0.07,
+       "id": "plan-rail-r",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 8,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": 0.85,
+       "y": -0.37,
+       "w": 0.075,
+       "h": 0.74,
+       "id": "plan-rail-f",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 9,
+       "filled": true,
+       "tone": 0.4
+      },
+      {
+       "kind": "rect",
+       "x": -0.925,
+       "y": -0.37,
+       "w": 0.075,
+       "h": 0.74,
+       "id": "plan-rail-b",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 10,
+       "filled": true,
+       "tone": 0.4
       }
      ]
     },
     "dimensionalNote": {
-     "en": "True extent in model metres: footprint 1.85 x 0.81 m, extension outline 0.9 m beyond the front; real size at both listed scales.",
-     "de": "Wahre Ausdehnung in Modellmetern: Grundriss 1,85 x 0,81 m, Verlängerungsumriss 0,9 m über der Front; in beiden gelisteten Maßstäben in Realgröße."
+     "en": "Model metres: footprint 1.85 x 0.81 m, stowed height with guard rails 2.20 m; the deck extension is retracted; side, front and top view.",
+     "de": "Modellmeter: Grundfläche 1,85 x 0,81 m, eingefahrene Höhe mit Geländer 2,20 m; die Plattformverlängerung ist eingefahren; Seiten-, Vorder- und Draufsicht."
     }
    }
   ],
@@ -3335,40 +7551,40 @@
     },
     "bones": {
      "A1": {
-      "angleDeg": 0.0
+      "angleDeg": 0
      },
      "slide": {
-      "dx": -0.0
+      "dx": 0
      },
      "B1": {
-      "angleDeg": -0.0
+      "angleDeg": 0
      },
      "platform": {
-      "angleDeg": 0.0
+      "angleDeg": 0
      },
      "A2": {
-      "angleDeg": 0.0
+      "angleDeg": 0
      },
      "B2": {
-      "angleDeg": -0.0
+      "angleDeg": 0
      },
      "A3": {
-      "angleDeg": 0.0
+      "angleDeg": 0
      },
      "B3": {
-      "angleDeg": -0.0
+      "angleDeg": 0
      },
      "A4": {
-      "angleDeg": 0.0
+      "angleDeg": 0
      },
      "B4": {
-      "angleDeg": -0.0
+      "angleDeg": 0
      },
      "A5": {
-      "angleDeg": 0.0
+      "angleDeg": 0
      },
      "B5": {
-      "angleDeg": -0.0
+      "angleDeg": 0
      }
     },
     "root": {
@@ -3378,8 +7594,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3488,8 +7706,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3638,8 +7858,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3665,7 +7887,7 @@
       },
       "deck": {
        "exposedFraction": 1,
-       "sunlitFraction": 1.0
+       "sunlitFraction": 1
       },
       "rails": {
        "exposedFraction": 1,
@@ -3786,8 +8008,10 @@
     },
     "ground": "auto",
     "contacts": [
-     "contact-f",
-     "contact-r"
+     "contact-f-l",
+     "contact-f-r",
+     "contact-r-l",
+     "contact-r-r"
     ],
     "thermal": {
      "operating": {
@@ -3901,40 +8125,40 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      },
@@ -3944,40 +8168,40 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      },
@@ -4165,40 +8389,40 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      },
@@ -4208,52 +8432,62 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      }
     ],
     "contacts": [
      {
-      "anchor": "contact-f",
+      "anchor": "contact-f-l",
       "fromS": 0,
       "toS": 24
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-f-r",
+      "fromS": 0,
+      "toS": 24
+     },
+     {
+      "anchor": "contact-r-l",
+      "fromS": 0,
+      "toS": 24
+     },
+     {
+      "anchor": "contact-r-r",
       "fromS": 0,
       "toS": 24
      }
@@ -4482,40 +8716,40 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      },
@@ -4525,40 +8759,40 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      },
@@ -4746,40 +8980,40 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      },
@@ -4789,52 +9023,62 @@
       "ease": "smooth",
       "bones": {
        "A1": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "slide": {
-        "dx": -0.0
+        "dx": 0
        },
        "B1": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "platform": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "A2": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B2": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A3": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B3": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A4": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B4": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        },
        "A5": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "B5": {
-        "angleDeg": -0.0
+        "angleDeg": 0
        }
       }
      }
     ],
     "contacts": [
      {
-      "anchor": "contact-f",
+      "anchor": "contact-f-l",
       "fromS": 0,
       "toS": 22
      },
      {
-      "anchor": "contact-r",
+      "anchor": "contact-f-r",
+      "fromS": 0,
+      "toS": 22
+     },
+     {
+      "anchor": "contact-r-l",
+      "fromS": 0,
+      "toS": 22
+     },
+     {
+      "anchor": "contact-r-r",
       "fromS": 0,
       "toS": 22
      }
@@ -4879,7 +9123,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "ignition",
       "title": {
        "en": "Key on",
@@ -4888,7 +9132,7 @@
       "target": "motor-vent"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "kind": "load-on",
       "title": {
        "en": "Occupants step on the platform",
@@ -4897,7 +9141,7 @@
       "target": "occupant-a"
      },
      {
-      "t": 21.0,
+      "t": 21,
       "kind": "shutdown",
       "title": {
        "en": "Key off",
@@ -4942,7 +9186,7 @@
         "v": 0
        },
        {
-        "t": 2.0,
+        "t": 2,
         "v": 0
        },
        {
@@ -5269,7 +9513,7 @@
        "kind": "metal",
        "material": "chassis-paint",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -5305,7 +9549,7 @@
        "kind": "metal",
        "material": "chassis-paint",
        "thicknessM": 0.002,
-       "resistanceM2KW": 0.0,
+       "resistanceM2KW": 0,
        "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "incropera-2011"
@@ -5330,7 +9574,7 @@
      "areaM2": 3.4,
      "characteristicLengthM": 1.3,
      "geometry": "horizontal-plate-up",
-     "skyViewFactor": 1.0,
+     "skyViewFactor": 1,
      "layers": [
       {
        "id": "plate",
@@ -5432,7 +9676,7 @@
      "operatingKey": "lift-pump",
      "volumeFlowM3S": 0.03,
      "temperatureRiseK": 25,
-     "vapourKgPerKg": 0.0,
+     "vapourKgPerKg": 0,
      "source": "authored-estimate"
     },
     {
@@ -5475,10 +9719,7 @@
   "presentation": {
    "defaultPose": "stowed",
    "defaultClip": "raise-cycle",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

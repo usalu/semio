@@ -7,12 +7,14 @@
  */
 import { useEffect, useId, useMemo, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, CSS_PX_PER_MM } from "@teaching/staffage";
-import type { Asset, CategoryId } from "@teaching/staffage";
+import type { Asset, CategoryId, Viewpoint } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { ArchiveCard, CardButton, Icon, Notice, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
 import { Level, PointerProvider, tracks, useBreakpoint, useSize, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { RowPreview, surfaceView, useDarkSurface } from "../🖼️previews/🟦️.tsx";
+import { usePreviewViewpoint } from "../🔭️viewpoints/🪝️preference/🟦️.tsx";
+import { VIEWPOINT_PHRASES, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
 import { PlacedFigure } from "../📍️placed/🟦️.tsx";
 import { defaultQuery, evaluateState } from "../🧮️pipeline/🟦️.ts";
 import { formatAddress, openedChain, parentRoute, useAddress, type Route } from "../🗺️routing/🟦️.ts";
@@ -25,7 +27,7 @@ import { PlaygroundPage } from "../🧪️playground/🟦️.tsx";
 /** 🗺️ The pages of the root grid, in cell order. */
 export const ROOT_PAGES = ["all", ...CATEGORIES, "collections", "compare", "playground"] as const;
 
-/** 🗺️ One of {@link ROOT_PAGES}. */
+/** 🔖️ One of {@link ROOT_PAGES}. */
 export type RootPage = (typeof ROOT_PAGES)[number];
 
 const isCategory = (id: string): id is CategoryId => (CATEGORIES as readonly string[]).includes(id);
@@ -54,9 +56,11 @@ const LANE_CYCLES = 2;
 type Item = { readonly row: Row; readonly x: number; readonly lane: number | null; readonly width: number };
 
 /** 🧍️ A frieze: figures side by side on one ground line at one scale, walkers travelling along their lane; metre ticks name the scale. */
-export function Frieze(props: { readonly rows: readonly Row[]; readonly label: string; readonly maxPxPerM?: number; readonly ticks?: boolean; readonly travel?: boolean; readonly className?: string }): ReactElement {
+export function Frieze(props: { readonly rows: readonly Row[]; readonly viewpoint?: Viewpoint; readonly label: string; readonly maxPxPerM?: number; readonly ticks?: boolean; readonly travel?: boolean; readonly className?: string }): ReactElement {
   const { rows, label, maxPxPerM = 160, ticks = true, travel = false, className } = props;
   const { language, ambient, t } = useArchive();
+  const [preferred] = usePreviewViewpoint();
+  const viewpoint = props.viewpoint ?? preferred;
   const dark = useDarkSurface();
   const [attach, size] = useSize({ width: 0, height: 0 });
   const items = useMemo(() => {
@@ -86,8 +90,9 @@ export function Frieze(props: { readonly rows: readonly Row[]; readonly label: s
   const metres = Math.floor(totalM);
   return (
     <div ref={attach} role="group" aria-label={label} data-frieze="" className={cn("relative min-h-24 w-full flex-1 overflow-hidden", className)}>
+      {viewpoint === "elevation" ? null : <p data-frieze-note="" className="absolute left-1 top-1 z-10 m-0 max-w-[90%] bg-background/80 px-single text-[0.65rem] text-muted-foreground">{viewpointWord("viewpoints.friezeNote", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}</p>}
       {size.width === 0 ? null : items.map((item, index) => (
-        <PlacedFigure key={item.row.entry.id} asset={item.row.asset!} selection={null} clock={ambient} view={surfaceView(dark)} scale={scale} language={language} pxPerMm={pxPerMm} xPx={offset + item.x * pxPerM} groundPx={ground} travel={item.lane === null ? undefined : { laneM: item.lane, phaseM: (index * 0.9) % item.lane }} />
+        <PlacedFigure key={item.row.entry.id} asset={item.row.asset!} selection={null} clock={ambient} view={surfaceView(dark)} viewpoint={viewpoint} scale={scale} language={language} pxPerMm={pxPerMm} xPx={offset + item.x * pxPerM} groundPx={ground} travel={item.lane === null ? undefined : { laneM: item.lane, phaseM: (index * 0.9) % item.lane }} />
       ))}
       <div aria-hidden="true" className="absolute inset-x-0 border-t border-foreground/50" style={{ top: ground }} />
       {ticks ? (
@@ -111,7 +116,7 @@ function useCategoryRows(category: CategoryId): readonly Row[] {
   return useMemo(() => rows.filter((row) => row.entry.category === category), [rows, category]);
 }
 
-const CATEGORY_ICONS: Readonly<Record<CategoryId, IconName>> = { humans: "user", vegetation: "sparkles", animals: "hand", furniture: "layout", objects: "box", vehicles: "wrench", machinery: "cpu", components: "building" };
+const CATEGORY_ICONS: Readonly<Record<CategoryId, IconName>> = { humans: "user", vegetation: "sparkles", animals: "hand", furniture: "layout", appliances: "plug", objects: "box", vehicles: "wrench", machinery: "cpu", components: "building" };
 
 /** 🗂️ The card of a category: its description, how many assets it holds and a live frieze of the first of them. */
 function CategoryCard(props: { readonly category: CategoryId; readonly card: { readonly revealed: boolean; readonly open: () => void }; readonly compact: boolean }): ReactElement {
@@ -243,6 +248,7 @@ function CompareCard(props: { readonly card: { readonly revealed: boolean; reado
   const { t } = useArchive();
   const { rows, manifest } = useRows();
   const dark = useDarkSurface();
+  const [viewpoint] = usePreviewViewpoint();
   const id = useId();
   const featured = manifest?.collections.find((collection) => collection.id === APP_CONFIG.featuredCollection)?.assets ?? [];
   const row = featured.flatMap((asset) => rows.filter((candidate) => candidate.status === "ready" && candidate.entry.id === asset))[0] ?? rows.find((candidate) => candidate.status === "ready");
@@ -251,8 +257,8 @@ function CompareCard(props: { readonly card: { readonly revealed: boolean; reado
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-double">
         {row === undefined ? (rows.some((candidate) => candidate.status === "pending") ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="col-span-2 h-full min-h-12 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <p className="col-span-2 m-0 text-xs text-muted-foreground">{t("compare.lede")}</p>) : (
           <>
-            <RowPreview row={row} view={surfaceView(dark)} compact {...(row.asset === undefined ? {} : { query: { kind: "pose", pose: row.asset.presentation.defaultPose } })} />
-            <RowPreview row={row} view="thermal" compact {...(row.asset === undefined ? {} : { query: { kind: "pose", pose: row.asset.presentation.defaultPose } })} />
+            <RowPreview row={row} viewpoint={viewpoint} view={surfaceView(dark)} compact {...(row.asset === undefined ? {} : { query: { kind: "pose", pose: row.asset.presentation.defaultPose } })} />
+            <RowPreview row={row} viewpoint={viewpoint} view="thermal" compact {...(row.asset === undefined ? {} : { query: { kind: "pose", pose: row.asset.presentation.defaultPose } })} />
           </>
         )}
       </div>
@@ -271,7 +277,7 @@ function PlaygroundCard(props: { readonly card: { readonly revealed: boolean; re
   return (
     <ArchiveCard id={id} card="playground" href={formatAddress({ page: "playground" })} onOpen={card.open} revealed={card.revealed} icon={<Icon icon="move" size="small" className="shrink-0 text-muted-foreground" />} title={t("playground.title")} footerLeft={<span className="px-single text-xs font-medium text-muted-foreground">{t("playground.count", { count: playground.placements.length })}</span>} footerRight={<CardButton icon="chevron-right" onClick={card.open}>{t("card.explore")}</CardButton>} className="h-full">
       <div className="min-h-0 flex-1">
-        {placed.length > 0 ? <Frieze rows={placed.slice(0, 5)} label={t("playground.previewLabel")} ticks={false} className="h-full" maxPxPerM={90} /> : <p className="m-0 text-xs leading-normal text-muted-foreground">{t("playground.emptyInvite")}</p>}
+        {placed.length > 0 ? <Frieze viewpoint={playground.viewpoint} rows={placed.slice(0, 5)} label={t("playground.previewLabel")} ticks={false} className="h-full" maxPxPerM={90} /> : <p className="m-0 text-xs leading-normal text-muted-foreground">{t("playground.emptyInvite")}</p>}
       </div>
     </ArchiveCard>
   );

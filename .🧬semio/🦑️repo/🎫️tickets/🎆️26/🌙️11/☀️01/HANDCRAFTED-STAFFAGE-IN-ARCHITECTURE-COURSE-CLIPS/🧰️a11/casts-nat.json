@@ -1,0 +1,4 @@
+{ "version": 1, "casts": {
+  "s10": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "mirror": true, "scale": 10, "theme": "dark" },
+  "s20": { "asset": "panel-radiator", "pose": "rated", "view": "thermal", "environment": "indoor-heated-winter", "mirror": true, "scale": 20, "theme": "dark" }
+} }

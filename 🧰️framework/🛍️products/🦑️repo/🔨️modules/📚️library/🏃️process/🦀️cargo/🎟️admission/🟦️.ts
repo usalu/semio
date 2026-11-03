@@ -24,7 +24,7 @@ import {repositoryCargoConfigurationStepArgumentsV1} from "../../../⚡️cachin
 async function execute(request:CargoTestRequestV1,policy:CargoTestPolicyV1,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,lint:boolean):Promise<void>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  const control=createRequestedIssuedResourceControlV1(phaseControl,policy.buildBudgetMs),network=repositoryCargoNetworkV1(invocation,workspace);
- await withRepositoryCompilerLaneV1(workspace,policy.mode,control,request.environment??process.env,{crates:request.packages,unitCache:!lint&&!policy.coveragePath},async (store,actualPhase)=>{
+ await withRepositoryCompilerLaneV1(workspace,policy.mode,control,scriptInvocationEnvironment(invocation,request.environment??process.env),{crates:request.packages,unitCache:!lint&&!policy.coveragePath},async (store,actualPhase)=>{
   requireIssuedResourceControlInvocationV1(actualPhase,invocation);requireIssuedResourceControlRefinementV1(control,actualPhase);checkResourceLeaseControl(actualPhase);
   const nextest=lint?policy.nextest:cargoNextestAvailableV1(store.environment);if(!lint&&!nextest)throw Error("Prepared pinned Cargo test runner required");
   const bounded={...policy,nextest,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,artifactDirectory:store.captureDirectory,...(policy.coveragePath?{coveragePath:join(store.captureDirectory,basename(policy.coveragePath))}: {})};

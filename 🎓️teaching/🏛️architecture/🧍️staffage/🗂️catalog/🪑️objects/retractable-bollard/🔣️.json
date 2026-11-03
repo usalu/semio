@@ -651,24 +651,583 @@
        "closed": false,
        "region": "hydraulic-unit"
       }
+     ],
+     "front": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 0.91
+      },
+      {
+       "id": "shaft-highlight",
+       "bone": "shaft",
+       "role": "texture",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "region": "shaft-steel",
+       "kind": "poly",
+       "points": [
+        [
+         -0.065,
+         -1.1
+        ],
+        [
+         -0.065,
+         -0.28
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "reflector",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.08,
+       "region": "reflector-band",
+       "material": "retro-film",
+       "hatch": "chevron",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.24,
+       "w": 0.2,
+       "h": 0.11
+      },
+      {
+       "id": "beacon",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.7,
+       "region": "beacon-led",
+       "material": "pc-amber",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.13,
+       "w": 0.2,
+       "h": 0.06
+      },
+      {
+       "id": "led-0",
+       "bone": "shaft",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "beacon-led",
+       "kind": "ellipse",
+       "cx": -0.06,
+       "cy": -0.1,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "led-1",
+       "bone": "shaft",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "beacon-led",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": -0.1,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "led-2",
+       "bone": "shaft",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "beacon-led",
+       "kind": "ellipse",
+       "cx": 0.06,
+       "cy": -0.1,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "kind": "path",
+       "d": "M -0.1 -0.07 C -0.1 -0.02 -0.05 0 0 0 C 0.05 0 0.1 -0.02 0.1 -0.07 Z"
+      },
+      {
+       "id": "cap-seam",
+       "bone": "shaft",
+       "role": "texture",
+       "z": 3.8,
+       "filled": false,
+       "tone": 0.3,
+       "region": "shaft-steel",
+       "kind": "poly",
+       "points": [
+        [
+         -0.09,
+         -0.05
+        ],
+        [
+         0.09,
+         -0.05
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "sleeve-steel",
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15,
+         0.0
+        ],
+        [
+         -0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": 0.145,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "frame-bolt-0",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": -0.175,
+       "cy": -0.02,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "frame-bolt-1",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": 0.175,
+       "cy": -0.02,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "brush-seal-l",
+       "bone": "sleeve",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "cover-frame",
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         -0.015
+        ],
+        [
+         -0.145,
+         -0.015
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "brush-seal-r",
+       "bone": "sleeve",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "cover-frame",
+       "kind": "poly",
+       "points": [
+        [
+         0.1,
+         -0.015
+        ],
+        [
+         0.145,
+         -0.015
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": -0.01,
+       "y": -0.95,
+       "w": 0.21,
+       "h": 0.4,
+       "r": 0.01
+      },
+      {
+       "id": "motor-seam",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "hydraulic-unit",
+       "kind": "poly",
+       "points": [
+        [
+         -0.01,
+         -0.8
+        ],
+        [
+         0.2,
+         -0.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "motor",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.8,
+       "region": "hydraulic-unit",
+       "kind": "rect",
+       "x": 0.025,
+       "y": -0.675,
+       "w": 0.14,
+       "h": 0.07,
+       "r": 0.01
+      },
+      {
+       "id": "hose-port",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "hydraulic-unit",
+       "kind": "ellipse",
+       "cx": 0.03,
+       "cy": -0.7,
+       "rx": 0.015,
+       "ry": 0.015
+      },
+      {
+       "id": "ram",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": -0.06,
+       "y": -1.25,
+       "w": 0.12,
+       "h": 0.55
+      },
+      {
+       "id": "ram-rod",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "hydraulic-unit",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.7
+        ],
+        [
+         0.0,
+         -0.45
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-frame",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.2,
+       "w": 0.4,
+       "h": 0.4,
+       "r": 0.02
+      },
+      {
+       "id": "frame-bolt-0",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": -0.175,
+       "cy": -0.175,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "frame-bolt-1",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": 0.175,
+       "cy": -0.175,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "frame-bolt-2",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": -0.175,
+       "cy": 0.175,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "frame-bolt-3",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": 0.175,
+       "cy": 0.175,
+       "rx": 0.01,
+       "ry": 0.01
+      },
+      {
+       "id": "plan-sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "sleeve-steel",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.15,
+       "ry": 0.15
+      },
+      {
+       "id": "plan-brush-seal",
+       "bone": "sleeve",
+       "role": "texture",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "cover-frame",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.125,
+       "ry": 0.125
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": 0.15,
+       "y": -0.01,
+       "w": 0.21,
+       "h": 0.21,
+       "r": 0.01
+      },
+      {
+       "id": "motor",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hydraulic-unit",
+       "kind": "rect",
+       "x": 0.22,
+       "y": 0.025,
+       "w": 0.07,
+       "h": 0.14,
+       "r": 0.01
+      },
+      {
+       "id": "unit-lid-seam",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "hydraulic-unit",
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         0.0
+        ],
+        [
+         0.2,
+         0.19
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "plan-cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.1,
+       "ry": 0.1
+      },
+      {
+       "id": "plan-cap-seam",
+       "bone": "shaft",
+       "role": "texture",
+       "z": 3.8,
+       "filled": false,
+       "tone": 0.3,
+       "region": "shaft-steel",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.085,
+       "ry": 0.085
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "A section 11 mm wide and 38 mm high with technical detail: shaft with highlight, chevron band, three-LED beacon and seamed cap, sleeve outline, bolted frame blocks with brush seal, power unit with motor and seam, hose, ram with rod.",
-      "de": "Ein Schnitt 11 mm breit und 38 mm hoch mit technischem Detail: Schaft mit Lichtkante, Chevronband, Leuchtring mit drei LEDs und genähte Kappe, Hülsenkontur, verschraubte Rahmenblöcke mit Bürstendichtung, Antriebseinheit mit Motor und Naht, Schlauch, Zylinder mit Stange."
+      "en": "A section 11 mm wide and 38 mm high with technical detail: shaft with highlight, chevron band, three-LED beacon and seamed cap, sleeve outline, bolted frame blocks with brush seal, power unit with motor and seam, hose, ram with rod. Front view: shaft with highlight line, chevron-hatched reflector band, beacon band with three LEDs, domed cap with seam, brush seals and bolts on the frame blocks, the 0.30 m sleeve outline, and the left-offset power unit with motor seam, end-on motor, hose port, ram and ram rod. Plan view: the 0.40 m cover frame with four bolts, the round sleeve opening with the brush-seal ring, the 0.20 m cap disc with its seam ring, and the buried power unit with its motor and lid seam.",
+      "de": "Ein Schnitt 11 mm breit und 38 mm hoch mit technischem Detail: Schaft mit Lichtkante, Chevronband, Leuchtring mit drei LEDs und genähte Kappe, Hülsenkontur, verschraubte Rahmenblöcke mit Bürstendichtung, Antriebseinheit mit Motor und Naht, Schlauch, Zylinder mit Stange. Vorderansicht: der Schaft mit Glanzlinie, chevronschraffiertem Reflexband, Leuchtband mit drei LEDs, gewölbter Kappe mit Fuge, Bürstendichtungen und Schrauben an den Rahmenblöcken, die 0,30 m breite Hülsenkontur und die nach links versetzte Antriebseinheit mit Motornaht, quer liegendem Motor, Schlauchanschluss, Zylinder und Kolbenstange. Draufsicht: der Abdeckrahmen von 0,40 m mit vier Schrauben, die runde Hülsenöffnung mit dem Bürstendichtungsring, die Kappenscheibe von 0,20 m mit Fugenring und die eingegrabene Antriebseinheit mit Motor und Deckelfuge."
      },
      "retained": {
-      "en": "All parts at true size and position; the shaft slides on its prismatic bone.",
-      "de": "Alle Teile in wahrer Größe und Lage; der Schaft gleitet an seinem Schubknochen."
+      "en": "All parts at true size and position; the shaft slides on its prismatic bone. Front view: LEDs, seals, bolts, motor, hose port, ram rod. Plan view: four bolts, brush-seal ring, cap seam, unit lid seam.",
+      "de": "Alle Teile in wahrer Größe und Lage; der Schaft gleitet an seinem Schubknochen. Vorderansicht: LEDs, Dichtungen, Schrauben, Motor, Schlauchanschluss, Kolbenstange. Draufsicht: vier Schrauben, Bürstendichtungsring, Kappenfuge, Deckelfuge der Einheit."
      },
      "merged": {
-      "en": "The sleeve wall is one outline; the third LED row and the cable gland are not shown.",
-      "de": "Die Hülsenwand ist eine Kontur; die weiteren LED-Reihen und die Kabelverschraubung sind nicht gezeigt."
+      "en": "The sleeve wall is one outline; the third LED row and the cable gland are not shown. Plan view: the cap and the beacon band are one disc; the ram lies hidden below the frame.",
+      "de": "Die Hülsenwand ist eine Kontur; die weiteren LED-Reihen und die Kabelverschraubung sind nicht gezeigt. Draufsicht: Kappe und Leuchtband sind eine Scheibe; der Zylinder liegt verdeckt unter dem Rahmen."
      },
      "omitted": {
-      "en": "Cable, valve block, anchor bolts below the frame.",
-      "de": "Kabel, Ventilblock, Ankerschrauben unter dem Rahmen."
+      "en": "Cable, valve block, anchor bolts below the frame. Front view: the hose is seen end-on as a port ring. Plan view: ram, hose and LEDs are hidden.",
+      "de": "Kabel, Ventilblock, Ankerschrauben unter dem Rahmen. Vorderansicht: der Schlauch erscheint stirnseitig als Anschlussring. Draufsicht: Zylinder, Schlauch und LEDs sind verdeckt."
      },
      "thinElements": {
       "en": "LEDs are 0.02 m (0.4 mm) circles, the sleeve wall a 0.25 mm line (real 0.012 m = 0.24 mm).",
@@ -894,24 +1453,284 @@
        "closed": false,
        "region": "hydraulic-unit"
       }
+     ],
+     "front": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 0.91
+      },
+      {
+       "id": "reflector",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.08,
+       "region": "reflector-band",
+       "material": "retro-film",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.24,
+       "w": 0.2,
+       "h": 0.11
+      },
+      {
+       "id": "beacon",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.7,
+       "region": "beacon-led",
+       "material": "pc-amber",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.13,
+       "w": 0.2,
+       "h": 0.06
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "kind": "path",
+       "d": "M -0.1 -0.07 C -0.1 -0.02 -0.05 0 0 0 C 0.05 0 0.1 -0.02 0.1 -0.07 Z"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "sleeve-steel",
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15,
+         0.0
+        ],
+        [
+         -0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": 0.145,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": -0.01,
+       "y": -0.95,
+       "w": 0.21,
+       "h": 0.4
+      },
+      {
+       "id": "motor-seam",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "hydraulic-unit",
+       "kind": "poly",
+       "points": [
+        [
+         -0.01,
+         -0.8
+        ],
+        [
+         0.2,
+         -0.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "motor",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.8,
+       "region": "hydraulic-unit",
+       "kind": "rect",
+       "x": 0.025,
+       "y": -0.675,
+       "w": 0.14,
+       "h": 0.07
+      },
+      {
+       "id": "ram",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": -0.06,
+       "y": -1.25,
+       "w": 0.12,
+       "h": 0.55
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-frame",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.2,
+       "w": 0.4,
+       "h": 0.4,
+       "r": 0.02
+      },
+      {
+       "id": "plan-sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "sleeve-steel",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.15,
+       "ry": 0.15
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": 0.15,
+       "y": -0.01,
+       "w": 0.21,
+       "h": 0.21
+      },
+      {
+       "id": "motor",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hydraulic-unit",
+       "kind": "rect",
+       "x": 0.22,
+       "y": 0.025,
+       "w": 0.07,
+       "h": 0.14
+      },
+      {
+       "id": "plan-cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.1,
+       "ry": 0.1
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "A section 5.6 mm wide and 19 mm high: shaft 2 mm wide with white band, amber beacon band and domed cap, the sleeve outline 3 mm wide, two frame blocks, the power unit with a motor seam and a hose to the ram.",
-      "de": "Ein Schnitt 5,6 mm breit und 19 mm hoch: Schaft 2 mm breit mit weißem Band, bernsteinfarbenem Leuchtband und gewölbter Kappe, die Hülsenkontur 3 mm breit, zwei Rahmenblöcke, die Antriebseinheit mit Motornaht und Schlauch zum Zylinder."
+      "en": "A section 5.6 mm wide and 19 mm high: shaft 2 mm wide with white band, amber beacon band and domed cap, the sleeve outline 3 mm wide, two frame blocks, the power unit with a motor seam and a hose to the ram. Front view: shaft with white band, amber beacon band and domed cap over the 0.30 m sleeve outline, frame blocks at ground level, and the power unit with motor seam and the end-on motor, drawn left of the axis in front of the ram. Plan view: the 0.40 m square cover frame with its round sleeve opening, the 0.20 m cap disc and the buried power unit with its motor beside the frame.",
+      "de": "Ein Schnitt 5,6 mm breit und 19 mm hoch: Schaft 2 mm breit mit weißem Band, bernsteinfarbenem Leuchtband und gewölbter Kappe, die Hülsenkontur 3 mm breit, zwei Rahmenblöcke, die Antriebseinheit mit Motornaht und Schlauch zum Zylinder. Vorderansicht: der Schaft mit weißem Band, bernsteinfarbenem Leuchtband und gewölbter Kappe über der 0,30 m breiten Hülsenkontur, Rahmenblöcke in Geländehöhe und die Antriebseinheit mit Motornaht und quer liegendem Motor, links der Achse vor dem Zylinder. Draufsicht: der quadratische Abdeckrahmen von 0,40 m mit der runden Hülsenöffnung, die Kappenscheibe von 0,20 m und die eingegrabene Antriebseinheit mit Motor neben dem Rahmen."
      },
      "retained": {
-      "en": "All parts at true size except the hairline sleeve wall.",
-      "de": "Alle Teile in wahrer Größe außer der haarfeinen Hülsenwand."
+      "en": "All parts at true size except the hairline sleeve wall. Front view: reflector, beacon band, cap, motor seam, motor. Plan view: sleeve opening, motor.",
+      "de": "Alle Teile in wahrer Größe außer der haarfeinen Hülsenwand. Vorderansicht: Reflexband, Leuchtband, Kappe, Motornaht, Motor. Draufsicht: Hülsenöffnung, Motor."
      },
      "merged": {
-      "en": "Lens, ring and seal of the beacon merge into one band.",
-      "de": "Linse, Ring und Dichtung des Leuchtrings gehen in einem Band auf."
+      "en": "Lens, ring and seal of the beacon merge into one band. Plan view: the cap and the beacon band are one disc; ram and hose lie under the cover frame.",
+      "de": "Linse, Ring und Dichtung des Leuchtrings gehen in einem Band auf. Draufsicht: Kappe und Leuchtband sind eine Scheibe; Zylinder und Schlauch liegen unter dem Abdeckrahmen."
      },
      "omitted": {
-      "en": "Bolts, flange, brush seal, power cable.",
-      "de": "Schrauben, Flansch, Bürstendichtung, Stromkabel."
+      "en": "Bolts, flange, brush seal, power cable. Front view: hose is not drawn (it runs in the viewing direction). Plan view: ram and hose are hidden below the frame.",
+      "de": "Schrauben, Flansch, Bürstendichtung, Stromkabel. Vorderansicht: der Schlauch ist nicht gezeichnet (er verläuft in Blickrichtung). Draufsicht: Zylinder und Schlauch liegen verdeckt unter dem Rahmen."
      },
      "thinElements": {
       "en": "The sleeve wall is a 0.13 mm line (real 0.06 mm); the hose a 0.13 mm line.",
@@ -961,8 +1780,7 @@
        "w": 0.2,
        "h": 0.9,
        "region": "shaft-steel",
-       "material": "steel-grey"
-      ,
+       "material": "steel-grey",
        "penMm": 0.256
       },
       {
@@ -978,8 +1796,7 @@
        "w": 0.2,
        "h": 0.12,
        "region": "reflector-band",
-       "material": "retro-film"
-      ,
+       "material": "retro-film",
        "penMm": 0.332
       },
       {
@@ -1040,8 +1857,7 @@
        "w": 0.11,
        "h": 0.095,
        "region": "cover-frame",
-       "material": "cast-iron-frame"
-      ,
+       "material": "cast-iron-frame",
        "penMm": 0.256
       },
       {
@@ -1057,8 +1873,7 @@
        "w": 0.11,
        "h": 0.095,
        "region": "cover-frame",
-       "material": "cast-iron-frame"
-      ,
+       "material": "cast-iron-frame",
        "penMm": 0.256
       },
       {
@@ -1074,8 +1889,7 @@
        "w": 0.26,
        "h": 0.4,
        "region": "hydraulic-unit",
-       "material": "steel-hyd"
-      ,
+       "material": "steel-hyd",
        "penMm": 0.282
       },
       {
@@ -1091,28 +1905,224 @@
        "w": 0.12,
        "h": 0.55,
        "region": "hydraulic-unit",
-       "material": "steel-hyd"
-      ,
+       "material": "steel-hyd",
        "penMm": 0.356
+      }
+     ],
+     "front": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "shaft-steel",
+       "material": "steel-grey",
+       "penMm": 0.256,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 0.9
+      },
+      {
+       "id": "reflector",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.08,
+       "region": "reflector-band",
+       "material": "retro-film",
+       "penMm": 0.332,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.25,
+       "w": 0.2,
+       "h": 0.12
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "shaft-steel",
+        "beacon-led"
+       ],
+       "material": "steel-grey",
+       "kind": "path",
+       "d": "M -0.1 -0.13 L -0.1 -0.05 C -0.1 -0.01 -0.05 0 0 0 C 0.05 0 0.1 -0.01 0.1 -0.05 L 0.1 -0.13 Z"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "sleeve-steel",
+       "penMm": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0
+        ],
+        [
+         -0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "penMm": 0.256,
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.08,
+       "w": 0.1,
+       "h": 0.095
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "penMm": 0.256,
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.08,
+       "w": 0.1,
+       "h": 0.095
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "penMm": 0.282,
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.95,
+       "w": 0.25,
+       "h": 0.4
+      },
+      {
+       "id": "ram",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "penMm": 0.356,
+       "kind": "rect",
+       "x": -0.06,
+       "y": -1.25,
+       "w": 0.12,
+       "h": 0.55
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-frame",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "penMm": 0.256,
+       "kind": "rect",
+       "x": -0.21,
+       "y": -0.2,
+       "w": 0.42,
+       "h": 0.4,
+       "r": 0.02
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "penMm": 0.282,
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.05,
+       "w": 0.26,
+       "h": 0.25
+      },
+      {
+       "id": "plan-cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "shaft-steel",
+        "beacon-led"
+       ],
+       "material": "steel-grey",
+       "penMm": 0.256,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1
       }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "A section 2.8 mm wide and 9.5 mm high: shaft 1 mm wide with a white band and a dark cap, the sleeve outline, two frame blocks, the power unit block and the cylinder in the sleeve.",
-      "de": "Ein Schnitt 2,8 mm breit und 9,5 mm hoch: Schaft 1 mm breit mit weißem Band und dunkler Kappe, die Hülsenkontur, zwei Rahmenblöcke, der Antriebsblock und der Zylinder in der Hülse."
+      "en": "A section 2.8 mm wide and 9.5 mm high: shaft 1 mm wide with a white band and a dark cap, the sleeve outline, two frame blocks, the power unit block and the cylinder in the sleeve. Front view: shaft, white reflector band and domed cap rise from the sleeve outline as in the side view, the cover-frame blocks sit at the ground line, and the left-offset power unit hangs beside the ram. Plan view: the square cover frame, the shaft cap disc and the buried power unit; the shaft only travels vertically, so the plan stays still while the bollard rises.",
+      "de": "Ein Schnitt 2,8 mm breit und 9,5 mm hoch: Schaft 1 mm breit mit weißem Band und dunkler Kappe, die Hülsenkontur, zwei Rahmenblöcke, der Antriebsblock und der Zylinder in der Hülse. Vorderansicht: Schaft, weißes Reflexband und gewölbte Kappe steigen wie in der Seitenansicht aus der Hülsenkontur, die Rahmenblöcke liegen in Geländehöhe, und die nach links versetzte Antriebseinheit hängt neben dem Zylinder. Draufsicht: der quadratische Abdeckrahmen, die Kappenscheibe des Schafts und die eingegrabene Antriebseinheit; der Schaft bewegt sich nur senkrecht, der Grundriss bleibt beim Ausfahren deshalb unverändert."
      },
      "retained": {
-      "en": "Shaft, reflective band, cap with beacon ring, sleeve, frame, power unit, ram at true size and position.",
-      "de": "Schaft, Reflexband, Kappe mit Leuchtring, Hülse, Rahmen, Antriebseinheit, Zylinder in wahrer Größe und Lage."
+      "en": "Shaft, reflective band, cap with beacon ring, sleeve, frame, power unit, ram at true size and position. Front view: reflector band, ram, power unit. Plan view: frame, cap, power unit.",
+      "de": "Schaft, Reflexband, Kappe mit Leuchtring, Hülse, Rahmen, Antriebseinheit, Zylinder in wahrer Größe und Lage. Vorderansicht: Reflexband, Zylinder, Antriebseinheit. Draufsicht: Rahmen, Kappe, Antriebseinheit."
      },
      "merged": {
-      "en": "Beacon ring merges into the cap; the sleeve wall coincides with the shaft edges.",
-      "de": "Der Leuchtring geht in der Kappe auf; die Hülsenwand fällt mit den Schaftkanten zusammen."
+      "en": "Beacon ring merges into the cap; the sleeve wall coincides with the shaft edges. Front view: the two frame blocks are the section through one square cover frame. Plan view: sleeve and shaft share one disc.",
+      "de": "Der Leuchtring geht in der Kappe auf; die Hülsenwand fällt mit den Schaftkanten zusammen. Vorderansicht: die zwei Rahmenblöcke sind der Schnitt durch einen quadratischen Abdeckrahmen. Draufsicht: Hülse und Schaft teilen sich eine Scheibe."
      },
      "omitted": {
-      "en": "Hose, bolts, flange, lens, brush seal.",
-      "de": "Schlauch, Schrauben, Flansch, Linse, Bürstendichtung."
+      "en": "Hose, bolts, flange, lens, brush seal. Front and plan view: no hose, no motor and no seam lines.",
+      "de": "Schlauch, Schrauben, Flansch, Linse, Bürstendichtung. Vorder- und Draufsicht: kein Schlauch, kein Motor und keine Fugenlinien."
      },
      "thinElements": {
       "en": "Sleeve wall is a 0.13 mm line (real 0.012 m = 0.06 mm); the frame blocks are 0.11 m (0.55 mm) wide, real 0.055 m, up to the shaft edge.",
@@ -1257,24 +2267,185 @@
        "region": "hydraulic-unit",
        "material": "steel-hyd"
       }
+     ],
+     "front": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "shaft-steel",
+        "reflector-band"
+       ],
+       "material": "steel-grey",
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 1.06
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "shaft-steel",
+        "beacon-led"
+       ],
+       "material": "steel-grey",
+       "kind": "path",
+       "d": "M -0.1 -0.13 L -0.1 -0.05 C -0.1 -0.01 -0.05 0 0 0 C 0.05 0 0.1 -0.01 0.1 -0.05 L 0.1 -0.13 Z"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "sleeve-steel",
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0
+        ],
+        [
+         -0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.11,
+       "w": 0.1,
+       "h": 0.13
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.11,
+       "w": 0.1,
+       "h": 0.13
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.95,
+       "w": 0.25,
+       "h": 0.4
+      }
+     ],
+     "plan": [
+      {
+       "id": "plan-frame",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "cover-frame",
+       "material": "cast-iron-frame",
+       "kind": "rect",
+       "x": -0.21,
+       "y": -0.2,
+       "w": 0.42,
+       "h": 0.4,
+       "r": 0.02
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd",
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.05,
+       "w": 0.26,
+       "h": 0.25
+      },
+      {
+       "id": "plan-cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "shaft-steel",
+        "beacon-led"
+       ],
+       "material": "steel-grey",
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1
+      }
      ]
     },
     "decisions": {
      "silhouette": {
-      "en": "A section sign 1.1 mm wide and 3.8 mm high: a solid shaft (0.4 mm wide) rising 1.3 mm above the ground line, a sleeve outline 2.5 mm below it, two frame blocks at ground level and the power unit block at the right.",
-      "de": "Ein Schnittzeichen, 1,1 mm breit und 3,8 mm hoch: ein voller Schaft (0,4 mm breit), der 1,3 mm über die Bodenlinie ragt, eine Hülsenkontur 2,5 mm darunter, zwei Rahmenblöcke in Geländehöhe und der Antriebsblock rechts."
+      "en": "A section sign 1.1 mm wide and 3.8 mm high: a solid shaft (0.4 mm wide) rising 1.3 mm above the ground line, a sleeve outline 2.5 mm below it, two frame blocks at ground level and the power unit block at the right. Front view: the shaft with its domed cap as one 0.4 mm column in front of a plain sleeve outline, two cover-frame blocks either side, and the power unit offset to the left of the axis so it is not hidden behind the shaft. Plan view: the 0.84 mm cover frame as one square, the shaft cap as one disc and the buried power unit as a light block beside it.",
+      "de": "Ein Schnittzeichen, 1,1 mm breit und 3,8 mm hoch: ein voller Schaft (0,4 mm breit), der 1,3 mm über die Bodenlinie ragt, eine Hülsenkontur 2,5 mm darunter, zwei Rahmenblöcke in Geländehöhe und der Antriebsblock rechts. Vorderansicht: der Schaft mit gewölbter Kappe als eine 0,4 mm breite Säule vor der schlichten Hülsenkontur, beidseits ein Abdeckrahmenblock und die Antriebseinheit links der Achse, damit der Schaft sie nicht verdeckt. Draufsicht: der 0,84 mm breite Abdeckrahmen als ein Quadrat, die Schaftkappe als eine Scheibe und die eingegrabene Antriebseinheit als helle Fläche daneben."
      },
      "retained": {
-      "en": "The 0.20 m shaft at true width, the true raised height 0.65 m and buried depth 1.25 m, the power unit at 0.26 x 0.40 m.",
-      "de": "Der 0,20 m dicke Schaft in wahrer Breite, die wahre Ausfahrhöhe 0,65 m und Einbautiefe 1,25 m, die Antriebseinheit mit 0,26 x 0,40 m."
+      "en": "The 0.20 m shaft at true width, the true raised height 0.65 m and buried depth 1.25 m, the power unit at 0.26 x 0.40 m. Front view: shaft, cap, sleeve outline, two frame blocks and the power unit. Plan view: frame square, cap disc, power unit.",
+      "de": "Der 0,20 m dicke Schaft in wahrer Breite, die wahre Ausfahrhöhe 0,65 m und Einbautiefe 1,25 m, die Antriebseinheit mit 0,26 x 0,40 m. Vorderansicht: Schaft, Kappe, Hülsenkontur, zwei Rahmenblöcke und die Antriebseinheit. Draufsicht: Rahmenquadrat, Kappenscheibe, Antriebseinheit."
      },
      "merged": {
-      "en": "Reflective band, beacon ring and shaft tube are one solid; the cylinder in the sleeve and the hose are omitted from this scale; the sleeve wall coincides with the shaft edges.",
-      "de": "Reflexband, Leuchtring und Schaftrohr sind ein Körper; Zylinder in der Hülse und Schlauch fehlen in diesem Maßstab; die Hülsenwand fällt mit den Schaftkanten zusammen."
+      "en": "Reflective band, beacon ring and shaft tube are one solid; the cylinder in the sleeve and the hose are omitted from this scale; the sleeve wall coincides with the shaft edges. Front view: the white band and the cap share the shaft column; the four frame blocks of the plan are one square. Plan view: shaft cap and beacon read as one disc.",
+      "de": "Reflexband, Leuchtring und Schaftrohr sind ein Körper; Zylinder in der Hülse und Schlauch fehlen in diesem Maßstab; die Hülsenwand fällt mit den Schaftkanten zusammen. Vorderansicht: Leuchtband und Kappe teilen sich die Schaftsäule; die vier Rahmenblöcke des Grundrisses sind ein Quadrat. Draufsicht: Schaftkappe und Leuchtring sind eine Scheibe."
      },
      "omitted": {
-      "en": "Cylinder, hose, bolts, flange, lens details.",
-      "de": "Zylinder, Schlauch, Schrauben, Flansch, Linsendetails."
+      "en": "Cylinder, hose, bolts, flange, lens details. Front and plan view: the ram, hose and motor of the buried unit are not drawn; from above the sleeve ring is hidden by the cap disc.",
+      "de": "Zylinder, Schlauch, Schrauben, Flansch, Linsendetails. Vorder- und Draufsicht: Zylinder, Schlauch und Motor der eingegrabenen Einheit sind nicht gezeichnet; von oben verdeckt die Kappenscheibe den Hülsenring."
      },
      "thinElements": {
       "en": "The 0.012 m sleeve wall is a single 0.13 mm line on the shaft edge; the 0.055 m cover frame is thickened to 0.12 m (0.24 mm) inward to the shaft edge; the 0.03 m shaft-sleeve clearance is omitted.",
@@ -1297,14 +2468,14 @@
   },
   "symbols": [
    {
-    "id": "plan-true",
+    "id": "retractable-bollard-symbol-true-extent",
     "title": {
-     "en": "Plan, true extent",
-     "de": "Grundriss, wahre Ausdehnung"
+     "en": "Bollard symbol, true extent",
+     "de": "Pollersymbol, wahre Ausdehnung"
     },
     "description": {
-     "en": "The bollard seen from above: the 0.20 m shaft disc inside the 0.30 m sleeve and the 0.40 m frame ring.",
-     "de": "Der Poller von oben: die 0,20-m-Schaftscheibe in der 0,30-m-Hülse und dem 0,40-m-Rahmenring."
+     "en": "The retractable bollard in all three views at real size: the 0.20 m shaft with reflector, beacon and cap, the 0.30 m sleeve and 0.40 m frame ring in the ground, the ram and the lateral power unit below grade; from above the shaft disc inside the sleeve and frame rings.",
+     "de": "Der versenkbare Poller in allen drei Ansichten in wahrer Größe: der 0,20-m-Schaft mit Reflektor, Leuchte und Kappe, die 0,30-m-Hülse und der 0,40-m-Rahmenring im Boden, der Stößel und das seitliche Antriebsaggregat unter Terrain; von oben die Schaftscheibe in Hülse und Rahmenring."
     },
     "semantics": "true-extent",
     "units": "model-m",
@@ -1322,22 +2493,277 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
-     "plan": [
+     "elevation": [
       {
-       "id": "shaft-plan",
+       "id": "shaft",
        "bone": "sleeve",
        "role": "body",
        "z": 3,
        "filled": true,
-       "tone": 0.3,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.5,
+       "w": 0.2,
+       "h": 0.91
+      },
+      {
+       "id": "reflector",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.41,
+       "w": 0.2,
+       "h": 0.11
+      },
+      {
+       "id": "beacon",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.52,
+       "w": 0.2,
+       "h": 0.06
+      },
+      {
+       "id": "cap",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.58,
+       "w": 0.2,
+       "h": 0.07
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.15,
+       "y": -1.25,
+       "w": 0.3,
+       "h": 1.25
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0.145,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "power-unit",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.15,
+       "y": -0.95,
+       "w": 0.21,
+       "h": 0.4
+      },
+      {
+       "id": "ram",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.06,
+       "y": -1.25,
+       "w": 0.12,
+       "h": 0.55
+      },
+      {
+       "id": "hose",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         -0.7
+        ],
+        [
+         0.15,
+         -0.7
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "shaft",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.5,
+       "w": 0.2,
+       "h": 0.91
+      },
+      {
+       "id": "reflector",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.41,
+       "w": 0.2,
+       "h": 0.11
+      },
+      {
+       "id": "beacon",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.52,
+       "w": 0.2,
+       "h": 0.06
+      },
+      {
+       "id": "cap",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0.58,
+       "w": 0.2,
+       "h": 0.07
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.15,
+       "y": -1.25,
+       "w": 0.3,
+       "h": 1.25
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0.145,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085
+      },
+      {
+       "id": "power-unit",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.01,
+       "y": -0.95,
+       "w": 0.21,
+       "h": 0.4
+      },
+      {
+       "id": "ram",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.06,
+       "y": -1.25,
+       "w": 0.12,
+       "h": 0.55
+      }
+     ],
+     "plan": [
+      {
+       "id": "frame-plan",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.5,
        "kind": "ellipse",
        "cx": 0,
        "cy": 0,
-       "rx": 0.1,
-       "ry": 0.1,
-       "region": "shaft-steel",
-       "material": "steel-grey"
+       "rx": 0.2,
+       "ry": 0.2
       },
       {
        "id": "sleeve-plan",
@@ -1345,44 +2771,68 @@
        "role": "detail",
        "z": 2.5,
        "filled": false,
-       "tone": 0.9,
+       "tone": 0.5,
        "kind": "ellipse",
        "cx": 0,
        "cy": 0,
        "rx": 0.15,
-       "ry": 0.15,
-       "region": "sleeve-steel"
+       "ry": 0.15
       },
       {
-       "id": "frame-plan",
+       "id": "shaft-plan",
        "bone": "sleeve",
-       "role": "detail",
-       "z": 2.4,
-       "filled": false,
-       "tone": 0.9,
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
        "kind": "ellipse",
        "cx": 0,
        "cy": 0,
-       "rx": 0.2,
-       "ry": 0.2,
-       "region": "cover-frame"
+       "rx": 0.1,
+       "ry": 0.1
+      },
+      {
+       "id": "power-unit",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.15,
+       "y": -0.01,
+       "w": 0.21,
+       "h": 0.21
+      },
+      {
+       "id": "motor",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.22,
+       "y": 0.025,
+       "w": 0.07,
+       "h": 0.14
       }
      ]
     },
     "dimensionalNote": {
-     "en": "Model metres at real size: circles of 0.20, 0.30 and 0.40 m diameter; pen widths are paper millimetres.",
-     "de": "Modellmeter in wahrer Größe: Kreise mit 0,20, 0,30 und 0,40 m Durchmesser; Stiftbreiten sind Papiermillimeter."
+     "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. The shaft follows the raised or lowered pose; the power unit lies below grade on the left (+z) of the sleeve and is drawn as hidden below the ground line.",
+     "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Der Schaft folgt der gehobenen oder gesenkten Haltung; das Antriebsaggregat liegt unter Terrain links (+z) der Hülse und ist als verdeckt unter der Bodenlinie gezeichnet."
     }
    },
    {
-    "id": "plan-dot",
+    "id": "retractable-bollard-symbol-conventional",
     "title": {
-     "en": "Bollard dot",
-     "de": "Pollerpunkt"
+     "en": "Bollard sign",
+     "de": "Pollerzeichen"
     },
     "description": {
-     "en": "A filled 0.9 mm dot marks one bollard on a site plan; at the bollard spacing of 1.2 to 1.5 m a row of dots reads as a line of control.",
-     "de": "Ein gefüllter Punkt von 0,9 mm markiert einen Poller im Lageplan; beim Pollerabstand von 1,2 bis 1,5 m liest sich eine Punktreihe als Sperrlinie."
+     "en": "A conventional sign for one bollard: in the top view a filled 0.9 mm dot; in the side and front view a 0.9 mm post of 2.5 mm with a cap; at the bollard spacing of 1.2 to 1.5 m a row of dots reads as a line of control.",
+     "de": "Ein Planzeichen für einen Poller: in der Draufsicht ein gefüllter Punkt von 0,9 mm; in der Seiten- und Vorderansicht ein 0,9-mm-Pfosten von 2,5 mm mit Kappe; beim Pollerabstand von 1,2 bis 1,5 m liest sich eine Punktreihe als Sperrlinie."
     },
     "semantics": "true-position",
     "units": "paper-mm",
@@ -1399,7 +2849,62 @@
     },
     "hatches": [],
     "geometry": {
-     "elevation": [],
+     "elevation": [
+      {
+       "id": "post",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0,
+       "w": 0.9,
+       "h": 2.2
+      },
+      {
+       "id": "cap",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 2.2,
+       "rx": 0.45,
+       "ry": 0.45
+      }
+     ],
+     "front": [
+      {
+       "id": "post",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0,
+       "w": 0.9,
+       "h": 2.2
+      },
+      {
+       "id": "cap",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 2.2,
+       "rx": 0.45,
+       "ry": 0.45
+      }
+     ],
      "plan": [
       {
        "id": "dot",
@@ -1407,19 +2912,18 @@
        "role": "body",
        "z": 3,
        "filled": true,
-       "tone": 1,
+       "tone": 0.85,
        "kind": "ellipse",
        "cx": 0,
        "cy": 0,
        "rx": 0.45,
-       "ry": 0.45,
-       "region": "shaft-steel"
+       "ry": 0.45
       }
      ]
     },
     "dimensionalNote": {
-     "en": "The dot marks the real position of the shaft axis (insertion point at the origin); its 0.9 mm diameter is a paper size and carries no dimension (the real shaft is 0.2 m = 0.4 mm at 1:500).",
-     "de": "Der Punkt markiert die reale Lage der Schaftachse (Einfügepunkt im Ursprung); sein Durchmesser von 0,9 mm ist ein Papiermaß und trägt kein Maß (der reale Schaft ist 0,2 m = 0,4 mm bei 1:500)."
+     "en": "Conventional symbol, not to scale: the dot marks the real position of the shaft axis (insertion point at the origin on the ground); its 0.9 mm diameter and 2.5 mm height are paper sizes and carry no dimension (the real shaft is 0.2 m = 0.4 mm at 1:500).",
+     "de": "Konventionelles Zeichen, nicht maßstäblich: der Punkt markiert die reale Lage der Schaftachse (Einfügepunkt im Ursprung am Boden); sein Durchmesser von 0,9 mm und seine Höhe von 2,5 mm sind Papiermaße und tragen kein Maß (der reale Schaft ist 0,2 m = 0,4 mm bei 1:500)."
     }
    }
   ],
@@ -2252,7 +3756,7 @@
        "kind": "metal",
        "material": "steel-hyd",
        "thicknessM": 0.003,
-       "resistanceM2KW": 0.00006,
+       "resistanceM2KW": 6e-05,
        "heatCapacityJM2K": 10598,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -2300,10 +3804,7 @@
   "presentation": {
    "defaultPose": "raised",
    "defaultClip": "raise-and-lower",
-   "defaultScale": 100,
-   "viewpoints": [
-    "elevation"
-   ]
+   "defaultScale": 100
   },
   "exports": [
    "svg",

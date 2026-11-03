@@ -82,8 +82,8 @@
         "densityKgM3": 7850,
         "conductivityWmK": 50,
         "specificHeatJKgK": 450,
-        "elasticModulusPa": 210000000000.0,
-        "strengthPa": 235000000.0,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
         "source": "literature",
         "reference": "en-iso-10456"
       },
@@ -98,8 +98,8 @@
         "densityKgM3": 7850,
         "conductivityWmK": 50,
         "specificHeatJKgK": 450,
-        "elasticModulusPa": 210000000000.0,
-        "strengthPa": 235000000.0,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
         "source": "literature",
         "reference": "en-10219"
       },
@@ -129,15 +129,15 @@
             "en": "Track frame with brackets and ceiling hangers (fixed root)",
             "de": "Laufschienenrahmen mit Winkeln und Deckenabhängern (feste Wurzel)"
           },
-          "x": 0.0,
-          "y": 0.0,
-          "angleDeg": 0.0,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
           "lengthM": 2.6,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 28.0,
+            "kg": 28,
             "comX": 1.2,
             "comY": 1.4,
             "distribution": "point",
@@ -152,10 +152,10 @@
             "en": "Horizontal travel of the lowest hinge (massless)",
             "de": "Horizontaler Weg des untersten Scharniers (masselos)"
           },
-          "x": 0.0,
-          "y": 0.0,
-          "angleDeg": 0.0,
-          "lengthM": 0.0,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
           "joint": {
             "type": "prismatic",
             "axisDeg": 0,
@@ -170,10 +170,10 @@
             "en": "Vertical travel of the lowest hinge (massless)",
             "de": "Vertikaler Weg des untersten Scharniers (masselos)"
           },
-          "x": 0.0,
-          "y": 0.0,
-          "angleDeg": 0.0,
-          "lengthM": 0.0,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
           "joint": {
             "type": "prismatic",
             "axisDeg": 90,
@@ -188,9 +188,9 @@
             "en": "Door panel 1 (bottom is 1)",
             "de": "Torpaneel 1 (unten ist 1)"
           },
-          "x": 0.0,
-          "y": 0.0,
-          "angleDeg": 90.0,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
           "lengthM": 0.5,
           "joint": {
             "type": "revolute",
@@ -198,9 +198,9 @@
             "maxDeg": 5
           },
           "mass": {
-            "kg": 15.0,
+            "kg": 15,
             "comX": 0.25,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "door-catalogues"
@@ -214,8 +214,8 @@
             "de": "Torpaneel 2 (unten ist 1)"
           },
           "x": 0.5,
-          "y": 0.0,
-          "angleDeg": 0.0,
+          "y": 0,
+          "angleDeg": 0,
           "lengthM": 0.5,
           "joint": {
             "type": "revolute",
@@ -225,7 +225,7 @@
           "mass": {
             "kg": 13.8,
             "comX": 0.25,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "door-catalogues"
@@ -239,8 +239,8 @@
             "de": "Torpaneel 3 (unten ist 1)"
           },
           "x": 0.5,
-          "y": 0.0,
-          "angleDeg": 0.0,
+          "y": 0,
+          "angleDeg": 0,
           "lengthM": 0.5,
           "joint": {
             "type": "revolute",
@@ -250,7 +250,7 @@
           "mass": {
             "kg": 13.8,
             "comX": 0.25,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "door-catalogues"
@@ -264,8 +264,8 @@
             "de": "Torpaneel 4 (unten ist 1)"
           },
           "x": 0.5,
-          "y": 0.0,
-          "angleDeg": 0.0,
+          "y": 0,
+          "angleDeg": 0,
           "lengthM": 0.5,
           "joint": {
             "type": "revolute",
@@ -275,7 +275,7 @@
           "mass": {
             "kg": 13.8,
             "comX": 0.25,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "door-catalogues"
@@ -290,7 +290,7 @@
           },
           "x": 0.12,
           "y": 2.75,
-          "angleDeg": 0.0,
+          "angleDeg": 0,
           "lengthM": 0.09,
           "joint": {
             "type": "revolute",
@@ -298,9 +298,9 @@
             "maxDeg": 2200
           },
           "mass": {
-            "kg": 16.0,
-            "comX": 0.0,
-            "comY": 0.0,
+            "kg": 16,
+            "comX": 0,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate",
             "reference": "door-catalogues"
@@ -312,8 +312,8 @@
       {
         "id": "jamb-fix",
         "bone": "track",
-        "x": 0.0,
-        "y": 0.0,
+        "x": 0,
+        "y": 0,
         "kind": "support",
         "title": {
           "en": "Vertical track fixed to the jamb",
@@ -351,7 +351,7 @@
         "id": "wind-1",
         "bone": "panel-1",
         "x": 0.25,
-        "y": 0.0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Wind point on panel 1",
@@ -362,7 +362,7 @@
         "id": "wind-2",
         "bone": "panel-2",
         "x": 0.25,
-        "y": 0.0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Wind point on panel 2",
@@ -373,7 +373,7 @@
         "id": "wind-3",
         "bone": "panel-3",
         "x": 0.25,
-        "y": 0.0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Wind point on panel 3",
@@ -384,7 +384,7 @@
         "id": "wind-4",
         "bone": "panel-4",
         "x": 0.25,
-        "y": 0.0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Wind point on panel 4",
@@ -394,8 +394,8 @@
       {
         "id": "cable-eye",
         "bone": "panel-1",
-        "x": 0.0,
-        "y": 0.0,
+        "x": 0,
+        "y": 0,
         "kind": "attachment",
         "title": {
           "en": "Cable eye on the bottom bracket",
@@ -406,7 +406,7 @@
         "id": "drum-cable",
         "bone": "spring-shaft",
         "x": -0.09,
-        "y": 0.0,
+        "y": 0,
         "kind": "attachment",
         "title": {
           "en": "Cable leaving the drum",
@@ -415,19 +415,19 @@
       }
     ],
     "representations": {
-      "500": {
+      "50": {
         "status": "authored",
-        "denominator": 500,
+        "denominator": 50,
         "validRange": {
-          "minDenominator": 350,
-          "maxDenominator": 1000
+          "minDenominator": 20,
+          "maxDenominator": 75
         },
         "pens": {
-          "body": 0.13,
-          "detail": null,
-          "texture": null,
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
           "glazing": null,
-          "ground": 0.18
+          "ground": 0.5
         },
         "hatches": [],
         "geometry": {
@@ -443,503 +443,11 @@
               "points": [
                 [
                   -0.2,
-                  0.0
+                  0
                 ],
                 [
                   2.65,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-1",
-              "bone": "panel-1",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-2",
-              "bone": "panel-2",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-3",
-              "bone": "panel-3",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-4",
-              "bone": "panel-4",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "track",
-              "bone": "track",
-              "role": "body",
-              "z": 1,
-              "filled": false,
-              "tone": 0.4,
-              "region": "track-steel",
-              "material": "steel",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  0.1
-                ],
-                [
-                  0.0,
-                  0.2
-                ],
-                [
-                  0.0,
-                  0.3
-                ],
-                [
-                  0.0,
-                  0.4
-                ],
-                [
-                  0.0,
-                  0.5
-                ],
-                [
-                  0.0,
-                  0.6
-                ],
-                [
-                  0.0,
-                  0.7
-                ],
-                [
-                  0.0,
-                  0.8
-                ],
-                [
-                  0.0,
-                  0.9
-                ],
-                [
-                  0.0,
-                  1.0
-                ],
-                [
-                  0.0,
-                  1.1
-                ],
-                [
-                  0.0,
-                  1.2
-                ],
-                [
-                  0.0,
-                  1.3
-                ],
-                [
-                  0.0,
-                  1.4
-                ],
-                [
-                  0.0,
-                  1.5
-                ],
-                [
-                  0.0,
-                  1.6
-                ],
-                [
-                  0.0,
-                  1.7
-                ],
-                [
-                  0.0,
-                  1.8
-                ],
-                [
-                  0.0,
-                  1.9
-                ],
-                [
-                  0.0,
-                  2.0
-                ],
-                [
-                  0.00241,
-                  2.04901
-                ],
-                [
-                  0.00961,
-                  2.09755
-                ],
-                [
-                  0.02153,
-                  2.14514
-                ],
-                [
-                  0.03806,
-                  2.19134
-                ],
-                [
-                  0.05904,
-                  2.2357
-                ],
-                [
-                  0.08427,
-                  2.27779
-                ],
-                [
-                  0.11349,
-                  2.3172
-                ],
-                [
-                  0.14645,
-                  2.35355
-                ],
-                [
-                  0.1828,
-                  2.38651
-                ],
-                [
-                  0.22221,
-                  2.41573
-                ],
-                [
-                  0.2643,
-                  2.44096
-                ],
-                [
-                  0.30866,
-                  2.46194
-                ],
-                [
-                  0.35486,
-                  2.47847
-                ],
-                [
-                  0.40245,
-                  2.49039
-                ],
-                [
-                  0.45099,
-                  2.49759
-                ],
-                [
-                  0.5,
-                  2.5
-                ],
-                [
-                  0.7625,
-                  2.5
-                ],
-                [
-                  1.025,
-                  2.5
-                ],
-                [
-                  1.2875,
-                  2.5
-                ],
-                [
-                  1.55,
-                  2.5
-                ],
-                [
-                  1.8125,
-                  2.5
-                ],
-                [
-                  2.075,
-                  2.5
-                ],
-                [
-                  2.3375,
-                  2.5
-                ],
-                [
-                  2.6,
-                  2.5
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "drum",
-              "bone": "spring-shaft",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.4,
-              "region": "spring-assembly",
-              "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.09,
-              "ry": 0.09
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "Four panel lines joined at the hinges, one track line, the spring drum as one dot.",
-            "de": "Vier an den Scharnieren verbundene Paneellinien, eine Schienenlinie, die Federtrommel als Punkt."
-          },
-          "retained": {
-            "en": "The 2.0 m door as four 0.5 m panels on the real quarter-circle track (R 0.5 m) and 2.1 m horizontal run, drum 0.18 m.",
-            "de": "Das 2,0 m hohe Tor als vier 0,5-m-Paneele auf der echten Viertelkreisschiene (R 0,5 m) mit 2,1 m Horizontalstück, Trommel 0,18 m."
-          },
-          "merged": {
-            "en": "Hinges, rollers and brackets are merged into the panel lines (regions listed); the sandwich panel and its steel hardware share one stroke.",
-            "de": "Scharniere, Rollen und Winkel sind in die Paneellinien eingeschmolzen (Regionen aufgeführt); Sandwichpaneel und Stahlbeschläge teilen einen Strich."
-          },
-          "omitted": {
-            "en": "Hangers, shaft, coil, cable, seal, handle.",
-            "de": "Abhänger, Welle, Feder, Seil, Dichtung, Griff."
-          },
-          "thinElements": {
-            "en": "A 0.04 m panel is a 0.13 mm line (0.065 m at this scale, 0.025 m wider than real); the 0.07 m track is the same line type.",
-            "de": "Ein 0,04 m dickes Paneel ist eine 0,13-mm-Linie (0,065 m in diesem Maßstab, 0,025 m breiter als real); die 0,07 m breite Schiene ist derselbe Linientyp."
-          },
-          "hatching": {
-            "en": "None.",
-            "de": "Keine."
-          },
-          "styles": {
-            "en": "Black lines for panels and track; the drum a filled dot.",
-            "de": "Schwarze Linien für Paneele und Schiene; die Trommel ein gefüllter Punkt."
-          },
-          "overlays": {
-            "en": "Cells: door line (all panels), track line, drum.",
-            "de": "Zellen: Torlinie (alle Paneele), Schienenlinie, Trommel."
-          }
-        }
-      },
-      "200": {
-        "status": "authored",
-        "denominator": 200,
-        "validRange": {
-          "minDenominator": 150,
-          "maxDenominator": 350
-        },
-        "pens": {
-          "body": 0.18,
-          "detail": 0.1,
-          "texture": null,
-          "glazing": null,
-          "ground": 0.25
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "ground",
-              "bone": "track",
-              "role": "ground",
-              "z": 0,
-              "filled": false,
-              "tone": 0.5,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.2,
-                  0.0
-                ],
-                [
-                  2.65,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-1",
-              "bone": "panel-1",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-2",
-              "bone": "panel-2",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-3",
-              "bone": "panel-3",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "panel-4",
-              "bone": "panel-4",
-              "role": "body",
-              "z": 3,
-              "filled": false,
-              "tone": 0.5,
-              "regions": [
-                "panel-sandwich",
-                "hardware-steel"
-              ],
-              "material": "sandwich-skin",
-              "penMm": 0.33,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.5,
-                  0.0
+                  0
                 ]
               ],
               "closed": false
@@ -956,261 +464,1482 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
-                  0.0
+                  -0.02,
+                  0
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.1
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.2
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.3
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.4
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.5
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.6
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.7
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.8
                 ],
                 [
-                  0.0,
+                  -0.02,
                   0.9
                 ],
                 [
-                  0.0,
-                  1.0
+                  -0.02,
+                  1
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.1
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.2
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.3
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.4
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.5
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.6
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.7
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.8
                 ],
                 [
-                  0.0,
+                  -0.02,
                   1.9
                 ],
                 [
-                  0.0,
-                  2.0
+                  -0.02,
+                  2.00032
                 ],
                 [
-                  0.00241,
-                  2.04901
+                  -0.0175,
+                  2.05097
                 ],
                 [
-                  0.00961,
-                  2.09755
+                  -0.01001,
+                  2.10145
                 ],
                 [
-                  0.02153,
-                  2.14514
+                  0.00239,
+                  2.15095
                 ],
                 [
-                  0.03806,
-                  2.19134
+                  0.01958,
+                  2.199
                 ],
                 [
-                  0.05904,
-                  2.2357
+                  0.0414,
+                  2.24513
                 ],
                 [
-                  0.08427,
-                  2.27779
+                  0.06764,
+                  2.2889
                 ],
                 [
-                  0.11349,
-                  2.3172
+                  0.09803,
+                  2.32988
                 ],
                 [
-                  0.14645,
-                  2.35355
+                  0.1323,
+                  2.3677
                 ],
                 [
-                  0.1828,
-                  2.38651
+                  0.17012,
+                  2.40197
                 ],
                 [
-                  0.22221,
-                  2.41573
+                  0.2111,
+                  2.43236
                 ],
                 [
-                  0.2643,
-                  2.44096
+                  0.25487,
+                  2.4586
                 ],
                 [
-                  0.30866,
-                  2.46194
+                  0.301,
+                  2.48042
                 ],
                 [
-                  0.35486,
-                  2.47847
+                  0.34905,
+                  2.49761
                 ],
                 [
-                  0.40245,
-                  2.49039
+                  0.39855,
+                  2.51001
                 ],
                 [
-                  0.45099,
-                  2.49759
+                  0.44903,
+                  2.5175
                 ],
                 [
-                  0.5,
-                  2.5
+                  0.49985,
+                  2.52
                 ],
                 [
                   0.7625,
-                  2.5
+                  2.52
                 ],
                 [
                   1.025,
-                  2.5
+                  2.52
                 ],
                 [
                   1.2875,
-                  2.5
+                  2.52
                 ],
                 [
                   1.55,
-                  2.5
+                  2.52
                 ],
                 [
                   1.8125,
-                  2.5
+                  2.52
                 ],
                 [
                   2.075,
-                  2.5
+                  2.52
                 ],
                 [
                   2.3375,
-                  2.5
+                  2.52
                 ],
                 [
                   2.6,
+                  2.52
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.468
+            },
+            {
+              "id": "track-b",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0
+                ],
+                [
+                  0.02,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.2
+                ],
+                [
+                  0.02,
+                  0.3
+                ],
+                [
+                  0.02,
+                  0.4
+                ],
+                [
+                  0.02,
+                  0.5
+                ],
+                [
+                  0.02,
+                  0.6
+                ],
+                [
+                  0.02,
+                  0.7
+                ],
+                [
+                  0.02,
+                  0.8
+                ],
+                [
+                  0.02,
+                  0.9
+                ],
+                [
+                  0.02,
+                  1
+                ],
+                [
+                  0.02,
+                  1.1
+                ],
+                [
+                  0.02,
+                  1.2
+                ],
+                [
+                  0.02,
+                  1.3
+                ],
+                [
+                  0.02,
+                  1.4
+                ],
+                [
+                  0.02,
+                  1.5
+                ],
+                [
+                  0.02,
+                  1.6
+                ],
+                [
+                  0.02,
+                  1.7
+                ],
+                [
+                  0.02,
+                  1.8
+                ],
+                [
+                  0.02,
+                  1.9
+                ],
+                [
+                  0.02,
+                  1.99968
+                ],
+                [
+                  0.02231,
+                  2.04705
+                ],
+                [
+                  0.02922,
+                  2.09364
+                ],
+                [
+                  0.04067,
+                  2.13934
+                ],
+                [
+                  0.05654,
+                  2.18369
+                ],
+                [
+                  0.07668,
+                  2.22627
+                ],
+                [
+                  0.10089,
+                  2.26667
+                ],
+                [
+                  0.12895,
+                  2.30451
+                ],
+                [
+                  0.16059,
+                  2.33941
+                ],
+                [
+                  0.19549,
+                  2.37105
+                ],
+                [
+                  0.23333,
+                  2.39911
+                ],
+                [
+                  0.27373,
+                  2.42332
+                ],
+                [
+                  0.31631,
+                  2.44346
+                ],
+                [
+                  0.36066,
+                  2.45933
+                ],
+                [
+                  0.40636,
+                  2.47078
+                ],
+                [
+                  0.45295,
+                  2.47769
+                ],
+                [
+                  0.50015,
+                  2.48
+                ],
+                [
+                  0.7625,
+                  2.48
+                ],
+                [
+                  1.025,
+                  2.48
+                ],
+                [
+                  1.2875,
+                  2.48
+                ],
+                [
+                  1.55,
+                  2.48
+                ],
+                [
+                  1.8125,
+                  2.48
+                ],
+                [
+                  2.075,
+                  2.48
+                ],
+                [
+                  2.3375,
+                  2.48
+                ],
+                [
+                  2.6,
+                  2.48
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.336
+            },
+            {
+              "id": "hanger-0",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  1.3,
                   2.5
+                ],
+                [
+                  1.3,
+                  2.85
                 ]
               ],
               "closed": false
-            ,
-              "penMm": 0.25
-             },
+            },
+            {
+              "id": "hanger-1",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  2.5,
+                  2.5
+                ],
+                [
+                  2.5,
+                  2.85
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.02
+                ],
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  0.02
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "panel-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.02
+                ],
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  0.02
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "panel-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.02
+                ],
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  0.02
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "panel-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.02
+                ],
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  -0.02
+                ],
+                [
+                  0.5,
+                  0.02
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "roller-0",
+              "bone": "panel-1",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "penMm": 0.186
+            },
+            {
+              "id": "roller-1",
+              "bone": "panel-1",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0.5,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "penMm": 0.292
+            },
+            {
+              "id": "hinge-1",
+              "bone": "panel-2",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  -0.025
+                ],
+                [
+                  -0.05,
+                  -0.045
+                ],
+                [
+                  0.05,
+                  -0.045
+                ],
+                [
+                  0.05,
+                  -0.025
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.286
+            },
+            {
+              "id": "roller-2",
+              "bone": "panel-2",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0.5,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "penMm": 0.292
+            },
+            {
+              "id": "hinge-2",
+              "bone": "panel-3",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  -0.025
+                ],
+                [
+                  -0.05,
+                  -0.045
+                ],
+                [
+                  0.05,
+                  -0.045
+                ],
+                [
+                  0.05,
+                  -0.025
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.4
+            },
+            {
+              "id": "roller-3",
+              "bone": "panel-3",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0.5,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "penMm": 0.292
+            },
+            {
+              "id": "hinge-3",
+              "bone": "panel-4",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  -0.025
+                ],
+                [
+                  -0.05,
+                  -0.045
+                ],
+                [
+                  0.05,
+                  -0.045
+                ],
+                [
+                  0.05,
+                  -0.025
+                ]
+              ],
+              "closed": true,
+              "penMm": 0.286
+            },
+            {
+              "id": "roller-4",
+              "bone": "panel-4",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0.5,
+              "cy": 0,
+              "rx": 0.011,
+              "ry": 0.011,
+              "penMm": 0.186
+            },
             {
               "id": "drum",
               "bone": "spring-shaft",
               "role": "body",
               "z": 2,
               "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.09,
+              "ry": 0.09
+            },
+            {
+              "id": "coil",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
               "tone": 0.4,
               "region": "spring-assembly",
               "material": "steel",
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.09,
-              "ry": 0.09
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.0375,
+              "ry": 0.0375
+            },
+            {
+              "id": "shaft",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.0125,
+              "ry": 0.0125
             },
             {
               "id": "drum-index",
               "bone": "spring-shaft",
-              "role": "detail",
-              "z": 3,
+              "role": "texture",
+              "z": 5,
               "filled": false,
               "tone": 0.9,
               "region": "spring-assembly",
-              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
-                  0.0,
-                  0.0
+                  0.0375,
+                  0
                 ],
                 [
                   0.09,
-                  0.0
+                  0
                 ]
               ],
               "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "panel-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-rib-1",
+              "bone": "panel-1",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "panel-sandwich",
+              "kind": "poly",
+              "points": [
+                [
+                  -1.11,
+                  0.25
+                ],
+                [
+                  1.11,
+                  0.25
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "panel-rib-2",
+              "bone": "panel-2",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "panel-sandwich",
+              "kind": "poly",
+              "points": [
+                [
+                  -1.11,
+                  0.75
+                ],
+                [
+                  1.11,
+                  0.75
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "panel-rib-3",
+              "bone": "panel-3",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "panel-sandwich",
+              "kind": "poly",
+              "points": [
+                [
+                  -1.11,
+                  1.25
+                ],
+                [
+                  1.11,
+                  1.25
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "panel-rib-4",
+              "bone": "panel-4",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "panel-sandwich",
+              "kind": "poly",
+              "points": [
+                [
+                  -1.11,
+                  1.75
+                ],
+                [
+                  1.11,
+                  1.75
+                ]
+              ],
+              "closed": false,
+              "followTip": true
+            },
+            {
+              "id": "hinge-band-1",
+              "bone": "panel-1",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0,
+              "w": 2.42,
+              "h": 0.08
+            },
+            {
+              "id": "hinge-band-2",
+              "bone": "panel-2",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0.46,
+              "w": 2.42,
+              "h": 0.08
+            },
+            {
+              "id": "hinge-band-3",
+              "bone": "panel-3",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0.96,
+              "w": 2.42,
+              "h": 0.08
+            },
+            {
+              "id": "hinge-band-4",
+              "bone": "panel-4",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 1.46,
+              "w": 2.42,
+              "h": 0.08
+            },
+            {
+              "id": "bottom-seal",
+              "bone": "panel-1",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.15,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0,
+              "w": 2.42,
+              "h": 0.07
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.21,
+              "y": 0,
+              "w": 0.04,
+              "h": 2.5
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.25,
+              "y": 0,
+              "w": 0.04,
+              "h": 2.5
+            },
+            {
+              "id": "hanger-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.215,
+              "y": 2.5,
+              "w": 0.03,
+              "h": 0.35
+            },
+            {
+              "id": "hanger-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.245,
+              "y": 2.5,
+              "w": 0.03,
+              "h": 0.35
+            },
+            {
+              "id": "drum-left",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.1,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.2,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            },
+            {
+              "id": "spring-coil",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 2.7125,
+              "w": 1,
+              "h": 0.075
+            },
+            {
+              "id": "shaft-left",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.1,
+              "y": 2.7375,
+              "w": 0.6,
+              "h": 0.025
+            },
+            {
+              "id": "shaft-right",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.5,
+              "y": 2.7375,
+              "w": 0.6,
+              "h": 0.025
+            }
+          ],
+          "plan": [
+            {
+              "id": "panel-edge-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": 1.21,
+              "w": 2.62,
+              "h": 0.04
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -1.25,
+              "w": 2.62,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-left-a",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.28,
+              "y": 1.21,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-left-b",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.48,
+              "y": 1.21,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-right-a",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.28,
+              "y": -1.25,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-right-b",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.48,
+              "y": -1.25,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "track-end-bar",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.58,
+              "y": -1.21,
+              "w": 0.02,
+              "h": 2.42
+            },
+            {
+              "id": "drum-left",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 1.1,
+              "w": 0.18,
+              "h": 0.1
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -1.2,
+              "w": 0.18,
+              "h": 0.1
+            },
+            {
+              "id": "spring-coil",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.0825,
+              "y": -0.5,
+              "w": 0.075,
+              "h": 1
+            },
+            {
+              "id": "shaft-left",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1075,
+              "y": -1.1,
+              "w": 0.025,
+              "h": 0.6
+            },
+            {
+              "id": "shaft-right",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1075,
+              "y": 0.5,
+              "w": 0.025,
+              "h": 0.6
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Four panel lines of 0.18 mm on a centre-line track, the drum as a filled disc with an index mark.",
-            "de": "Vier 0,18-mm-Paneellinien auf einer Mittellinienschiene, die Trommel als gefüllte Scheibe mit Marke."
+            "en": "The full section of a sectional door: four panels with hinge plates and rollers on a track band, curved track, horizontal track with hangers, torsion spring drum with coil, shaft and index. Convention: the elevation is the section along the travel, so the front view is the door seen from outside (lateral x: left of the door is +x) and the plan view is the view from above through the open garage; the lateral extent of 2.5 m is the track-to-track width. At 1:50 the front view shows four ribbed panels with hinge bands and bottom seal, both tracks with hangers, drums, coil and shaft; the plan view shows the four panels as extruded bars (they fold and travel with the door), tracks, four hangers, the track end bar, drums, coil and shaft.",
+            "de": "Der volle Schnitt eines Sektionaltors: vier Paneele mit Scharnierplatten und Rollen auf einem Schienenband, gebogene Schiene, Horizontalschiene mit Abhängern, Torsionsfedertrommel mit Feder, Welle und Marke. Konvention: die Ansicht ist der Schnitt in Fahrtrichtung, daher ist die Vorderansicht das Tor von außen gesehen (seitliches x: links vom Tor ist +x) und die Draufsicht der Blick von oben durch die offene Garage; die seitliche Ausdehnung von 2,5 m ist die Breite von Schiene zu Schiene. Bei 1:50 zeigt die Vorderansicht vier gesickte Paneele mit Scharnierbändern und Bodendichtung, beide Schienen mit Abhängern, Trommeln, Feder und Welle; die Draufsicht zeigt die vier Paneele als extrudierte Balken (sie falten und fahren mit dem Tor), Schienen, vier Abhänger, den Schienenabschluss, Trommeln, Feder und Welle."
           },
           "retained": {
-            "en": "Panels at the real 0.5 m height and 0.04 m thickness (0.18 mm line), track centre line, drum 0.18 m with its index line that shows the winding.",
-            "de": "Paneele in der echten Höhe 0,5 m und Dicke 0,04 m (0,18-mm-Linie), Schienenmittellinie, Trommel 0,18 m mit Markierungslinie, die das Aufwickeln zeigt."
+            "en": "Five rollers (0.022 m), three hinge plates, drum, coil, shaft, index.",
+            "de": "Fünf Rollen (0,022 m), drei Scharnierplatten, Trommel, Feder, Welle, Marke."
           },
           "merged": {
-            "en": "Hinges and rollers are merged into the panel lines.",
-            "de": "Scharniere und Rollen sind in die Paneellinien eingeschmolzen."
+            "en": "Nothing merged.",
+            "de": "Nichts zusammengefasst."
           },
           "omitted": {
-            "en": "Hangers, brackets, coil, shaft.",
-            "de": "Abhänger, Winkel, Feder, Welle."
+            "en": "Cable, bottom seal, handle, lock, panel ribs. Cable, handle, lock; the rollers are inside the track.",
+            "de": "Seil, Bodendichtung, Griff, Schloss, Paneelsicken. Seil, Griff, Schloss; die Rollen liegen in der Schiene."
           },
           "thinElements": {
-            "en": "Panel line 0.18 mm is about the real 0.04 m; track 0.1 mm instead of 0.07 m (0.35 mm).",
-            "de": "Paneellinie 0,18 mm entspricht etwa den realen 0,04 m; Schiene 0,1 mm statt 0,07 m (0,35 mm)."
+            "en": "Rollers and hinge plates at real size; the panel skins (0.5 mm) are the outline.",
+            "de": "Rollen und Scharnierplatten in echter Größe; die Paneelhäute (0,5 mm) sind die Kontur."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Panels bold, track light.",
-            "de": "Paneele kräftig, Schiene leicht."
+            "en": "Panels 0.35 mm outline, hardware 0.18 mm, index 0.1 mm.",
+            "de": "Paneele 0,35-mm-Kontur, Beschläge 0,18 mm, Marke 0,1 mm."
           },
           "overlays": {
-            "en": "Cells: door line (panel and hardware merged), track, drum.",
-            "de": "Zellen: Torlinie (Paneel und Beschläge zusammengefasst), Schiene, Trommel."
+            "en": "One cell per region: panels, hardware (rollers and hinges), track band and hangers, spring assembly.",
+            "de": "Eine Zelle je Region: Paneele, Beschläge (Rollen und Scharniere), Schienenband und Abhänger, Federbaugruppe."
           }
         }
       },
@@ -1242,11 +1971,11 @@
               "points": [
                 [
                   -0.2,
-                  0.0
+                  0
                 ],
                 [
                   2.65,
-                  0.0
+                  0
                 ]
               ],
               "closed": false
@@ -1264,7 +1993,7 @@
               "points": [
                 [
                   -0.02,
-                  0.0
+                  0
                 ],
                 [
                   -0.02,
@@ -1304,7 +2033,7 @@
                 ],
                 [
                   -0.02,
-                  1.0
+                  1
                 ],
                 [
                   -0.02,
@@ -1458,7 +2187,7 @@
               "points": [
                 [
                   0.02,
-                  0.0
+                  0
                 ],
                 [
                   0.02,
@@ -1498,7 +2227,7 @@
                 ],
                 [
                   0.02,
-                  1.0
+                  1
                 ],
                 [
                   0.02,
@@ -1637,10 +2366,9 @@
                   2.48
                 ]
               ],
-              "closed": false
-            ,
+              "closed": false,
               "penMm": 0.282
-             },
+            },
             {
               "id": "hanger-0",
               "bone": "track",
@@ -1702,11 +2430,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.02
                 ],
                 [
-                  0.0,
+                  0,
                   -0.02
                 ],
                 [
@@ -1735,11 +2463,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.02
                 ],
                 [
-                  0.0,
+                  0,
                   -0.02
                 ],
                 [
@@ -1768,11 +2496,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.02
                 ],
                 [
-                  0.0,
+                  0,
                   -0.02
                 ],
                 [
@@ -1801,11 +2529,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.02
                 ],
                 [
-                  0.0,
+                  0,
                   -0.02
                 ],
                 [
@@ -1829,8 +2557,8 @@
               "region": "spring-assembly",
               "material": "steel",
               "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
+              "cx": 0,
+              "cy": 0,
               "rx": 0.09,
               "ry": 0.09
             },
@@ -1845,12 +2573,546 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
-                  0.0
+                  0,
+                  0
                 ],
                 [
                   0.09,
-                  0.0
+                  0
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "panel-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.25,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.25,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.25,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.25,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "hinge-band-1",
+              "bone": "panel-1",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0,
+              "w": 2.42,
+              "h": 0.07
+            },
+            {
+              "id": "hinge-band-2",
+              "bone": "panel-2",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0.465,
+              "w": 2.42,
+              "h": 0.07
+            },
+            {
+              "id": "hinge-band-3",
+              "bone": "panel-3",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 0.965,
+              "w": 2.42,
+              "h": 0.07
+            },
+            {
+              "id": "hinge-band-4",
+              "bone": "panel-4",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hardware-steel",
+              "material": "steel",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -1.21,
+              "y": 1.465,
+              "w": 2.42,
+              "h": 0.07
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.21,
+              "y": 0,
+              "w": 0.04,
+              "h": 2.5
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.25,
+              "y": 0,
+              "w": 0.04,
+              "h": 2.5
+            },
+            {
+              "id": "hanger-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.215,
+              "y": 2.5,
+              "w": 0.03,
+              "h": 0.35
+            },
+            {
+              "id": "hanger-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.245,
+              "y": 2.5,
+              "w": 0.03,
+              "h": 0.35
+            },
+            {
+              "id": "drum-left",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.1,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.2,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            },
+            {
+              "id": "spring-coil",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 2.7125,
+              "w": 1,
+              "h": 0.075
+            },
+            {
+              "id": "shaft",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -1.1,
+                  2.75
+                ],
+                [
+                  -0.5,
+                  2.75
+                ],
+                [
+                  0.5,
+                  2.75
+                ],
+                [
+                  1.1,
+                  2.75
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "panel-edge-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": 1.21,
+              "w": 2.62,
+              "h": 0.04
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -1.25,
+              "w": 2.62,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-left-a",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.28,
+              "y": 1.21,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-left-b",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.48,
+              "y": 1.21,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-right-a",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.28,
+              "y": -1.25,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "hanger-right-b",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.48,
+              "y": -1.25,
+              "w": 0.04,
+              "h": 0.04
+            },
+            {
+              "id": "drum-left",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 1.1,
+              "w": 0.18,
+              "h": 0.1
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -1.2,
+              "w": 0.18,
+              "h": 0.1
+            },
+            {
+              "id": "spring-coil",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.0825,
+              "y": -0.5,
+              "w": 0.075,
+              "h": 1
+            },
+            {
+              "id": "shaft",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.12,
+                  -1.1
+                ],
+                [
+                  0.12,
+                  1.1
                 ]
               ],
               "closed": false
@@ -1859,8 +3121,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Four filled panel bars between a double-line track band, two ceiling hangers and the drum.",
-            "de": "Vier gefüllte Paneelbalken zwischen einem Doppellinien-Schienenband, zwei Deckenabhänger und die Trommel."
+            "en": "Four filled panel bars between a double-line track band, two ceiling hangers and the drum. Convention: the elevation is the section along the travel, so the front view is the door seen from outside (lateral x: left of the door is +x) and the plan view is the view from above through the open garage; the lateral extent of 2.5 m is the track-to-track width. At 1:100 the front view adds the hinge bands between the panels, hanger bars, the spring coil between the drums; the plan view adds the four hangers.",
+            "de": "Vier gefüllte Paneelbalken zwischen einem Doppellinien-Schienenband, zwei Deckenabhänger und die Trommel. Konvention: die Ansicht ist der Schnitt in Fahrtrichtung, daher ist die Vorderansicht das Tor von außen gesehen (seitliches x: links vom Tor ist +x) und die Draufsicht der Blick von oben durch die offene Garage; die seitliche Ausdehnung von 2,5 m ist die Breite von Schiene zu Schiene. Bei 1:100 ergänzt die Vorderansicht die Scharnierbänder zwischen den Paneelen, Abhängerbalken und die Feder zwischen den Trommeln; die Draufsicht ergänzt die vier Abhänger."
           },
           "retained": {
             "en": "Panels at 0.04 x 0.5 m (0.4 mm), track band of 0.07 m, hangers, drum with index.",
@@ -1871,8 +3133,8 @@
             "de": "Scharniere, Rollen und Winkel bleiben in den Paneelbalken zusammengefasst."
           },
           "omitted": {
-            "en": "Rollers (0.022 m = 0.2 mm), shaft, coil.",
-            "de": "Rollen (0,022 m = 0,2 mm), Welle, Feder."
+            "en": "Rollers (0.022 m = 0.2 mm), shaft, coil. Rollers, cable and handle.",
+            "de": "Rollen (0,022 m = 0,2 mm), Welle, Feder. Rollen, Seil und Griff."
           },
           "thinElements": {
             "en": "None thickened.",
@@ -1892,19 +3154,19 @@
           }
         }
       },
-      "50": {
+      "200": {
         "status": "authored",
-        "denominator": 50,
+        "denominator": 200,
         "validRange": {
-          "minDenominator": 20,
-          "maxDenominator": 75
+          "minDenominator": 150,
+          "maxDenominator": 350
         },
         "pens": {
-          "body": 0.35,
-          "detail": 0.18,
-          "texture": 0.1,
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
           "glazing": null,
-          "ground": 0.5
+          "ground": 0.25
         },
         "hatches": [],
         "geometry": {
@@ -1920,11 +3182,115 @@
               "points": [
                 [
                   -0.2,
-                  0.0
+                  0
                 ],
                 [
                   2.65,
-                  0.0
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.33,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
                 ]
               ],
               "closed": false
@@ -1941,432 +3307,228 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.02,
-                  0.0
+                  0,
+                  0
                 ],
                 [
-                  -0.02,
+                  0,
                   0.1
                 ],
                 [
-                  -0.02,
+                  0,
                   0.2
                 ],
                 [
-                  -0.02,
+                  0,
                   0.3
                 ],
                 [
-                  -0.02,
+                  0,
                   0.4
                 ],
                 [
-                  -0.02,
+                  0,
                   0.5
                 ],
                 [
-                  -0.02,
+                  0,
                   0.6
                 ],
                 [
-                  -0.02,
+                  0,
                   0.7
                 ],
                 [
-                  -0.02,
+                  0,
                   0.8
                 ],
                 [
-                  -0.02,
+                  0,
                   0.9
                 ],
                 [
-                  -0.02,
-                  1.0
+                  0,
+                  1
                 ],
                 [
-                  -0.02,
+                  0,
                   1.1
                 ],
                 [
-                  -0.02,
+                  0,
                   1.2
                 ],
                 [
-                  -0.02,
+                  0,
                   1.3
                 ],
                 [
-                  -0.02,
+                  0,
                   1.4
                 ],
                 [
-                  -0.02,
+                  0,
                   1.5
                 ],
                 [
-                  -0.02,
+                  0,
                   1.6
                 ],
                 [
-                  -0.02,
+                  0,
                   1.7
                 ],
                 [
-                  -0.02,
+                  0,
                   1.8
                 ],
                 [
-                  -0.02,
+                  0,
                   1.9
                 ],
                 [
-                  -0.02,
-                  2.00032
+                  0,
+                  2
                 ],
                 [
-                  -0.0175,
-                  2.05097
+                  0.00241,
+                  2.04901
                 ],
                 [
-                  -0.01001,
-                  2.10145
+                  0.00961,
+                  2.09755
                 ],
                 [
-                  0.00239,
-                  2.15095
+                  0.02153,
+                  2.14514
                 ],
                 [
-                  0.01958,
-                  2.199
+                  0.03806,
+                  2.19134
                 ],
                 [
-                  0.0414,
-                  2.24513
+                  0.05904,
+                  2.2357
                 ],
                 [
-                  0.06764,
-                  2.2889
+                  0.08427,
+                  2.27779
                 ],
                 [
-                  0.09803,
-                  2.32988
+                  0.11349,
+                  2.3172
                 ],
                 [
-                  0.1323,
-                  2.3677
+                  0.14645,
+                  2.35355
                 ],
                 [
-                  0.17012,
-                  2.40197
+                  0.1828,
+                  2.38651
                 ],
                 [
-                  0.2111,
-                  2.43236
+                  0.22221,
+                  2.41573
                 ],
                 [
-                  0.25487,
-                  2.4586
+                  0.2643,
+                  2.44096
                 ],
                 [
-                  0.301,
-                  2.48042
+                  0.30866,
+                  2.46194
                 ],
                 [
-                  0.34905,
-                  2.49761
+                  0.35486,
+                  2.47847
                 ],
                 [
-                  0.39855,
-                  2.51001
+                  0.40245,
+                  2.49039
                 ],
                 [
-                  0.44903,
-                  2.5175
+                  0.45099,
+                  2.49759
                 ],
                 [
-                  0.49985,
-                  2.52
-                ],
-                [
-                  0.7625,
-                  2.52
-                ],
-                [
-                  1.025,
-                  2.52
-                ],
-                [
-                  1.2875,
-                  2.52
-                ],
-                [
-                  1.55,
-                  2.52
-                ],
-                [
-                  1.8125,
-                  2.52
-                ],
-                [
-                  2.075,
-                  2.52
-                ],
-                [
-                  2.3375,
-                  2.52
-                ],
-                [
-                  2.6,
-                  2.52
-                ]
-              ],
-              "closed": false
-            ,
-              "penMm": 0.468
-             },
-            {
-              "id": "track-b",
-              "bone": "track",
-              "role": "detail",
-              "z": 1,
-              "filled": false,
-              "tone": 0.4,
-              "region": "track-steel",
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.02,
-                  0.0
-                ],
-                [
-                  0.02,
-                  0.1
-                ],
-                [
-                  0.02,
-                  0.2
-                ],
-                [
-                  0.02,
-                  0.3
-                ],
-                [
-                  0.02,
-                  0.4
-                ],
-                [
-                  0.02,
-                  0.5
-                ],
-                [
-                  0.02,
-                  0.6
-                ],
-                [
-                  0.02,
-                  0.7
-                ],
-                [
-                  0.02,
-                  0.8
-                ],
-                [
-                  0.02,
-                  0.9
-                ],
-                [
-                  0.02,
-                  1.0
-                ],
-                [
-                  0.02,
-                  1.1
-                ],
-                [
-                  0.02,
-                  1.2
-                ],
-                [
-                  0.02,
-                  1.3
-                ],
-                [
-                  0.02,
-                  1.4
-                ],
-                [
-                  0.02,
-                  1.5
-                ],
-                [
-                  0.02,
-                  1.6
-                ],
-                [
-                  0.02,
-                  1.7
-                ],
-                [
-                  0.02,
-                  1.8
-                ],
-                [
-                  0.02,
-                  1.9
-                ],
-                [
-                  0.02,
-                  1.99968
-                ],
-                [
-                  0.02231,
-                  2.04705
-                ],
-                [
-                  0.02922,
-                  2.09364
-                ],
-                [
-                  0.04067,
-                  2.13934
-                ],
-                [
-                  0.05654,
-                  2.18369
-                ],
-                [
-                  0.07668,
-                  2.22627
-                ],
-                [
-                  0.10089,
-                  2.26667
-                ],
-                [
-                  0.12895,
-                  2.30451
-                ],
-                [
-                  0.16059,
-                  2.33941
-                ],
-                [
-                  0.19549,
-                  2.37105
-                ],
-                [
-                  0.23333,
-                  2.39911
-                ],
-                [
-                  0.27373,
-                  2.42332
-                ],
-                [
-                  0.31631,
-                  2.44346
-                ],
-                [
-                  0.36066,
-                  2.45933
-                ],
-                [
-                  0.40636,
-                  2.47078
-                ],
-                [
-                  0.45295,
-                  2.47769
-                ],
-                [
-                  0.50015,
-                  2.48
-                ],
-                [
-                  0.7625,
-                  2.48
-                ],
-                [
-                  1.025,
-                  2.48
-                ],
-                [
-                  1.2875,
-                  2.48
-                ],
-                [
-                  1.55,
-                  2.48
-                ],
-                [
-                  1.8125,
-                  2.48
-                ],
-                [
-                  2.075,
-                  2.48
-                ],
-                [
-                  2.3375,
-                  2.48
-                ],
-                [
-                  2.6,
-                  2.48
-                ]
-              ],
-              "closed": false
-            ,
-              "penMm": 0.336
-             },
-            {
-              "id": "hanger-0",
-              "bone": "track",
-              "role": "detail",
-              "z": 1,
-              "filled": false,
-              "tone": 0.4,
-              "region": "track-steel",
-              "material": "steel",
-              "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  1.3,
+                  0.5,
                   2.5
                 ],
                 [
-                  1.3,
-                  2.85
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "hanger-1",
-              "bone": "track",
-              "role": "detail",
-              "z": 1,
-              "filled": false,
-              "tone": 0.4,
-              "region": "track-steel",
-              "material": "steel",
-              "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  2.5,
+                  0.7625,
                   2.5
                 ],
                 [
-                  2.5,
-                  2.85
+                  1.025,
+                  2.5
+                ],
+                [
+                  1.2875,
+                  2.5
+                ],
+                [
+                  1.55,
+                  2.5
+                ],
+                [
+                  1.8125,
+                  2.5
+                ],
+                [
+                  2.075,
+                  2.5
+                ],
+                [
+                  2.3375,
+                  2.5
+                ],
+                [
+                  2.6,
+                  2.5
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.25
+            },
+            {
+              "id": "drum",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.09,
+              "ry": 0.09
+            },
+            {
+              "id": "drum-index",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.9,
+              "region": "spring-assembly",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.09,
+                  0
                 ]
               ],
               "closed": false
-            },
+            }
+          ],
+          "front": [
             {
               "id": "panel-1",
               "bone": "panel-1",
@@ -2376,26 +3538,18 @@
               "tone": 0.55,
               "region": "panel-sandwich",
               "material": "sandwich-skin",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.02
-                ],
-                [
-                  0.0,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  0.02
-                ]
-              ],
-              "closed": true
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
             },
             {
               "id": "panel-2",
@@ -2406,26 +3560,18 @@
               "tone": 0.55,
               "region": "panel-sandwich",
               "material": "sandwich-skin",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.02
-                ],
-                [
-                  0.0,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  0.02
-                ]
-              ],
-              "closed": true
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
             },
             {
               "id": "panel-3",
@@ -2436,26 +3582,18 @@
               "tone": 0.55,
               "region": "panel-sandwich",
               "material": "sandwich-skin",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.02
-                ],
-                [
-                  0.0,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  0.02
-                ]
-              ],
-              "closed": true
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
             },
             {
               "id": "panel-4",
@@ -2466,270 +3604,313 @@
               "tone": 0.55,
               "region": "panel-sandwich",
               "material": "sandwich-skin",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.02
-                ],
-                [
-                  0.0,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  -0.02
-                ],
-                [
-                  0.5,
-                  0.02
-                ]
-              ],
-              "closed": true
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
             },
             {
-              "id": "roller-0",
-              "bone": "panel-1",
+              "id": "track-left",
+              "bone": "track",
               "role": "detail",
-              "z": 4,
+              "z": 1,
               "filled": true,
-              "tone": 0.2,
-              "region": "hardware-steel",
+              "tone": 0.4,
+              "region": "track-steel",
               "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.011,
-              "ry": 0.011
-            ,
-              "penMm": 0.186
-             },
+              "kind": "rect",
+              "x": 1.21,
+              "y": 0,
+              "w": 0.04,
+              "h": 2.5
+            },
             {
-              "id": "roller-1",
-              "bone": "panel-1",
+              "id": "track-right",
+              "bone": "track",
               "role": "detail",
-              "z": 4,
+              "z": 1,
               "filled": true,
-              "tone": 0.2,
-              "region": "hardware-steel",
+              "tone": 0.4,
+              "region": "track-steel",
               "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.5,
-              "cy": 0.0,
-              "rx": 0.011,
-              "ry": 0.011
-            ,
-              "penMm": 0.292
-             },
+              "kind": "rect",
+              "x": -1.25,
+              "y": 0,
+              "w": 0.04,
+              "h": 2.5
+            },
             {
-              "id": "hinge-1",
-              "bone": "panel-2",
+              "id": "hanger-left",
+              "bone": "track",
               "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.3,
-              "region": "hardware-steel",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
               "material": "steel",
+              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
-                  -0.05,
-                  -0.025
+                  1.23,
+                  2.5
                 ],
                 [
-                  -0.05,
-                  -0.045
-                ],
-                [
-                  0.05,
-                  -0.045
-                ],
-                [
-                  0.05,
-                  -0.025
+                  1.23,
+                  2.85
                 ]
               ],
-              "closed": true
-            ,
-              "penMm": 0.286
-             },
+              "closed": false
+            },
             {
-              "id": "roller-2",
-              "bone": "panel-2",
+              "id": "hanger-right",
+              "bone": "track",
               "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.2,
-              "region": "hardware-steel",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
               "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.5,
-              "cy": 0.0,
-              "rx": 0.011,
-              "ry": 0.011
-            ,
-              "penMm": 0.292
-             },
-            {
-              "id": "hinge-2",
-              "bone": "panel-3",
-              "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.3,
-              "region": "hardware-steel",
-              "material": "steel",
+              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
-                  -0.05,
-                  -0.025
+                  -1.23,
+                  2.5
                 ],
                 [
-                  -0.05,
-                  -0.045
-                ],
-                [
-                  0.05,
-                  -0.045
-                ],
-                [
-                  0.05,
-                  -0.025
+                  -1.23,
+                  2.85
                 ]
               ],
-              "closed": true
-            ,
-              "penMm": 0.4
-             },
+              "closed": false
+            },
             {
-              "id": "roller-3",
-              "bone": "panel-3",
-              "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.2,
-              "region": "hardware-steel",
-              "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.5,
-              "cy": 0.0,
-              "rx": 0.011,
-              "ry": 0.011
-            ,
-              "penMm": 0.292
-             },
-            {
-              "id": "hinge-3",
-              "bone": "panel-4",
-              "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.3,
-              "region": "hardware-steel",
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.05,
-                  -0.025
-                ],
-                [
-                  -0.05,
-                  -0.045
-                ],
-                [
-                  0.05,
-                  -0.045
-                ],
-                [
-                  0.05,
-                  -0.025
-                ]
-              ],
-              "closed": true
-            ,
-              "penMm": 0.286
-             },
-            {
-              "id": "roller-4",
-              "bone": "panel-4",
-              "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.2,
-              "region": "hardware-steel",
-              "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.5,
-              "cy": 0.0,
-              "rx": 0.011,
-              "ry": 0.011
-            ,
-              "penMm": 0.186
-             },
-            {
-              "id": "drum",
+              "id": "drum-left",
               "bone": "spring-shaft",
               "role": "body",
               "z": 2,
               "filled": true,
-              "tone": 0.5,
-              "region": "spring-assembly",
-              "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.09,
-              "ry": 0.09
-            },
-            {
-              "id": "coil",
-              "bone": "spring-shaft",
-              "role": "detail",
-              "z": 3,
-              "filled": false,
               "tone": 0.4,
               "region": "spring-assembly",
               "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.0375,
-              "ry": 0.0375
+              "kind": "rect",
+              "x": 1.1,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.2,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
             },
             {
               "id": "shaft",
               "bone": "spring-shaft",
               "role": "detail",
-              "z": 4,
-              "filled": true,
-              "tone": 0.2,
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
               "region": "spring-assembly",
               "material": "steel",
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.0125,
-              "ry": 0.0125
-            },
-            {
-              "id": "drum-index",
-              "bone": "spring-shaft",
-              "role": "texture",
-              "z": 5,
-              "filled": false,
-              "tone": 0.9,
-              "region": "spring-assembly",
+              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
-                  0.0375,
-                  0.0
+                  -1.1,
+                  2.75
                 ],
                 [
-                  0.09,
-                  0.0
+                  1.1,
+                  2.75
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "panel-edge-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": 1.21,
+              "w": 2.62,
+              "h": 0.04
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -1.25,
+              "w": 2.62,
+              "h": 0.04
+            },
+            {
+              "id": "drum-left",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": 1.1,
+              "w": 0.18,
+              "h": 0.1
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.03,
+              "y": -1.2,
+              "w": 0.18,
+              "h": 0.1
+            },
+            {
+              "id": "shaft",
+              "bone": "spring-shaft",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.12,
+                  -1.1
+                ],
+                [
+                  0.12,
+                  1.1
                 ]
               ],
               "closed": false
@@ -2738,36 +3919,768 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "The full section of a sectional door: four panels with hinge plates and rollers on a track band, curved track, horizontal track with hangers, torsion spring drum with coil, shaft and index.",
-            "de": "Der volle Schnitt eines Sektionaltors: vier Paneele mit Scharnierplatten und Rollen auf einem Schienenband, gebogene Schiene, Horizontalschiene mit Abhängern, Torsionsfedertrommel mit Feder, Welle und Marke."
+            "en": "Four panel lines of 0.18 mm on a centre-line track, the drum as a filled disc with an index mark. Convention: the elevation is the section along the travel, so the front view is the door seen from outside (lateral x: left of the door is +x) and the plan view is the view from above through the open garage; the lateral extent of 2.5 m is the track-to-track width. At 1:200 the front view shows four panel bars, the two track bars with hanger lines, the two spring drums and the shaft; the plan view shows the leaf as four extruded panel bars, the two tracks, the drums and the shaft.",
+            "de": "Vier 0,18-mm-Paneellinien auf einer Mittellinienschiene, die Trommel als gefüllte Scheibe mit Marke. Konvention: die Ansicht ist der Schnitt in Fahrtrichtung, daher ist die Vorderansicht das Tor von außen gesehen (seitliches x: links vom Tor ist +x) und die Draufsicht der Blick von oben durch die offene Garage; die seitliche Ausdehnung von 2,5 m ist die Breite von Schiene zu Schiene. Bei 1:200 zeigt die Vorderansicht vier Paneelbalken, die beiden Schienenbalken mit Abhängerlinien, die beiden Federtrommeln und die Welle; die Draufsicht zeigt das Torblatt als vier extrudierte Paneelbalken, die beiden Schienen, die Trommeln und die Welle."
           },
           "retained": {
-            "en": "Five rollers (0.022 m), three hinge plates, drum, coil, shaft, index.",
-            "de": "Fünf Rollen (0,022 m), drei Scharnierplatten, Trommel, Feder, Welle, Marke."
+            "en": "Panels at the real 0.5 m height and 0.04 m thickness (0.18 mm line), track centre line, drum 0.18 m with its index line that shows the winding.",
+            "de": "Paneele in der echten Höhe 0,5 m und Dicke 0,04 m (0,18-mm-Linie), Schienenmittellinie, Trommel 0,18 m mit Markierungslinie, die das Aufwickeln zeigt."
           },
           "merged": {
-            "en": "Nothing merged.",
-            "de": "Nichts zusammengefasst."
+            "en": "Hinges and rollers are merged into the panel lines.",
+            "de": "Scharniere und Rollen sind in die Paneellinien eingeschmolzen."
           },
           "omitted": {
-            "en": "Cable, bottom seal, handle, lock, panel ribs.",
-            "de": "Seil, Bodendichtung, Griff, Schloss, Paneelsicken."
+            "en": "Hangers, brackets, coil, shaft. Hardware, rollers and the spring coil.",
+            "de": "Abhänger, Winkel, Feder, Welle. Beschläge, Rollen und die Feder."
           },
           "thinElements": {
-            "en": "Rollers and hinge plates at real size; the panel skins (0.5 mm) are the outline.",
-            "de": "Rollen und Scharnierplatten in echter Größe; die Paneelhäute (0,5 mm) sind die Kontur."
+            "en": "Panel line 0.18 mm is about the real 0.04 m; track 0.1 mm instead of 0.07 m (0.35 mm).",
+            "de": "Paneellinie 0,18 mm entspricht etwa den realen 0,04 m; Schiene 0,1 mm statt 0,07 m (0,35 mm)."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Panels 0.35 mm outline, hardware 0.18 mm, index 0.1 mm.",
-            "de": "Paneele 0,35-mm-Kontur, Beschläge 0,18 mm, Marke 0,1 mm."
+            "en": "Panels bold, track light.",
+            "de": "Paneele kräftig, Schiene leicht."
           },
           "overlays": {
-            "en": "One cell per region: panels, hardware (rollers and hinges), track band and hangers, spring assembly.",
-            "de": "Eine Zelle je Region: Paneele, Beschläge (Rollen und Scharniere), Schienenband und Abhänger, Federbaugruppe."
+            "en": "Cells: door line (panel and hardware merged), track, drum.",
+            "de": "Zellen: Torlinie (Paneel und Beschläge zusammengefasst), Schiene, Trommel."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "track",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0
+                ],
+                [
+                  2.65,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "regions": [
+                "panel-sandwich",
+                "hardware-steel"
+              ],
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "track",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  0,
+                  0.2
+                ],
+                [
+                  0,
+                  0.3
+                ],
+                [
+                  0,
+                  0.4
+                ],
+                [
+                  0,
+                  0.5
+                ],
+                [
+                  0,
+                  0.6
+                ],
+                [
+                  0,
+                  0.7
+                ],
+                [
+                  0,
+                  0.8
+                ],
+                [
+                  0,
+                  0.9
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  0,
+                  1.1
+                ],
+                [
+                  0,
+                  1.2
+                ],
+                [
+                  0,
+                  1.3
+                ],
+                [
+                  0,
+                  1.4
+                ],
+                [
+                  0,
+                  1.5
+                ],
+                [
+                  0,
+                  1.6
+                ],
+                [
+                  0,
+                  1.7
+                ],
+                [
+                  0,
+                  1.8
+                ],
+                [
+                  0,
+                  1.9
+                ],
+                [
+                  0,
+                  2
+                ],
+                [
+                  0.00241,
+                  2.04901
+                ],
+                [
+                  0.00961,
+                  2.09755
+                ],
+                [
+                  0.02153,
+                  2.14514
+                ],
+                [
+                  0.03806,
+                  2.19134
+                ],
+                [
+                  0.05904,
+                  2.2357
+                ],
+                [
+                  0.08427,
+                  2.27779
+                ],
+                [
+                  0.11349,
+                  2.3172
+                ],
+                [
+                  0.14645,
+                  2.35355
+                ],
+                [
+                  0.1828,
+                  2.38651
+                ],
+                [
+                  0.22221,
+                  2.41573
+                ],
+                [
+                  0.2643,
+                  2.44096
+                ],
+                [
+                  0.30866,
+                  2.46194
+                ],
+                [
+                  0.35486,
+                  2.47847
+                ],
+                [
+                  0.40245,
+                  2.49039
+                ],
+                [
+                  0.45099,
+                  2.49759
+                ],
+                [
+                  0.5,
+                  2.5
+                ],
+                [
+                  0.7625,
+                  2.5
+                ],
+                [
+                  1.025,
+                  2.5
+                ],
+                [
+                  1.2875,
+                  2.5
+                ],
+                [
+                  1.55,
+                  2.5
+                ],
+                [
+                  1.8125,
+                  2.5
+                ],
+                [
+                  2.075,
+                  2.5
+                ],
+                [
+                  2.3375,
+                  2.5
+                ],
+                [
+                  2.6,
+                  2.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "drum",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.09,
+              "ry": 0.09
+            }
+          ],
+          "front": [
+            {
+              "id": "panel-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  1.23,
+                  0
+                ],
+                [
+                  1.23,
+                  2.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -1.23,
+                  0
+                ],
+                [
+                  -1.23,
+                  2.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "shaft",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -1.2,
+                  2.75
+                ],
+                [
+                  1.2,
+                  2.75
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "drum-left",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.1,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            },
+            {
+              "id": "drum-right",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1.2,
+              "y": 2.66,
+              "w": 0.1,
+              "h": 0.18
+            }
+          ],
+          "plan": [
+            {
+              "id": "panel-edge-1",
+              "bone": "panel-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.0325,
+              "w": 0.5,
+              "h": 0.065,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-2",
+              "bone": "panel-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.0325,
+              "w": 0.5,
+              "h": 0.065,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-3",
+              "bone": "panel-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.0325,
+              "w": 0.5,
+              "h": 0.065,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "panel-edge-4",
+              "bone": "panel-4",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "panel-sandwich",
+              "material": "sandwich-skin",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.0325,
+              "w": 0.5,
+              "h": 0.065,
+              "solid": {
+                "kind": "extruded",
+                "z0": -1.21,
+                "z1": 1.21,
+                "sweep": "w"
+              }
+            },
+            {
+              "id": "track-left",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  1.23
+                ],
+                [
+                  2.6,
+                  1.23
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "track-right",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "track-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  -1.23
+                ],
+                [
+                  2.6,
+                  -1.23
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "shaft",
+              "bone": "spring-shaft",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "spring-assembly",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.12,
+                  -1.2
+                ],
+                [
+                  0.12,
+                  1.2
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Four panel lines joined at the hinges, one track line, the spring drum as one dot. Convention: the elevation is the section along the travel, so the front view is the door seen from outside (lateral x: left of the door is +x) and the plan view is the view from above through the open garage; the lateral extent of 2.5 m is the track-to-track width. At 1:500 the front view is four panel bars stacked between two track lines with the spring shaft as a line; the plan view is two track lines, the shaft line and the four panels as extruded bars that fold with the door.",
+            "de": "Vier an den Scharnieren verbundene Paneellinien, eine Schienenlinie, die Federtrommel als Punkt. Konvention: die Ansicht ist der Schnitt in Fahrtrichtung, daher ist die Vorderansicht das Tor von außen gesehen (seitliches x: links vom Tor ist +x) und die Draufsicht der Blick von oben durch die offene Garage; die seitliche Ausdehnung von 2,5 m ist die Breite von Schiene zu Schiene. Bei 1:500 ist die Vorderansicht vier gestapelte Paneelbalken zwischen zwei Schienenlinien mit der Federwelle als Linie; die Draufsicht ist zwei Schienenlinien, die Wellenlinie und die vier Paneele als extrudierte Balken, die mit dem Tor falten."
+          },
+          "retained": {
+            "en": "The 2.0 m door as four 0.5 m panels on the real quarter-circle track (R 0.5 m) and 2.1 m horizontal run, drum 0.18 m.",
+            "de": "Das 2,0 m hohe Tor als vier 0,5-m-Paneele auf der echten Viertelkreisschiene (R 0,5 m) mit 2,1 m Horizontalstück, Trommel 0,18 m."
+          },
+          "merged": {
+            "en": "Hinges, rollers and brackets are merged into the panel lines (regions listed); the sandwich panel and its steel hardware share one stroke.",
+            "de": "Scharniere, Rollen und Winkel sind in die Paneellinien eingeschmolzen (Regionen aufgeführt); Sandwichpaneel und Stahlbeschläge teilen einen Strich."
+          },
+          "omitted": {
+            "en": "Hangers, shaft, coil, cable, seal, handle.",
+            "de": "Abhänger, Welle, Feder, Seil, Dichtung, Griff."
+          },
+          "thinElements": {
+            "en": "A 0.04 m panel is a 0.13 mm line (0.065 m at this scale, 0.025 m wider than real); the 0.07 m track is the same line type. The 0.04 m panels and track legs are 0.13 mm lines or bars (0.065 m).",
+            "de": "Ein 0,04 m dickes Paneel ist eine 0,13-mm-Linie (0,065 m in diesem Maßstab, 0,025 m breiter als real); die 0,07 m breite Schiene ist derselbe Linientyp. Die 0,04 m dicken Paneele und Schienenschenkel sind 0,13-mm-Linien oder -Balken (0,065 m)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Black lines for panels and track; the drum a filled dot.",
+            "de": "Schwarze Linien für Paneele und Schiene; die Trommel ein gefüllter Punkt."
+          },
+          "overlays": {
+            "en": "Cells: door line (all panels), track line, drum.",
+            "de": "Zellen: Torlinie (alle Paneele), Schienenlinie, Trommel."
           }
         }
       }
@@ -2786,22 +4699,22 @@
         },
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": -8.881784197001252e-16
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-3": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-4": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "spring-shaft": {
             "angleDeg": -6.361109362927034e-13
@@ -2812,20 +4725,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.85
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2839,7 +4752,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 525.6198,
             "source": "authored-estimate"
           },
@@ -2851,7 +4764,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -525.6198,
             "source": "authored-estimate"
           }
@@ -2869,13 +4782,13 @@
         },
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": 1.358319250171405
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
             "angleDeg": -15.490496841195181
@@ -2895,20 +4808,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.45
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2922,7 +4835,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 304.84447,
             "source": "authored-estimate"
           },
@@ -2934,7 +4847,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -304.84447,
             "source": "authored-estimate"
           }
@@ -2958,16 +4871,16 @@
             "dy": 2.5
           },
           "panel-1": {
-            "angleDeg": -90.0
+            "angleDeg": -90
           },
           "panel-2": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-3": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-4": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "spring-shaft": {
             "angleDeg": 1994.8944878270581
@@ -2978,20 +4891,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "track-steel": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3005,8 +4918,8 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
-            "fyN": 0.0,
+            "fxN": 0,
+            "fyN": 0,
             "source": "authored-estimate"
           },
           {
@@ -3017,8 +4930,8 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
-            "fyN": 0.0,
+            "fxN": 0,
+            "fyN": 0,
             "source": "authored-estimate"
           }
         ]
@@ -3035,22 +4948,22 @@
         },
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": -8.881784197001252e-16
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-3": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-4": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "spring-shaft": {
             "angleDeg": -6.361109362927034e-13
@@ -3061,20 +4974,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.85
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3088,7 +5001,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 525.6198,
             "source": "authored-estimate"
           },
@@ -3100,7 +5013,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -525.6198,
             "source": "authored-estimate"
           },
@@ -3113,7 +5026,7 @@
             },
             "anchor": "wind-1",
             "fxN": 875,
-            "fyN": 0.0,
+            "fyN": 0,
             "source": "literature",
             "reference": "en-12424"
           },
@@ -3126,7 +5039,7 @@
             },
             "anchor": "wind-2",
             "fxN": 875,
-            "fyN": 0.0,
+            "fyN": 0,
             "source": "literature",
             "reference": "en-12424"
           },
@@ -3139,7 +5052,7 @@
             },
             "anchor": "wind-3",
             "fxN": 875,
-            "fyN": 0.0,
+            "fyN": 0,
             "source": "literature",
             "reference": "en-12424"
           },
@@ -3152,7 +5065,7 @@
             },
             "anchor": "wind-4",
             "fxN": 875,
-            "fyN": 0.0,
+            "fyN": 0,
             "source": "literature",
             "reference": "en-12424"
           }
@@ -3171,19 +5084,19 @@
         "key": true,
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": 0.3344497152923722
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-3": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-4": {
             "angleDeg": -13.462636940679673
@@ -3197,20 +5110,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.733125
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3224,7 +5137,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 522.08587,
             "source": "authored-estimate"
           },
@@ -3236,7 +5149,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -522.08587,
             "source": "authored-estimate"
           }
@@ -3255,16 +5168,16 @@
         "key": true,
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": 0.6702081034226985
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-3": {
             "angleDeg": -3.3878266796119334
@@ -3281,20 +5194,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.61625
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3308,7 +5221,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 479.80491,
             "source": "authored-estimate"
           },
@@ -3320,7 +5233,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -479.80491,
             "source": "authored-estimate"
           }
@@ -3339,13 +5252,13 @@
         "key": true,
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": 1.0145714338650496
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
             "angleDeg": -0.024335864177686517
@@ -3365,20 +5278,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4993749999999999
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3392,7 +5305,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 393.26266,
             "source": "authored-estimate"
           },
@@ -3404,7 +5317,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -393.26266,
             "source": "authored-estimate"
           }
@@ -3423,13 +5336,13 @@
         "key": true,
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": 1.358319250171405
           },
           "panel-1": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-2": {
             "angleDeg": -15.490496841195181
@@ -3449,20 +5362,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.38249999999999995
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3476,7 +5389,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 304.84447,
             "source": "authored-estimate"
           },
@@ -3488,7 +5401,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -304.84447,
             "source": "authored-estimate"
           }
@@ -3507,7 +5420,7 @@
         "key": true,
         "bones": {
           "carriage-x": {
-            "dx": 0.0
+            "dx": 0
           },
           "carriage-y": {
             "dy": 1.7126132299743473
@@ -3533,20 +5446,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.265625
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3560,7 +5473,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 213.66525,
             "source": "authored-estimate"
           },
@@ -3572,7 +5485,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -213.66525,
             "source": "authored-estimate"
           }
@@ -3606,7 +5519,7 @@
             "angleDeg": -4.531349660063901
           },
           "panel-4": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "spring-shaft": {
             "angleDeg": 1476.5947766536717
@@ -3617,20 +5530,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.14874999999999994
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3644,7 +5557,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 121.69808,
             "source": "authored-estimate"
           },
@@ -3656,7 +5569,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -121.69808,
             "source": "authored-estimate"
           }
@@ -3687,10 +5600,10 @@
             "angleDeg": -14.612030519349151
           },
           "panel-3": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "panel-4": {
-            "angleDeg": 0.0
+            "angleDeg": 0
           },
           "spring-shaft": {
             "angleDeg": 1734.8563919584392
@@ -3701,20 +5614,20 @@
         "thermal": {
           "regions": {
             "panel-sandwich": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.03187499999999988
             },
             "hardware-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.6
             },
             "track-steel": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "spring-assembly": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -3728,7 +5641,7 @@
               "de": "Federseilzug am unteren Winkel"
             },
             "anchor": "cable-eye",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 35.26581,
             "source": "authored-estimate"
           },
@@ -3740,7 +5653,7 @@
               "de": "Seilreaktion an der Trommel"
             },
             "anchor": "drum-cable",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -35.26581,
             "source": "authored-estimate"
           }
@@ -4196,8 +6109,8 @@
           "kind": "wall",
           "model": "conditioned",
           "material": "sandwich-skin",
-          "areaM2": 5.0,
-          "characteristicLengthM": 2.0,
+          "areaM2": 5,
+          "characteristicLengthM": 2,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
           "layers": [
@@ -4209,7 +6122,7 @@
               },
               "kind": "metal",
               "material": "sandwich-skin",
-              "resistanceM2KW": 1e-05,
+              "resistanceM2KW": 0.00001,
               "source": "literature",
               "thicknessM": 0.0005,
               "heatCapacityJM2K": 1766,
@@ -4237,7 +6150,7 @@
               },
               "kind": "metal",
               "material": "sandwich-skin",
-              "resistanceM2KW": 1e-05,
+              "resistanceM2KW": 0.00001,
               "source": "literature",
               "thicknessM": 0.0005,
               "heatCapacityJM2K": 1766,
@@ -4274,7 +6187,7 @@
               },
               "kind": "metal",
               "material": "steel",
-              "resistanceM2KW": 4e-05,
+              "resistanceM2KW": 0.00004,
               "source": "literature",
               "thicknessM": 0.002,
               "heatCapacityJM2K": 7065,
@@ -4307,7 +6220,7 @@
               },
               "kind": "metal",
               "material": "steel",
-              "resistanceM2KW": 4e-05,
+              "resistanceM2KW": 0.00004,
               "source": "literature",
               "thicknessM": 0.002,
               "heatCapacityJM2K": 7065,
@@ -4396,10 +6309,7 @@
     "presentation": {
       "defaultPose": "closed",
       "defaultClip": "open-close",
-      "defaultScale": 50,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 50
     },
     "exports": [
       "svg",

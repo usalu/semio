@@ -1,0 +1,1829 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "ceiling-diffuser",
+    "category": "appliances",
+    "title": {
+      "en": "Four-Way Square Ceiling Diffuser",
+      "de": "Quadratischer Vierwege-Deckenauslass"
+    },
+    "summary": {
+      "en": "A 0.595 m square four-way ceiling air diffuser in side view: a flange flush with the ceiling, stepped cones below and a round collar above; it supplies 300 m3/h of 18 degC air that spreads left and right along the ceiling.",
+      "de": "Ein quadratischer Vierwege-Deckenluftauslass von 0,595 m in der Seitenansicht: ein Flansch bündig mit der Decke, darunter Kegelstufen und darüber ein runder Kragen; er bläst 300 m3/h Luft von 18 °C ein, die sich links und rechts an der Decke entlang ausbreitet."
+    },
+    "tags": [
+      "diffuser",
+      "air-outlet",
+      "supply-air",
+      "ceiling",
+      "cooling",
+      "ventilation",
+      "air-conditioning",
+      "appliance",
+      "component"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G4)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "din-en-12238-2001",
+          "citation": "DIN EN 12238:2001 Ventilation for buildings - Air terminal devices - Aerodynamic testing and rating for mixed flow application (throw of a ceiling jet along the ceiling by the Coanda effect)."
+        },
+        {
+          "id": "vdi-2083-4-2019",
+          "citation": "VDI 2083 Part 4 and manufacturer data for square four-way ceiling diffusers of nominal size 600 (design flow 100 to 400 cubic metres per hour)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A square four-way ceiling diffuser of nominal size 600 seen from the side: a flange of 0.595 m by 0.595 m flush with the ceiling (12 mm thick), three stepped cones narrowing downwards to 0.23 m with a total depth of 0.07 m, and a round collar of 0.25 m width and 0.05 m height above the ceiling plane for the duct connection. The origin is the centre of the flange at the ceiling plane, the diffuser hangs below it. At level 1 it supplies 0.083 m3/s (300 m3/h) of air 8 K cooler than a 26 degC room, that is 18 degC, in four directions; the side view shows two of them (left and right) as 0.021 m3/s each. The jets leave horizontally under the flange and cling to the ceiling. The mass of 3.2 kg is rounded from this product class (authored estimate).",
+        "de": "Ein quadratischer Vierwege-Deckenauslass der Nennweite 600 von der Seite gesehen: ein Flansch von 0,595 m mal 0,595 m bündig mit der Decke (12 mm stark), drei nach unten auf 0,23 m schmaler werdende Kegelstufen mit einer Gesamttiefe von 0,07 m und oberhalb der Deckenebene ein runder Kragen von 0,25 m Breite und 0,05 m Höhe für den Kanalanschluss. Der Ursprung ist die Mitte des Flansches in der Deckenebene, der Auslass hängt darunter. Auf Stufe 1 bläst er 0,083 m3/s (300 m3/h) Luft ein, die 8 K kühler ist als ein Raum von 26 °C, also 18 °C, in vier Richtungen; die Seitenansicht zeigt zwei davon (links und rechts) mit je 0,021 m3/s. Die Strahlen verlassen den Auslass waagerecht unter dem Flansch und legen sich an die Decke an. Die Masse von 3,2 kg ist aus dieser Produktklasse gerundet (Schätzwert)."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.12,
+      "widthM": 0.595,
+      "depthM": 0.595,
+      "massKg": 3.2
+    },
+    "materials": [
+      {
+        "id": "powder-coated-steel",
+        "title": {
+          "en": "Powder-coated steel sheet",
+          "de": "Pulverbeschichtetes Stahlblech"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "galvanised-steel",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "body",
+      "bones": [
+        {
+          "id": "body",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Diffuser with collar",
+            "de": "Auslass mit Anschlusskragen"
+          },
+          "lengthM": 0.595,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.2,
+            "comX": 0,
+            "comY": -0.01,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "ceiling-hanger-left",
+        "bone": "body",
+        "x": -0.28,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Left hanger in the ceiling",
+          "de": "Linker Halter in der Decke"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016
+      },
+      {
+        "id": "ceiling-hanger-right",
+        "bone": "body",
+        "x": 0.28,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Right hanger in the ceiling",
+          "de": "Rechter Halter in der Decke"
+        },
+        "support": "roller",
+        "normalDeg": 90,
+        "footprintLengthM": 0.016,
+        "footprintWidthM": 0.016,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "outlet-left",
+        "bone": "body",
+        "x": -0.262,
+        "y": -0.022,
+        "kind": "emitter",
+        "title": {
+          "en": "Left outlet slot under the flange",
+          "de": "Linker Auslassschlitz unter dem Flansch"
+        }
+      },
+      {
+        "id": "outlet-right",
+        "bone": "body",
+        "x": 0.262,
+        "y": -0.022,
+        "kind": "emitter",
+        "title": {
+          "en": "Right outlet slot under the flange",
+          "de": "Rechter Auslassschlitz unter dem Flansch"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.05,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.012,
+              "w": 0.595,
+              "h": 0.012,
+              "r": 0.002,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.265,
+                  -0.012
+                ],
+                [
+                  0.265,
+                  -0.012
+                ],
+                [
+                  0.245,
+                  -0.032
+                ],
+                [
+                  -0.245,
+                  -0.032
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  -0.032
+                ],
+                [
+                  0.2,
+                  -0.032
+                ],
+                [
+                  0.18,
+                  -0.052
+                ],
+                [
+                  -0.18,
+                  -0.052
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-3",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.135,
+                  -0.052
+                ],
+                [
+                  0.135,
+                  -0.052
+                ],
+                [
+                  0.115,
+                  -0.07
+                ],
+                [
+                  -0.115,
+                  -0.07
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "slot-left",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.262,
+                  -0.0125
+                ],
+                [
+                  -0.205,
+                  -0.0325
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "slot-right",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  0.262,
+                  -0.0125
+                ],
+                [
+                  0.205,
+                  -0.0325
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.2975,
+              "w": 0.595,
+              "h": 0.595,
+              "r": 0.006,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "flange-edge",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  -0.285
+                ],
+                [
+                  0.285,
+                  -0.285
+                ],
+                [
+                  0.285,
+                  0.285
+                ],
+                [
+                  -0.285,
+                  0.285
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "screw-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": -0.27,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "screw-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": -0.27,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "screw-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": 0.27,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "screw-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 1.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": 0.27,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.125,
+              "ry": 0.125,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "opening",
+              "bone": "body",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.112,
+              "ry": 0.112
+            },
+            {
+              "id": "collar-bead",
+              "bone": "body",
+              "role": "detail",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.119,
+              "ry": 0.119,
+              "region": "collar",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.05,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-band",
+              "bone": "body",
+              "role": "detail",
+              "z": 2.95,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.125,
+                  0.026
+                ],
+                [
+                  0.125,
+                  0.026
+                ]
+              ],
+              "closed": false,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.012,
+              "w": 0.595,
+              "h": 0.012,
+              "r": 0.002,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.265,
+                  -0.012
+                ],
+                [
+                  0.265,
+                  -0.012
+                ],
+                [
+                  0.245,
+                  -0.032
+                ],
+                [
+                  -0.245,
+                  -0.032
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  -0.032
+                ],
+                [
+                  0.2,
+                  -0.032
+                ],
+                [
+                  0.18,
+                  -0.052
+                ],
+                [
+                  -0.18,
+                  -0.052
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-3",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.135,
+                  -0.052
+                ],
+                [
+                  0.135,
+                  -0.052
+                ],
+                [
+                  0.115,
+                  -0.07
+                ],
+                [
+                  -0.115,
+                  -0.07
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "slot-left",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.262,
+                  -0.0125
+                ],
+                [
+                  -0.205,
+                  -0.0325
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "slot-right",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  0.262,
+                  -0.0125
+                ],
+                [
+                  0.205,
+                  -0.0325
+                ]
+              ],
+              "closed": false,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.595 m square four-way ceiling diffuser in side view, 11.9 mm wide and 2.4 mm high on paper: a thin flange flush with the ceiling, three stepped cones narrowing downwards, and a short round collar on top that goes through the ceiling. Front: the same section as the side view, because the diffuser is square, with a clamp band on the collar. Plan, 11.9 mm square: the flange with its folded edge and four screws, the round collar with its bore and a bead on top; the cones lie hidden below the flange.",
+            "de": "Ein quadratischer Vierwege-Deckenauslass von 0,595 m in der Seitenansicht, auf Papier 11,9 mm breit und 2,4 mm hoch: ein dünner Flansch bündig mit der Decke, drei nach unten schmaler werdende Kegelstufen und oben ein kurzer runder Kragen, der durch die Decke geht. Vorderansicht: derselbe Schnitt wie in der Seitenansicht, weil der Auslass quadratisch ist, mit einem Spannband am Kragen. Grundriss, 11,9 mm im Quadrat: der Flansch mit umgelegtem Rand und vier Schrauben, der runde Kragen mit Öffnung und Wulst obenauf; die Kegel liegen verdeckt unter dem Flansch."
+          },
+          "retained": {
+            "en": "Flange of 12 mm, three cones of 20, 20 and 18 mm height stepping in by 65 mm each, the 250 mm collar of 50 mm height, and one slot line on each side that shows where the air leaves.",
+            "de": "Flansch von 12 mm, drei Kegel von 20, 20 und 18 mm Höhe, die jeweils 65 mm einrücken, der 250 mm breite Kragen von 50 mm Höhe und je eine Schlitzlinie auf jeder Seite, die zeigt, wo die Luft austritt."
+          },
+          "merged": {
+            "en": "The inner plate behind the cones and the deflector vanes are part of the cones.",
+            "de": "Die Innenplatte hinter den Kegeln und die Leitlamellen gehen in den Kegeln auf."
+          },
+          "omitted": {
+            "en": "The central screw, the neck damper and the flexible duct behind the collar. In the plan the three cones, the slots and the central screw are hidden under the flange.",
+            "de": "Die zentrale Schraube, die Drosselklappe im Hals und der flexible Kanal hinter dem Kragen. Im Grundriss sind die drei Kegel, die Schlitze und die zentrale Schraube vom Flansch verdeckt."
+          },
+          "thinElements": {
+            "en": "The flange is 12 mm (0.24 mm); the slot lines are 0.13 mm detail pens.",
+            "de": "Der Flansch ist 12 mm (0,24 mm) stark; die Schlitzlinien sind Linien mit dem 0,13-mm-Detailstift."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Flange 0.88, cones 0.8, 0.7 and 0.6, collar 0.5; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Flansch 0,88, Kegel 0,8, 0,7 und 0,6, Kragen 0,5; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Plate (flange and cones) and collar are two regions: in the thermal view the plate is cooled by the supply air behind it, and the air leaves left and right along the ceiling.",
+            "de": "Platte (Flansch und Kegel) und Kragen sind zwei Regionen: in der Thermalansicht wird die Platte von der Zuluft dahinter gekühlt, und die Luft tritt links und rechts an der Decke entlang aus."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.05,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.02,
+              "w": 0.595,
+              "h": 0.02,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.255,
+                  -0.02
+                ],
+                [
+                  0.255,
+                  -0.02
+                ],
+                [
+                  0.225,
+                  -0.045
+                ],
+                [
+                  -0.225,
+                  -0.045
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.18,
+                  -0.045
+                ],
+                [
+                  0.18,
+                  -0.045
+                ],
+                [
+                  0.12,
+                  -0.07
+                ],
+                [
+                  -0.12,
+                  -0.07
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.2975,
+              "w": 0.595,
+              "h": 0.595,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.125,
+              "ry": 0.125,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "opening",
+              "bone": "body",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.1,
+              "ry": 0.1
+            }
+          ],
+          "front": [
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.05,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.02,
+              "w": 0.595,
+              "h": 0.02,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-1",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.255,
+                  -0.02
+                ],
+                [
+                  0.255,
+                  -0.02
+                ],
+                [
+                  0.225,
+                  -0.045
+                ],
+                [
+                  -0.225,
+                  -0.045
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone-2",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.18,
+                  -0.045
+                ],
+                [
+                  0.18,
+                  -0.045
+                ],
+                [
+                  0.12,
+                  -0.07
+                ],
+                [
+                  -0.12,
+                  -0.07
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 6 mm wide and 1.2 mm high diffuser: a flange, two stepped cones and a short collar. Front: flange, two cones and collar as in the side view. Plan, 6 mm square: the flange as one square with the collar disc and its dark bore.",
+            "de": "Ein Auslass von 6 mm Breite und 1,2 mm Höhe: ein Flansch, zwei Kegelstufen und ein kurzer Kragen. Vorderansicht: Flansch, zwei Kegel und Kragen wie in der Seitenansicht. Grundriss, 6 mm im Quadrat: der Flansch als ein Quadrat mit der Kragenscheibe und ihrer dunklen Öffnung."
+          },
+          "retained": {
+            "en": "Flange, two cones (three merged into two), collar.",
+            "de": "Flansch, zwei Kegelstufen (aus drei zusammengeführt), Kragen."
+          },
+          "merged": {
+            "en": "The three cones of 1:50 become two.",
+            "de": "Die drei Kegel von 1:50 werden zu zwei."
+          },
+          "omitted": {
+            "en": "Slot lines. Screws, folded edge and collar bead in plan.",
+            "de": "Schlitzlinien. Schrauben, umgelegter Rand und Kragenwulst im Grundriss."
+          },
+          "thinElements": {
+            "en": "The flange is thickened from 12 to 20 mm (0.2 mm) so that it prints as a filled shape.",
+            "de": "Der Flansch ist von 12 auf 20 mm (0,2 mm) verstärkt, damit er als Fläche druckt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Flange 0.88, cones 0.75 and 0.65, collar 0.5; one body pen of 0.18 mm.",
+            "de": "Flansch 0,88, Kegel 0,75 und 0,65, Kragen 0,5; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Plate and collar stay two regions.",
+            "de": "Platte und Kragen bleiben zwei Regionen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.05,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.04,
+              "w": 0.595,
+              "h": 0.04,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.24,
+                  -0.04
+                ],
+                [
+                  0.24,
+                  -0.04
+                ],
+                [
+                  0.12,
+                  -0.07
+                ],
+                [
+                  -0.12,
+                  -0.07
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.2975,
+              "w": 0.595,
+              "h": 0.595,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.13,
+              "ry": 0.13,
+              "region": "collar",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "collar",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.05,
+              "region": "collar",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "flange",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "rect",
+              "x": -0.2975,
+              "y": -0.04,
+              "w": 0.595,
+              "h": 0.04,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "cone",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.24,
+                  -0.04
+                ],
+                [
+                  0.24,
+                  -0.04
+                ],
+                [
+                  0.12,
+                  -0.07
+                ],
+                [
+                  -0.12,
+                  -0.07
+                ]
+              ],
+              "closed": true,
+              "region": "plate",
+              "material": "powder-coated-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 3 mm wide and 0.6 mm high diffuser: a broad flange with one cone and a collar. Front: flange, one cone and collar. Plan, 3 mm square: a flange square with one collar disc.",
+            "de": "Ein Auslass von 3 mm Breite und 0,6 mm Höhe: ein breiter Flansch mit einem Kegel und einem Kragen. Vorderansicht: Flansch, ein Kegel und Kragen. Grundriss, 3 mm im Quadrat: ein Flanschquadrat mit einer Kragenscheibe."
+          },
+          "retained": {
+            "en": "Flange, one merged cone, collar.",
+            "de": "Flansch, ein zusammengeführter Kegel, Kragen."
+          },
+          "merged": {
+            "en": "All three cones become one trapezoid.",
+            "de": "Alle drei Kegel werden zu einem Trapez."
+          },
+          "omitted": {
+            "en": "Slot lines and cone steps. The collar bore in plan.",
+            "de": "Schlitzlinien und Kegelstufen. Die Kragenöffnung im Grundriss."
+          },
+          "thinElements": {
+            "en": "The flange is thickened to 40 mm (0.2 mm) and is therefore taller than in reality.",
+            "de": "Der Flansch ist auf 40 mm (0,2 mm) verstärkt und damit höher als in Wirklichkeit."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Flange 0.88, cone 0.7, collar 0.5; one body pen of 0.13 mm.",
+            "de": "Flansch 0,88, Kegel 0,7, Kragen 0,5; ein Körperstift von 0,13 mm."
+          },
+          "overlays": {
+            "en": "Plate and collar stay two regions.",
+            "de": "Platte und Kragen bleiben zwei Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the diffuser is 1.19 mm by 0.24 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the flange of 12 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+          "de": "Bei 1:500 ist der Auslass 1,19 mm mal 0,24 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, der Flansch von 12 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+        },
+        "limitingFeature": {
+          "en": "Flange of 12 mm",
+          "de": "Flansch von 12 mm"
+        },
+        "limitingSizeM": 0.012,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Supply air off",
+          "de": "Zuluft aus"
+        },
+        "description": {
+          "en": "The fan is off and the room air is at rest.",
+          "de": "Der Ventilator ist aus und die Raumluft ruht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "ceiling-hanger-left",
+          "ceiling-hanger-right"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 26
+              }
+            },
+            "collar": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "jet-left": 0,
+            "jet-right": 0
+          },
+          "operating": {
+            "supply": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "half",
+        "title": {
+          "en": "Half volume flow",
+          "de": "Halber Volumenstrom"
+        },
+        "description": {
+          "en": "A variable-volume box passes half of the design flow: 150 cubic metres per hour at 18 degC.",
+          "de": "Ein Variabel-Volumenstromregler lässt die Hälfte des Auslegungsstroms durch: 150 Kubikmeter je Stunde bei 18 °C."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "ceiling-hanger-left",
+          "ceiling-hanger-right"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 26
+              }
+            },
+            "collar": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "jet-left": 0.5,
+            "jet-right": 0.5
+          },
+          "operating": {
+            "supply": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "design",
+        "title": {
+          "en": "Design volume flow",
+          "de": "Auslegungsvolumenstrom"
+        },
+        "description": {
+          "en": "The diffuser supplies 300 cubic metres per hour of 18 degC air; the jets spread left and right along the ceiling.",
+          "de": "Der Auslass bläst 300 Kubikmeter je Stunde Luft von 18 °C ein; die Strahlen breiten sich links und rechts an der Decke aus."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "ceiling-hanger-left",
+          "ceiling-hanger-right"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 26
+              }
+            },
+            "collar": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "jet-left": 1,
+            "jet-right": 1
+          },
+          "operating": {
+            "supply": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "switch-on",
+        "title": {
+          "en": "Cooling supply switched on",
+          "de": "Kühlende Zuluft wird eingeschaltet"
+        },
+        "description": {
+          "en": "The supply air is switched on at the design flow after ten seconds; the face plate cools below room temperature and the jets spread along the ceiling.",
+          "de": "Die Zuluft wird nach zehn Sekunden mit dem Auslegungsstrom eingeschaltet; die Frontplatte kühlt unter die Raumtemperatur ab und die Strahlen breiten sich an der Decke aus."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 10,
+            "pose": "design",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "design",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "ceiling-hanger-left",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "ceiling-hanger-right",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "supply",
+            "fromS": 10,
+            "toS": 300,
+            "title": {
+              "en": "Cooling supply",
+              "de": "Kühlende Zuluft"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 10,
+            "kind": "operating",
+            "title": {
+              "en": "Supply air switched on",
+              "de": "Zuluft eingeschaltet"
+            },
+            "target": "supply"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:supply",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:jet-left",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:jet-right",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modulate",
+        "title": {
+          "en": "Variable volume flow and switch off",
+          "de": "Variabler Volumenstrom und Ausschalten"
+        },
+        "description": {
+          "en": "The diffuser runs at half flow, goes to the design flow after five minutes and is switched off after ten; the plate cools and warms again.",
+          "de": "Der Auslass läuft mit halbem Strom, geht nach fünf Minuten auf den Auslegungsstrom und wird nach zehn ausgeschaltet; die Platte kühlt ab und erwärmt sich wieder."
+        },
+        "durationS": 900,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "half",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "design",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 900,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "ceiling-hanger-left",
+            "fromS": 0,
+            "toS": 900
+          },
+          {
+            "anchor": "ceiling-hanger-right",
+            "fromS": 0,
+            "toS": 900
+          }
+        ],
+        "phases": [
+          {
+            "id": "half",
+            "fromS": 0,
+            "toS": 300,
+            "title": {
+              "en": "Half flow",
+              "de": "Halber Strom"
+            }
+          },
+          {
+            "id": "design",
+            "fromS": 300,
+            "toS": 600,
+            "title": {
+              "en": "Design flow",
+              "de": "Auslegungsstrom"
+            }
+          },
+          {
+            "id": "off",
+            "fromS": 600,
+            "toS": 900,
+            "title": {
+              "en": "Off, warming",
+              "de": "Aus, erwärmt sich"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 600,
+            "kind": "shutdown",
+            "title": {
+              "en": "Supply air switched off",
+              "de": "Zuluft ausgeschaltet"
+            },
+            "target": "supply"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:supply",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 300,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:jet-left",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 300,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:jet-right",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 300,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 26,
+        "meanRadiantTempC": 26,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "supply",
+          "title": {
+            "en": "Supply air",
+            "de": "Zuluft"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Half flow (150 m3/h)",
+                "de": "Halber Strom (150 m3/h)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Design flow (300 m3/h, 18 degC)",
+                "de": "Auslegungsstrom (300 m3/h, 18 °C)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "plate",
+          "title": {
+            "en": "Face plate and cones",
+            "de": "Frontplatte und Kegel"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "powder-coated-steel",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.595,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Powder-coated steel sheet 0.8 mm",
+                "de": "Pulverbeschichtetes Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "powder-coated-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3600,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3600,
+          "operating": {
+            "key": "supply",
+            "heatW": -25
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "collar",
+          "title": {
+            "en": "Round collar",
+            "de": "Runder Kragen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.25,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Galvanised steel 0.7 mm",
+                "de": "Verzinkter Stahl 0,7 mm"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.00002,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "jet-left",
+          "kind": "vent",
+          "title": {
+            "en": "Supply air jet leaving to the left along the ceiling",
+            "de": "Zuluftstrahl nach links an der Decke entlang"
+          },
+          "anchor": "outlet-left",
+          "directionDeg": 180,
+          "diameterM": 0.04,
+          "operatingKey": "supply",
+          "volumeFlowM3S": 0.0208,
+          "temperatureRiseK": -8,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "din-en-12238-2001"
+        },
+        {
+          "id": "jet-right",
+          "kind": "vent",
+          "title": {
+            "en": "Supply air jet leaving to the right along the ceiling",
+            "de": "Zuluftstrahl nach rechts an der Decke entlang"
+          },
+          "anchor": "outlet-right",
+          "directionDeg": 0,
+          "diameterM": 0.04,
+          "operatingKey": "supply",
+          "volumeFlowM3S": 0.0208,
+          "temperatureRiseK": -8,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "din-en-12238-2001"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The supply air is 8 K cooler than the room air of 26 degC at every level; the face plate is cooled with about 25 W at level 1 (inner heat transfer of about 8 W/m2K over 0.36 m2 and 8 K).",
+          "de": "Die Zuluft ist auf jeder Stufe 8 K kühler als die Raumluft von 26 °C; die Frontplatte wird auf Stufe 1 mit etwa 25 W gekühlt (innerer Wärmeübergang von etwa 8 W/m2K über 0,36 m2 und 8 K)."
+        },
+        {
+          "en": "The view shows two of the four jets (left and right); the two jets normal to the drawing plane are not drawn, so each emitter carries one quarter of the 300 m3/h.",
+          "de": "Die Ansicht zeigt zwei der vier Strahlen (links und rechts); die beiden Strahlen senkrecht zur Zeichenebene sind nicht gezeichnet, deshalb tragen die Emitter je ein Viertel der 300 m3/h."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "ceiling-hanger-left",
+        "ceiling-hanger-right"
+      ],
+      "assumptions": [
+        {
+          "en": "The 3.2 kg diffuser hangs on two ceiling hangers: the left one is a pin, the right one a roller.",
+          "de": "Der 3,2 kg schwere Auslass hängt an zwei Deckenhaltern: der linke ist ein Festlager, der rechte ein Rollenlager."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "design",
+      "defaultClip": "switch-on",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

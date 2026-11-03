@@ -230,42 +230,78 @@
     },
     "anchors": [
       {
-        "id": "foot-left",
+        "id": "foot-left-l",
         "bone": "frame",
         "x": -0.69,
-        "y": 0.0,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Left foot of the A-frame (front and rear coincide)",
-          "de": "Linker Fuß des A-Gestells (vorn und hinten fallen zusammen)"
+          "en": "Left trestle, left foot",
+          "de": "Linker Bock, linker Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.09,
-        "footprintWidthM": 1.4,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": 0.8
       },
       {
-        "id": "foot-right",
+        "id": "foot-left-r",
         "bone": "frame",
-        "x": 0.69,
-        "y": 0.0,
+        "x": -0.69,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Right foot of the A-frame",
-          "de": "Rechter Fuß des A-Gestells"
+          "en": "Left trestle, right foot",
+          "de": "Linker Bock, rechter Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.09,
-        "footprintWidthM": 1.4,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": -0.8
+      },
+      {
+        "id": "foot-right-l",
+        "bone": "frame",
+        "x": 0.69,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right trestle, left foot",
+          "de": "Rechter Bock, linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.09,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": 0.8
+      },
+      {
+        "id": "foot-right-r",
+        "bone": "frame",
+        "x": 0.69,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right trestle, right foot",
+          "de": "Rechter Bock, rechter Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.09,
+        "footprintWidthM": 0.05,
+        "frictionCoefficient": 0.5,
+        "z": -0.8
       },
       {
         "id": "seat-r",
         "bone": "bench-r",
-        "x": -0.26,
-        "y": -0.36,
+        "x": 0.12,
+        "y": 0.04,
         "kind": "load",
         "title": {
           "en": "Sitting point on the right bench",
@@ -275,8 +311,8 @@
       {
         "id": "seat-l",
         "bone": "bench-l",
-        "x": -0.66,
-        "y": 0.44,
+        "x": 0.12,
+        "y": -0.04,
         "kind": "load",
         "title": {
           "en": "Sitting point on the left bench",
@@ -286,8 +322,8 @@
       {
         "id": "table-edge",
         "bone": "top",
-        "x": 1.0,
-        "y": -0.67,
+        "x": 0.7,
+        "y": 0.04,
         "kind": "load",
         "title": {
           "en": "Test point at the table edge",
@@ -300,7 +336,7 @@
         "status": "authored",
         "denominator": 500,
         "validRange": {
-          "minDenominator": 351,
+          "minDenominator": 350,
           "maxDenominator": 1000
         },
         "pens": {
@@ -444,12 +480,312 @@
               "region": "hinges",
               "material": "steel-galvanised"
             }
+          ],
+          "front": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bench-seats",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  0.02
+                ],
+                [
+                  -0.11,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bench-seats",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  0.02
+                ],
+                [
+                  -0.11,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "slab",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top"
+              ],
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.9,
+              "y": 0.65,
+              "w": 1.8,
+              "h": 0.1
+            },
+            {
+              "id": "leg-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "a-frame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.8,
+                  0
+                ],
+                [
+                  0.8,
+                  0.66
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "a-frame",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.8,
+                  0
+                ],
+                [
+                  -0.8,
+                  0.66
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bench-seats",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  0.02
+                ],
+                [
+                  -0.11,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bench-seats",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  -0.02
+                ],
+                [
+                  0.3,
+                  0.02
+                ],
+                [
+                  -0.11,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "slab",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top"
+              ],
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.35,
+              "y": -0.9,
+              "w": 0.7,
+              "h": 1.8
+            },
+            {
+              "id": "leg-l-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "a-frame",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.22,
+                  0.8
+                ],
+                [
+                  -0.69,
+                  0.8
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-r-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "a-frame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.22,
+                  0.8
+                ],
+                [
+                  0.69,
+                  0.8
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-l-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "a-frame",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.22,
+                  -0.8
+                ],
+                [
+                  -0.69,
+                  -0.8
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-r-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "a-frame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.22,
+                  -0.8
+                ],
+                [
+                  0.69,
+                  -0.8
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Picnic table sign 3.0 x 1.5 mm in end view: top slab, two splayed leg strokes, two bench strokes, hinges.",
-            "de": "Picknicktisch-Zeichen 3,0 x 1,5 mm in der Stirnansicht: Plattenblock, zwei gespreizte Beinstriche, zwei Bankstriche, Scharniere."
+            "en": "Picnic table sign 3.0 x 1.5 mm in end view: top slab, two splayed leg strokes, two bench strokes, hinges. Front view: the long side with the table slab, the two A-frame legs as lines and the benches swinging up with their bones. Plan: the table slab with the two benches either side, extruded from their side profile so they swing up in both views, and the splayed frame legs as lines.",
+            "de": "Picknicktisch-Zeichen 3,0 x 1,5 mm in der Stirnansicht: Plattenblock, zwei gespreizte Beinstriche, zwei Bankstriche, Scharniere. Vorderansicht: die Längsseite mit Tischplatte, den zwei A-Rahmen-Beinen als Linien und den Bänken, die mit ihren Knochen hochschwingen. Grundriss: die Tischplatte mit den beiden Bänken zu beiden Seiten, gezeichnet aus ihrem Seitenprofil gezogen, so schwingen sie in beiden Ansichten hoch, und die gespreizten Rahmenbeine als Linien."
           },
           "retained": {
             "en": "The A-shaped legs, the top level 0.75 m, the benches at 0.42 m reaching beyond the feet.",
@@ -485,7 +821,7 @@
         "status": "authored",
         "denominator": 200,
         "validRange": {
-          "minDenominator": 151,
+          "minDenominator": 150,
           "maxDenominator": 350
         },
         "pens": {
@@ -666,12 +1002,372 @@
               "region": "hinges",
               "material": "steel-galvanised"
             }
+          ],
+          "front": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.06,
+              "y": 0.0,
+              "w": 0.36,
+              "h": 0.05,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  -0.05
+                ],
+                [
+                  0.3,
+                  -0.05
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "slab",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "a-frame"
+              ],
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.9,
+              "y": 0.665,
+              "w": 1.8,
+              "h": 0.085
+            },
+            {
+              "id": "leg-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.775,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.71
+            },
+            {
+              "id": "beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.775,
+              "y": 0.35,
+              "w": 0.05,
+              "h": 0.05
+            },
+            {
+              "id": "leg-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.825,
+              "y": 0.0,
+              "w": 0.05,
+              "h": 0.71
+            },
+            {
+              "id": "beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.825,
+              "y": 0.35,
+              "w": 0.05,
+              "h": 0.05
+            },
+            {
+              "id": "hinge-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "rect",
+              "x": 0.67,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1
+            },
+            {
+              "id": "hinge-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "rect",
+              "x": -0.77,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1
+            }
+          ],
+          "plan": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.06,
+              "y": 0.0,
+              "w": 0.36,
+              "h": 0.05,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  -0.05
+                ],
+                [
+                  0.3,
+                  -0.05
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "slab",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "table-top",
+                "a-frame"
+              ],
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.35,
+              "y": -0.9,
+              "w": 0.7,
+              "h": 1.8
+            },
+            {
+              "id": "leg-l-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.775
+                ],
+                [
+                  -0.19,
+                  0.775
+                ],
+                [
+                  -0.66,
+                  0.775
+                ],
+                [
+                  -0.72,
+                  0.775
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leg-r-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.25,
+                  0.775
+                ],
+                [
+                  0.19,
+                  0.775
+                ],
+                [
+                  0.66,
+                  0.775
+                ],
+                [
+                  0.72,
+                  0.775
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leg-l-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  -0.775
+                ],
+                [
+                  -0.19,
+                  -0.775
+                ],
+                [
+                  -0.66,
+                  -0.775
+                ],
+                [
+                  -0.72,
+                  -0.775
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leg-r-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.25,
+                  -0.775
+                ],
+                [
+                  0.19,
+                  -0.775
+                ],
+                [
+                  0.66,
+                  -0.775
+                ],
+                [
+                  0.72,
+                  -0.775
+                ]
+              ],
+              "closed": true
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Picnic table 7.6 x 3.8 mm: top slab with beam, two leg polygons, bench beam, two benches, two hinge plates.",
-            "de": "Picknicktisch 7,6 x 3,8 mm: Plattenblock mit Riegel, zwei Beinpolygone, Bankriegel, zwei Bänke, zwei Scharnierplatten."
+            "en": "Picnic table 7.6 x 3.8 mm: top slab with beam, two leg polygons, bench beam, two benches, two hinge plates. Front view: the long side with the slab, the two A-frames seen edge-on with their cross beams, the hinges and the benches swinging up with their bones. Plan: the slab, the benches extruded from their side profile so they swing up in both views and the frame legs.",
+            "de": "Picknicktisch 7,6 x 3,8 mm: Plattenblock mit Riegel, zwei Beinpolygone, Bankriegel, zwei Bänke, zwei Scharnierplatten. Vorderansicht: die Längsseite mit Tischplatte, den zwei A-Rahmen von der Kante mit ihren Querbalken, den Scharnieren und den Bänken, die mit ihren Knochen hochschwingen. Grundriss: die Tischplatte, die Bänke aus ihrem Seitenprofil gezogen, so schwingen sie in beiden Ansichten hoch, und die Rahmenbeine."
           },
           "retained": {
             "en": "A-frame legs, benches as planks (folding), hinge plates.",
@@ -707,7 +1403,7 @@
         "status": "authored",
         "denominator": 100,
         "validRange": {
-          "minDenominator": 76,
+          "minDenominator": 75,
           "maxDenominator": 150
         },
         "pens": {
@@ -900,12 +1596,366 @@
               "region": "hinges",
               "material": "steel-galvanised"
             }
+          ],
+          "front": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.06,
+              "y": 0.0,
+              "w": 0.36,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  -0.04
+                ],
+                [
+                  0.3,
+                  -0.04
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.9,
+              "y": 0.71,
+              "w": 1.8,
+              "h": 0.04
+            },
+            {
+              "id": "top-beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.7775,
+              "y": 0.665,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "leg-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.7775,
+              "y": 0.0,
+              "w": 0.045,
+              "h": 0.665
+            },
+            {
+              "id": "beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.7775,
+              "y": 0.355,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "hinge-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "rect",
+              "x": 0.67,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1
+            },
+            {
+              "id": "top-beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.8225,
+              "y": 0.665,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "leg-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.8225,
+              "y": 0.0,
+              "w": 0.045,
+              "h": 0.665
+            },
+            {
+              "id": "beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.8225,
+              "y": 0.355,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "hinge-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "rect",
+              "x": -0.77,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1
+            }
+          ],
+          "plan": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.06,
+              "y": 0.0,
+              "w": 0.36,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  0.0
+                ],
+                [
+                  -0.06,
+                  -0.04
+                ],
+                [
+                  0.3,
+                  -0.04
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.35,
+              "y": -0.9,
+              "w": 0.7,
+              "h": 1.8
+            },
+            {
+              "id": "leg-l-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.72,
+              "y": 0.7775,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "leg-r-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.7775,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "top-beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.7775,
+              "w": 0.6,
+              "h": 0.045
+            },
+            {
+              "id": "leg-l-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.8225,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "leg-r-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.8225,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "top-beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.8225,
+              "w": 0.6,
+              "h": 0.045
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Picnic table 15.2 x 7.5 mm with all members at real size: top planks, top beam, legs, bench beam, benches, hinges.",
-            "de": "Picknicktisch 15,2 x 7,5 mm mit allen Bauteilen in Realgröße: Tischplanken, Plattenriegel, Beine, Bankriegel, Bänke, Scharniere."
+            "en": "Picnic table 15.2 x 7.5 mm with all members at real size: top planks, top beam, legs, bench beam, benches, hinges. Front view: the slab, the two A-frames seen edge-on with top beam, leg, cross beam and hinge, and the two benches swinging up with their bones. Plan: the slab, the benches extruded from their side profile so they swing up in both views, and the frame legs and top beams below.",
+            "de": "Picknicktisch 15,2 x 7,5 mm mit allen Bauteilen in Realgröße: Tischplanken, Plattenriegel, Beine, Bankriegel, Bänke, Scharniere. Vorderansicht: die Tischplatte, die zwei A-Rahmen von der Kante mit Kopfbalken, Bein, Querbalken und Scharnier und die zwei Bänke, die mit ihren Knochen hochschwingen. Grundriss: die Tischplatte, die Bänke aus ihrem Seitenprofil gezogen, so schwingen sie in beiden Ansichten hoch, und darunter die Rahmenbeine und Kopfbalken."
           },
           "retained": {
             "en": "Real thicknesses 40 mm planks, 45 mm beams, 60 mm legs.",
@@ -1204,12 +2254,488 @@
               "material": "steel-galvanised",
               "penMm": 0.13
             }
+          ],
+          "front": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "path",
+              "d": "M -0.06 0 L -0.06 0.03 Q -0.06 0.04 -0.05 0.04 L 0.29 0.04 Q 0.3 0.04 0.3 0.03 L 0.3 0 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "path",
+              "d": "M 0.3 0 L 0.3 -0.03 Q 0.3 -0.04 0.29 -0.04 L -0.05 -0.04 Q -0.06 -0.04 -0.06 -0.03 L -0.06 0 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.9,
+                  0.748
+                ],
+                [
+                  -0.9,
+                  0.718
+                ],
+                [
+                  -0.892,
+                  0.71
+                ],
+                [
+                  0.892,
+                  0.71
+                ],
+                [
+                  0.9,
+                  0.718
+                ],
+                [
+                  0.9,
+                  0.748
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "top-beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": 0.7775,
+              "y": 0.665,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "leg-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": 0.7775,
+              "y": 0.0,
+              "w": 0.045,
+              "h": 0.665
+            },
+            {
+              "id": "beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": 0.7775,
+              "y": 0.355,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "hinge-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "rect",
+              "x": 0.67,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1,
+              "r": 0.004
+            },
+            {
+              "id": "screw-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.1,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "ellipse",
+              "cx": 0.72,
+              "cy": 0.4,
+              "rx": 0.009,
+              "ry": 0.009,
+              "penMm": 0.13
+            },
+            {
+              "id": "top-beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.8225,
+              "y": 0.665,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "leg-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": -0.8225,
+              "y": 0.0,
+              "w": 0.045,
+              "h": 0.665
+            },
+            {
+              "id": "beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.8225,
+              "y": 0.355,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "hinge-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.2,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "rect",
+              "x": -0.77,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1,
+              "r": 0.004
+            },
+            {
+              "id": "screw-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.1,
+              "region": "hinges",
+              "material": "steel-galvanised",
+              "kind": "ellipse",
+              "cx": -0.72,
+              "cy": 0.4,
+              "rx": 0.009,
+              "ry": 0.009,
+              "penMm": 0.13
+            }
+          ],
+          "plan": [
+            {
+              "id": "bench-r",
+              "bone": "bench-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "path",
+              "d": "M -0.06 0 L -0.06 0.03 Q -0.06 0.04 -0.05 0.04 L 0.29 0.04 Q 0.3 0.04 0.3 0.03 L 0.3 0 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "bench-l",
+              "bone": "bench-l",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "bench-seats",
+              "material": "pine-timber",
+              "kind": "path",
+              "d": "M 0.3 0 L 0.3 -0.03 Q 0.3 -0.04 0.29 -0.04 L -0.05 -0.04 Q -0.06 -0.04 -0.06 -0.03 L -0.06 0 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.85,
+                "z1": 0.85
+              }
+            },
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-top",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.35,
+              "y": -0.9,
+              "w": 0.7,
+              "h": 1.8,
+              "r": 0.008
+            },
+            {
+              "id": "top-plank-0",
+              "bone": "top",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.21,
+                  -0.89
+                ],
+                [
+                  -0.21,
+                  0.89
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-plank-1",
+              "bone": "top",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  -0.89
+                ],
+                [
+                  -0.07,
+                  0.89
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-plank-2",
+              "bone": "top",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "poly",
+              "points": [
+                [
+                  0.07,
+                  -0.89
+                ],
+                [
+                  0.07,
+                  0.89
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-plank-3",
+              "bone": "top",
+              "role": "texture",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.4,
+              "region": "table-top",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "poly",
+              "points": [
+                [
+                  0.21,
+                  -0.89
+                ],
+                [
+                  0.21,
+                  0.89
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "leg-l-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": -0.72,
+              "y": 0.7775,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "leg-r-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.7775,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "top-beam-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.7775,
+              "w": 0.6,
+              "h": 0.045
+            },
+            {
+              "id": "leg-l-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.8225,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "leg-r-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.8225,
+              "w": 0.53,
+              "h": 0.045
+            },
+            {
+              "id": "top-beam-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.8225,
+              "w": 0.6,
+              "h": 0.045
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Picnic table 30 x 15 mm with grain on legs and beams, planks at real thickness and hinge plates.",
-            "de": "Picknicktisch 30 x 15 mm mit Maserung auf Beinen und Riegeln, Bohlen in Realstärke und Scharnierplatten."
+            "en": "Picnic table 30 x 15 mm with grain on legs and beams, planks at real thickness and hinge plates. Front view: the slab with its chamfer, the two A-frames seen edge-on with top beam, leg, cross beam, hinge plate and screw, and the two rounded benches swinging up with their bones. Plan: the slab with plank joints, the benches extruded from their side profile so they swing up in both views, and below them the frame legs and top beams, which show as soon as the benches are folded away.",
+            "de": "Picknicktisch 30 x 15 mm mit Maserung auf Beinen und Riegeln, Bohlen in Realstärke und Scharnierplatten. Vorderansicht: die gefaste Tischplatte, die zwei A-Rahmen von der Kante mit Kopfbalken, Bein, Querbalken, Scharnierplatte und Schraube und die zwei abgerundeten Bänke, die mit ihren Knochen hochschwingen. Grundriss: die Tischplatte mit Brettfugen, die Bänke aus ihrem Seitenprofil gezogen, so schwingen sie in beiden Ansichten hoch, und darunter die Rahmenbeine und Kopfbalken, die sichtbar werden, sobald die Bänke weggeklappt sind."
           },
           "retained": {
             "en": "As at 1:100 plus grain hatching along the legs and beams.",
@@ -1244,14 +2770,14 @@
     },
     "symbols": [
       {
-        "id": "picnic-plan",
+        "id": "picnic-table-symbol",
         "title": {
-          "en": "Picnic table plan symbol",
-          "de": "Picknicktisch-Grundrisssymbol"
+          "en": "Picnic table symbol, true extent",
+          "de": "Picknicktisch-Symbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "Floor-plan sign of the table with both benches: top 1.80 x 0.70 m between two benches of 0.30 m.",
-          "de": "Grundrisszeichen des Tisches mit beiden Bänken: Platte 1,80 x 0,70 m zwischen zwei Bänken von 0,30 m."
+          "en": "The picnic table with deployed benches in all three views: top 0.70 x 1.80 m at 0.75 m, two benches at 0.44 m, two A-frame trestles with a cross beam.",
+          "de": "Der Picknicktisch mit ausgeklappten Bänken in allen drei Ansichten: Platte 0,70 x 1,80 m auf 0,75 m, zwei Bänke auf 0,44 m, zwei A-Böcke mit Querbalken."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -1269,63 +2795,274 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
-          "plan": [
+          "elevation": [
             {
-              "id": "plan-top",
+              "id": "top",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.35,
+              "y": 0.71,
+              "w": 0.7,
+              "h": 0.04
+            },
+            {
+              "id": "top-beam",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.3,
+              "y": 0.665,
+              "w": 0.6,
+              "h": 0.045
+            },
+            {
+              "id": "leg-l",
               "bone": "ground",
               "role": "body",
               "z": 2,
               "filled": true,
-              "tone": 0.9,
+              "tone": 0.85,
               "kind": "poly",
               "points": [
                 [
-                  -0.35,
-                  -0.9
+                  -0.76,
+                  0
                 ],
                 [
-                  0.35,
-                  -0.9
+                  -0.71,
+                  0
                 ],
                 [
-                  0.35,
-                  0.9
+                  -0.175,
+                  0.665
                 ],
                 [
-                  -0.35,
-                  0.9
+                  -0.225,
+                  0.665
                 ]
               ],
               "closed": true
             },
+            {
+              "id": "leg-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "poly",
+              "points": [
+                [
+                  0.76,
+                  0
+                ],
+                [
+                  0.71,
+                  0
+                ],
+                [
+                  0.175,
+                  0.665
+                ],
+                [
+                  0.225,
+                  0.665
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "beam",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.48,
+              "y": 0.355,
+              "w": 0.96,
+              "h": 0.045
+            },
+            {
+              "id": "bench-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.76,
+              "y": 0.4,
+              "w": 0.36,
+              "h": 0.04
+            },
+            {
+              "id": "bench-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.4,
+              "y": 0.4,
+              "w": 0.36,
+              "h": 0.04
+            },
+            {
+              "id": "hinge-l",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0.34,
+              "w": 0.08,
+              "h": 0.1
+            },
+            {
+              "id": "hinge-r",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.42,
+              "y": 0.34,
+              "w": 0.08,
+              "h": 0.1
+            }
+          ],
+          "front": [
+            {
+              "id": "top",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.9,
+              "y": 0.71,
+              "w": 1.8,
+              "h": 0.04
+            },
+            {
+              "id": "bench",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.85,
+              "y": 0.4,
+              "w": 1.7,
+              "h": 0.04
+            },
+            {
+              "id": "trestle-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.777,
+              "y": 0,
+              "w": 0.046,
+              "h": 0.665
+            },
+            {
+              "id": "trestle-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.823,
+              "y": 0,
+              "w": 0.046,
+              "h": 0.665
+            },
+            {
+              "id": "beam-l",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.777,
+              "y": 0.355,
+              "w": 0.046,
+              "h": 0.045
+            },
+            {
+              "id": "beam-r",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.823,
+              "y": 0.355,
+              "w": 0.046,
+              "h": 0.045
+            },
+            {
+              "id": "hinge-l",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.67,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1
+            },
+            {
+              "id": "hinge-r",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.77,
+              "y": 0.34,
+              "w": 0.1,
+              "h": 0.1
+            }
+          ],
+          "plan": [
             {
               "id": "plan-bench-r",
               "bone": "ground",
               "role": "body",
               "z": 1,
               "filled": true,
-              "tone": 0.8,
-              "kind": "poly",
-              "points": [
-                [
-                  0.46,
-                  -0.9
-                ],
-                [
-                  0.76,
-                  -0.9
-                ],
-                [
-                  0.76,
-                  0.9
-                ],
-                [
-                  0.46,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.4,
+              "y": -0.85,
+              "w": 0.36,
+              "h": 1.7
             },
             {
               "id": "plan-bench-l",
@@ -1333,33 +3070,83 @@
               "role": "body",
               "z": 1,
               "filled": true,
-              "tone": 0.8,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.76,
-                  -0.9
-                ],
-                [
-                  -0.46,
-                  -0.9
-                ],
-                [
-                  -0.46,
-                  0.9
-                ],
-                [
-                  -0.76,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.76,
+              "y": -0.85,
+              "w": 0.36,
+              "h": 1.7
+            },
+            {
+              "id": "plan-top",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.35,
+              "y": -0.9,
+              "w": 0.7,
+              "h": 1.8
+            },
+            {
+              "id": "leg-l-0",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.72,
+              "y": 0.777,
+              "w": 0.53,
+              "h": 0.046
+            },
+            {
+              "id": "leg-r-0",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.777,
+              "w": 0.53,
+              "h": 0.046
+            },
+            {
+              "id": "leg-l-1",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.823,
+              "w": 0.53,
+              "h": 0.046
+            },
+            {
+              "id": "leg-r-1",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.823,
+              "w": 0.53,
+              "h": 0.046
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size: x across the table -0.76 to 0.76 m, y along the table -0.90 to 0.90 m; benches in the deployed position.",
-          "de": "Modellmeter in Originalgröße: x quer -0,76 bis 0,76 m, y längs -0,90 bis 0,90 m; Bänke in Sitzstellung."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. x runs across the table, the 1.80 m length runs laterally; benches in the deployed position.",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. x läuft quer zum Tisch, die Länge von 1,80 m verläuft seitlich; Bänke ausgeklappt."
         }
       }
     ],
@@ -1377,25 +3164,27 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.9
             },
             "bench-seats": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.55
             },
             "a-frame": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "hinges": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             }
           },
@@ -1423,25 +3212,27 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.9
             },
             "bench-seats": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.25
             },
             "a-frame": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "hinges": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             }
           },
@@ -1462,8 +3253,10 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
@@ -1484,11 +3277,11 @@
               }
             },
             "a-frame": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "hinges": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             }
           },
@@ -1503,8 +3296,8 @@
               "de": "Zwei Personen auf der rechten Bank (2 x 75 kg)"
             },
             "anchor": "seat-r",
-            "fxN": 0.0,
-            "fyN": -1471.0,
+            "fxN": 0,
+            "fyN": -1471,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
           },
@@ -1516,8 +3309,8 @@
               "de": "Zwei Personen auf der linken Bank (2 x 75 kg)"
             },
             "anchor": "seat-l",
-            "fxN": 0.0,
-            "fyN": -1471.0,
+            "fxN": 0,
+            "fyN": -1471,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
           },
@@ -1535,7 +3328,7 @@
               "wxNPerM": 0,
               "wyNPerM": -540
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1555,25 +3348,27 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.9
             },
             "bench-seats": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.55
             },
             "a-frame": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "hinges": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             }
           },
@@ -1588,7 +3383,7 @@
               "de": "Statische Sitzprüflast (1600 N)"
             },
             "anchor": "seat-r",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -1600,
             "source": "authored-estimate",
             "reference": "en-581-2"
@@ -1616,25 +3411,27 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "table-top": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.9
             },
             "bench-seats": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4
             },
             "a-frame": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "hinges": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             }
           },
@@ -1654,7 +3451,7 @@
           "en": "Both benches swing up on their hinges and hang down against the A-frames in 3 s.",
           "de": "Beide Bänke schwingen an ihren Scharnieren hoch und hängen in 3 s an den A-Gestellen."
         },
-        "durationS": 3.0,
+        "durationS": 3,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1670,28 +3467,38 @@
             "ease": "smooth"
           },
           {
-            "t": 3.0,
+            "t": 3,
             "pose": "stowed",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-left-l",
             "fromS": 0,
-            "toS": 3.0
+            "toS": 3
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-left-r",
             "fromS": 0,
-            "toS": 3.0
+            "toS": 3
+          },
+          {
+            "anchor": "foot-right-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "foot-right-r",
+            "fromS": 0,
+            "toS": 3
           }
         ],
         "phases": [
           {
             "id": "swing",
             "fromS": 0,
-            "toS": 3.0,
+            "toS": 3,
             "title": {
               "en": "Swing",
               "de": "Schwenken"
@@ -1700,7 +3507,7 @@
         ],
         "events": [
           {
-            "t": 3.0,
+            "t": 3,
             "kind": "motion",
             "title": {
               "en": "Benches hang stowed",
@@ -1718,7 +3525,7 @@
                 "v": 0.55
               },
               {
-                "t": 3.0,
+                "t": 3,
                 "v": 0.25
               }
             ]
@@ -1735,7 +3542,7 @@
           "en": "Both benches are lowered into the seat position.",
           "de": "Beide Bänke werden in die Sitzstellung heruntergeklappt."
         },
-        "durationS": 3.0,
+        "durationS": 3,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1751,28 +3558,38 @@
             "ease": "smooth"
           },
           {
-            "t": 3.0,
+            "t": 3,
             "pose": "deployed",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-left-l",
             "fromS": 0,
-            "toS": 3.0
+            "toS": 3
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-left-r",
             "fromS": 0,
-            "toS": 3.0
+            "toS": 3
+          },
+          {
+            "anchor": "foot-right-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "foot-right-r",
+            "fromS": 0,
+            "toS": 3
           }
         ],
         "phases": [
           {
             "id": "swing",
             "fromS": 0,
-            "toS": 3.0,
+            "toS": 3,
             "title": {
               "en": "Swing",
               "de": "Schwenken"
@@ -1781,7 +3598,7 @@
         ],
         "events": [
           {
-            "t": 3.0,
+            "t": 3,
             "kind": "motion",
             "title": {
               "en": "Benches rest on the beams",
@@ -1801,7 +3618,7 @@
           "en": "Two adults sit on each bench one after another (four persons, 5.9 kN in total).",
           "de": "Zwei Erwachsene setzen sich nacheinander auf jede Bank (vier Personen, insgesamt 5,9 kN)."
         },
-        "durationS": 5.0,
+        "durationS": 5,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1812,28 +3629,38 @@
             "ease": "smooth"
           },
           {
-            "t": 5.0,
+            "t": 5,
             "pose": "occupied",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-left-l",
             "fromS": 0,
-            "toS": 5.0
+            "toS": 5
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-left-r",
             "fromS": 0,
-            "toS": 5.0
+            "toS": 5
+          },
+          {
+            "anchor": "foot-right-l",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "foot-right-r",
+            "fromS": 0,
+            "toS": 5
           }
         ],
         "phases": [
           {
             "id": "sit",
             "fromS": 0,
-            "toS": 5.0,
+            "toS": 5,
             "title": {
               "en": "Sitting",
               "de": "Hinsetzen"
@@ -1842,7 +3669,7 @@
         ],
         "events": [
           {
-            "t": 1.0,
+            "t": 1,
             "kind": "load-on",
             "title": {
               "en": "Right bench occupied",
@@ -1860,7 +3687,7 @@
             "target": "sitters-l"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "kind": "load-on",
             "title": {
               "en": "Table set",
@@ -1869,7 +3696,7 @@
             "target": "table-setting"
           },
           {
-            "t": 1.0,
+            "t": 1,
             "kind": "thermal",
             "title": {
               "en": "Benches take up 30 degC contact heat",
@@ -1891,11 +3718,11 @@
                 "v": 0
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 1
               },
               {
-                "t": 5.0,
+                "t": 5,
                 "v": 1
               }
             ]
@@ -1917,7 +3744,7 @@
                 "v": 1
               },
               {
-                "t": 5.0,
+                "t": 5,
                 "v": 1
               }
             ]
@@ -1939,7 +3766,7 @@
                 "v": 1
               },
               {
-                "t": 5.0,
+                "t": 5,
                 "v": 1
               }
             ]
@@ -2118,13 +3945,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "foot-left",
-        "foot-right"
+        "foot-left-l",
+        "foot-left-r",
+        "foot-right-l",
+        "foot-right-r"
       ],
       "assumptions": [
         {
-          "en": "End elevation: the A-frame (legs, top beam, bench beam) is a rigid body on two foot contacts; the top and the two benches are bodies on it, the benches on revolute hinges (0 to 95 degrees).",
-          "de": "Stirnansicht: das A-Gestell (Beine, Plattenriegel, Bankriegel) ist ein starrer Körper auf zwei Fußkontakten; Platte und beide Bänke sind Körper darauf, die Bänke an Drehgelenken (0 bis 95 Grad)."
+          "en": "End elevation: the A-frame (legs, top beam, bench beam) is a rigid body on four foot contacts (two trestles at z = +-0.8 m, feet at x = +-0.69 m); the top and the two benches are bodies on it, the benches on revolute hinges (0 to 95 degrees).",
+          "de": "Stirnansicht: das A-Gestell (Beine, Plattenriegel, Bankriegel) ist ein starrer Körper auf vier Fußkontakten (zwei Böcke bei z = +-0,8 m, Füße bei x = +-0,69 m); Platte und beide Bänke sind Körper darauf, die Bänke an Drehgelenken (0 bis 95 Grad)."
         },
         {
           "en": "Occupant loads are totals over the table length (3D); distributed loads are per metre of the elevation width (table setting 0.3 kN/m2 x 1.8 m = 540 N/m, authored-estimate).",
@@ -2140,10 +3969,7 @@
     "presentation": {
       "defaultPose": "deployed",
       "defaultClip": "fold-benches",
-      "defaultScale": 50,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 50
     },
     "exports": [
       "svg",

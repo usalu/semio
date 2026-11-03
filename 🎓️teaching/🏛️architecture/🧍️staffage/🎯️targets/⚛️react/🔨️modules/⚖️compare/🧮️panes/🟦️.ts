@@ -2,9 +2,9 @@
  *
  * @see ../../🗺️routing/🟦️.ts — `ComparePane`, `CompareState` and their address parameters
  */
-import { VIEWS } from "@teaching/staffage";
-import type { Asset, EvaluationQuery, Slug, View } from "@teaching/staffage";
-import { COMPARE_LIMITS, type ComparePane } from "../../🗺️routing/🟦️.ts";
+import { VIEWPOINTS, VIEWS } from "@teaching/staffage";
+import type { Asset, EvaluationQuery, Slug, View, Viewpoint } from "@teaching/staffage";
+import { COMPARE_LIMITS, type CompareState, type ComparePane, type ViewerState } from "../../🗺️routing/🟦️.ts";
 import type { Selection } from "../../💾️persistence/🟦️.ts";
 
 /** 🎞️ The views a same-asset comparison walks through, in order. */
@@ -26,27 +26,37 @@ export function defaultPanes(ready: readonly Slug[], preferred: Slug | undefined
   if (ready.length === 0) return [];
   const wanted = preferred !== undefined && ready.includes(preferred);
   const first = wanted ? preferred : ready[0]!;
-  if (ready.length === 1 || wanted) return [{ asset: first, view: "dark-line", selection: null }, { asset: first, view: "thermal", selection: null }];
-  return [{ asset: ready[0]!, view: "dark-line", selection: null }, { asset: ready[1]!, view: "dark-line", selection: null }];
+  if (ready.length === 1 || wanted) return [{ asset: first, view: "dark-line", viewpoint: "elevation", selection: null }, { asset: first, view: "thermal", viewpoint: "elevation", selection: null }];
+  return [{ asset: ready[0]!, view: "dark-line", viewpoint: "elevation", selection: null }, { asset: ready[1]!, view: "dark-line", viewpoint: "elevation", selection: null }];
+}
+
+/** 🔗️ The comparison the asset page links to: the asset in the dark line and the thermal representation, at the viewer's viewpoint, pose or clip, time and scale. */
+export function comparisonOf(asset: Slug, viewer: Pick<ViewerState, "viewpoint" | "selection" | "timeS" | "scale">): CompareState {
+  return { panes: (["dark-line", "thermal"] as const).map((view) => ({ asset, view, viewpoint: viewer.viewpoint, selection: viewer.selection })), scale: viewer.scale, timeS: viewer.timeS };
 }
 
 /** 🪞️ One asset in `count` different views. */
-export function sameAssetAcrossViews(asset: Slug, count: number, selection: Selection | null = null): readonly ComparePane[] {
+export function sameAssetAcrossViews(asset: Slug, count: number, selection: Selection | null = null, viewpoint: Viewpoint = "elevation"): readonly ComparePane[] {
   const views = [...ACROSS_VIEWS, ...VIEWS.filter((view) => !ACROSS_VIEWS.includes(view))];
-  return views.slice(0, Math.min(Math.max(count, COMPARE_LIMITS.min), COMPARE_LIMITS.max)).map((view) => ({ asset, view, selection }));
+  return views.slice(0, Math.min(Math.max(count, COMPARE_LIMITS.min), COMPARE_LIMITS.max)).map((view) => ({ asset, view, viewpoint, selection }));
+}
+
+/** 📐️ One asset in the three viewpoints, side elevation, front elevation and plan, in one representation, at one selection: one physical state seen three ways. */
+export function sameAssetAcrossViewpoints(asset: Slug, view: View, selection: Selection | null = null): readonly ComparePane[] {
+  return VIEWPOINTS.map((viewpoint) => ({ asset, view, viewpoint, selection }));
 }
 
 /** 👥️ `count` different assets in one view, starting with `first`. */
-export function differentAssetsSameView(ready: readonly Slug[], first: Slug, view: View, count: number): readonly ComparePane[] {
+export function differentAssetsSameView(ready: readonly Slug[], first: Slug, view: View, count: number, viewpoint: Viewpoint = "elevation"): readonly ComparePane[] {
   const order = [first, ...ready.filter((id) => id !== first)];
-  return order.slice(0, Math.min(Math.max(count, COMPARE_LIMITS.min), COMPARE_LIMITS.max)).map((asset) => ({ asset, view, selection: null }));
+  return order.slice(0, Math.min(Math.max(count, COMPARE_LIMITS.min), COMPARE_LIMITS.max)).map((asset) => ({ asset, view, viewpoint, selection: null }));
 }
 
 /** ➕️ A pane to append: the last pane's asset in the next view not yet shown. */
 export function nextPane(panes: readonly ComparePane[]): ComparePane {
   const last = panes[panes.length - 1]!;
   const used = new Set(panes.filter((pane) => pane.asset === last.asset).map((pane) => pane.view));
-  return { asset: last.asset, view: VIEWS.find((view) => !used.has(view)) ?? last.view, selection: null };
+  return { asset: last.asset, view: VIEWS.find((view) => !used.has(view)) ?? last.view, viewpoint: last.viewpoint, selection: null };
 }
 
 /** 🔁️ The first two panes exchanged. */

@@ -1,0 +1,1 @@
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*fk*loop.py*' -or $_.CommandLine -like '*while True: pass*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }

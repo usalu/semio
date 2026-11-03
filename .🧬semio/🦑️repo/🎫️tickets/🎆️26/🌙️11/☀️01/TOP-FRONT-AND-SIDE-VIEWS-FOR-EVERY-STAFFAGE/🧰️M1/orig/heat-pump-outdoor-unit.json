@@ -1,0 +1,2945 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "heat-pump-outdoor-unit",
+  "category": "machinery",
+  "title": {
+   "en": "Air-source heat pump outdoor unit, 12 kW",
+   "de": "Luft-Wasser-Wärmepumpe Außengerät, 12 kW"
+  },
+  "summary": {
+   "en": "A 12 kW air-source heat pump outdoor unit in side elevation: the louvred coil guard, front fan outlet with an adjustable guide vane and a hinged service lid. In heating mode the fan blows air cooled by 5 K, in cooling mode air warmed by 7 K; a defrost cycle releases vapour from the coil.",
+   "de": "Ein Luft-Wasser-Wärmepumpen-Außengerät von 12 kW in der Seitenansicht: Lamellenschutz des Wärmetauschers, vorderer Lüfterausblas mit verstellbarer Leitlamelle und angeschlagener Wartungsdeckel. Im Heizbetrieb bläst der Lüfter um 5 K abgekühlte Luft, im Kühlbetrieb um 7 K erwärmte; ein Abtauzyklus setzt Dampf vom Wärmetauscher frei."
+  },
+  "tags": [
+   "machine",
+   "heat-pump",
+   "outdoor-unit",
+   "air-source",
+   "hvac",
+   "fan",
+   "defrost"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-MA",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-14511",
+     "citation": "EN 14511-2:2022 Air conditioners, liquid chilling packages and heat pumps for space heating and cooling, test conditions (A7/W35 heating, A35/W7 cooling, outdoor air flow definitions)."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 25 Heat, Air and Moisture Control (surface emissivity and solar absorptivity of painted and bare metals, glass)."
+    },
+    {
+     "id": "class-data-note",
+     "citation": "Manufacturer class data (public data sheets of the product class, quoted as orders of magnitude from memory of the data sheet families, not retrieved for this asset); every number derived from it is tagged authored-estimate."
+    }
+   ],
+   "notes": {
+    "en": "Class data of 10 to 12 kW monobloc air-source heat pump outdoor units (about 1.10 m wide, 0.45 m deep, 1.45 m high, 150 kg, 5500 m3/h fan flow). Air flow and temperature change follow the EN 14511 test points A7/W35 heating (12 kW, COP 4.5, electric input 2.7 kW) and A35/W7 cooling (10 kW, EER 3.3, 3.0 kW input); all numbers are authored estimates of that class. Fan blade rotation is not visible in the side elevation.",
+    "de": "Klassendaten von 10- bis 12-kW-Monoblock-Luft-Wasser-Wärmepumpen-Außengeräten (etwa 1,10 m breit, 0,45 m tief, 1,45 m hoch, 150 kg, Lüfterluftstrom 5500 m3/h). Luftstrom und Temperaturänderung folgen den Prüfpunkten nach EN 14511 A7/W35 Heizen (12 kW, COP 4,5, elektrische Aufnahme 2,7 kW) und A35/W7 Kühlen (10 kW, EER 3,3, Aufnahme 3,0 kW); alle Zahlen sind Schätzungen dieser Klasse. Die Lüfterdrehung ist in der Seitenansicht nicht sichtbar."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.45,
+   "widthM": 0.72,
+   "depthM": 1.1,
+   "massKg": 150
+  },
+  "materials": [
+   {
+    "id": "powder-coat",
+    "title": {
+     "en": "Powder-coated galvanised steel (light grey)",
+     "de": "Pulverbeschichteter verzinkter Stahl (hellgrau)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "Aluminium sheet",
+     "de": "Aluminiumblech"
+    },
+    "emissivity": 0.25,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2700,
+    "conductivityWmK": 200,
+    "specificHeatJKgK": 900,
+    "source": "literature",
+    "reference": "incropera-2011"
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "Galvanised steel",
+     "de": "Verzinkter Stahl"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.93,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 1700,
+    "source": "literature",
+    "reference": "incropera-2011"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "unit",
+   "bones": [
+    {
+     "id": "unit",
+     "parent": null,
+     "title": {
+      "en": "Casing with fan, compressor, coil and feet",
+      "de": "Gehäuse mit Lüfter, Verdichter, Wärmetauscher und Füßen"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.45,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 141,
+      "comX": 0,
+      "comY": 0.7,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "vane",
+     "parent": "unit",
+     "title": {
+      "en": "Discharge air guide vane",
+      "de": "Luftleitlamelle am Ausblas"
+     },
+     "x": 0.26,
+     "y": 0.8,
+     "angleDeg": 0,
+     "lengthM": 0.22,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -25,
+      "maxDeg": 25
+     },
+     "mass": {
+      "kg": 2,
+      "comX": 0.11,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "lid",
+     "parent": "unit",
+     "title": {
+      "en": "Service lid hinged at the rear top edge",
+      "de": "Wartungsdeckel, hinten oben angeschlagen"
+     },
+     "x": -0.235,
+     "y": 1.45,
+     "angleDeg": 0,
+     "lengthM": 0.47,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 7,
+      "comX": 0.23,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-r",
+    "bone": "unit",
+    "x": 0.13,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Front foot contact",
+     "de": "Auflager vorderer Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.45,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "contact-l",
+    "bone": "unit",
+    "x": -0.13,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear foot contact",
+     "de": "Auflager hinterer Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.45,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "fan-outlet",
+    "bone": "unit",
+    "x": 0.26,
+    "y": 0.8,
+    "kind": "emitter",
+    "title": {
+     "en": "Fan outlet centre",
+     "de": "Mitte des Lüfterausblases"
+    }
+   },
+   {
+    "id": "coil-top",
+    "bone": "unit",
+    "x": -0.05,
+    "y": 1.3,
+    "kind": "emitter",
+    "title": {
+     "en": "Top of the coil",
+     "de": "Oberseite des Wärmetauschers"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "fins",
+      "title": {
+       "en": "Coil fins and guard louvres",
+       "de": "Tauscherlamellen und Schutzlamellen"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.4,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.17,
+         0
+        ],
+        [
+         0.17,
+         0
+        ],
+        [
+         0.17,
+         0.09
+        ],
+        [
+         -0.17,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "feet",
+       "bone": "unit",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "feet",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         1.41
+        ],
+        [
+         -0.225,
+         1.41
+        ]
+       ],
+       "closed": true,
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "casing",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.32
+        ],
+        [
+         -0.225,
+         0.32
+        ]
+       ],
+       "closed": true,
+       "id": "compressor-panel",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "compressor-casing",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.13,
+         0.42
+        ],
+        [
+         0.09,
+         0.42
+        ],
+        [
+         0.09,
+         1.28
+        ],
+        [
+         -0.13,
+         1.28
+        ]
+       ],
+       "closed": true,
+       "id": "coil-guard",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "coil-guard",
+       "material": "aluminium"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.215,
+         0.45
+        ],
+        [
+         0.26,
+         0.5
+        ],
+        [
+         0.26,
+         1.1
+        ],
+        [
+         0.215,
+         1.15
+        ]
+       ],
+       "closed": true,
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.15
+        ],
+        [
+         -0.225,
+         0.15
+        ]
+       ],
+       "closed": true,
+       "id": "base-tray",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "base-tray",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.04
+        ],
+        [
+         0.47,
+         -0.04
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "top-lid",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.025
+        ],
+        [
+         0.22,
+         -0.025
+        ],
+        [
+         0.22,
+         0.025
+        ],
+        [
+         -0.02,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "discharge-vane",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.1,
+         0.8
+        ],
+        [
+         0.14,
+         0.8
+        ],
+        [
+         0.14,
+         0.9
+        ],
+        [
+         0.1,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "panel-handle",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "casing",
+       "material": "powder-coat"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "All 1:100 parts plus the panel handle.",
+      "de": "Alle 1:100-Teile plus der Paneelgriff."
+     },
+     "retained": {
+      "en": "Handle crossing the service panel line.",
+      "de": "Griff über der Wartungspaneelfuge."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Screws, nameplate, fan blade edges (not visible from the side).",
+      "de": "Schrauben, Typenschild, Lüfterblattkanten (von der Seite nicht sichtbar)."
+     },
+     "thinElements": {
+      "en": "Lid 0.04 m (0.8 mm).",
+      "de": "Deckel 0,04 m (0,8 mm)."
+     },
+     "hatching": {
+      "en": "Louvre hatch at 0.4 mm spacing.",
+      "de": "Lamellenschraffur mit 0,4 mm Abstand."
+     },
+     "styles": {
+      "en": "Heavier pens 0.35 / 0.25 mm.",
+      "de": "Stärkere Stifte 0,35 / 0,25 mm."
+     },
+     "overlays": {
+      "en": "As 1:100.",
+      "de": "Wie 1:100."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "fins",
+      "title": {
+       "en": "Coil fins and guard louvres",
+       "de": "Tauscherlamellen und Schutzlamellen"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.4,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.17,
+         0
+        ],
+        [
+         0.17,
+         0
+        ],
+        [
+         0.17,
+         0.09
+        ],
+        [
+         -0.17,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "feet",
+       "bone": "unit",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "feet",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         1.41
+        ],
+        [
+         -0.225,
+         1.41
+        ]
+       ],
+       "closed": true,
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "casing",
+       "material": "powder-coat"
+      ,
+       "penMm": 0.337
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.32
+        ],
+        [
+         -0.225,
+         0.32
+        ]
+       ],
+       "closed": true,
+       "id": "compressor-panel",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "compressor-casing",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.13,
+         0.42
+        ],
+        [
+         0.09,
+         0.42
+        ],
+        [
+         0.09,
+         1.28
+        ],
+        [
+         -0.13,
+         1.28
+        ]
+       ],
+       "closed": true,
+       "id": "coil-guard",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "coil-guard",
+       "material": "aluminium",
+       "hatch": "fins"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.215,
+         0.45
+        ],
+        [
+         0.26,
+         0.5
+        ],
+        [
+         0.26,
+         1.1
+        ],
+        [
+         0.215,
+         1.15
+        ]
+       ],
+       "closed": true,
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.15
+        ],
+        [
+         -0.225,
+         0.15
+        ]
+       ],
+       "closed": true,
+       "id": "base-tray",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "base-tray",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.04
+        ],
+        [
+         0.47,
+         -0.04
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "top-lid",
+       "material": "powder-coat"
+      ,
+       "penMm": 0.336
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.025
+        ],
+        [
+         0.22,
+         -0.025
+        ],
+        [
+         0.22,
+         0.025
+        ],
+        [
+         -0.02,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "discharge-vane",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.45
+        ],
+        [
+         0.12,
+         0.45
+        ],
+        [
+         0.12,
+         1.25
+        ],
+        [
+         0,
+         1.25
+        ]
+       ],
+       "closed": true,
+       "id": "service-panel-line",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.5,
+       "region": "casing",
+       "material": "powder-coat"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "As 1:200 with separate rubber feet, a service panel outline and louvre hatching on the coil guard.",
+      "de": "Wie 1:200 mit getrennten Gummifüßen, einem Wartungspaneelumriss und Lamellenschraffur auf dem Tauscherschutz."
+     },
+     "retained": {
+      "en": "Feet with notches, service panel line, louvre hatch.",
+      "de": "Füße mit Aussparungen, Wartungspaneelfuge, Lamellenschraffur."
+     },
+     "merged": {
+      "en": "Handle merged.",
+      "de": "Griff zusammengefasst."
+     },
+     "omitted": {
+      "en": "Handle, screws, nameplate.",
+      "de": "Griff, Schrauben, Typenschild."
+     },
+     "thinElements": {
+      "en": "Lid 0.04 m (0.4 mm).",
+      "de": "Deckel 0,04 m (0,4 mm)."
+     },
+     "hatching": {
+      "en": "Louvre hatch at 0.4 mm spacing, pen 0.1 mm.",
+      "de": "Lamellenschraffur mit 0,4 mm Abstand, Stift 0,1 mm."
+     },
+     "styles": {
+      "en": "As 1:200, detail pen 0.18 mm.",
+      "de": "Wie 1:200, Detailstift 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200; feet carry the feet region.",
+      "de": "Wie 1:200; Füße tragen die Fußregion."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0
+        ],
+        [
+         0.225,
+         0
+        ],
+        [
+         0.225,
+         1.41
+        ],
+        [
+         -0.225,
+         1.41
+        ]
+       ],
+       "closed": true,
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "casing",
+        "feet"
+       ],
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.32
+        ],
+        [
+         -0.225,
+         0.32
+        ]
+       ],
+       "closed": true,
+       "id": "compressor-panel",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "compressor-casing",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.13,
+         0.42
+        ],
+        [
+         0.09,
+         0.42
+        ],
+        [
+         0.09,
+         1.28
+        ],
+        [
+         -0.13,
+         1.28
+        ]
+       ],
+       "closed": true,
+       "id": "coil-guard",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "coil-guard",
+       "material": "aluminium"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.215,
+         0.45
+        ],
+        [
+         0.26,
+         0.5
+        ],
+        [
+         0.26,
+         1.1
+        ],
+        [
+         0.215,
+         1.15
+        ]
+       ],
+       "closed": true,
+       "id": "fan-guard",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "fan-guard",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.08
+        ],
+        [
+         0.225,
+         0.15
+        ],
+        [
+         -0.225,
+         0.15
+        ]
+       ],
+       "closed": true,
+       "id": "base-tray",
+       "bone": "unit",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.3,
+       "region": "base-tray",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.05
+        ],
+        [
+         0.47,
+         -0.05
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "top-lid",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.03
+        ],
+        [
+         0.22,
+         -0.03
+        ],
+        [
+         0.22,
+         0.03
+        ],
+        [
+         -0.02,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "discharge-vane",
+       "material": "powder-coat"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.45
+        ],
+        [
+         0.12,
+         0.45
+        ],
+        [
+         0.12,
+         1.25
+        ],
+        [
+         0,
+         1.25
+        ]
+       ],
+       "closed": true,
+       "id": "service-panel-line",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.5,
+       "region": "casing",
+       "material": "powder-coat"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Casing down to the ground, compressor panel, coil guard field, fan bulge, base tray, lid and vane.",
+      "de": "Gehäuse bis zum Boden, Verdichterpaneel, Tauscherschutzfeld, Lüfterwölbung, Wanne, Deckel und Lamelle."
+     },
+     "retained": {
+      "en": "The coil guard field and the compressor panel.",
+      "de": "Das Tauscherschutzfeld und das Verdichterpaneel."
+     },
+     "merged": {
+      "en": "Feet merge into the casing at 1:200 (notches would be 0.28 mm).",
+      "de": "Die Füße gehen bei 1:200 im Gehäuse auf (Aussparungen wären 0,28 mm)."
+     },
+     "omitted": {
+      "en": "Louvres, panel line, handle.",
+      "de": "Lamellen, Paneelfuge, Griff."
+     },
+     "thinElements": {
+      "en": "Lid 0.05 m (0.25 mm) and vane 0.06 m (0.3 mm) at about real thickness.",
+      "de": "Deckel 0,05 m (0,25 mm) und Lamelle 0,06 m (0,3 mm) in etwa Realdicke."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Coil guard darkest, compressor panel mid-dark, casing mid-tone.",
+      "de": "Tauscherschutz am dunkelsten, Verdichterpaneel mitteldunkel, Gehäuse mittlerer Ton."
+     },
+     "overlays": {
+      "en": "Every region has its own form except the feet (merged into the casing).",
+      "de": "Jede Region hat eine eigene Form außer den Füßen (im Gehäuse zusammengefasst)."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0
+        ],
+        [
+         0.225,
+         0
+        ],
+        [
+         0.225,
+         0.45
+        ],
+        [
+         0.26,
+         0.5
+        ],
+        [
+         0.26,
+         1.1
+        ],
+        [
+         0.225,
+         1.15
+        ],
+        [
+         0.225,
+         1.35
+        ],
+        [
+         -0.225,
+         1.35
+        ]
+       ],
+       "closed": true,
+       "id": "casing",
+       "bone": "unit",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "casing",
+        "coil-guard",
+        "compressor-casing",
+        "base-tray",
+        "fan-guard",
+        "feet"
+       ],
+       "material": "powder-coat"
+      ,
+       "penMm": 0.171
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.1
+        ],
+        [
+         0.47,
+         -0.1
+        ],
+        [
+         0.47,
+         0
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "lid",
+       "bone": "lid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "top-lid",
+       "material": "powder-coat"
+      ,
+       "penMm": 0.172
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.02,
+         -0.06
+        ],
+        [
+         0.22,
+         -0.06
+        ],
+        [
+         0.22,
+         0.06
+        ],
+        [
+         -0.02,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "vane",
+       "bone": "vane",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "discharge-vane",
+       "material": "powder-coat"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One composed casing silhouette with the fan bulge on the front, the service lid on top and the air-guide vane on the discharge side.",
+      "de": "Eine zusammengesetzte Gehäusesilhouette mit der Lüfterwölbung vorn, dem Wartungsdeckel oben und der Luftleitlamelle an der Ausblasseite."
+     },
+     "retained": {
+      "en": "The 0.45 x 1.45 m outline, the fan bulge, lid and vane (they move).",
+      "de": "Der Umriss von 0,45 x 1,45 m, die Lüfterwölbung, Deckel und Lamelle (sie bewegen sich)."
+     },
+     "merged": {
+      "en": "Casing, coil guard, compressor panel, tray, fan grille and feet are one form.",
+      "de": "Gehäuse, Tauscherschutz, Verdichterpaneel, Wanne, Lüftergitter und Füße sind eine Form."
+     },
+     "omitted": {
+      "en": "Louvres, panel lines, feet notches, handle.",
+      "de": "Lamellen, Paneelfugen, Fußaussparungen, Griff."
+     },
+     "thinElements": {
+      "en": "Lid (real 0.04 m) and vane (real 0.05 m) are drawn 0.1 and 0.12 m thick (0.2 and 0.24 mm), the least that prints; the lid thickening lowers the casing top by 0.06 m to keep the 1.45 m height.",
+      "de": "Deckel (real 0,04 m) und Lamelle (real 0,05 m) sind 0,1 und 0,12 m dick (0,2 und 0,24 mm) gezeichnet, das Mindeste, das druckt; die Deckelverdickung senkt die Gehäuseoberkante um 0,06 m, um die Höhe von 1,45 m zu halten."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Casing mid-tone, lid and vane dark; pen 0.15 mm.",
+      "de": "Gehäuse mittlerer Ton, Deckel und Lamelle dunkel; Stift 0,15 mm."
+     },
+     "overlays": {
+      "en": "The casing form carries six regions (merged); lid and vane have their own regions.",
+      "de": "Die Gehäuseform trägt sechs Regionen (zusammengefasst); Deckel und Lamelle haben eigene Regionen."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "site-plan-footprint",
+    "title": {
+     "en": "Site-plan footprint with fan and air flow",
+     "de": "Baustellenplan-Grundriss mit Lüfter und Luftstrom"
+    },
+    "description": {
+     "en": "Plan symbol of the 1.10 x 0.45 m unit: the footprint, the fan circle and the discharge air arrow.",
+     "de": "Planzeichen des Geräts von 1,10 x 0,45 m: Grundriss, Lüfterkreis und Pfeil des Ausblasluftstroms."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.55,
+         -0.225
+        ],
+        [
+         0.55,
+         -0.225
+        ],
+        [
+         0.55,
+         0.225
+        ],
+        [
+         -0.55,
+         0.225
+        ]
+       ],
+       "closed": true,
+       "id": "footprint",
+       "bone": "unit",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.22,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "fan-circle",
+       "bone": "unit",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0
+        ],
+        [
+         0.85,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "flow-arrow",
+       "bone": "unit",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.5
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "True extent in model metres: 1.10 x 0.45 m footprint, fan circle 0.4 m, arrow 0.4 m long showing the discharge direction; real size at both listed scales.",
+     "de": "Wahre Ausdehnung in Modellmetern: Grundriss 1,10 x 0,45 m, Lüfterkreis 0,4 m, Pfeil 0,4 m lang für die Ausblasrichtung; in beiden gelisteten Maßstäben in Realgröße."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "heating",
+    "title": {
+     "en": "Heating operation",
+     "de": "Heizbetrieb"
+    },
+    "description": {
+     "en": "Part-load heating at an outdoor air of 7 C: the fan blows air cooled by about 5 K, the vane points slightly down.",
+     "de": "Teillast-Heizbetrieb bei 7 C Außenluft: Der Lüfter bläst um etwa 5 K abgekühlte Luft aus, die Lamelle zeigt leicht nach unten."
+    },
+    "bones": {
+     "vane": {
+      "angleDeg": -12
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-r",
+     "contact-l"
+    ],
+    "thermal": {
+     "operating": {
+      "compressor": 0.7,
+      "fan-speed": 0.7,
+      "refrigerant-duty": 0.7,
+      "defrost": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "coil-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2
+      },
+      "compressor-casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "base-tray": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "fan-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "top-lid": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "discharge-vane": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "feet": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 25
+       }
+      }
+     },
+     "emitters": {
+      "discharge-heating": 1,
+      "discharge-cooling": 0,
+      "defrost-vapour": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "cooling",
+    "title": {
+     "en": "Cooling operation",
+     "de": "Kühlbetrieb"
+    },
+    "description": {
+     "en": "Part-load cooling at 35 C: the coil rejects heat and the fan blows air warmed by about 7 K; the vane points slightly up.",
+     "de": "Teillast-Kühlbetrieb bei 35 C: Der Tauscher gibt Wärme ab, der Lüfter bläst um etwa 7 K erwärmte Luft aus; die Lamelle zeigt leicht nach oben."
+    },
+    "bones": {
+     "vane": {
+      "angleDeg": 12
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-r",
+     "contact-l"
+    ],
+    "thermal": {
+     "operating": {
+      "compressor": 0.7,
+      "fan-speed": 0.7,
+      "refrigerant-duty": -0.7,
+      "defrost": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "coil-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2
+      },
+      "compressor-casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "base-tray": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "fan-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "top-lid": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "discharge-vane": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "feet": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 25
+       }
+      }
+     },
+     "emitters": {
+      "discharge-heating": 0,
+      "discharge-cooling": 1,
+      "defrost-vapour": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "defrosting",
+    "title": {
+     "en": "Defrost cycle",
+     "de": "Abtauzyklus"
+    },
+    "description": {
+     "en": "Fan stopped, hot gas through the coil and the tray heating melting the frost: vapour rises from the coil.",
+     "de": "Lüfter steht, Heißgas im Wärmetauscher und Wannenheizung tauen den Reif ab: Dampf steigt vom Tauscher auf."
+    },
+    "bones": {
+     "vane": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-r",
+     "contact-l"
+    ],
+    "thermal": {
+     "operating": {
+      "compressor": 0.6,
+      "fan-speed": 0,
+      "refrigerant-duty": -0.8,
+      "defrost": 1
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "coil-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2
+      },
+      "compressor-casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "base-tray": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "wettedness": 0.8
+      },
+      "fan-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "top-lid": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "discharge-vane": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "feet": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 25
+       }
+      }
+     },
+     "emitters": {
+      "discharge-heating": 0,
+      "discharge-cooling": 0,
+      "defrost-vapour": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "off",
+    "title": {
+     "en": "Off, lid closed",
+     "de": "Aus, Deckel geschlossen"
+    },
+    "description": {
+     "en": "Standby without operation, everything at ambient.",
+     "de": "Bereitschaft ohne Betrieb, alles auf Umgebungstemperatur."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-r",
+     "contact-l"
+    ],
+    "thermal": {
+     "operating": {
+      "compressor": 0,
+      "fan-speed": 0,
+      "refrigerant-duty": 0,
+      "defrost": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "coil-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2
+      },
+      "compressor-casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "base-tray": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "fan-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "top-lid": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "discharge-vane": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "feet": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 25
+       }
+      }
+     },
+     "emitters": {
+      "discharge-heating": 0,
+      "discharge-cooling": 0,
+      "defrost-vapour": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "serviced",
+    "title": {
+     "en": "Serviced, lid open",
+     "de": "Gewartet, Deckel offen"
+    },
+    "description": {
+     "en": "Off with the service lid lifted 80 degrees for access to the electronics.",
+     "de": "Aus mit um 80 Grad gehobenem Wartungsdeckel für den Zugang zur Elektronik."
+    },
+    "bones": {
+     "lid": {
+      "angleDeg": 80
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-r",
+     "contact-l"
+    ],
+    "thermal": {
+     "operating": {
+      "compressor": 0,
+      "fan-speed": 0,
+      "refrigerant-duty": 0,
+      "defrost": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "coil-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2
+      },
+      "compressor-casing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "base-tray": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "fan-guard": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "top-lid": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "discharge-vane": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "feet": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 25
+       }
+      }
+     },
+     "emitters": {
+      "discharge-heating": 0,
+      "discharge-cooling": 0,
+      "defrost-vapour": 0
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "heating-sweep",
+    "title": {
+     "en": "Heating with swinging vane",
+     "de": "Heizbetrieb mit schwingender Lamelle"
+    },
+    "description": {
+     "en": "A 20 s loop of heating operation: the guide vane swings between 15 degrees down and 15 degrees up while the compressor modulates between 60 and 80 percent; the cooled air keeps leaving the fan.",
+     "de": "Eine Schleife von 20 s im Heizbetrieb: Die Leitlamelle schwingt zwischen 15 Grad unten und 15 Grad oben, während der Verdichter zwischen 60 und 80 Prozent moduliert; die abgekühlte Luft strömt weiter aus dem Lüfter."
+    },
+    "durationS": 20,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "heating",
+      "ease": "smooth",
+      "bones": {
+       "vane": {
+        "angleDeg": -15
+       }
+      }
+     },
+     {
+      "t": 10,
+      "pose": "heating",
+      "ease": "smooth",
+      "bones": {
+       "vane": {
+        "angleDeg": 15
+       }
+      }
+     },
+     {
+      "t": 20,
+      "pose": "heating",
+      "ease": "smooth",
+      "bones": {
+       "vane": {
+        "angleDeg": -15
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 20
+     },
+     {
+      "anchor": "contact-l",
+      "fromS": 0,
+      "toS": 20
+     }
+    ],
+    "phases": [
+     {
+      "id": "sweep-up",
+      "fromS": 0,
+      "toS": 10,
+      "title": {
+       "en": "Vane swings up",
+       "de": "Lamelle schwingt nach oben"
+      }
+     },
+     {
+      "id": "sweep-down",
+      "fromS": 10,
+      "toS": 20,
+      "title": {
+       "en": "Vane swings down",
+       "de": "Lamelle schwingt nach unten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "operating",
+      "title": {
+       "en": "Heating at part load",
+       "de": "Heizen in Teillast"
+      },
+      "target": "compressor"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:compressor",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.6
+       },
+       {
+        "t": 10,
+        "v": 0.8
+       },
+       {
+        "t": 20,
+        "v": 0.6
+       }
+      ]
+     },
+     {
+      "target": "operating:refrigerant-duty",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.6
+       },
+       {
+        "t": 10,
+        "v": 0.8
+       },
+       {
+        "t": 20,
+        "v": 0.6
+       }
+      ]
+     },
+     {
+      "target": "operating:fan-speed",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.7
+       },
+       {
+        "t": 20,
+        "v": 0.7
+       }
+      ]
+     },
+     {
+      "target": "emitter:discharge-heating",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "defrost-sequence",
+    "title": {
+     "en": "Start, defrost and shutdown",
+     "de": "Anlaufen, Abtauen und Abschalten"
+    },
+    "description": {
+     "en": "A 30 s sequence: compressor starts, heating runs, the fan stops and the defrost cycle melts the frost under rising vapour, heating resumes, the unit shuts down and the lid is lifted for service.",
+     "de": "Eine Folge von 30 s: Der Verdichter startet, Heizbetrieb läuft, der Lüfter stoppt und der Abtauzyklus taut den Reif unter aufsteigendem Dampf ab, der Heizbetrieb setzt wieder ein, das Gerät schaltet ab und der Deckel wird zur Wartung gehoben."
+    },
+    "durationS": 30,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 3,
+      "pose": "heating",
+      "ease": "smooth"
+     },
+     {
+      "t": 10,
+      "pose": "heating",
+      "ease": "smooth"
+     },
+     {
+      "t": 11,
+      "pose": "defrosting",
+      "ease": "smooth"
+     },
+     {
+      "t": 17,
+      "pose": "defrosting",
+      "ease": "smooth"
+     },
+     {
+      "t": 18.5,
+      "pose": "heating",
+      "ease": "smooth"
+     },
+     {
+      "t": 25,
+      "pose": "heating",
+      "ease": "smooth"
+     },
+     {
+      "t": 26,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 28,
+      "pose": "serviced",
+      "ease": "smooth"
+     },
+     {
+      "t": 30,
+      "pose": "serviced",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 30
+     },
+     {
+      "anchor": "contact-l",
+      "fromS": 0,
+      "toS": 30
+     }
+    ],
+    "phases": [
+     {
+      "id": "start",
+      "fromS": 0,
+      "toS": 3,
+      "title": {
+       "en": "Compressor start",
+       "de": "Verdichterstart"
+      }
+     },
+     {
+      "id": "heat",
+      "fromS": 3,
+      "toS": 11,
+      "title": {
+       "en": "Heating",
+       "de": "Heizen"
+      }
+     },
+     {
+      "id": "defrost",
+      "fromS": 11,
+      "toS": 18,
+      "title": {
+       "en": "Defrost",
+       "de": "Abtauen"
+      }
+     },
+     {
+      "id": "heat-2",
+      "fromS": 18,
+      "toS": 26,
+      "title": {
+       "en": "Heating again",
+       "de": "Wieder heizen"
+      }
+     },
+     {
+      "id": "service",
+      "fromS": 26,
+      "toS": 30,
+      "title": {
+       "en": "Shutdown and service",
+       "de": "Abschalten und Wartung"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1,
+      "kind": "ignition",
+      "title": {
+       "en": "Compressor starts",
+       "de": "Verdichter startet"
+      },
+      "target": "discharge-heating"
+     },
+     {
+      "t": 11,
+      "kind": "thermal",
+      "title": {
+       "en": "Reversing valve switches to defrost",
+       "de": "Umschaltventil schaltet auf Abtauen"
+      },
+      "target": "defrost-vapour"
+     },
+     {
+      "t": 26,
+      "kind": "shutdown",
+      "title": {
+       "en": "Unit switches off",
+       "de": "Gerät schaltet ab"
+      },
+      "target": "discharge-heating"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:compressor",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 0.7
+       },
+       {
+        "t": 10,
+        "v": 0.7
+       },
+       {
+        "t": 11,
+        "v": 0.6
+       },
+       {
+        "t": 17,
+        "v": 0.6
+       },
+       {
+        "t": 18.5,
+        "v": 0.7
+       },
+       {
+        "t": 25,
+        "v": 0.7
+       },
+       {
+        "t": 26,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:fan-speed",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.5,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 0.7
+       },
+       {
+        "t": 10.5,
+        "v": 0.7
+       },
+       {
+        "t": 11,
+        "v": 0
+       },
+       {
+        "t": 18,
+        "v": 0
+       },
+       {
+        "t": 18.5,
+        "v": 0.7
+       },
+       {
+        "t": 25.8,
+        "v": 0.7
+       },
+       {
+        "t": 26,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:refrigerant-duty",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 0.7
+       },
+       {
+        "t": 10.5,
+        "v": 0.7
+       },
+       {
+        "t": 11,
+        "v": -0.8
+       },
+       {
+        "t": 18,
+        "v": -0.8
+       },
+       {
+        "t": 18.5,
+        "v": 0.7
+       },
+       {
+        "t": 25.8,
+        "v": 0.7
+       },
+       {
+        "t": 26,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:defrost",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 10.9,
+        "v": 0
+       },
+       {
+        "t": 11,
+        "v": 1
+       },
+       {
+        "t": 18,
+        "v": 1
+       },
+       {
+        "t": 18.1,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:discharge-heating",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.5,
+        "v": 1
+       },
+       {
+        "t": 10.8,
+        "v": 1
+       },
+       {
+        "t": 11,
+        "v": 0
+       },
+       {
+        "t": 18.4,
+        "v": 1
+       },
+       {
+        "t": 26,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:defrost-vapour",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 11.5,
+        "v": 1
+       },
+       {
+        "t": 18,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "region:base-tray:wettedness",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 11,
+        "v": 0
+       },
+       {
+        "t": 12,
+        "v": 0.8
+       },
+       {
+        "t": 18,
+        "v": 0.5
+       },
+       {
+        "t": 22,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 7,
+    "meanRadiantTempC": 7,
+    "skyTempC": -3,
+    "groundTempC": 8,
+    "relativeHumidity": 0.87,
+    "windMS": 1,
+    "windDirectionDeg": 180,
+    "solarWM2": 200,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "compressor",
+     "title": {
+      "en": "Compressor modulation",
+      "de": "Verdichtermodulation"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.35,
+       "title": {
+        "en": "Minimum modulation",
+        "de": "Minimale Modulation"
+       }
+      },
+      {
+       "v": 0.7,
+       "title": {
+        "en": "Part load",
+        "de": "Teillast"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Rated (A7/W35 12 kW)",
+        "de": "Nennlast (A7/W35 12 kW)"
+       }
+      }
+     ]
+    },
+    {
+     "id": "fan-speed",
+     "title": {
+      "en": "Fan speed",
+      "de": "Lüfterdrehzahl"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Stopped",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.4,
+       "title": {
+        "en": "Low",
+        "de": "Niedrig"
+       }
+      },
+      {
+       "v": 0.7,
+       "title": {
+        "en": "Medium",
+        "de": "Mittel"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "High",
+        "de": "Hoch"
+       }
+      }
+     ]
+    },
+    {
+     "id": "refrigerant-duty",
+     "title": {
+      "en": "Coil duty (positive evaporating, negative condensing)",
+      "de": "Wärmetauscher-Betrieb (positiv verdampfend, negativ verflüssigend)"
+     },
+     "levels": [
+      {
+       "v": -1,
+       "title": {
+        "en": "Condensing: coil rejects heat",
+        "de": "Verflüssigend: Tauscher gibt Wärme ab"
+       }
+      },
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.7,
+       "title": {
+        "en": "Evaporating, part load",
+        "de": "Verdampfend, Teillast"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Evaporating, rated",
+        "de": "Verdampfend, Nennlast"
+       }
+      }
+     ]
+    },
+    {
+     "id": "defrost",
+     "title": {
+      "en": "Defrost",
+      "de": "Abtauen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Defrosting",
+        "de": "Abtauend"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "casing",
+     "title": {
+      "en": "Casing panels",
+      "de": "Gehäuseverkleidung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "powder-coat",
+     "areaM2": 3.4,
+     "characteristicLengthM": 1.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "panel",
+       "title": {
+        "en": "Steel plate 1 mm",
+        "de": "Stahlblech 1 mm"
+       },
+       "kind": "metal",
+       "material": "powder-coat",
+       "thicknessM": 0.0012,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 4333,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 4300,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "coil-guard",
+     "title": {
+      "en": "Coil face and louvred guard",
+      "de": "Wärmetauscherfläche und Lamellenschutz"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "aluminium",
+     "areaM2": 1.6,
+     "characteristicLengthM": 1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "fins",
+       "title": {
+        "en": "Aluminium fins (smeared), 0.4 mm",
+        "de": "Aluminiumlamellen (verschmiert), 0,4 mm"
+       },
+       "kind": "metal",
+       "material": "aluminium",
+       "thicknessM": 0.0004,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 970,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 970,
+     "operating": {
+      "key": "refrigerant-duty",
+      "heatW": -220
+     },
+     "source": "authored-estimate",
+     "reference": "en-14511"
+    },
+    {
+     "id": "compressor-casing",
+     "title": {
+      "en": "Compressor compartment panel",
+      "de": "Verdichterraum-Verkleidung"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "powder-coat",
+     "areaM2": 1,
+     "characteristicLengthM": 0.25,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "panel",
+       "title": {
+        "en": "Steel plate 1 mm",
+        "de": "Stahlblech 1 mm"
+       },
+       "kind": "metal",
+       "material": "powder-coat",
+       "thicknessM": 0.0012,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 4333,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 4300,
+     "operating": {
+      "key": "compressor",
+      "heatW": 700
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "base-tray",
+     "title": {
+      "en": "Base tray with defrost heating",
+      "de": "Bodenwanne mit Abtauheizung"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "galvanised-steel",
+     "areaM2": 0.5,
+     "characteristicLengthM": 0.1,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "tray",
+       "title": {
+        "en": "Steel plate 1 mm",
+        "de": "Stahlblech 1 mm"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 5416,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 5400,
+     "operating": {
+      "key": "defrost",
+      "heatW": 185.5
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "fan-guard",
+     "title": {
+      "en": "Fan outlet grille and bell mouth",
+      "de": "Lüfter-Ausblasgitter und Düse"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "galvanised-steel",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "wire",
+       "title": {
+        "en": "Steel plate 4 mm",
+        "de": "Stahlblech 4 mm"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 14444,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 1000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "top-lid",
+     "title": {
+      "en": "Service lid",
+      "de": "Wartungsdeckel"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "powder-coat",
+     "areaM2": 0.5,
+     "characteristicLengthM": 0.45,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 1,
+     "layers": [
+      {
+       "id": "lid",
+       "title": {
+        "en": "Steel plate 1 mm",
+        "de": "Stahlblech 1 mm"
+       },
+       "kind": "metal",
+       "material": "powder-coat",
+       "thicknessM": 0.0012,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 4333,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 4300,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "discharge-vane",
+     "title": {
+      "en": "Discharge guide vane",
+      "de": "Luftleitlamelle"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "powder-coat",
+     "areaM2": 0.25,
+     "characteristicLengthM": 0.22,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "vane",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "powder-coat",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "feet",
+     "title": {
+      "en": "Rubber feet",
+      "de": "Gummifüße"
+     },
+     "kind": "tyre",
+     "model": "passive",
+     "material": "rubber",
+     "areaM2": 0.1,
+     "characteristicLengthM": 0.1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "rubber",
+       "title": {
+        "en": "Rubber 30 mm",
+        "de": "Gummi 30 mm"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.03,
+       "resistanceM2KW": 0.2,
+       "heatCapacityJM2K": 56000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 56000,
+     "source": "authored-estimate"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "discharge-heating",
+     "kind": "fan",
+     "title": {
+      "en": "Cooled fan discharge in heating mode",
+      "de": "Abgekühlte Lüfterluft im Heizbetrieb"
+     },
+     "anchor": "fan-outlet",
+     "directionDeg": 0,
+     "diameterM": 0.5,
+     "operatingKey": "fan-speed",
+     "volumeFlowM3S": 1.53,
+     "temperatureRiseK": -5.1,
+     "vapourKgPerKg": -0.0008,
+     "source": "authored-estimate",
+     "reference": "en-14511"
+    },
+    {
+     "id": "discharge-cooling",
+     "kind": "fan",
+     "title": {
+      "en": "Warmed fan discharge in cooling mode",
+      "de": "Erwärmte Lüfterluft im Kühlbetrieb"
+     },
+     "anchor": "fan-outlet",
+     "directionDeg": 0,
+     "diameterM": 0.5,
+     "operatingKey": "fan-speed",
+     "volumeFlowM3S": 1.53,
+     "temperatureRiseK": 7,
+     "vapourKgPerKg": 0,
+     "source": "authored-estimate",
+     "reference": "en-14511"
+    },
+    {
+     "id": "defrost-vapour",
+     "kind": "vent",
+     "title": {
+      "en": "Vapour rising from the coil during defrost",
+      "de": "Dampf vom Wärmetauscher beim Abtauen"
+     },
+     "anchor": "coil-top",
+     "directionDeg": 100,
+     "diameterM": 0.4,
+     "operatingKey": "defrost",
+     "volumeFlowM3S": 0.25,
+     "temperatureRiseK": 3,
+     "vapourKgPerKg": 0.008,
+     "source": "authored-estimate"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Heating, EN 14511 A7/W35: 12 kW heat output with 2.7 kW electric input extracts 9.3 kW from the air; at 5500 m3/h (1.53 m3/s, rho cp V = 1845 W/K) the air cools by 5.1 K; at 87 percent relative humidity and 7 C (w = 0.0049 kg/kg) air at 1.9 C holds 0.0041 kg/kg, hence -0.0008 kg/kg (condensate on the coil). Cooling, A35/W7: 10 kW + 3.0 kW input rejects 13 kW, +7.0 K.",
+     "de": "Heizen nach EN 14511 A7/W35: 12 kW Heizleistung bei 2,7 kW elektrischer Aufnahme entziehen der Luft 9,3 kW; bei 5500 m3/h (1,53 m3/s, rho cp V = 1845 W/K) kühlt die Luft um 5,1 K ab; bei 87 Prozent relativer Feuchte und 7 C (w = 0,0049 kg/kg) enthält Luft von 1,9 C 0,0041 kg/kg, also -0,0008 kg/kg (Kondensat am Tauscher). Kühlen A35/W7: 10 kW + 3,0 kW Aufnahme führen 13 kW ab, +7,0 K."
+    },
+    {
+     "en": "Coil duty is a signed operating key: level 1 = evaporating (heat absorbed at the coil surface, -1.8 kW through the visible guard), level -1 = condensing (+1.8 kW). The compressor compartment panel receives 0.7 kW, the tray heating 2.5 kW during defrost. The defrost vapour jet is 0.25 m3/s at +3 K with 0.008 kg/kg. All authored estimates.",
+     "de": "Der Tauscherbetrieb ist ein vorzeichenbehafteter Betriebsschlüssel: Stufe 1 = verdampfend (Wärmeaufnahme an der Tauscheroberfläche, -1,8 kW durch den sichtbaren Schutz), Stufe -1 = verflüssigend (+1,8 kW). Das Verdichterpaneel erhält 0,7 kW, die Wannenheizung beim Abtauen 2,5 kW. Der Abtaudampfstrahl hat 0,25 m3/s bei +3 K mit 0,008 kg/kg. Alles Schätzungen."
+    },
+    {
+     "en": "Reference environment is a cold humid heating day (7 C, 87 percent, 200 W/m2).",
+     "de": "Die Referenzumgebung ist ein kalter feuchter Heiztag (7 C, 87 Prozent, 200 W/m2)."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.8066,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Two foot contacts carry the unit as unilateral supports; the 150 kg is distributed over the bones; gravity only.",
+     "de": "Zwei Fußauflager tragen das Gerät als einseitige Auflager; die 150 kg verteilen sich auf die Knochen; nur Schwerkraft."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "heating",
+   "defaultClip": "heating-sweep",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

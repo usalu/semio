@@ -1,0 +1,3 @@
+{ "version": 1, "casts": {
+  "sp-heat": { "asset": "split-ac-indoor-unit", "clip": "start-cooling", "view": "thermal", "environment": "summer-heatwave-calm", "fps": 15, "theme": "dark", "viewpoint": "elevation", "scale": 50 }
+} }

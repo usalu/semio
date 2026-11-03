@@ -1,0 +1,10 @@
+s=open("human.py",encoding="utf8").read()
+s=s.replace("def limbsol(h, o, id, bone, ra, rb, lat, z, style):","def limbsol(h, o, id, bone, ra, rb, lat, z, style, zr=None):").replace("    r = (ra + rb) / 2\n    sol(o, lat - r, lat + r)","    r = zr if zr is not None else (ra + rb) / 2\n    sol(o, lat - r, lat + r)")
+open("human.py","w",encoding="utf8").write(s)
+t=open("p_runner.py",encoding="utf8").read()
+import re
+t=t.replace('poly(of, "socket", "shank-r", limb(-hl, sy0 + 0.01, sy1, .052, .042, 0.004), 3.02, s("socket"), follow=True)','limbsol(h, of, "socket", "shank-r", .052, .042, -hl, 3.02, s("socket"))')
+t=t.replace('poly(of, "blade-upper", "blade-r", limb(-hl, by0, by1, bw, bw), 2.5, s("blade-upper"), follow=True)','limbsol(h, of, "blade-upper", "blade-r", .012, .012, -hl, 2.5, s("blade-upper"), zr=bw)')
+t=t.replace('poly(of, "blade-curl", "blade-tip-r", limb(-hl, cy0, cy1, bw, bw), 2.5, s("blade-curl"), follow=True)','limbsol(h, of, "blade-curl", "blade-tip-r", .012, .012, -hl, 2.5, s("blade-curl"), zr=bw)')
+open("p_runner.py","w",encoding="utf8").write(t)
+print(t.count("limbsol"))

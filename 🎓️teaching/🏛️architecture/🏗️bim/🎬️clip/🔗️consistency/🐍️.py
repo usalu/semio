@@ -19,6 +19,7 @@ _panels = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bi
 _analysis = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🧮️analysis.🐍️")
 _core = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
+_art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _engine = importlib.import_module("manim")
 
 INK, MUTED, ARCH, STRUCT, SERV = _visuals.INK, _visuals.MUTED, _visuals.ARCH, _visuals.STRUCT, _visuals.SERV
@@ -137,7 +138,7 @@ class Beat6_Consistency(_visuals.ClipScene):
             getattr(self, "_" + name)()
 
     def _prepare(self):
-        """🧮 Read every model state the clip shows: base, changed, alternative and resolved."""
+        """📖 Read every model state the clip shows: base, changed, alternative and resolved."""
         base = _model.load_model()
         self.base = base
         self.geometry = _model.building_geometry(base)
@@ -183,7 +184,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return _model.element(self.tag, model)["metadata"]["revision"]
 
     def model_revision(self, model_id, model):
-        """🔢 Revision of one partial model in one model state."""
+        """🆕 Revision of one partial model in one model state."""
         return _model.partial_model(model_id, model)["revision"]
 
     def rev(self, value):
@@ -214,7 +215,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return " *" if basis == "assumed" else ""
 
     def weights(self, paving):
-        """⚖️ Weight per m² of every roof layer of the roof zone at one paving depth, bottom to top, then the imposed load: (id, name, thickness, density, weight)."""
+        """🏋️ Weight per m² of every roof layer of the roof zone at one paving depth, bottom to top, then the imposed load: (id, name, thickness, density, weight)."""
         state = self.paving_state(paving)
         breakdown = next(zone for zone in _model.tributary(state, "roof")["zones"] if zone["id"] == "roof")["load_breakdown"]
         self.layer_basis = {key: (value["basis"], value["basis"]) for key, value in breakdown.items()}
@@ -222,7 +223,7 @@ class Beat6_Consistency(_visuals.ClipScene):
                 for key, value in breakdown.items() if key != "total"]
 
     def q_of(self, paving):
-        """⚖️ Roof load at one paving depth: the sum of the layer weights and the imposed load."""
+        """🔣 Roof load at one paving depth: the sum of the layer weights and the imposed load."""
         return sum(row[4] for row in self.weights(paving))
 
     def wrap(self, text, columns):
@@ -269,15 +270,13 @@ class Beat6_Consistency(_visuals.ClipScene):
         group.row, group.frame = row, frame
         return _d.place(group, point, anchor)
 
-    def person(self, point, color, size=0.42):
-        """🧑 A person glyph: head and shoulders."""
+    def person(self, point, color, size=0.42, cast="shared-person-relaxed-line"):
+        """🚶 A handcrafted standing person in the actor colour, feet at ``point`` lowered by a tenth of ``size``. [staffage](../../../🧍️staffage/README.md)"""
         x, y, _ = point
-        head = _engine.Circle(radius=size * 0.26, stroke_width=0, fill_color=color, fill_opacity=1).move_to((x, y + size * 0.52, 0))
-        body = _d.polygon(_d.circle_points((x, y - size * 0.1), size * 0.5, 16, 0, 180), color, 1.0, color, 0.5)
-        return _engine.VGroup(head, body)
+        return _art.staffage(cast, unit=1.4 * size / _art.staffage_height(cast), anchor=(x, y - 0.1 * size, 0), color=color)
 
     def stack(self, lines, point, color, *, size=S_SMALL, pitch=0.3, pad=0.16):
-        """🥞 A framed block of centred lines, each with its own colour."""
+        """🪧 A framed block of centred lines, each with its own colour."""
         rows = _engine.VGroup(*[self.text(text, (point[0], point[1] + pitch * (len(lines) - 1) / 2 - pitch * index, 0), size=size, color=tone) for index, (text, tone) in enumerate(lines)])
         frame = self.panel(rows.width + 2 * pad, pitch * len(lines) + pad, point, color)
         return _engine.VGroup(frame, rows)
@@ -293,7 +292,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def backed(self, label, color=None):
-        """🔲 A label on an opaque background chip so the drawing below never runs through it."""
+        """🎴 A label on an opaque background chip so the drawing below never runs through it."""
         chip = _engine.RoundedRectangle(corner_radius=0.04, width=label.width + 0.12, height=label.height + 0.1, stroke_color=color or BG, stroke_width=_d.W_THIN if color else 0,
                                         fill_color=BG, fill_opacity=1).move_to(label)
         return _engine.VGroup(chip, label)
@@ -304,7 +303,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return _d.segments([((token.get_left()[0], y, 0), (token.get_right()[0], y, 0))], color, _d.W_CUT)
 
     def step_number(self):
-        """#️⃣ Local STEP instance number of the roof slab in its exchange fragment."""
+        """🧩 Local STEP instance number of the roof slab in its exchange fragment."""
         return next(row for row in _model.step_excerpt(self.tag)["lines"] if "IFCSLAB" in row).split("=")[0]
 
     def checkmark(self, point, color=GOOD):
@@ -335,11 +334,11 @@ class Beat6_Consistency(_visuals.ClipScene):
         return self.axon_point(p["x"], p["y"], 0.0, point, scale, model=model)
 
     def roof_spans(self):
-        """📏 Intervals along the section cut where the roof lies, in metres of y."""
+        """📶 Intervals along the section cut where the roof lies, in metres of y."""
         return _core.scan(self.zone_new["roof"]["pieces"], self.cut_x, axis=0)
 
     def revision_badges(self, point, *, architecture, structure, analysis, analysis_color=STRUCT):
-        """🔖 The three model badges of a row with the given revisions."""
+        """🎖️ The three model badges of a row with the given revisions."""
         items = [(self.tr("architecture", "Architektur"), architecture, ARCH), (self.tr("structure", "Tragwerk"), structure, STRUCT),
                  (self.tr("analysis", "Analyse"), analysis, analysis_color)]
         row = _engine.VGroup(*[self.badge(f"{name} {self.rev(revision)}", (0, 0, 0), color=color, size=S_SMALL) for name, revision, color in items])
@@ -367,7 +366,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return out, new
 
     def show(self, key, new=(), keep=(), extra=(), track=(), seconds=3.0, legend=False):
-        """🎞️ Complete the entrance before extra animations change live drawing topology."""
+        """🎭 Complete the entrance before extra animations change live drawing topology."""
         keep_ids = {id(item) for item in keep}
         gone = [item for item in self.stage if id(item) not in keep_ids]
         out, fresh = self.chrome(key, legend)
@@ -381,7 +380,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.step(key, motion, seconds=seconds)
 
     def section_view(self, model):
-        """✂️ Section through piloti axis 3 with the roof slab lit."""
+        """🔪 Section through piloti axis 3 with the roof slab lit."""
         return self.villa_section(SECTION_AT, SECTION_SCALE, model=model, highlight=(self.tag,), levels=False, level_lines=False)
 
     def storey_marks(self, section):
@@ -393,7 +392,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def build_up(self, model, point=DETAIL_AT, scale=DETAIL_SCALE, width=DETAIL_WIDTH, *, labels=True, dims=True, lit=None, grown_from=None, reach=6.9):
-        """🥞 Magnified roof build-up: coloured layers of the model's layer set, swatch labels and the total thickness dimension."""
+        """🔬 Magnified roof build-up: coloured layers of the model's layer set, swatch labels and the total thickness dimension."""
         layers = self.layers_of(model)
         x0, y = point[0] - width / 2, point[1]
         group = _engine.VGroup()
@@ -435,7 +434,7 @@ class Beat6_Consistency(_visuals.ClipScene):
                                 for index in range(6)])
 
     def leak_path(self, detail):
-        """💧 The water path through the build-up: points from the paving surface through a gap in the paving to the ceiling stain."""
+        """🌊 The water path through the build-up: points from the paving surface through a gap in the paving to the ceiling stain."""
         spans = detail.spans
         gap_x, entry_x = detail.x0 + 0.34 * detail.span, detail.x0 + 0.78 * detail.span
         wp0, wp1 = spans["paving"]
@@ -496,12 +495,11 @@ class Beat6_Consistency(_visuals.ClipScene):
     def story_chip(self, section):
         """🆔 The GlobalId chip above the section with a leader to the roof slab: the same identity through the whole story."""
         chip = self.guid_chip(self.tag, (-4.0, 2.5, 0), label=False)
-        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
         pointer = self.leader(chip, section.at(self.cut_x, max(self.roof_spans())[0] + 1.0, self.geometry["storeys"]["roof"]), color=DATA)
         return chip, pointer
 
     def _identity(self):
-        """🆔 Beat 1: the GlobalId names the roof slab; the tag and the STEP number are local."""
+        """🪪 Beat 1: the GlobalId names the roof slab; the tag and the STEP number are local."""
         axon = self.villa_axon((-3.4, 0.3, 0), 0.155, model=self.base, highlight=(self.tag,))
         windows = self.label("teaching choice: ribbon windows on all faces", "Lehrannahme: Bandfenster an allen Seiten", (-6.9, 2.95, 0), size=S_SMALL, color=MUTED, anchor="l")
         tag_badge = self.badge(self.tag, (1.0, 2.8, 0), color=MUTED, filled=False, anchor="l")
@@ -550,7 +548,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.show("models", new=[axon, windows, chip, cards, leaders], seconds=4.0)
 
     def _metadata(self):
-        """🏷️ Beat 3: class, properties, author and revision of the slab record."""
+        """📇 Beat 3: class, properties, author and revision of the slab record."""
         element = _model.element(self.tag, self.base)
         storey = next(s for s in self.base["storeys"] if s["id"] == element["storey"])
         psets = element["psets"]["Pset_SlabCommon"]
@@ -573,7 +571,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.show("metadata", new=[axon, card, pointers, chip, who], legend=True, seconds=3.4)
 
     def _leak(self):
-        """💧 Beat 4: the reported leak, shown in section and in the magnified build-up."""
+        """🚨 Beat 4: the reported leak, shown in section and in the magnified build-up."""
         section = self.section_view(self.base)
         marks = self.storey_marks(section)
         chip, pointer = self.story_chip(section)
@@ -591,7 +589,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.detail, self.frame, self.zoom, self.clock, self.rain, self.detail_title = detail, frame, zoom, clock, rain, title
 
     def _leakpath(self):
-        """🚰 Beat 5: the water passes paving and structural reserve, finds a gap in the paving and stains the ceiling below."""
+        """🕳️ Beat 5: the water passes paving and structural reserve, finds a gap in the paving and stains the ceiling below."""
         flow = _engine.ValueTracker(0)
         flow.add_updater(lambda tracker, dt: tracker.increment_value(dt * 0.3))
         self.add(flow)
@@ -620,7 +618,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def _change(self):
-        """⚡ Beat 6: after the repair the design event thickens the paving; the build-up grows live."""
+        """🔧 Beat 6: after the repair the design event thickens the paving; the build-up grows live."""
         tracker = _engine.ValueTracker(self.paving_old)
         self.clock.clear_updaters()
         self.flow.clear_updaters()
@@ -690,7 +688,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def load_formula(self, paving):
-        """🧮 The sum of the layer weights with the substituted numbers."""
+        """🧷 The sum of the layer weights with the substituted numbers."""
         rows = self.weights(paving)
         parts = [("q =", INK)]
         for index, row in enumerate(rows):
@@ -715,7 +713,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def _load(self):
-        """⚖️ Beat 8: the thicker paving weighs more: layer weights, the sum and the growing bar."""
+        """🏗️ Beat 8: the thicker paving weighs more: layer weights, the sum and the growing bar."""
         paving = _engine.ValueTracker(self.paving_old)
         key = lambda: round(paving.get_value(), 3)
         build = self.live(lambda: self.build_up(self.paving_state(paving.get_value()), (-5.9, -2.4, 0), 3.2, 1.2, labels=False, dims=False, lit="paving"), key=key)
@@ -760,7 +758,6 @@ class Beat6_Consistency(_visuals.ClipScene):
         panels = _engine.VGroup()
         forms = _engine.VGroup()
         bounds = {tag: self.cell_box(tag) for tag in (self.focus, self.contrast)}
-        num = lambda v: self.number(v, 2 if abs(round(v, 2) - v) < 1e-9 else 3)
         for tag, colour, x, wide, note in ((self.focus, DATA, 1.0, 4.3, ("nearest-support cell", "Zelle der nächsten Stütze")), (self.contrast, GLASS, 5.1, 3.5, ("slab minus openings", "Decke ohne Öffnungen"))):
             x0, x1, y0, y1 = bounds[tag]
             kind = {"edge": ("edge piloti", "Randpiloti"), "interior": ("interior piloti", "Innenpiloti"), "corner": ("corner piloti", "Eckpiloti")}[self.cell[tag]["kind"]]
@@ -788,7 +785,6 @@ class Beat6_Consistency(_visuals.ClipScene):
         mix = lambda old, new: old + (new - old) * alpha.get_value()
         udl = self.live(lambda: _engine.VGroup(*[self.arrow(section.at(self.cut_x, y, storeys["roof"]) + (0, 0.02, 0), mix(q_old, q_new) * self.k_q, colour, width=3.5)
                                                  for zid, y, q_old, q_new, colour in arrows]))
-        span = max(self.roof_spans(), key=lambda s: s[1] - s[0])
         q_label = self.live_label(lambda: "q = " + self.quantity(mix(0, self.q_new - self.q_old), "kN/m²", 2),
                                   (-6.9, section.at(self.cut_x, 0.0, storeys["roof"])[1] + 0.3 + self.q_new * self.k_q, 0), size=S_LABEL, color=DATA, anchor="l")
         feet = {tag: section.at(self.cut_x, self.pilotis[tag]["y"], 0.0) for tag in self.column}
@@ -808,7 +804,6 @@ class Beat6_Consistency(_visuals.ClipScene):
         group.add(self.label(f"{self.trib_new['method']}, not FEM", f"{self.trib_new['method_de']}, keine FEM", (x0, top, 0), size=S_SMALL, color=MUTED, anchor="l"),
                   self.formula([("ΔR", GOOD), ("=", INK), ("A", DATA), ("·", INK), ("Δq", DATA)], (point[0], top - 0.6, 0), color=MUTED))
         for index, (tag, colour) in enumerate(((self.focus, DATA), (self.contrast, GLASS))):
-            entry = self.cell[tag]["zones"]["roof"]
             area, r_old, r_new = self.cell[tag]["area"], self.reaction_old[tag], self.reaction_new[tag]
             y = top - 1.55 - 1.3 * index
             group.add(self.label(f"{self.tr('piloti', 'Piloti')} {tag}", None, (x0, y, 0), size=S_LABEL, color=colour, anchor="l"),
@@ -821,7 +816,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def signed(self, value):
-        """±️ A rounded change with its sign, a plain zero when nothing changes."""
+        """➕ A rounded change with its sign, a plain zero when nothing changes."""
         shown = round(value)
         return ("+" if shown > 0 else "") + self.number(shown, 0)
 
@@ -853,7 +848,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def _spread(self):
-        """🌡️ Beat 11: every piloti changes by its own roof area; the largest, a small one and one that stays at zero."""
+        """🎨 Beat 11: every piloti changes by its own roof area; the largest, a small one and one that stays at zero."""
         plan_at, scale = (-3.4, 0.15, 0), 0.18
         ranked = sorted(self.delta.items(), key=lambda item: -item[1])
         largest, smallest = ranked[0][0], min(ranked, key=lambda item: item[1])[0]
@@ -878,7 +873,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.show("spread", new=[cells, card, rows, count_note, sums, legend], seconds=5.0)
 
     def slab_corner(self, view_at, scale, model, level_z, *, side):
-        """📍 The screen corner of a slab at one height that lies furthest to the left or right in the axonometric."""
+        """📌 The screen corner of a slab at one height that lies furthest to the left or right in the axonometric."""
         box = self.geometry["box"]
         corners = [np.array(self.axon_point(x, y, level_z, view_at, scale, model=model)) for x in (0.0, box["length"]) for y in (0.0, box["width"])]
         return max(corners, key=lambda p: p[0] * side)
@@ -1053,7 +1048,7 @@ class Beat6_Consistency(_visuals.ClipScene):
             _engine.LaggedStart(*[_engine.Create(tick) for tick in ticks], lag_ratio=0.5)], track=[ticks], seconds=5.0)
 
     def _resolve(self):
-        """✅ Beat 17: the link is updated to revision 2; the arrows match again and the check finds nothing."""
+        """🔃 Beat 17: the link is updated to revision 2; the arrows match again and the check finds nothing."""
         model_view, fixed_view, a, b = self.pair(stale=False)
         head_left = self.badge(f"{self.tr('architecture + structure', 'Architektur + Tragwerk')} · {self.rev(self.revision(self.resolved))}", (-3.45, 2.0, 0), color=ARCH, size=S_LABEL)
         head_right = self.badge(f"{self.tr('structural analysis', 'Tragwerksanalyse')} · {self.rev(self.link_new['source_revision'])}", (3.45, 2.0, 0), color=GOOD, size=S_LABEL)
@@ -1080,7 +1075,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         """🧑 One edit of the slab: person, revision, paving depth, build-up and the unchanged GlobalId."""
         card = self.panel(5.0, 2.65, point, color)
         x, y = point[0], point[1]
-        group = _engine.VGroup(card, self.person((x - 2.1, y + 0.82, 0), color, 0.42), self.text(title, (x - 1.75, y + 0.98, 0), size=S_LABEL, color=color, anchor="l"),
+        group = _engine.VGroup(card, self.person((x - 2.1, y + 0.74, 0), color, 0.4), self.text(title, (x - 1.75, y + 0.98, 0), size=S_LABEL, color=color, anchor="l"),
                                self.text(f"{self.rev(self.revision(model))} · {self.tr('paving', 'Belag')} {self.quantity(paving, 'm', 2)} *", (x - 2.3, y + 0.5, 0), size=S_LABEL, color=INK, anchor="l"),
                                self.build_up(model, (x - 1.7, y - 0.95, 0), 1.9, 1.0, labels=False, dims=False, lit="paving"),
                                self.mono(self.gid, (x - 0.3, y - 0.2, 0), size=S_SMALL, color=DATA, anchor="l"),
@@ -1101,13 +1096,13 @@ class Beat6_Consistency(_visuals.ClipScene):
         self.show("fork", new=[root_group, edit_a, edit_b, arrows, middle], seconds=4.4)
 
     def _decide(self):
-        """⚖️ Beat 19: the GlobalId cannot merge two loads; a person decides."""
+        """🙋 Beat 19: the GlobalId cannot merge two loads; a person decides."""
         stacks = _engine.VGroup(self.load_stack((-3.4, -2.3, 0), self.paving_new, scale=0.27, old=self.q_old), self.load_stack((3.4, -2.3, 0), self.paving_alt, scale=0.27, old=self.q_old, side=1))
         names = _engine.VGroup(self.label(f"{self.tr('edit A', 'Änderung A')} · {self.rev(self.revision(self.new))} · {self.tr('paving', 'Belag')} {self.quantity(self.paving_new, 'm', 2)} *", None, (-3.4, 2.75, 0), size=S_LABEL, color=ARCH),
                                self.label(f"{self.tr('edit B', 'Änderung B')} · {self.rev(self.revision(self.alt))} · {self.tr('paving', 'Belag')} {self.quantity(self.paving_alt, 'm', 2)} *", None, (3.4, 2.75, 0), size=S_LABEL, color=STRUCT),
                                self.mono(self.gid, (-3.4, 2.35, 0), size=S_SMALL, color=DATA), self.mono(self.gid, (3.4, 2.35, 0), size=S_SMALL, color=DATA))
         verdict = _engine.VGroup(self.unequal((0.0, 0.7, 0)), self.paragraph([self.tr("no automatic", "keine automatische"), self.tr("merge", "Zusammenführung")], (0.0, 0.2, 0), size=S_LABEL, color=MUTED, pitch=0.3, anchor="c"),
-                                 self.person((0.0, -1.0, 0), GOOD, 0.6), self.label("a person decides", "eine Person entscheidet", (0.0, -1.5, 0), size=S_LABEL, color=GOOD, width=2.9))
+                                 self.person((0.0, -1.0, 0), GOOD, 0.6, "bim-consistency-decider"), self.label("a person decides", "eine Person entscheidet", (0.0, -1.5, 0), size=S_LABEL, color=GOOD, width=2.5))
         self.show("decide", new=[stacks, names, verdict], seconds=4.4)
 
     def _recap(self):

@@ -49,7 +49,7 @@ def geometry(api,model,obj):
     parts=api._native_public_value(api._ramp_finish_reference_parts(model,obj))
     for part in parts:
         part.update(api._polyhedron_part(api.part_vertices(part),api.part_faces(part)))
-    api._surface_finishes().apply_material_appearance(parts,lambda tag:api._find(model,tag),obj.get('material'))
+    api.surface_finishes().apply_material_appearance(parts,lambda tag:api._find(model,tag),obj.get('material'))
     return {'tag':obj['tag'],'guid':obj['guid'],'class':obj['class'],'storey':obj['storey'],'kind':obj['geometry']['kind'],'predefined_type':obj.get('predefined_type'),'name':deepcopy(obj['name']),'domains':deepcopy(obj['metadata']['domains']),'parts':parts,'shared_parts':[]}
 
 

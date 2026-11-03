@@ -15,14 +15,14 @@ describe("cantilever against anastruct", () => {
     const wall = result.reactions[0]!;
     expect(wall.active).toBe(true);
     expect(near(wall.fyN, 1000, 1e-12)).toBe(true);
-    expect(near(wall.momentNm, 2000, 1e-12)).toBe(true);
+    expect(near(wall.mzNm, 2000, 1e-12)).toBe(true);
     expect(Math.abs(wall.fxN)).toBeLessThan(1e-9);
     expect(near(wall.fyN, oracle["reactionFyN"]!, 1e-9)).toBe(true);
-    expect(near(wall.momentNm, oracle["reactionMomentNm"]!, 1e-9)).toBe(true);
+    expect(near(wall.mzNm, oracle["reactionMomentNm"]!, 1e-9)).toBe(true);
   });
   it("is in equilibrium", () => {
     expect(Math.hypot(result.residual.fxN, result.residual.fyN)).toBeLessThan(1e-9 * 1000);
-    expect(Math.abs(result.residual.momentNm)).toBeLessThan(1e-9 * 2000);
+    expect(Math.abs(result.residual.mzNm)).toBeLessThan(1e-9 * 2000);
   });
   it("draws M(x) = -P(L-x) hogging and constant shear V = +P", () => {
     expect(beam.stations.length).toBeGreaterThanOrEqual(24);

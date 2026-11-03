@@ -1,0 +1,26 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { evaluate } from "../../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+const L = join(import.meta.dirname, "../../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage");
+const slug = process.argv[2]!;
+const file = ["👤️humans"].map((g) => join(L, "🗂️catalog", g, slug, "🔣️.json"))[0]!;
+const a = JSON.parse(readFileSync(file, "utf8")).asset;
+const pose = a.presentation.defaultPose;
+const snap = (asset: any) => { const s = evaluate(asset, { kind: "pose", pose }, { kind: "scale", scale: { denominator: 50 } }); return Object.fromEntries(["front", "plan"].flatMap((v) => s.shapes[v].map((e: any) => [`${v}/${e.shape.id}@${e.shape.bone}`, e.rings.flat()]))); };
+const before = snap(a);
+const b = JSON.parse(JSON.stringify(a));
+const byId = new Map<string, any>(b.rig.bones.map((x: any) => [x.id, x]));
+for (const bone of b.rig.bones) if (/^(arm|upper-arm|thigh)-[lr]$/.test(bone.id)) bone.z = (bone.id.endsWith("-l") ? 1 : -1) * 0.2;
+const worldZ = (id: string, A: any): number => { const m = new Map<string, any>(A.rig.bones.map((x: any) => [x.id, x])); let z = 0; for (let q = m.get(id); q; q = q.parent ? m.get(q.parent) : undefined) z += q.z ?? 0; return z; };
+for (const r of Object.values<any>(b.representations)) if (r.status === "authored") for (const v of ["elevation", "front", "plan"]) for (const s of r.geometry[v]) if (s.solid?.kind === "revolved") s.solid.axisZ = (s.solid.axisZ ?? 0) + worldZ(s.solid.axisBone, a) - worldZ(s.solid.axisBone, b);
+const after = snap(b);
+const out: string[] = [];
+for (const k of Object.keys(before)) { const p = before[k], q = after[k]; if (!q || p.length !== q.length) { out.push(k + " len"); continue; } let d = 0; for (let i = 0; i < p.length; i++) d = Math.max(d, Math.hypot(p[i].x - q[i].x, p[i].y - q[i].y)); if (d > 1e-6) out.push(`${k} ${d.toFixed(3)}`); }
+console.log(out.join("\n"), "\npose", pose, "parents", JSON.stringify(b.rig.bones.filter((x: any) => /^(arm|upper-arm|thigh)-[lr]$/.test(x.id)).map((x: any) => x.id + "<" + x.parent)));
+const sb = evaluate(b, { kind: "pose", pose }, { kind: "scale", scale: { denominator: 50 } });
+const bb = evaluate(b, { kind: "pose", pose: "tripod-stand" });
+console.log(JSON.stringify(sb.bones["thigh-l"].frame.o), JSON.stringify(sb.bones["thigh-l"].offset));
+const rest = (await import("../../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🦴️rig/🟦️.ts")).restFrames(b.rig);
+console.log(JSON.stringify(rest["thigh-l"].frame.o), JSON.stringify(rest["pelvis"].frame.o), b.rig.bones.find((x: any) => x.id === "pelvis").z, b.rig.root);
+const sh = b.representations["50"].geometry.front.find((s: any) => s.id === "thigh-l");
+console.log(JSON.stringify(sh).slice(0, 300));

@@ -56,6 +56,23 @@ class _SceneView(_book.EngineView):
         return float(self.widths[col]) if sheet == "Program" and col in self.widths else super().column_width(sheet, col)
 
 
+def occupant_spots(room, fits, size, count, margin=0.02, step=0.02) -> list:
+    """🧍 Lower-left corners in metres where ``count`` occupants of ``size`` (width, depth) stand on the net floor ``room`` (width, length): scanned from the window-wall corner down and leftwards, clear of the fittings ``(x, y, width, length)`` and of each other."""
+    (room_w, room_l), (w, d) = room, size
+    placed = []
+    rows = int((room_l - 2 * margin - d) / step + 1e-9) + 1
+    cols = int((room_w - 2 * margin - w) / step + 1e-9) + 1
+    free = lambda x, y: all(x + w <= px + 1e-9 or px + pw <= x + 1e-9 or y + d <= py + 1e-9 or py + pd <= y + 1e-9 for px, py, pw, pd in [*fits, *[(px, py, w, d) for px, py in placed]])
+    for row in range(rows):
+        for col in range(cols):
+            x, y = room_w - margin - w - col * step, room_l - margin - d - row * step
+            if free(x, y):
+                placed.append((x, y))
+            if len(placed) == count:
+                return placed
+    raise ValueError(f"room {room} has no free floor for {count} occupants of {size}")
+
+
 def _span(a1: str) -> list:
     """🔲 Every cell address of a range, row by row."""
     c1, r1, c2, r2 = _book.parse_range(a1)
@@ -131,7 +148,6 @@ class Beat3_Program(_visuals.ClipScene):
         self.keys = [(s.building, s.tower, s.storey, s.facade, s.item) for s in self.slots]
         self.ktype = {k: s.type for k, s in zip(self.keys, self.slots)}
         self._later, self._seconds = {"pre": [], "post": [], "trash": []}, None
-        self._axon = self.tower_axon(**TOWER_FIT, types=False)
         self.paint, self.litset, self.stamp = {}, None, _engine.ValueTracker(0)
         self.L, self.R = None, []
         self.swap_row = next(i + 2 for i, s in enumerate(self.slots) if s.type == SWAP_FROM)
@@ -156,7 +172,7 @@ class Beat3_Program(_visuals.ClipScene):
         return super().step(key, *animations, seconds=seconds)
 
     def play(self, *animations, **kwargs):
-        """🎬 Play queued morphs before and after the main animation of a clause; morph targets that only bridge are removed afterwards."""
+        """🎦 Play queued morphs before and after the main animation of a clause; morph targets that only bridge are removed afterwards."""
         main = kwargs.get("run_time") == getattr(self, "_seconds", None) and bool(self._later["pre"] or self._later["post"] or self._later["trash"])
         if not main:
             return super().play(*animations, **kwargs)
@@ -181,16 +197,9 @@ class Beat3_Program(_visuals.ClipScene):
         """📌 Register mobjects that morphs brought into the scene as live right-panel objects."""
         self.R += [m for m in mobs if m not in self.R]
 
-    def coloured(self, color):
-        """🎨 The tower drawn in one flat tint, cached per colour; its capsules are the real morph sources."""
-        cache = self.__dict__.setdefault("_coloured", {})
-        if color not in cache:
-            cache[color] = self.tower_axon(**TOWER_FIT, types=False, tint=lambda k, c=color: c)
-        return cache[color]
-
     def silhouettes(self, keys, color=None):
-        """🔶 One real capsule drawing per key in the capsule's type colour (or the given colour), at its place on the tower, as morph source or target."""
-        return [self.coloured(color or self.tcol(self.ktype[k])).capsules[k].copy() for k in keys]
+        """🔶 One real capsule drawing per key in the capsule's type colour (or the given colour), at its place on the tower, as morph source or target; only those capsules are copied and recoloured."""
+        return [self.tower_capsules([k], color or self.tcol(self.ktype[k]), **TOWER_FIT)[0] for k in keys]
 
     def swarm(self, animations, run, total):
         """🐝 Staggered group of morphs whose total duration is ``total`` seconds."""
@@ -219,7 +228,7 @@ class Beat3_Program(_visuals.ClipScene):
         return self.badge(string, point, color=color, size=S_SMALL, filled=False, anchor=anchor)
 
     def tcol(self, key):
-        """🎨 The fixed colour of a capsule type."""
+        """🌈 The fixed colour of a capsule type."""
         return TYPE_COLORS[key]
 
     def sheet_title(self, name):
@@ -237,7 +246,7 @@ class Beat3_Program(_visuals.ClipScene):
         return _x.apply(base, [{"type": "clear-cell", "sheet": "Program", "cell": cell} for cell in drop])
 
     def type_book(self, key, keep=()):
-        """🧮 The workbook with the computed cells of one type sheet cleared except the kept ones."""
+        """📘 The workbook with the computed cells of one type sheet cleared except the kept ones."""
         kept = {cell for a1 in keep for cell in _span(a1)}
         drop = [cell for a1 in TYPE_CELLS for cell in _span(a1) if cell not in kept]
         return _x.apply(self.wb, [{"type": "clear-cell", "sheet": f"Type {key}", "cell": cell} for cell in drop])
@@ -268,7 +277,7 @@ class Beat3_Program(_visuals.ClipScene):
             self.remove(*stale)
 
     def stage(self, *animations, left=None, right=None, add=(), drop=()):
-        """⏱️ The animations of one narration clause: swap the left window or the right panel, add or drop right-panel objects."""
+        """🎚️ The animations of one narration clause: swap the left window or the right panel, add or drop right-panel objects."""
         plays = list(animations)
         if left is not None:
             self.purge()
@@ -295,7 +304,7 @@ class Beat3_Program(_visuals.ClipScene):
 
     def capsule_center(self, key):
         """🎯 Screen centre of one capsule of the tower currently drawn."""
-        return self.tower_axon(**TOWER_FIT, types=False).capsules[key].get_center()
+        return self.tower_capsules([key], MUTED, **TOWER_FIT)[0].get_center()
 
     def bump(self):
         """🔔 Make the tower rebuild with the current paint and lit set."""
@@ -316,7 +325,7 @@ class Beat3_Program(_visuals.ClipScene):
         return _engine.UpdateFromAlphaFunc(self.stamp, update, run_time=seconds, rate_func=_engine.linear)
 
     def layout(self, t):
-        """📐 Teaching layout of the fittings on the net floor: rows from the core wall, wrapping at the interior width; metres (fitting index, key, x, y, width, length)."""
+        """🪑 Teaching layout of the fittings on the net floor: rows from the core wall, wrapping at the interior width; metres (fitting index, key, x, y, width, length)."""
         x = y = row = 0.0
         out = []
         for index, f in enumerate(t.fittings):
@@ -343,13 +352,20 @@ class Beat3_Program(_visuals.ClipScene):
         group.ring = [pt(0, 0), pt(iw, 0), pt(iw, il), pt(0, il)]
         group.people = _engine.VGroup()
         if people:
-            for k in range(int(t.occupants)):
-                group.people.add(_art.person_glyph(pt(iw - 0.3 - 0.4 * k, il - 0.27), color=INK, scale=0.62 * scale))
+            probe = self.occupant(np.zeros(3), scale)
+            size = (probe.width / scale, probe.height / scale)
+            fits = [(x, y, w, l) for _, _, x, y, w, l in self.layout(t)]
+            for x, y in occupant_spots((iw, il), fits, size, int(t.occupants)):
+                group.people.add(probe.copy().move_to(pt(x + size[0] / 2, y + size[1] / 2)))
         for index, key, x, y, w, l in self.layout(t):
             colour = FITTING_COLORS[key]
             rect = _engine.Rectangle(width=w * scale, height=l * scale, stroke_color=colour, stroke_width=W_EDGE, fill_color=colour, fill_opacity=0).move_to((pt(x, y) + pt(x + w, y + l)) / 2)
             group.fits.setdefault(index, []).append((rect, [pt(x, y), pt(x + w, y), pt(x + w, y + l), pt(x, y + l)], colour))
         return group
+
+    def occupant(self, centre, scale):
+        """🙋 One handcrafted occupant seen from above, in true plan metres at ``scale`` drawing units per metre, centred on ``centre``; the plan cast is yawed by minus 90 degrees, so the occupant faces the core side (down on paper) with the back to the window wall at the top edge. [staffage](../../../🧍️staffage/README.md)"""
+        return _art.staffage("excel-program-occupant", unit=scale, color=INK).rotate(-np.pi / 2).move_to(centre)
 
     def outlines(self, plan):
         """▭ The fitting rectangles of a plan."""
@@ -364,7 +380,7 @@ class Beat3_Program(_visuals.ClipScene):
         return _engine.VGroup(*parts)
 
     def legend(self, t, key, areas):
-        """🏷️ Fitting legend: colour chip, localized name and, for the first ``areas`` rows, the area cell as the sheet shows it."""
+        """🪧 Fitting legend: colour chip, localized name and, for the first ``areas`` rows, the area cell as the sheet shows it."""
         group = _engine.VGroup()
         for index, f in enumerate(t.fittings):
             y = LEGEND_AT[1] - index * 0.42
@@ -502,7 +518,7 @@ class Beat3_Program(_visuals.ClipScene):
         return parts
 
     def act_counts(self):
-        """📋 The capsule table, COUNTIF, COUNTIFS."""
+        """🗒️ The capsule table, COUNTIF, COUNTIFS."""
         lst = self.window(self.wb, "Program", "H:M", (1, 11), selected="H1")
         self.paint = {}
         self.bump()
@@ -521,7 +537,7 @@ class Beat3_Program(_visuals.ClipScene):
             dots.append(_morph.token("", kind="item", color=self.tcol(self.ktype[self.keys[i]]), size=0.8).move_to((right + 0.3, (top + bottom) / 2, 0)))
         rest = self.silhouettes(self.keys[shown:])
         rows = _morph.token(f"{len(self.slots)} {self.tr('rows', 'Zeilen')}", kind="cell", color=GOOD).move_to((6.3, 1.75, 0))
-        self.later(_morph.scatter([self._axon.capsules[k].copy() for k in self.keys[:shown]], dots, lag=0.12, path_arc=-0.7, run_time=1.0, limit=2.4, pairs_fn=_morph.capsule_pairs, dip=0.15))
+        self.later(_morph.scatter(self.tower_capsules(self.keys[:shown], None, **TOWER_FIT), dots, lag=0.12, path_arc=-0.7, run_time=1.0, limit=2.4, pairs_fn=_morph.capsule_pairs, dip=0.15))
         self.later(_morph.gather(rest, rows, lag=0.012, run_time=0.7, limit=1.6))
         self.step("table", *plays, seconds=2.6)
         self.keep(rows, *dots)
@@ -532,7 +548,7 @@ class Beat3_Program(_visuals.ClipScene):
         row_frame = self.xl_ref_frame(lst, f"H{self.swap_row}:M{self.swap_row}", color=DATA, dashed=True)
         plays = self.stage(lst.select(f"M{self.swap_row}"), drop=[ribbon, name_chip, rows], add=[tag, row_frame])
         pill = _morph.token(self.vals[("Program", f"M{self.swap_row}")], kind="item", color=self.tcol(SWAP_FROM)).move_to(lst.point(f"M{self.swap_row}"))
-        lit = self._axon.capsules[key].copy()
+        lit = self.tower_capsules([key], None, **TOWER_FIT)[0]
         self.later(_engine.FadeIn(pill, run_time=0.3), when="post")
         self.later(_morph.morph(pill, lit, pairs=[(b, a) for a, b in _morph.capsule_pairs(lit, pill)], path_arc=-0.6, run_time=1.3, dip=0.15), when="post", clean=[lit])
         self.step("row", *plays, seconds=2.2)
@@ -576,7 +592,7 @@ class Beat3_Program(_visuals.ClipScene):
         self.step("countifs", *plays, seconds=2.6)
 
     def act_areas(self):
-        """📐 Free floor per type, XLOOKUP, SUMPRODUCT, the chart and the tower totals."""
+        """🗂️ Free floor per type, XLOOKUP, SUMPRODUCT, the chart and the tower totals."""
         kept = ("B4:B8", "B11:E13")
         self.litset, self.paint = None, {}
         self.bump()
@@ -662,7 +678,7 @@ class Beat3_Program(_visuals.ClipScene):
         self.step("towers", *plays, seconds=2.8)
 
     def product_tiles(self):
-        """🟦 One row of tiles per type: as many tiles as capsules, with the product count times free floor written below."""
+        """🔳 One row of tiles per type: as many tiles as capsules, with the product count times free floor written below."""
         out = []
         for index, key in enumerate(self.types):
             n = int(self.vals[("Program", f"B{21 + index}")])
@@ -765,7 +781,7 @@ class Beat3_Program(_visuals.ClipScene):
         self.bump()
 
     def act_recap(self):
-        """🧾 Legend of terms in both languages beside the lit tower."""
+        """📇 Legend of terms in both languages beside the lit tower."""
         terms = [(self.tr("table", "Tabelle"), self.tr("one row per capsule, columns by name", "eine Zeile je Kapsel, Spalten über ihren Namen")),
                  ("COUNTIF", self.tr("counts the rows of one type", "zählt die Zeilen eines Typs")),
                  ("COUNTIFS", self.tr("counts rows meeting two conditions", "zählt Zeilen mit zwei Bedingungen")),

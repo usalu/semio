@@ -1,0 +1,5 @@
+[
+ {"asset":"electric-kettle","clip":"boil","env":"indoor-heated-winter","times":[150,170,184,200],"label":"1930"},
+ {"asset":"electric-kettle","clip":"boil","env":"indoor-heated-winter","times":[150,170,184,200],"label":"1990","patch":[{"region":"water","path":"operating.heatW","value":1990}]},
+ {"asset":"electric-kettle","clip":"boil","env":"indoor-heated-winter","times":[150,170,184,200],"label":"2050","patch":[{"region":"water","path":"operating.heatW","value":2050}]}
+]

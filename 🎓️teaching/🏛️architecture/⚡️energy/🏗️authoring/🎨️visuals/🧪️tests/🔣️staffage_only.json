@@ -1,0 +1,275 @@
+{
+  "root": "🎓️teaching",
+  "file_name": "🐍️.py",
+  "clip_folder": "🎬️clip",
+  "skip_folders": ["🧪️tests", ".venv", "node_modules", "__pycache__"],
+  "forbidden_names": ["person_glyph", "seated_person_glyph", "object_silhouette", "lamp_glyph", "respiration_parts"],
+  "forbidden_casts": ["ventilation-need-occupant-mirrored", "ventilation-volume-office-worker", "ventilation-volume-student", "heating-calculation-radiator", "heating-calculation-radiator-mirrored", "optimization-room-radiator", "standing", "walking", "radiator", "seated-reader", "shared-radiator", "shared-watt-bulb", "shared-watt-monitor", "shared-watt-vacuum"],
+  "rule_a": {
+    "scope": "🏛️architecture",
+    "object_nouns": {
+      "catalog": "🏛️architecture/🧍️staffage/🗂️catalog",
+      "slug_depth": "*/*",
+      "stop_words": ["1929", "ac", "adjustable", "adult", "balcony", "bar", "bay", "box", "cargo", "carrying", "ceiling", "child", "circulation", "city", "column", "concrete", "cooking", "courier", "curtain", "dairy", "date", "decentralised", "delivery", "desktop", "diesel", "dining", "domestic", "drinking", "elderly", "electric", "electricity", "english", "evaporative", "expansion", "external", "finned", "flight", "folding", "gas", "glass", "glulam", "guide", "hand", "head", "heat", "height", "herring", "hot", "indoor", "japanese", "kick", "kitchen", "kneeling", "leaning", "leaved", "lombardy", "london", "market", "masonry", "multi", "office", "oil", "on", "operating", "outdoor", "panel", "park", "patio", "picnic", "plate", "playground", "pollarded", "pregnant", "red", "retractable", "roe", "room", "running", "scots", "seat", "seated", "sectional", "shopping", "single", "sleeping", "sliding", "small", "solar", "sorption", "split", "stack", "standing", "steel", "stem", "street", "swivel", "thermal", "thermostatic", "three", "tied", "tilt", "tour", "user", "vintage", "walking", "wall", "waste", "water", "weeping", "white", "with"],
+      "extra_nouns": ["derrick", "occupant", "tank", "grille", "plant", "thermo", "thermometer", "clock", "sink", "cooker", "evaporator", "condenser", "device", "figure", "cooler", "walker", "sleeper", "student", "cook", "blackboard", "lattice", "bulb", "shelf"]
+    },
+    "primitives": ["Circle", "Rectangle", "RoundedRectangle", "Square", "Polygon", "Ellipse", "Dot", "Line", "Arc", "SurroundingRectangle", "RegularPolygon", "Triangle", "Annulus"],
+    "staffage_calls": ["staffage", "fitted_staffage", "staffage_motion", "staffage_height", "staffage_parts", "_staffage", "_staffage_parts", "_staffage_motion", "_fitted_staffage", "_cast", "_use_cast", "_figure", "build", "pendant_lamp", "watt_anchor"],
+    "allowed": {
+      "⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py::_north_window": "section: aperture cut through the section-material wall, glass from the shared window glyph",
+      "⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py::_year_clock":"diagram instrument: dial of the shared clock glyph with a redrawn month hand",
+      "⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py::_valve_dial": "diagram instrument: dial mark redrawn on the anchor of the staffage valve",
+      "⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py::_window_wall": "structure: wall opening of the building section",
+      "⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py::_lattice": "diagram: bonded and free particles of the physics lens",
+      "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::person_bars": "chart: bar chart of person heat outputs",
+      "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::_beam": "diagram: a straight light ray of the physics lens, not a structural beam",
+      "🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py::ramp_strip": "chart: colour-ramp legend strip, not a wheelchair ramp",
+      "🎯️optimization/🎬️clip/🎲️sampling/🐍️.py::_plane_group": "chart: axis lines, ticks and design-space box of a coordinate plane, not a tree",
+      "🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📋️plan/🐍️.py::_plan_ramps": "structure: IFC ramp footprints of the Savoye floor plan, drawn from model geometry",
+      "🎯️optimization/🎬️clip/🎲️sampling/🐍️.py::_meters": "chart: sample meters of the optimization run",
+      "🎯️optimization/🎬️clip/🏆️pareto/🐍️.py::_payback_table": "table: payback figures",
+      "🎯️optimization/🎬️clip/🧪️experiments/🐍️.py::_table": "table: experiment results",
+      "📊️excel/🎬️clip/📋️program/🐍️.py::table_dressing": "table: spreadsheet cell styling",
+      "🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py::present_trees": "data diagram: Grasshopper data trees",
+      "🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py::_table": "table: capsule parameters",
+      "🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py::_table": "table: component anatomy",
+      "🦗️grasshopper/🎬️clip/🧱️model/🐍️.py::window": "structure: CAD window geometry of the solid model"
+    },
+    "sources": {
+      "def _hob(self):\n    return VGroup(Rectangle(), Circle())": ["_hob"],
+      "def _pot(self):\n    return Polygon(a, b, c)": ["_pot"],
+      "def _vent_unit(x):\n    return VGroup(Rectangle(), Line(a, b))": ["_vent_unit"],
+      "def _hob(self):\n    return fitted_staffage('physics-fundamentals-hob', width=1)": [],
+      "def _valve(self):\n    group = VGroup(Circle())\n    group.add(staffage('demand-practice-valve', unit=1))\n    return group": [],
+      "def _wall(self):\n    return Rectangle()": [],
+      "def _spotlight(self):\n    return Circle()": [],
+      "def _hob(self):\n    return VGroup()": [],
+      "def _collector(self):\n    return VGroup(Rectangle(), Line(a, b))": ["_collector"],
+      "def _meter_box(self):\n    return VGroup(RoundedRectangle(), Circle())": ["_meter_box"],
+      "def _diffuser(x):\n    return VGroup(Polygon(a, b, c))": ["_diffuser"],
+      "def _humidifiers(self):\n    return Rectangle()": ["_humidifiers"],
+      "def _cylinder(self):\n    return Rectangle()": ["_cylinder"],
+      "def _collector(self):\n    return fitted_staffage('cooling-solar-collector', width=1)": [],
+      "def _meter_box(self):\n    return VGroup(Rectangle(), staffage('demand-gas-meter', unit=1))": [],
+      "def _diffuser(x):\n    return fitted_staffage('ventilation-ceiling-diffuser', width=1)": [],
+      "def _heat_flow(self):\n    return Line(a, b)": [],
+      "def _solar_gain(self):\n    return Line(a, b)": []
+    },
+    "head_nouns": {
+      "solar-thermal-collector": ["collector"],
+      "gas-meter": ["meter"],
+      "ceiling-diffuser": ["diffuser"],
+      "hot-water-cylinder": ["cylinder"],
+      "evaporative-humidifier": ["humidifier"],
+      "external-venetian-blind": ["venetian", "blind"],
+      "oil-pumpjack": ["pumpjack"]
+    }
+  },
+  "rule_c": {
+    "minimum_primitives": 3,
+    "group_calls": ["VGroup", "Group"],
+    "collect_methods": ["add", "add_to_back", "append", "extend", "insert"],
+    "context_calls": ["Axes", "NumberPlane", "NumberLine", "ThreeDAxes", "Table", "MobjectTable", "MathTable", "IntegerTable", "DecimalTable", "BarChart", "Graph", "DiGraph", "plot", "get_graph", "get_axes", "c2p", "coords_to_point"],
+    "allowed": {
+      "⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py::Beat2_HumanFactor.construct": "chart: activity scale with axis line, ticks and data dots",
+      "⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py::Beat3_IsolateAirflow.construct": "diagram: abstract equality balance of two quantities, not a weighing device (the catalog has no balance asset)",
+      "⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py::_document": "diagram: certificate card with header band and ruled lines, a UI card not a paper object",
+      "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::Beat7_SensibelLatent.construct": "diagram: fade-out group of the psychrometric chart parts, no new object",
+      "🎯️optimization/🎬️clip/⚖️index/🐍️.py::Board._build": "chart: score rows and rank badges of the index board",
+      "🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py::RoomVisuals.plan": "diagram: floor plan with orientation ring and compass, structure only",
+      "🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py::RoomVisuals.room_section.build": "structure: room section geometry, daylight wedge, lamp halo and light cone around the pendant lamp casts",
+      "🎯️optimization/🎬️clip/🎲️sampling/🐍️.py::Beat2_GridRandomSampling._orientation_glyph": "glyph: mini plan with north tick and glazed facade of a design sample",
+      "🏗️bim/🎬️clip/🔗️consistency/🐍️.py::Beat6_Consistency.leak_marks": "diagram: gap, leak path and stain annotations on the build-up detail",
+      "📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py::Window._title_bar": "UI chrome: application title bar of the workbook window",
+      "🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py::Beat2_Capsule._icon": "glyph: legend icons drawn from the clip's own widgets",
+      "🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py::Beat2_Capsule._table": "table: capsule parameter table",
+      "🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py::Beat1_Anatomy._eye": "UI glyph: preview eye above a Grasshopper component, struck through when off"
+    },
+    "sources": {
+      "def f():\n    return VGroup(Rectangle(), Circle(), Line(a, b))": ["f"],
+      "def f():\n    g = VGroup()\n    g.add(Rectangle())\n    g.add(Circle())\n    g.add(Line(a, b))\n    return g": ["f"],
+      "def f():\n    body = Rectangle()\n    head = Circle()\n    arm = Line(a, b)\n    return VGroup(body, head, arm)": ["f"],
+      "class A:\n    def construct(self):\n        self.add(VGroup(Polygon(a, b, c), Dot(), Square()))": ["A.construct"],
+      "def f():\n    return VGroup(Rectangle(), Circle())": [],
+      "def f():\n    return VGroup(Rectangle(), Rectangle(), Rectangle(), Line(a, b))": [],
+      "def f():\n    return VGroup(Rectangle(), Circle(), Line(a, b), staffage('x-y', unit=1))": [],
+      "def f():\n    return VGroup(Rectangle(), Circle(), Line(a, b), Axes())": [],
+      "def f():\n    return VGroup(Rectangle(), Circle(), Line(a, b), Table(rows))": [],
+      "def f():\n    body = Rectangle()\n    head = Circle()\n    arm = Line(a, b)\n    return [body, head, arm]": ["f"],
+      "def f():\n    body = Rectangle()\n    head = Circle()\n    arm = Line(a, b)\n    return body": [],
+      "def f():\n    return VGroup(Text('a'), Tex('b'), MathTex('c'))": []
+    }
+  },
+  "rule_b": {
+    "scope": "⚡️energy",
+    "allowed": {
+      "shared-desk": "furniture: desk beside the thermal figures, carries no heat",
+      "cooling-internal-gains-office-chair": "furniture: chair of the seated worker, carries no heat",
+      "cooling-heating-comparison-table": "furniture: table under the thermal toaster, carries no heat",
+      "ventilation-volume-blackboard": "furniture: board that shows the room size, carries no heat",
+      "ventilation-volume-crates-low": "storage: crate stack as volume measure, carries no heat",
+      "ventilation-volume-crates-half": "storage: crate stack as volume measure, carries no heat",
+      "ventilation-volume-crates-high": "storage: crate stack as volume measure, carries no heat",
+      "demand-primary-energy-tree": "landscape: tree beside the plant, carries no heat"
+    },
+    "vector_allowed": { "x-desk": "furniture beside a thermal figure" },
+    "manifest": {
+      "x-person": { "view": "thermal" },
+      "x-lamp": { "view": "dark-line" },
+      "x-desk": { "view": "dark-line" },
+      "y-a": { "view": "thermal" },
+      "y-b": { "view": "dark-line" },
+      "y-c": { "view": "dark-line" }
+    },
+    "resolve": {
+      "staffage('x-person', unit=1)": ["x-person"],
+      "K = 'x-lamp'\nfitted_staffage(K, width=1)": ["x-lamp"],
+      "P = 'y-'\nstaffage(P + name)": ["y-a", "y-b", "y-c"],
+      "P = 'y-'\nstaffage(f'{P}{name}')": ["y-a", "y-b", "y-c"],
+      "staffage(f'y-{name}', unit=1)": ["y-a", "y-b", "y-c"],
+      "staffage(name, unit=1)": [],
+      "staffage('unknown-id')": []
+    },
+    "sources": {
+      "staffage('x-lamp', unit=1)": ["x-lamp"],
+      "staffage('x-desk', unit=1)": [],
+      "staffage('x-person', unit=1)": [],
+      "P = 'y-'\n_cast(P + name)": ["y-b", "y-c"],
+      "pendant_lamp(top, 1, on_cast='x-lamp', off_cast='x-person')": ["x-lamp"]
+    }
+  },
+  "thermal_span": {
+    "manifest": {
+      "a-warm": { "view": "thermal", "thermalSpanK": 25 },
+      "b-warm": { "view": "thermal", "thermalSpanK": 25 },
+      "c-wide": { "view": "thermal", "thermalSpanK": 40 },
+      "d-absolute": { "view": "thermal" },
+      "e-line": { "view": "dark-line" }
+    },
+    "sources": {
+      "class A:\n    x = staffage('a-warm')\n    y = staffage('b-warm')": [[25]],
+      "class A:\n    x = staffage('a-warm')\n    y = staffage('c-wide')": [[25, 40]],
+      "class A:\n    x = staffage('a-warm')\n    y = staffage('d-absolute')": [[null, 25]],
+      "class A:\n    x = staffage('a-warm')\n    y = staffage('e-line')": [[25]],
+      "class A:\n    x = staffage('a-warm')\nclass B:\n    x = staffage('c-wide')": [[25], [40]],
+      "staffage('e-line')": []
+    }
+  },
+  "manifest": "🧍️staffage/🔣️.json",
+  "forbidden_paths": ["🫟️silhouettes", "🏃️activity"],
+  "minimum_scanned_files": 40,
+  "violations": [
+    "from x import person_glyph",
+    "y = V.lamp_glyph(1)",
+    "def object_silhouette(): pass",
+    "n = respiration_parts"
+  ],
+  "clean": ["staffage('standing-adult', unit=1.0)", "fitted_staffage('shared-watt-laptop', width=1)", "# person_glyph in a comment"],
+  "scene_projections": {
+    "plans": ["plan"],
+    "vertical": ["elevation", "front"],
+    "clips": {
+      "⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py": "vertical",
+      "⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py": "vertical",
+      "⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py": "vertical",
+      "⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py": "vertical",
+      "⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py": "vertical",
+      "⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py": "vertical",
+      "⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py": "vertical",
+      "⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py": "vertical",
+      "⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py": "vertical",
+      "⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py": "vertical",
+      "⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py": "vertical",
+      "⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py": "vertical",
+      "⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py": "vertical",
+      "⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py": "vertical",
+      "⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py": "vertical",
+      "⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py": "vertical",
+      "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py": "vertical",
+      "🎯️optimization/🎬️clip/⚖️index/🐍️.py": "vertical",
+      "🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py": "vertical",
+      "🎯️optimization/🎬️clip/📉️extrema/🐍️.py": "vertical",
+      "🎯️optimization/🎬️clip/🧪️experiments/🐍️.py": "vertical",
+      "🏗️bim/🎬️clip/📊️information/🐍️.py": "plan",
+      "🏗️bim/🎬️clip/🔌️exchange/🐍️.py": "vertical",
+      "🏗️bim/🎬️clip/🔗️consistency/🐍️.py": "vertical",
+      "📊️excel/🎬️clip/📋️program/🐍️.py": "plan"
+    },
+    "fixture": [
+      { "scene": "plan", "views": { "a": "plan", "b": "front", "c": "elevation" }, "wrong": ["b", "c"] },
+      { "scene": "vertical", "views": { "a": "plan", "b": "front", "c": "elevation" }, "wrong": ["a"] }
+    ],
+    "mirror_fixture": { "ok": { "viewpoint": "elevation", "mirror": true }, "wrong": [{ "viewpoint": "plan", "mirror": true }, { "viewpoint": "front", "mirror": true }] }
+  },
+  "cast_rules": {
+    "mirror_suffix": "-mirrored",
+    "stretch_methods": ["stretch", "stretch_to_fit_width", "stretch_to_fit_height", "stretch_about_point"],
+    "mirrored_assets": {
+      "split-ac-indoor-unit": "wall-mounted unit with one display, one wall rest and one jet outlet: the cast hangs on the right-hand wall of the room section, so the figure is mirrored and the jet still leaves into the room",
+      "panel-radiator": "valve head and supply pipe sit on one side: the cast stands against the opposite wall of the section, so the valve stays on the room side as for the unmirrored radiator",
+      "kitchen-extractor-hood": "the hood is mirrored to face the cooking zone of the section; its two sides carry no different parts",
+      "external-venetian-blind": "slat faces and light bounces are computed from the parts of the mirrored cast, so the sun-side cut-off is read from the drawn blind"
+    },
+    "mirrored_calls": {
+      "⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py": { "standing-adult": "bilaterally symmetric adult; mirror only turns the occupant to face the other way, nothing held" },
+      "⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py": { "seated-office-worker": "typing posture is bilaterally symmetric; mirror only turns the worker to face the other way" },
+      "⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py": { "panel-radiator": "second radiator stands against the opposite wall of the house section; the valve stays on the room side" },
+      "🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py": { "panel-radiator": "radiator stands against the far wall of the room section; the valve stays on the room side" }
+    },
+    "mirror_call_sources": {
+      "staffage('a', unit=1)": [],
+      "staffage('a', unit=1, mirror=False)": [],
+      "staffage('a', unit=1, mirror=True)": ["mirror=True"],
+      "def f(mirror):\n    return staffage('a', mirror=mirror)": [],
+      "def f():\n    return [staffage('a', mirror=m) for m in (False, True)]": ["mirror=m"],
+      "staffage_motion('a', mirror=i % 2 == 1)": ["mirror=i % 2 == 1"]
+    },
+    "composed_id_sources": {
+      "staffage(f'crates-{kind}', unit=1)": ["f'crates-{kind}'"],
+      "staffage('crates-' + kind, unit=1)": ["'crates-' + kind"],
+      "staffage('crates-low', unit=1)": [],
+      "staffage(name, unit=1)": []
+    },
+    "unit_rule": {
+      "calls": ["staffage", "staffage_motion", "_staffage", "_staffage_motion", "_cast", "_use_cast", "_figure"],
+      "derived_from": ["staffage_height", "_staffage_height", "staffage_width", "_staffage_width", "room_metre"]
+    },
+    "unit_sources": {
+      "staffage('a', unit=0.8)": ["0.8"],
+      "staffage('a', unit=width / 0.595)": ["width / 0.595"],
+      "staffage('a', unit=0.7 * h / staffage_height('a'))": [],
+      "staffage('a', unit=room_metre(h / 2))": [],
+      "_figure('a', unit=ROW_METRE, at=(0, 0))": [],
+      "_art.staffage('a', unit=.6 / _art.staffage_height('a'))": [],
+      "build('a', unit=0.8)": []
+    },
+    "rotate_methods": ["rotate", "rotate_about_origin", "flip"],
+    "rotate_sources": {
+      "def car(h):\n    return staffage('a', unit=1).rotate(h)": ["car"],
+      "def car(h):\n    c = staffage('a', unit=1)\n    return c.move_to(0)": [],
+      "def arrow(h):\n    return Arrow().rotate(h)": []
+    },
+    "plan_yaws": {
+      "🏗️bim/🎬️clip/📊️information/🐍️.py": { "Beat1_DataToInformation._car": "the car heading in degrees is the physical yaw of the vehicle on the model path; the plan cast is drawn nose along +x before the turn" },
+      "📊️excel/🎬️clip/📋️program/🐍️.py": { "Beat3_Program.occupant": "yaw of minus 90 degrees about the occupant: in the capsule plan the window wall is the top edge, so the occupant faces the core side (down on paper) with the back to the window; plan paper x is the figure forward and the rotation is a yaw, never a flip" }
+    },
+    "stretch_sources": {
+      "def car():\n    c = staffage('a', unit=1)\n    c.stretch(2, 0)\n    return c": ["car"],
+      "def car():\n    c = staffage('a', unit=1)\n    c.scale(2)\n    return c": [],
+      "def box():\n    return Rectangle().stretch(2, 0)": []
+    }
+  },
+  "cast_calls": ["staffage", "staffage_motion", "fitted_staffage", "staffage_height", "staffage_parts"],
+  "cast_sources": {
+    "staffage('a-cast', unit=1.0)": ["a-cast"],
+    "V.fitted_staffage(\"b-cast\", width=1, rate=2.0)": ["b-cast"],
+    "x = [staffage_motion('c-cast', unit=1), staffage_height('d-cast')]": ["c-cast", "d-cast"],
+    "staffage(name, unit=1.0)": []
+  }
+}

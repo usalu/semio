@@ -40,7 +40,7 @@ describe("🧮️ evaluation state", () => {
     expect(state.bounds.minY).toBeGreaterThan(-0.05);
     expect(state.bounds.maxY - state.bounds.minY).toBeCloseTo(asset.dimensions.heightM, 1);
     expect(state.frame).toBe(0);
-    expect(state.kinematics.comVelocity).toEqual({ x: 0, y: 0 });
+    expect(state.kinematics.comVelocity).toEqual({ x: 0, y: 0, z: 0 });
   });
 
   it("converts a distributed load to eight exact resultants", () => {

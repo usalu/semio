@@ -29,7 +29,8 @@ export type DepictionRequest = {
   readonly view: View;
   readonly scale: DrawingScale;
   readonly language: Language;
-  readonly viewpoint?: Viewpoint;
+  readonly viewpoint: Viewpoint;
+  readonly representation?: RepresentationSelector;
   readonly theme?: "light" | "dark";
   readonly transparent?: boolean;
   readonly annotations?: Partial<DepictionOptions["annotations"]>;
@@ -97,11 +98,12 @@ export function structureOf(state: EvaluatedState): StructuralResult {
 
 /** 🎛️ Merges viewer options over {@link defaultDepictionOptions}. */
 export function depictionOptions(request: DepictionRequest): DepictionOptions {
-  const base = defaultDepictionOptions(request.view, request.language, request.scale.denominator, request.viewpoint ?? "elevation", request.theme);
+  const base = defaultDepictionOptions(request.view, request.language, request.scale.denominator, request.viewpoint, request.theme);
   return {
     ...base,
     profile: SCREEN_PROFILE,
     scale: request.scale,
+    ...(request.representation === undefined ? {} : { representation: request.representation }),
     transparent: request.transparent ?? base.transparent,
     annotations: { ...base.annotations, ...request.annotations },
     diagrams: { ...base.diagrams, ...request.diagrams },

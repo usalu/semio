@@ -24,7 +24,7 @@ export const CORE_EN = {
   "level.neighbour.left": "Go left to {page}",
   "level.neighbour.right": "Go right to {page}",
   "hero.title": "Architectural staffage, drawn to scale",
-  "hero.lede": "People, trees, animals, furniture, vehicles and building components with real dimensions, rigs, poses and clips. Every figure carries thermal and structural models and draws in seven synchronized views. The figures below stand at one true relative scale on one ground line.",
+  "hero.lede": "People, trees, animals, furniture, vehicles and building components with real dimensions, rigs, poses and clips. Every figure carries thermal and structural models and draws in seven synchronized representations. The figures below stand at one true relative scale on one ground line.",
   "hero.browse": "Browse the whole archive",
   "hero.count": "{authored} authored · {planned} planned",
   "hero.friezeLabel": "Live frieze: figures at one true relative scale on one ground line",

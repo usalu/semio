@@ -9,10 +9,10 @@ import { compareFromParams, compareToParams, formatAddress, parseAddress, type C
 
 const four: CompareState = {
   panes: [
-    { asset: "walking-commuter", view: "dark-line", selection: null },
-    { asset: "walking-commuter", view: "thermal", selection: { kind: "clip", clip: "walk-cycle" } },
-    { asset: "cyclist", view: "forces", selection: { kind: "pose", pose: "riding-upright" } },
-    { asset: "park-bench", view: "moments", selection: null },
+    { asset: "walking-commuter", view: "dark-line", viewpoint: "elevation", selection: null },
+    { asset: "walking-commuter", view: "thermal", viewpoint: "elevation", selection: { kind: "clip", clip: "walk-cycle" } },
+    { asset: "cyclist", view: "forces", viewpoint: "elevation", selection: { kind: "pose", pose: "riding-upright" } },
+    { asset: "park-bench", view: "moments", viewpoint: "elevation", selection: null },
   ],
   scale: 50,
   timeS: 1.25,
@@ -54,7 +54,7 @@ describe("quick actions", () => {
 
   it("spans the clock over the longest clip", () => {
     const asset = { id: "a", poses: [], clips: [{ id: "c1", durationS: 2 }, { id: "c2", durationS: 3.5 }], presentation: { defaultClip: "c1" } } as never;
-    expect(clockSpan([{ asset: "a", view: "dark-line", selection: null }, { asset: "a", view: "thermal", selection: { kind: "clip", clip: "c2" } }, { asset: "a", view: "forces", selection: { kind: "pose", pose: "p" } }], () => asset)).toBe(3.5);
+    expect(clockSpan([{ asset: "a", view: "dark-line", viewpoint: "elevation", selection: null }, { asset: "a", view: "thermal", viewpoint: "elevation", selection: { kind: "clip", clip: "c2" } }, { asset: "a", view: "forces", viewpoint: "elevation", selection: { kind: "pose", pose: "p" } }], () => asset)).toBe(3.5);
   });
 });
 

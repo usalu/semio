@@ -8,6 +8,7 @@
 import type { Slug } from "../../../🧬️schema/🟦️.ts";
 import type { Language } from "../../../🧬️schema/🟦️.ts";
 import { LAYERS, type DepictionOptions, type DrawingItem, type DrawingLayer, type EvaluatedState, type Fill, type ItemValue, type LayerId, type PathCommand, type Point, type Stroke } from "../../🔗️contracts/🟦️.ts";
+import { textWidthMm } from "../../📐️units/🟦️.ts";
 import { tx, type Theme, type ThemeColours } from "../🖍️palette/🟦️.ts";
 import type { Box, Vec } from "../📐️geometry/🟦️.ts";
 
@@ -26,8 +27,8 @@ const LAYER_TITLES = {
   legend: tx("Legend", "Legende"),
 } as const satisfies Record<LayerId, ReturnType<typeof tx>>;
 
-/** 🔤️ Average glyph advance relative to the text height, used to reserve room for text. */
-export const GLYPH_ADVANCE = 0.56;
+/** 🔤️ The room reserved around measured text relative to its Helvetica width, covering renderers that fall back to a slightly wider sans-serif. */
+export const TEXT_SLACK = 1.04;
 
 /** 🧭️ What every view builder needs: state, options, scale factor and the model-to-paper mapping `(x, y) → (x·k, −y·k)`. */
 export type Ctx = { readonly state: EvaluatedState; readonly options: DepictionOptions; readonly language: Language; readonly k: number; readonly theme: Theme; readonly colours: ThemeColours; readonly paper: (p: Point) => Vec; readonly labels: Labels };
@@ -71,7 +72,7 @@ export class Canvas {
   /** 🔤️ Adds a text item and grows the extent over its estimated box. */
   text(layer: LayerId, id: string, at: Vec, text: string, sizeMm: number, color: string, options: TextOptions = {}): void {
     const anchor = options.anchor ?? "start";
-    const w = text.length * sizeMm * GLYPH_ADVANCE;
+    const w = textWidthMm(text, sizeMm, options.weight === "bold") * TEXT_SLACK;
     const x0 = anchor === "start" ? at.x : anchor === "end" ? at.x - w : at.x - w / 2;
     this.reach({ x: x0, y: at.y - sizeMm * 0.8 });
     this.reach({ x: x0 + w, y: at.y + sizeMm * 0.25 });

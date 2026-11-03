@@ -8,7 +8,7 @@ import { walker } from "../🧰️support/🧰️.ts";
 
 afterEach(cleanup);
 
-const base = { asset: walker, scale: { denominator: 100 }, language: "en" as const };
+const base = { asset: walker, scale: { denominator: 100 }, language: "en" as const, viewpoint: "elevation" as const };
 const stand = { kind: "pose", pose: "stand" } as const;
 
 describe("🧍️ figure", () => {

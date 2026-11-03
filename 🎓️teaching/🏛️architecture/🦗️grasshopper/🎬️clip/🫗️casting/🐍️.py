@@ -101,7 +101,7 @@ def _gone(*mobs):
 
 
 class Beat4_Casting(_visuals.ClipScene):
-    """🫗 Teach implicit type casting on the Nakagin Capsule Tower with explicit English and German narration."""
+    """🎓 Teach implicit type casting on the Nakagin Capsule Tower with explicit English and German narration."""
 
     TITLE = {"en": "Casting: When Types Meet", "de": "Casting: Wenn Typen sich treffen"}
     NARRATION = [
@@ -210,14 +210,14 @@ class Beat4_Casting(_visuals.ClipScene):
         return _mn.VGroup(self._band(1, n, INK_GOLD), self._count_tag(n), self._ticks(n))
 
     def _sol(self, **overrides):
-        """🧮 Evaluate the casting canvas with overrides, cached per override set."""
+        """🧪 Evaluate the casting canvas with overrides, cached per override set."""
         key = tuple(sorted((k, repr(v)) for k, v in overrides.items()))
         if key not in self._cache:
             self._cache[key] = _model.evaluate(self._d, overrides)
         return self._cache[key]
 
     def _pn(self, rows, raw=False):
-        """🔡 Panel rows with the decimal separator of the narration language; raw text stays untouched."""
+        """🔤 Panel rows with the decimal separator of the narration language; raw text stays untouched."""
         return list(rows) if raw or self.language() == "en" else [LABELS_DE.get(row, row.replace(".", ",")) for row in rows]
 
     def _lb(self, text):
@@ -225,7 +225,7 @@ class Beat4_Casting(_visuals.ClipScene):
         return text if text is None or self.language() == "en" else LABELS_DE.get(text, text)
 
     def _tag(self, string, point, color):
-        """🏷️ A label on a light backing plate so it stays readable over drawings."""
+        """🔖 A label on a light backing plate so it stays readable over drawings."""
         label = self.text(string, point, size=SMALL, color=color)
         plate = _mn.RoundedRectangle(corner_radius=0.05, width=label.width + 0.14, height=label.height + 0.1, stroke_width=0, fill_color="#F2F2F2", fill_opacity=0.9).move_to(label)
         return _mn.VGroup(plate, label)
@@ -249,13 +249,13 @@ class Beat4_Casting(_visuals.ClipScene):
         group.add(foot)
         return group
 
-    def _title(self, view):
-        """🏷️ Small view title in the top left corner of the canvas sheet."""
+    def _view_title(self, view):
+        """🪧 Small view title in the top left corner of the canvas sheet."""
         title = self._d.views[view]["title"]
         return self._title_text(title["en"], title["de"])
 
     def _title_text(self, en, de):
-        """🏷️ A free title in the top left corner of the canvas sheet."""
+        """📰 A free title in the top left corner of the canvas sheet."""
         return self.text(self.tr(en, de), SHEET_AT + np.array([-SHEET_SIZE[0] / 2 + 0.2, SHEET_SIZE[1] / 2 - 0.25, 0]), size=SMALL, color=_canvas.TEXT, anchor="l")
 
     def _widget(self, obj, sol, tracker=None):
@@ -349,7 +349,7 @@ class Beat4_Casting(_visuals.ClipScene):
         return group
 
     def _count_tag(self, n):
-        """🔢 Count tag above the tower."""
+        """🔟 Count tag above the tower."""
         return self.text(self.tr(f"Tower B: {n} capsule storeys", f"Turm B: {n} Kapselgeschosse"), PORT_AT + np.array([0, 2.2, 0]), size=SMALL, color=_canvas.TEXT)
 
     def _capsule(self, *, ghost=False, dims=("width",), window=True, highlight=(), hatch=(), up=0.0):
@@ -472,7 +472,7 @@ class Beat4_Casting(_visuals.ClipScene):
         return group
 
     def _chips(self, sol):
-        """🏷️ Three value chips under the tower: width, storeys, plane."""
+        """🎫 Three value chips under the tower: width, storeys, plane."""
         width = self.quantity(sol.value("wid", "Number"), "m")
         slot = next(s for s in _nakagin.slots() if (s.building, s.tower, s.storey, s.facade, s.item) == SLOT)
         key = f"{{{slot.building};{slot.tower};{slot.storey};{slot.facade}}}"
@@ -494,7 +494,7 @@ class Beat4_Casting(_visuals.ClipScene):
         return _mn.VGroup(cap, bar)
 
     def _geometry_world(self, sol):
-        """⭕ Capsule A with the window circle as its outline curve and the body tinted as one Brep."""
+        """🧬 Capsule A with the window circle as its outline curve and the body tinted as one Brep."""
         cap = self._capsule(dims=(), highlight={"front": INK_GOLD, "top": INK_GOLD, "right": INK_GOLD, "left": INK_GOLD})
         circle = sol.value("crv", "Curve").shape
         centre, radius = np.array(circle.plane.origin.t), circle.radius
@@ -592,7 +592,7 @@ class Beat4_Casting(_visuals.ClipScene):
         return group
 
     def _legend(self):
-        """🧭 Swatches: works, fails, to check, not castable; plus the family rule."""
+        """🎨 Swatches: works, fails, to check, not castable; plus the family rule."""
         items = ((GOOD, False, self.tr("works (verified)", "klappt (belegt)")), (SERV, False, self.tr("fails", "scheitert")), (GOOD, True, self.tr("works, check in Rhino 8", "klappt, in Rhino 8 prüfen")))
         group = _mn.VGroup()
         for tone, dashed, label in items:
@@ -611,7 +611,7 @@ class Beat4_Casting(_visuals.ClipScene):
         return _mn.VGroup(group, rule)
 
     def _habits(self):
-        """🧭 Three habit cards, each tied to a scene of the video; UI names stay English."""
+        """🌱 Three habit cards, each tied to a scene of the video; UI names stay English."""
         cards = ((self.tr("Check with a Panel", "Mit einem Panel prüfen"), self.tr(f"{SLIDER:g} shows {STOREYS} (check in Rhino 8)", f"{SLIDER:g}".replace(".", ",") + f" zeigt {STOREYS} (in Rhino 8 prüfen)")),
                  (self.tr("Build planes explicitly", "Ebenen ausdrücklich bauen"), self.tr("the capsule faces outwards", "die Kapsel schaut nach außen")),
                  (self.tr("Labels are no numbers", "Bezeichnungen sind keine Zahlen"), self.tr("Type A needs a Value List", "Typ A braucht eine Value List")))
@@ -636,16 +636,15 @@ class Beat4_Casting(_visuals.ClipScene):
         self._tower_fit = _canvas.building_fit(5.4, 3.4, centre=PORT_AT + np.array([-0.3, 0.1, 0]), margin=0.0)
         sheet = self.gh_background(at=SHEET_AT, width=SHEET_SIZE[0], height=SHEET_SIZE[1])
         port = self.gh_viewport(at=PORT_AT, width=PORT_SIZE[0], height=PORT_SIZE[1], label=self.tr("Perspective", "Perspektive"))
-        none = _mn.VGroup()
 
         pt = self._sol()
         plane = pt.value("plc", "Plane")
-        canvas, title = self._view("point-plane", pt), self._title("point-plane")
+        canvas, title = self._view("point-plane", pt), self._view_title("point-plane")
         stage = self._stage(spin=0.0, arrows=True, arc=True, legend=True)
         self.step("teaser", _mn.FadeIn(sheet), _mn.FadeIn(port), _mn.FadeIn(canvas), _mn.FadeIn(stage), _mn.FadeIn(title), seconds=1.6)
 
         old = (canvas, stage, title)
-        canvas, world, title = self._view("types", base, zoom=1.2), self._tower(), self._title("types")
+        canvas, world, title = self._view("types", base, zoom=1.2), self._tower(), self._view_title("types")
         chips = list(self._chips(base))
         slot = next(s for s in _nakagin.slots() if (s.building, s.tower, s.storey, s.facade, s.item) == SLOT)
         spot = self._towers[None].at(*slot.plane.origin)
@@ -656,7 +655,7 @@ class Beat4_Casting(_visuals.ClipScene):
         self.step("types", *_gone(*old), _mn.FadeIn(canvas), _mn.FadeIn(world), _mn.FadeIn(title), _morph.scatter(sources, chips, lag=0.3, path_arc=0.5, run_time=1.4), seconds=1.8)
 
         old = (canvas, world, title, *chips)
-        canvas, title = self._view("text-number", base, zoom=1.25), self._title("text-number")
+        canvas, title = self._view("text-number", base, zoom=1.25), self._view_title("text-number")
         hint = self.gh_bubble(self.tr("Text → Number", "Text → Zahl"), level="remark", target=canvas.w["tn"], width=2.4)
         ghost = self._capsule(ghost=True, dims=())
         leash = _morph.tether(canvas.w["t25"], ghost.get_center(), color=INK_GOLD, width=2.8)
@@ -680,7 +679,7 @@ class Beat4_Casting(_visuals.ClipScene):
             "sto2p": lambda c: self.live(lambda: self.gh_panel([str(count())], at=c, width=0.9), key=count)})
         shell = self._tower()
         tower = self.live(lambda: self._lit(count()), key=count)
-        title, flags = self._title("storeys"), self._flags(canvas, ("sto2",), "Number>Integer", source=True)
+        title, flags = self._view_title("storeys"), self._flags(canvas, ("sto2",), "Number>Integer", source=True)
         sl_chip = _morph.token(self._pn([f"{SLIDER:g}"])[0], kind="number", color=INK_GOLD, size=1.2).move_to(canvas.w["sl"].get_top() + np.array([0.0, 0.45, 0.0]))
         landing = self._grip(canvas.w["sto2"], "in", "Integer").get_center() + np.array([-0.5, 0.45, 0.0])
         int_chip = _morph.token(str(count()), kind="number", color=INK_GREEN, size=1.2).move_to(landing)
@@ -697,14 +696,14 @@ class Beat4_Casting(_visuals.ClipScene):
         floor = _model.evaluate(self._d, {"sl": SLIDER}).items("sto3", "Integer")[0]
         canvas2 = self._view("deliberate", self._sol(), trackers={"sl": value}, layout={"sto3": (260, 130), "sto3p": (260, 240)}, live={
             "sto3p": lambda c: self.live(lambda: self.gh_panel([str(floor)], at=c, width=0.9), key=lambda: floor)})
-        tower2, title2 = self._lit(floor), self._title("deliberate")
+        tower2, title2 = self._lit(floor), self._view_title("deliberate")
         lost = _mn.VGroup(self.text(str(count()), self._tick_at(count()), size=26, color=INK_RED, anchor="l"),
                           _draft.segments([(self._tick_at(count()) + np.array([-0.05, -0.16, 0]), self._tick_at(count()) + np.array([0.3, 0.16, 0]))], INK_RED, 2.4))
         eleventh = self._band(count(), count(), INK_GOLD)
         self.add(eleventh)
         self.step("deliberate", *_gone(canvas, tower, title, flags, line_base, line_live, line_base.dot), _mn.FadeIn(canvas2), _mn.FadeIn(tower2), _mn.FadeIn(title2), seconds=self.then((_morph.morph(eleventh, lost, path_arc=0.5, run_time=1.2),), 1.2, 1.2))
 
-        canvas3, title3 = self._view("point-plane", pt), self._title("point-plane")
+        canvas3, title3 = self._view("point-plane", pt), self._view_title("point-plane")
         base_stage = self._stage()
         anchor, view0 = base_stage.base, base_stage.view
         stage1 = self._stage(axes=[plane]).over
@@ -720,7 +719,7 @@ class Beat4_Casting(_visuals.ClipScene):
         self.step("wrong_way", _mn.FadeOut(stage1), _mn.FadeIn(stage2), _mn.FadeIn(world_plane), seconds=self.then((_morph.morph(world_plane, red, path_arc=0.3, run_time=1.4), self._later(_mn.FadeIn(red_arrow), 0.6), self._later(_mn.FadeIn(tags), 0.75)), 1.4, 1.2))
 
         lp = self._sol()
-        canvas4, title4 = self._view("line-plane", lp, zoom=1.25), self._title("line-plane")
+        canvas4, title4 = self._view("line-plane", lp, zoom=1.25), self._view_title("line-plane")
         line = lp.value("ln", "Line")
         line_mob = _mn.Line(view0(*line.a.t), view0(*line.b.t), color=_draw.AXIS_Z, stroke_width=5)
         z_axes = self.plane_axes(_plane(lp.value("lpl", "Plane")), at=view0(*plane.origin.t), scale=0.5, view=view0, length=1.8)
@@ -729,7 +728,7 @@ class Beat4_Casting(_visuals.ClipScene):
                   seconds=self.then((_morph.morph(line_mob, z_axes, path_arc=0.2, run_time=1.4),), 1.4, 1.3))
 
         spin = _mn.ValueTracker(0.0)
-        canvas5, title5 = self._view("explicit", self._sol(), layout={"vx": (0, 100), "vy": (0, 200), "cpl": (260, 100), "capc": (260, 215), "pln": (260, 300), "ore": (520, 150)}), self._title("explicit")
+        canvas5, title5 = self._view("explicit", self._sol(), layout={"vx": (0, 100), "vy": (0, 200), "cpl": (260, 100), "capc": (260, 215), "pln": (260, 300), "ore": (520, 150)}), self._view_title("explicit")
         stage4 = self.live(lambda: self._stage(spin=spin.get_value(), arrows=True, arc=True, legend=True, axes=[self._sol().value("cpl", "Plane")]).over, key=lambda: round(spin.get_value(), 2))
         inputs = [_morph.token(label, kind="number", color=color).move_to(canvas5.w[oid].get_top() + np.array([0.0, 0.4, 0.0]))
                   for oid, label, color in (("ore", self.tr("Origin", "Ursprung"), "#E0B84A"), ("vx", self._lb("X-Axis"), "#E08080"), ("vy", self._lb("Y-Axis"), "#80C890"))]
@@ -738,7 +737,7 @@ class Beat4_Casting(_visuals.ClipScene):
                   _mn.UpdateFromAlphaFunc(spin, lambda mob, alpha: mob.set_value(alpha), rate_func=_mn.smooth, run_time=2.4), seconds=self.then((_morph.gather(inputs, built_plane, run_time=1.2),), 1.6, 2.6))
 
         sd = self._sol()
-        canvas6, world, title6 = self._view("domain", sd), self._domain_world(sd), self._title("domain")
+        canvas6, world, title6 = self._view("domain", sd), self._domain_world(sd), self._view_title("domain")
         flags = self._flags(canvas6, ("dom",), "Number>Domain")
         length = self.quantity(sd.value("dom", "Domain").hi, "m", 1)
         length_chip = _morph.token(length, kind="number", color="#E0B84A").move_to(canvas6.w["dom"].get_top() + np.array([0.0, 0.4, 0.0]))
@@ -760,7 +759,7 @@ class Beat4_Casting(_visuals.ClipScene):
             "tg": lambda c: self.live(lambda: self.gh_toggle(on(), at=c, name=self._lb(self._d.obj("tg").settings["label"]), scale=1.15), key=on),
             "bip": lambda c: self.live(lambda: self.gh_panel([str(solved().items("bi", "Integer")[0])], at=c, width=0.9), key=on)})
         world9 = self.live(lambda: self._capsule(window=bool(solved().items("bi", "Integer")[0]), dims=()), key=on)
-        title9 = self._title("bool-int")
+        title9 = self._view_title("bool-int")
         flip = _mn.UpdateFromAlphaFunc(flag, lambda mob, alpha: mob.set_value(0 if 0.35 < alpha < 0.7 else 1), run_time=2.0)
         one = _morph.token("1", kind="number", color="#7FC48A").move_to(canvas9.w["bip"].get_top() + np.array([0.0, 0.4, 0.0]))
         ring_on = self._ring(sd, self._capsule(dims=()), INK_GREEN, 4.0)
@@ -773,7 +772,7 @@ class Beat4_Casting(_visuals.ClipScene):
         canvas10 = self._view("int-bool", self._sol(), trackers={"isl": level}, layout={"win": (260, 0), "winp": (260, 150)}, live={
             "winp": lambda c: self.live(lambda: self.gh_panel([_model.describe(visible())], at=c, width=1.2), key=visible)})
         world10 = self.live(lambda: self._capsule(window=visible(), dims=()), key=visible)
-        title10, flags10 = self._title("int-bool"), self._flags(canvas10, ("win",), _model.cast(1.0, "Boolean").rule)
+        title10, flags10 = self._view_title("int-bool"), self._flags(canvas10, ("win",), _model.cast(1.0, "Boolean").rule)
         path = lambda mob, alpha: mob.set_value(1 if alpha < 0.3 else 0 if alpha < 0.65 else 2)
         true_chip = _morph.token("True", kind="number", color="#E0B070").move_to(canvas10.w["winp"].get_top() + np.array([0.0, 0.4, 0.0]))
         ring_two = self._ring(sd, self._capsule(dims=()), INK_ORANGE, 4.0)
@@ -781,7 +780,7 @@ class Beat4_Casting(_visuals.ClipScene):
                   _mn.UpdateFromAlphaFunc(level, path, run_time=2.6), seconds=self.then((_morph.travel(true_chip, self._route(true_chip, ring_two), run_time=1.3),), 1.3, 2.8, ((_morph.morph(true_chip, ring_two, run_time=0.9),), 0.9)))
 
         loc = self._sol()
-        canvas11, title11 = self._view("locale", loc, zoom=1.2), self._title("locale")
+        canvas11, title11 = self._view("locale", loc, zoom=1.2), self._view_title("locale")
         warn = self.gh_bubble(loc.msgs("tdn")[0]["en"], level="warning", target=canvas11.w["tdn"], side="below", width=3.6)
         rule = "Text>Number!comma" if "Text>Number!comma" in _model.rules() else "Text>Number!"
         flags11 = self._flags(canvas11, ("tdn",), rule)
@@ -801,7 +800,7 @@ class Beat4_Casting(_visuals.ClipScene):
         bubble = self.gh_bubble(message["en"], level="error", at=canvas12.w["cbx"].get_bottom() + np.array([1.0, -0.7, 0]), width=4.0)
         explain = _mn.VGroup(self.gh_bubble("Der Text lässt sich nicht als Zahl lesen; der Platz bleibt leer.", level="remark", at=SHEET_AT + np.array([1.85, 1.65, 0]), width=2.9),
                              self._tag("Grasshopper-Meldung (englisch)", bubble.get_bottom() + np.array([0.0, -0.2, 0]), INK_ORANGE)) if self.language() == "de" else _mn.VGroup()
-        title12 = self._title("fail")
+        title12 = self._view_title("fail")
         nothing = self.text(self.tr("no width, no capsule", "keine Breite, keine Kapsel"), PORT_AT + np.array([0, -1.75, 0]), size=SMALL, color=INK_RED)
         blank = _morph.token("null", kind="number", color="#D8362B", size=1.2).move_to(canvas12.w["cbxp"].get_top() + np.array([0.0, 0.4, 0.0]))
         typea = _morph.token(self.tr("Type A", "Typ A"), kind="number", color="#E0B070", size=1.2).move_to(canvas12.w["typa"].get_top() + np.array([0.0, 0.45, 0.0]))
@@ -817,7 +816,7 @@ class Beat4_Casting(_visuals.ClipScene):
         self.step("order", *_gone(canvas12, bubble, explain, title12, blank), self._later(_mn.FadeIn(ladder), 0.55), _morph.travel(typea, self._route(typea, entry), run_time=1.2),
                   seconds=self.then((_mn.UpdateFromAlphaFunc(ladder_u, lambda mob, alpha: mob.set_value(alpha), run_time=2.4), _mn.UpdateFromAlphaFunc(typea, walk, run_time=2.4)), 2.4, 1.4))
 
-        canvas13, fixed, title13 = self._view("fix", fail), self._capsule(), self._title("fix")
+        canvas13, fixed, title13 = self._view("fix", fail), self._capsule(), self._view_title("fix")
         item = self._d.obj("vl").settings["items"][0]
         expression = self.text(f"{self._lb(item['name'])} = {self._pn([_num(item['value'])])[0]}", canvas13.w["vl"].get_bottom() + np.array([0.0, -0.22, 0]), size=SMALL, color=_canvas.TEXT)
         expression.shift(np.array([max(0.0, canvas13.w["vl"].get_left()[0] + expression.width / 2 - expression.get_center()[0]), 0, 0]))

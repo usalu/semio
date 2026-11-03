@@ -722,13 +722,13 @@
           ],
           "properties": {
             "first": {
-              "$ref": "#/$defs/positive"
+              "$ref": "#/$defs/imposedLoad"
             },
             "roof": {
-              "$ref": "#/$defs/positive"
+              "$ref": "#/$defs/imposedLoad"
             },
             "solarium": {
-              "$ref": "#/$defs/positive"
+              "$ref": "#/$defs/imposedLoad"
             }
           }
         }
@@ -1371,6 +1371,19 @@
           "type": "string",
           "minLength": 1
         }
+      }
+    },
+    "imposedLoad": {
+      "description": "A characteristic imposed load of a zone with the EN 1991-1-1 occupancy category id (staffage load cases, structure/load-cases) it is checked against.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "basis", "category"],
+      "properties": {
+        "value": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "const": "kN/m²" },
+        "basis": { "$ref": "#/$defs/basis" },
+        "source": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
       }
     },
     "axes": {

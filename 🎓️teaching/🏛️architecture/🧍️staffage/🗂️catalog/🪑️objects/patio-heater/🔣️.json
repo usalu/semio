@@ -404,12 +404,85 @@
               "region": "control",
               "material": "plastic-black"
             }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.1 L 0.17 0.1 L 0.17 0.58 C 0.17 0.64 0.06 0.66 0.05 0.66 L -0.05 0.66 C -0.06 0.66 -0.17 0.64 -0.17 0.58 L -0.17 0.1 L -0.23 0.1 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.62,
+              "w": 0.14,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 1.96,
+              "w": 0.26,
+              "h": 0.14,
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 2.03 C -0.4 2.09 -0.22 2.25 0 2.25 C 0.22 2.25 0.4 2.09 0.4 2.03 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            }
+          ],
+          "plan": [
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.4,
+              "ry": 0.4,
+              "region": "reflector",
+              "material": "alu-reflector"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A mushroom sign 1.6 mm wide and 4.5 mm high: a stepped base block, a thick pole, a small head block and a solid dome.",
-            "de": "Ein Pilzzeichen, 1,6 mm breit und 4,5 mm hoch: ein gestufter Sockelblock, ein dicker Mast, ein kleiner Kopfblock und eine volle Haube."
+            "en": "A mushroom sign 1.6 mm wide and 4.5 mm high: a stepped base block, a thick pole, a small head block and a solid dome. Front: the same turned profile as the side view (base, pole, burner head, reflector dome), all of it round; plan: the reflector disc of 0.80 m that hides everything below it.",
+            "de": "Ein Pilzzeichen, 1,6 mm breit und 4,5 mm hoch: ein gestufter Sockelblock, ein dicker Mast, ein kleiner Kopfblock und eine volle Haube. Vorderansicht: dasselbe gedrehte Profil wie in der Seitenansicht (Sockel, Mast, Brennerkopf, Reflektorkuppel), alles rund; Draufsicht: die Reflektorscheibe von 0,80 m, die alles darunter verdeckt."
           },
           "retained": {
             "en": "Height 2.25 m and the 0.80 m dome width exactly; the base plate step, pole, emitter head, dome and the control knob.",
@@ -420,8 +493,8 @@
             "de": "Bodenplatte, Gehäuse und Tür gehen im gestuften Sockelblock auf; der Knopf ist ein kleiner Balken an dessen Seite."
           },
           "omitted": {
-            "en": "Door seam, vents, wheels, pole joint, flame guard rods, mesh.",
-            "de": "Türfuge, Lüftungsschlitze, Räder, Mastfuge, Flammenschutzstäbe, Gitter."
+            "en": "Door seam, vents, wheels, pole joint, flame guard rods, mesh. The control knob is merged into the base in front; base, pole and burner head are hidden under the reflector in plan.",
+            "de": "Türfuge, Lüftungsschlitze, Räder, Mastfuge, Flammenschutzstäbe, Gitter. Der Drehknopf geht in der Vorderansicht im Sockel auf; Sockel, Mast und Brennerkopf sind in der Draufsicht unter dem Reflektor verdeckt."
           },
           "thinElements": {
             "en": "The 0.06 m pole would be 0.12 mm wide: thickened to 0.14 m (0.28 mm); the 0.03 m base plate is merged into a 0.10 m (0.2 mm) step; the dome rim hangs 0.03 m lower than real so its edge reaches the feature width.",
@@ -556,12 +629,114 @@
               "closed": false,
               "region": "base-housing"
             }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.05 L 0.17 0.05 L 0.17 0.6 C 0.17 0.64 0.05 0.66 0.03 0.66 L -0.03 0.66 C -0.05 0.66 -0.17 0.64 -0.17 0.6 L -0.17 0.05 L -0.23 0.05 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.62,
+              "w": 0.07,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 1.98,
+              "w": 0.26,
+              "h": 0.12,
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 2.05 C -0.4 2.11 -0.22 2.25 0 2.25 C 0.22 2.25 0.4 2.11 0.4 2.05 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.46,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "control",
+              "material": "plastic-black"
+            }
+          ],
+          "plan": [
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.4,
+              "ry": 0.4,
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-ring",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.22,
+              "ry": 0.22,
+              "region": "reflector"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A heater 4 mm wide and 11 mm high: base with housing shoulder, a 0.3 mm pole, the emitter head under a solid dome, a round knob and the door seam.",
-            "de": "Ein Heizpilz 4 mm breit und 11 mm hoch: Sockel mit Gehäuseschulter, ein 0,3 mm dicker Mast, der Strahlerkopf unter einer vollen Haube, ein runder Knopf und die Türfuge."
+            "en": "A heater 4 mm wide and 11 mm high: base with housing shoulder, a 0.3 mm pole, the emitter head under a solid dome, a round knob and the door seam. Front: turned base, pole, burner head and reflector with the round control knob on the base; plan: the reflector disc with the dome contour ring.",
+            "de": "Ein Heizpilz 4 mm breit und 11 mm hoch: Sockel mit Gehäuseschulter, ein 0,3 mm dicker Mast, der Strahlerkopf unter einer vollen Haube, ein runder Knopf und die Türfuge. Vorderansicht: gedrehter Sockel, Mast, Brennerkopf und Reflektor mit dem runden Drehknopf am Sockel; Draufsicht: die Reflektorscheibe mit dem Kuppelkonturring."
           },
           "retained": {
             "en": "True proportions: plate, housing, pole, head, dome, knob; the door as one seam line.",
@@ -572,8 +747,8 @@
             "de": "Platte und Gehäuse sind ein Sockelpfad; die Mastfuge geht im Mast auf."
           },
           "omitted": {
-            "en": "Vents, wheels, handle, flame guard, mesh.",
-            "de": "Lüftungsschlitze, Räder, Griff, Flammenschutz, Gitter."
+            "en": "Vents, wheels, handle, flame guard, mesh. The knob pointer is not drawn in front (the knob turns about the lateral axis); door seam and base are hidden or on the side.",
+            "de": "Lüftungsschlitze, Räder, Griff, Flammenschutz, Gitter. Der Knopfzeiger wird in der Vorderansicht nicht gezeichnet (der Knopf dreht um die Querachse); Türfuge und Sockel liegen an der Seite oder sind verdeckt."
           },
           "thinElements": {
             "en": "Pole is 0.07 m = 0.35 mm wide (real 0.06 m): thickened 0.01 m; the dome rim is 0.01 m lower than real.",
@@ -835,12 +1010,255 @@
               "closed": false,
               "region": "base-housing"
             }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.04 L 0.17 0.04 L 0.17 0.6 C 0.17 0.64 0.05 0.66 0.03 0.66 L -0.03 0.66 C -0.05 0.66 -0.17 0.64 -0.17 0.6 L -0.17 0.04 L -0.23 0.04 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.62,
+              "w": 0.06,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "pole-joint",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  1.3
+                ],
+                [
+                  0.03,
+                  1.3
+                ]
+              ],
+              "closed": false,
+              "region": "pole-stainless"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 1.98,
+              "w": 0.26,
+              "h": 0.12,
+              "r": 0.02,
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "guard-rod-0",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  1.985
+                ],
+                [
+                  -0.08,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-1",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  1.985
+                ],
+                [
+                  0.0,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-2",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.08,
+                  1.985
+                ],
+                [
+                  0.08,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 2.06 C -0.4 2.12 -0.22 2.25 0 2.25 C 0.22 2.25 0.4 2.12 0.4 2.06 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-rim",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  2.08
+                ],
+                [
+                  0.4,
+                  2.08
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "vent-slots",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0.57
+                ],
+                [
+                  0.08,
+                  0.57
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.46,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "control",
+              "material": "plastic-black"
+            }
+          ],
+          "plan": [
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.4,
+              "ry": 0.4,
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-ring",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.22,
+              "ry": 0.22,
+              "region": "reflector"
+            },
+            {
+              "id": "top-cap",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "reflector"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A heater 8 mm wide and 22.5 mm high: stepped base with door and vent line, pole with a joint, emitter head with three guard rods, dome with rim line, round knob.",
-            "de": "Ein Heizpilz 8 mm breit und 22,5 mm hoch: gestufter Sockel mit Tür und Lüftungslinie, Mast mit Fuge, Strahlerkopf mit drei Schutzstäben, Haube mit Randlinie, runder Knopf."
+            "en": "A heater 8 mm wide and 22.5 mm high: stepped base with door and vent line, pole with a joint, emitter head with three guard rods, dome with rim line, round knob. Front: the turned silhouette with pole joint, burner head and three guard rods, dome rim, vent slots and the control knob; plan: reflector disc with the dome contour ring and the top cap.",
+            "de": "Ein Heizpilz 8 mm breit und 22,5 mm hoch: gestufter Sockel mit Tür und Lüftungslinie, Mast mit Fuge, Strahlerkopf mit drei Schutzstäben, Haube mit Randlinie, runder Knopf. Vorderansicht: die gedrehte Silhouette mit Mastfuge, Brennerkopf und drei Schutzstäben, Kuppelrand, Lüftungsschlitzen und Drehknopf; Draufsicht: Reflektorscheibe mit Kuppelkonturring und Kappe."
           },
           "retained": {
             "en": "Plate, housing, door, pole, joint, head, guard rods, dome and rim, knob.",
@@ -851,8 +1269,8 @@
             "de": "Von den sechs Schutzstäben des Kopfes sind nur drei gezeichnet; die Gehäuseschulter ist eine Kurve."
           },
           "omitted": {
-            "en": "Wheels, handle, mesh, label plate, bottle valve.",
-            "de": "Räder, Griff, Gitter, Typenschild, Flaschenventil."
+            "en": "Wheels, handle, mesh, label plate, bottle valve. The knob pointer and the side door are not drawn in front.",
+            "de": "Räder, Griff, Gitter, Typenschild, Flaschenventil. Knopfzeiger und seitliche Tür werden in der Vorderansicht nicht gezeichnet."
           },
           "thinElements": {
             "en": "The three guard rods are 0.13 mm strokes 0.08 m (0.8 mm) apart; the pole is true at 0.6 mm.",
@@ -1293,12 +1711,613 @@
               "closed": false,
               "region": "control"
             }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.03 L 0.17 0.03 L 0.17 0.6 C 0.17 0.64 0.05 0.66 0.03 0.66 L -0.03 0.66 C -0.05 0.66 -0.17 0.64 -0.17 0.6 L -0.17 0.03 L -0.23 0.03 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "wheel-l",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.11,
+              "y": 0.01,
+              "w": 0.02,
+              "h": 0.08,
+              "region": "base-housing",
+              "material": "plastic-black"
+            },
+            {
+              "id": "wheel-r",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0.01,
+              "w": 0.02,
+              "h": 0.08,
+              "region": "base-housing",
+              "material": "plastic-black"
+            },
+            {
+              "id": "base-lip",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.045
+                ],
+                [
+                  0.17,
+                  0.045
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slot-0",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.55
+                ],
+                [
+                  0.07,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slot-1",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.58
+                ],
+                [
+                  0.07,
+                  0.58
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slot-2",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.61
+                ],
+                [
+                  0.07,
+                  0.61
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.62,
+              "w": 0.06,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "pole-joint",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  1.3
+                ],
+                [
+                  0.03,
+                  1.3
+                ]
+              ],
+              "closed": false,
+              "region": "pole-stainless"
+            },
+            {
+              "id": "pole-highlight",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.012,
+                  0.7
+                ],
+                [
+                  -0.012,
+                  1.9
+                ]
+              ],
+              "closed": false,
+              "region": "pole-stainless"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 1.98,
+              "w": 0.26,
+              "h": 0.12,
+              "r": 0.02,
+              "hatch": "mesh",
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "guard-rod-0",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  1.99
+                ],
+                [
+                  -0.1,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-1",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  1.99
+                ],
+                [
+                  -0.05,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-2",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  1.99
+                ],
+                [
+                  0.0,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-3",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  1.99
+                ],
+                [
+                  0.05,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-4",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  1.99
+                ],
+                [
+                  0.1,
+                  2.055
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 2.06 C -0.4 2.12 -0.22 2.25 0 2.25 C 0.22 2.25 0.4 2.12 0.4 2.06 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-bead",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.395 2.085 C -0.3 2.105 0.3 2.105 0.395 2.085",
+              "region": "reflector"
+            },
+            {
+              "id": "top-cap",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.175,
+              "rx": 0.03,
+              "ry": 0.012,
+              "region": "reflector"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.46,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "control",
+              "material": "plastic-black"
+            },
+            {
+              "id": "knob-ring",
+              "bone": "knob",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.46,
+              "rx": 0.038,
+              "ry": 0.038,
+              "region": "control",
+              "material": "plastic-black"
+            }
+          ],
+          "plan": [
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.4,
+              "ry": 0.4,
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-bead",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.37,
+              "ry": 0.37,
+              "region": "reflector"
+            },
+            {
+              "id": "dome-ring",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.22,
+              "ry": 0.22,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-0",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.0
+                ],
+                [
+                  0.4,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-1",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.03536,
+                  0.03536
+                ],
+                [
+                  0.28284,
+                  0.28284
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-2",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.05
+                ],
+                [
+                  0.0,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-3",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03536,
+                  0.03536
+                ],
+                [
+                  -0.28284,
+                  0.28284
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-4",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.0
+                ],
+                [
+                  -0.4,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-5",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03536,
+                  -0.03536
+                ],
+                [
+                  -0.28284,
+                  -0.28284
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-6",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0,
+                  -0.05
+                ],
+                [
+                  -0.0,
+                  -0.4
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "seam-7",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.03536,
+                  -0.03536
+                ],
+                [
+                  0.28284,
+                  -0.28284
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "top-cap",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "reflector"
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A heater 16 mm wide and 45 mm high in construction detail: base plate with lip and wheel, housing with door seam and three vent slots, pole with joint and highlight, burner head with five guard rods over a mesh, dome with rim bead and cap, knob with pointer.",
-            "de": "Ein Heizpilz 16 mm breit und 45 mm hoch im Konstruktionsdetail: Bodenplatte mit Rand und Rad, Gehäuse mit Türfuge und drei Lüftungsschlitzen, Mast mit Fuge und Lichtkante, Brennerkopf mit fünf Schutzstäben über einem Gitter, Haube mit Randwulst und Kappe, Knopf mit Zeiger."
+            "en": "A heater 16 mm wide and 45 mm high in construction detail: base plate with lip and wheel, housing with door seam and three vent slots, pole with joint and highlight, burner head with five guard rods over a mesh, dome with rim bead and cap, knob with pointer. Front: the full turned silhouette with wheels, lip, three vent slots, pole joint and highlight, the meshed burner head with five guard rods, the dome bead and top cap, and the knob with its ring; plan: the reflector disc with bead ring, contour ring, eight radial panel seams and the top cap.",
+            "de": "Ein Heizpilz 16 mm breit und 45 mm hoch im Konstruktionsdetail: Bodenplatte mit Rand und Rad, Gehäuse mit Türfuge und drei Lüftungsschlitzen, Mast mit Fuge und Lichtkante, Brennerkopf mit fünf Schutzstäben über einem Gitter, Haube mit Randwulst und Kappe, Knopf mit Zeiger. Vorderansicht: die volle gedrehte Silhouette mit Rädern, Lippe, drei Lüftungsschlitzen, Mastfuge und Lichtkante, dem vergitterten Brennerkopf mit fünf Schutzstäben, Kuppelwulst und Kappe sowie dem Drehknopf mit Ring; Draufsicht: die Reflektorscheibe mit Wulstring, Konturring, acht radialen Blechnähten und der Kappe."
           },
           "retained": {
             "en": "All visible construction at real size; the knob pointer turns with the knob bone.",
@@ -1309,8 +2328,8 @@
             "de": "Das ferne Rad ist hinter dem nahen verdeckt; das Haubeninnere ist von der Seite nicht sichtbar."
           },
           "omitted": {
-            "en": "Label plate, bottle valve, tipping handle.",
-            "de": "Typenschild, Flaschenventil, Kippgriff."
+            "en": "Label plate, bottle valve, tipping handle. Knob pointer and the side door are not drawn in front; everything under the reflector is hidden in plan.",
+            "de": "Typenschild, Flaschenventil, Kippgriff. Knopfzeiger und seitliche Tür werden in der Vorderansicht nicht gezeichnet; alles unter dem Reflektor ist in der Draufsicht verdeckt."
           },
           "thinElements": {
             "en": "Guard rods are 0.18 mm strokes at 1.3 mm spacing; the dome bead is a 0.18 mm line; the top cap ellipse is 1.2 x 0.5 mm.",
@@ -2139,10 +3158,7 @@
     "presentation": {
       "defaultPose": "high",
       "defaultClip": "ignite-and-warm-up",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

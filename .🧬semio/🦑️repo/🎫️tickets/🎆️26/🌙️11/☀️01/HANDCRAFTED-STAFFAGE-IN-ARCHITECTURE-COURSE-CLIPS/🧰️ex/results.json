@@ -1,0 +1,875 @@
+{
+ "bim-consistency-decider": {
+  "ok": true,
+  "wall": 2.5,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "bim-information-car": {
+  "ok": true,
+  "wall": 0.6,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-heating-comparison-cooler": {
+  "ok": true,
+  "wall": 1.5,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.9983333333333333,
+  "durationS": 600
+ },
+ "cooling-heating-comparison-laptop": {
+  "ok": true,
+  "wall": 2.0,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.9983333333333333,
+  "durationS": 600
+ },
+ "cooling-heating-comparison-laptop-summer": {
+  "ok": true,
+  "wall": 2.9,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.9983333333333333,
+  "durationS": 600
+ },
+ "cooling-heating-comparison-table": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-heating-comparison-toaster-summer": {
+  "ok": true,
+  "wall": 1.5,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.9966666666666666,
+  "durationS": 300
+ },
+ "cooling-internal-gains-jogger": {
+  "ok": true,
+  "wall": 0.6,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 11,
+  "fps": 15,
+  "durationS": 0.72
+ },
+ "cooling-internal-gains-lamp-dimmed": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-internal-gains-laptop": {
+  "ok": true,
+  "wall": 17.3,
+  "batchPeakMB": "266",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-internal-gains-laptop-closed": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-internal-gains-office-chair": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-internal-gains-seated-worker": {
+  "ok": true,
+  "wall": 1.4,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ },
+ "cooling-internal-gains-server-rack": {
+  "ok": true,
+  "wall": 0.3,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-internal-gains-sleeper": {
+  "ok": true,
+  "wall": 0.8,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ },
+ "cooling-internal-gains-standing": {
+  "ok": true,
+  "wall": 1.4,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 75,
+  "fps": 15,
+  "durationS": 5
+ },
+ "cooling-internal-gains-walker": {
+  "ok": true,
+  "wall": 0.9,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 18,
+  "fps": 15,
+  "durationS": 1.2
+ },
+ "cooling-summer-strategy-blind": {
+  "ok": true,
+  "wall": 1.1,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 150,
+  "fps": 15,
+  "durationS": 10
+ },
+ "cooling-summer-strategy-exchanger": {
+  "ok": true,
+  "wall": 0.4,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "cooling-summer-strategy-heater": {
+  "ok": true,
+  "wall": 3.0,
+  "batchPeakMB": "284",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 9.983333333333333,
+  "durationS": 60
+ },
+ "cooling-summer-strategy-humidifier": {
+  "ok": true,
+  "wall": 0.3,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 18,
+  "fps": 15,
+  "durationS": 1.2
+ },
+ "cooling-summer-strategy-wheel": {
+  "ok": true,
+  "wall": 6.2,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 2,
+  "durationS": 300
+ },
+ "cooling-system-sizing-diffuser": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "demand-certificate-buyer": {
+  "ok": true,
+  "wall": 0.7,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "demand-certificate-sleeper": {
+  "ok": true,
+  "wall": 2.5,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ },
+ "demand-practice-valve": {
+  "ok": true,
+  "wall": 0.5,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 121,
+  "fps": 15,
+  "durationS": 8
+ },
+ "demand-primary-energy-pumpjack": {
+  "ok": true,
+  "wall": 1.8,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 45,
+  "fps": 15,
+  "durationS": 3
+ },
+ "demand-primary-energy-tree": {
+  "ok": true,
+  "wall": 39.4,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "excel-program-occupant": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "heating-calculation-laptop": {
+  "ok": true,
+  "wall": 0.4,
+  "batchPeakMB": "767",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "heating-calculation-radiator": {
+  "ok": true,
+  "wall": 1.9,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 15,
+  "durationS": 40
+ },
+ "heating-calculation-radiator-mirrored": {
+  "ok": true,
+  "wall": 4.4,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 15,
+  "durationS": 40
+ },
+ "heating-calculation-thermostat": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 91,
+  "fps": 15,
+  "durationS": 6
+ },
+ "heating-conduction-tealight": {
+  "ok": true,
+  "wall": 0.9,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 31,
+  "fps": 15,
+  "durationS": 2
+ },
+ "heating-internal-gains-office-worker": {
+  "ok": true,
+  "wall": 1.0,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ },
+ "heating-internal-gains-pendant-lamp-warm-up": {
+  "ok": true,
+  "wall": 1.7,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.9966666666666666,
+  "durationS": 300
+ },
+ "heating-internal-gains-server-rack": {
+  "ok": true,
+  "wall": 5.4,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.9966666666666666,
+  "durationS": 300
+ },
+ "optimization-experiments-occupant": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "optimization-experiments-window": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "optimization-extrema-cooler": {
+  "ok": true,
+  "wall": 5.9,
+  "batchPeakMB": "446",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "optimization-room-cooler": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "optimization-room-occupant": {
+  "ok": true,
+  "wall": 0.5,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "optimization-room-radiator": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "physics-fundamentals-clerk": {
+  "ok": true,
+  "wall": 0.4,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "physics-fundamentals-compressor": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 46,
+  "fps": 15,
+  "durationS": 3
+ },
+ "physics-fundamentals-condenser": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "physics-fundamentals-evaporator": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "physics-fundamentals-hob": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 30,
+  "fps": 15,
+  "durationS": 2
+ },
+ "physics-fundamentals-kettle": {
+  "ok": true,
+  "wall": 4.4,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 2.995,
+  "durationS": 200
+ },
+ "physics-fundamentals-pot": {
+  "ok": true,
+  "wall": 15.5,
+  "batchPeakMB": "279",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.5804749340369393,
+  "durationS": 379
+ },
+ "physics-fundamentals-shower": {
+  "ok": true,
+  "wall": 3.2,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.9966666666666666,
+  "durationS": 300
+ },
+ "physics-fundamentals-vacuum": {
+  "ok": true,
+  "wall": 5.3,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.3993333333333333,
+  "durationS": 1500
+ },
+ "physics-fundamentals-valve": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-blind-lowered": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-boiler-heating-cycle": {
+  "ok": true,
+  "wall": 1.3,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.6655555555555556,
+  "durationS": 900
+ },
+ "shared-desk": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-electricity-meter-run": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 91,
+  "fps": 15,
+  "durationS": 6
+ },
+ "shared-gas-meter-run": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 61,
+  "fps": 15,
+  "durationS": 4
+ },
+ "shared-heat-pump-heating-sweep": {
+  "ok": true,
+  "wall": 0.8,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 300,
+  "fps": 15,
+  "durationS": 20
+ },
+ "shared-lamp-neutral": {
+  "ok": true,
+  "wall": 3.2,
+  "batchPeakMB": "247",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-lamp-off-neutral": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-lamp-off-winter": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-lamp-summer": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-lamp-winter": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-laptop-winter": {
+  "ok": true,
+  "wall": 0.1,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-mvhr-normal": {
+  "ok": true,
+  "wall": 0.3,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-person-fanning": {
+  "ok": true,
+  "wall": 1.2,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 30,
+  "fps": 15,
+  "durationS": 2
+ },
+ "shared-person-neutral": {
+  "ok": true,
+  "wall": 0.8,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 75,
+  "fps": 15,
+  "durationS": 5
+ },
+ "shared-person-pathlines": {
+  "ok": true,
+  "wall": 3.1,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 75,
+  "fps": 15,
+  "durationS": 5
+ },
+ "shared-person-relaxed-line": {
+  "ok": true,
+  "wall": 0.6,
+  "batchPeakMB": "219",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-person-winter": {
+  "ok": true,
+  "wall": 3.4,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 75,
+  "fps": 15,
+  "durationS": 5
+ },
+ "shared-pump-run-high": {
+  "ok": true,
+  "wall": 0.5,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 30,
+  "fps": 15,
+  "durationS": 2
+ },
+ "shared-radiator-front-winter": {
+  "ok": true,
+  "wall": 0.9,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-radiator-thermostat-front": {
+  "ok": true,
+  "wall": 2.3,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 15,
+  "durationS": 40
+ },
+ "shared-radiator-winter": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "shared-tank-charge-up": {
+  "ok": true,
+  "wall": 1.9,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.6655555555555556,
+  "durationS": 900
+ },
+ "shared-toaster-winter": {
+  "ok": true,
+  "wall": 1.8,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.9966666666666666,
+  "durationS": 300
+ },
+ "shared-watt-heater": {
+  "ok": true,
+  "wall": 1.5,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.6655555555555556,
+  "durationS": 900
+ },
+ "shared-watt-laptop": {
+  "ok": true,
+  "wall": 2.7,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 0.9983333333333333,
+  "durationS": 600
+ },
+ "shared-watt-seated": {
+  "ok": true,
+  "wall": 5.6,
+  "batchPeakMB": "282",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ },
+ "shared-watt-toaster": {
+  "ok": true,
+  "wall": 4.3,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.9966666666666666,
+  "durationS": 300
+ },
+ "ventilation-heat-flow-heater": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-mechanical-duct-fan": {
+  "ok": true,
+  "wall": 1.0,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 91,
+  "fps": 15,
+  "durationS": 6
+ },
+ "ventilation-mechanical-mvhr": {
+  "ok": true,
+  "wall": 0.6,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 91,
+  "fps": 15,
+  "durationS": 6
+ },
+ "ventilation-mechanical-pendulum-fan": {
+  "ok": true,
+  "wall": 2.3,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 600,
+  "fps": 1.4261904761904762,
+  "durationS": 420
+ },
+ "ventilation-natural-radiator-off": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-natural-radiator-on": {
+  "ok": true,
+  "wall": 0.0,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-need-occupant-mirrored": {
+  "ok": true,
+  "wall": 2.5,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 75,
+  "fps": 15,
+  "durationS": 5
+ },
+ "ventilation-volume-blackboard": {
+  "ok": true,
+  "wall": 0.5,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-volume-cook": {
+  "ok": true,
+  "wall": 8.3,
+  "batchPeakMB": "468",
+  "batchExit": 0,
+  "frames": 60,
+  "fps": 15,
+  "durationS": 4
+ },
+ "ventilation-volume-crates-half": {
+  "ok": true,
+  "wall": 0.4,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-volume-crates-high": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-volume-crates-low": {
+  "ok": true,
+  "wall": 0.4,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-volume-hood": {
+  "ok": true,
+  "wall": 0.4,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-volume-office-worker": {
+  "ok": true,
+  "wall": 5.0,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ },
+ "ventilation-volume-operating-table": {
+  "ok": true,
+  "wall": 0.2,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 1,
+  "fps": 1,
+  "durationS": 0
+ },
+ "ventilation-volume-student": {
+  "ok": true,
+  "wall": 14.7,
+  "batchPeakMB": "291",
+  "batchExit": 0,
+  "frames": 72,
+  "fps": 15,
+  "durationS": 4.8
+ }
+}

@@ -33,7 +33,7 @@ def ramp_plan_regions(flight,model,progress=None,cancelled=None):
         """🛑 Stop before cache reads and before publishing a completed projection."""
         if cancelled and cancelled():
             raise _regions.UnionCancelled('Ramp plan projection cancelled')
-    check();api=_c._model;key=(id(model),api._geometry_producers(),api._find,api.part_vertices,api.part_faces,_regions.producer_token(),ramp_plan_regions)
+    check();api=_c._model;key=(id(model),api.geometry_producers(),api._find,api.part_vertices,api.part_faces,_regions.producer_token(),ramp_plan_regions)
     with _RAMP_REGIONS_LOCK:
         bucket=_RAMP_REGIONS_CACHE.get(key)
         if bucket is not None and bucket[0] is model:

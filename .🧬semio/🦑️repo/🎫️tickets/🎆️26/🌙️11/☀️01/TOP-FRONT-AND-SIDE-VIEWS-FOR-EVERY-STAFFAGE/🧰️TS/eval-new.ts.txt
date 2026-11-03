@@ -1,0 +1,84 @@
+/** 🧊️ The current and the rest 3D frames of the bones of a spread or twisted rig. */
+type Chain3 = { readonly now: Readonly<Record<Slug, SolvedFrame>>; readonly rest: Readonly<Record<Slug, SolvedFrame>> };
+
+const REST3 = new WeakMap<Asset, Record<Slug, SolvedFrame>>();
+
+function restOf(asset: Asset): Record<Slug, SolvedFrame> {
+  let rest = REST3.get(asset);
+  if (rest === undefined) REST3.set(asset, (rest = restFrames(asset.rig)));
+  return rest;
+}
+
+/** 🪽️ The lateral position of origin and tip of every bone that leaves the sagittal plane. */
+function lateralOf(frames: Readonly<Record<Slug, SolvedFrame>>): Record<Slug, BoneSpread> {
+  return Object.fromEntries(Object.entries(frames).filter(([, f]) => Math.abs(f.originZ) > 1e-12 || Math.abs(f.tipZ) > 1e-12).map(([id, f]) => [id, { originZ: f.originZ, tipZ: f.tipZ }]));
+}
+
+/** ➡️ A front or plan point of a bone carried by the 3D transform from its rest frame to its current frame and projected to the view: a plan point `(x, y)` is the rest point (x, height of the bone origin, lateral y), a front point `(x, y)` the rest point (forward position of the bone origin, height y, lateral x). */
+function carryPoint(kin: Chain3, bone: Slug, viewpoint: Viewpoint, p: Point): Point {
+  const rest = kin.rest[bone]!.frame;
+  const now = kin.now[bone]!.frame;
+  if (viewpoint === "plan") {
+    const q = carry(rest, now, [p.x, rest.o[1], p.y]);
+    return { x: q[0], y: q[2] };
+  }
+  const q = carry(rest, now, [rest.o[0], p.y, p.x]);
+  return { x: q[2], y: q[1] };
+}
+
+type Vec3 = readonly [number, number, number];
+
+const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const norm = (a: Vec3): Vec3 => {
+  const l = Math.hypot(a[0], a[1], a[2]);
+  return [a[0] / l, a[1] / l, a[2] / l];
+};
+
+/** 🔺️ The convex hull of points (monotone chain), counter-clockwise. */
+function hull(points: readonly Point[]): Point[] {
+  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+  if (sorted.length < 3) return sorted;
+  const turn = (o: Point, a: Point, b: Point): number => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const build = (input: readonly Point[]): Point[] => {
+    const out: Point[] = [];
+    for (const p of input) {
+      while (out.length >= 2 && turn(out[out.length - 2]!, out[out.length - 1]!, p) <= 0) out.pop();
+      out.push(p);
+    }
+    out.pop();
+    return out;
+  };
+  return [...build(sorted), ...build([...sorted].reverse())];
+}
+
+const projected = (viewpoint: Viewpoint, q: Vec3): Point => (viewpoint === "plan" ? { x: q[0], y: q[2] } : { x: q[2], y: q[1] });
+
+/** 🧊️ A {@link Solid} on a spread or twisted bone, placed by the full 3D frames: an extruded part is the profile of the bone frame swept along the lateral axis of the frame from `z0` to `z1` (measured from the rest origin of the bone), projected to the view; a revolved part is revolved about the vertical axis of its axis bone carried to the current frame (a tilted axis is legal), each profile edge as the hull of the projected circles of its two ends. */
+function solid3(solid: Solid, rings: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: Viewpoint): Point[][] {
+  const now = kin.now[bone]!.frame;
+  const rest = kin.rest[bone]!.frame;
+  const place = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];
+  if (solid.kind === "extruded") return rings.map((ring) => hull([solid.z0 - rest.o[2], solid.z1 - rest.o[2]].flatMap((c) => ring.map((p) => projected(viewpoint, place(p.x, p.y, c))))));
+  const axisRest = kin.rest[solid.axisBone]!.frame;
+  const axisNow = kin.now[solid.axisBone]!.frame;
+  const origin = carry(axisRest, axisNow, [solid.axisX, axisRest.o[1], solid.axisZ ?? 0]);
+  const tip = carry(axisRest, axisNow, [solid.axisX, axisRest.o[1] + 1, solid.axisZ ?? 0]);
+  const axis = norm([tip[0] - origin[0], tip[1] - origin[1], tip[2] - origin[2]]);
+  const e1 = norm(Math.hypot(...cross(axis, [0, 0, 1])) > 1e-9 ? cross(axis, [0, 0, 1]) : cross(axis, [1, 0, 0]));
+  const e2 = cross(axis, e1);
+  const segments = 32;
+  const circle = (p: Point): Point[] => {
+    const q = place(p.x, p.y, 0);
+    const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
+    const h = dot(d, axis);
+    const radial: Vec3 = [d[0] - h * axis[0], d[1] - h * axis[1], d[2] - h * axis[2]];
+    const r = Math.hypot(...radial);
+    return Array.from({ length: segments }, (_, i) => {
+      const t = (2 * Math.PI * i) / segments;
+      return projected(viewpoint, [origin[0] + h * axis[0] + r * (Math.cos(t) * e1[0] + Math.sin(t) * e2[0]), origin[1] + h * axis[1] + r * (Math.cos(t) * e1[1] + Math.sin(t) * e2[1]), origin[2] + h * axis[2] + r * (Math.cos(t) * e1[2] + Math.sin(t) * e2[2])]);
+    });
+  };
+  return rings.flatMap((ring) => ring.map((p, i) => hull([...circle(p), ...circle(ring[(i + 1) % ring.length]!)])));
+}
+

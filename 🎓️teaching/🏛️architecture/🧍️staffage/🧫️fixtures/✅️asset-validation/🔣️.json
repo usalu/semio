@@ -1,1299 +1,1420 @@
 {
- "description": "Broken variants of the sample figure (semio.staffage/v2); every case applies its JSON-patch-like operations (path segments `id=<slug>` select the array element with that id, `-` appends) and must report at least the listed codes. The unpatched asset and manifest must report none.",
- "patchPaths": "RFC 6901 pointers with the id= selector",
- "cases": [
-  {
-   "name": "duplicate bone id",
-   "patch": [
+  "description": "Broken variants of the sample figure (semio.staffage/v2); every case applies its JSON-patch-like operations (path segments `id=<slug>` select the array element with that id, `-` appends) and must report at least the listed codes. The unpatched asset and manifest must report none.",
+  "patchPaths": "RFC 6901 pointers with the id= selector",
+  "cases": [
     {
-     "op": "replace",
-     "path": "/rig/bones/id=head/id",
-     "value": "torso"
-    }
-   ],
-   "expectCodes": [
-    "duplicate-id"
-   ]
-  },
-  {
-   "name": "rig root is not a bone",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/rig/root",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "rig-root"
-   ]
-  },
-  {
-   "name": "missing parent",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/rig/bones/id=torso/parent",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "rig-missing-parent"
-   ]
-  },
-  {
-   "name": "parent cycle",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/rig/bones/id=torso/parent",
-     "value": "head"
-    }
-   ],
-   "expectCodes": [
-    "rig-cycle"
-   ]
-  },
-  {
-   "name": "second root",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/rig/bones/id=head/parent",
-     "value": null
-    }
-   ],
-   "expectCodes": [
-    "rig-multiple-roots"
-   ]
-  },
-  {
-   "name": "shape on unknown bone",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/geometry/elevation/id=head/bone",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "shape with unknown region",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/geometry/elevation/id=head/region",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "shape with unknown material",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/geometry/elevation/id=head/material",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "anchor on unknown bone",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/anchors/id=mouth/bone",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "pose offsets an unknown bone",
-   "patch": [
-    {
-     "op": "add",
-     "path": "/poses/id=stand/bones/ghost",
-     "value": {
-      "angleDeg": 1
-     }
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "pose lists an unknown contact",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/poses/id=stand/contacts/0",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "clip key uses an unknown pose",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/keys/0/pose",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "clip contact uses an unknown anchor",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=walk/contacts/0/anchor",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "emitter on an unknown anchor",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/thermal/emitters/id=nose-breath/anchor",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "track target does not resolve",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/tracks/0/target",
-     "value": "emitter:ghost"
-    }
-   ],
-   "expectCodes": [
-    "track-target"
-   ]
-  },
-  {
-   "name": "structure support is unknown",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/structure/supports/0",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "presentation default pose is unknown",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/presentation/defaultPose",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "presentation default clip is unknown",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/presentation/defaultClip",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "fewer than three poses",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/clips/id=bag-swing"
+      "name": "duplicate bone id",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/bones/id=head/id",
+          "value": "torso"
+        }
+      ],
+      "expectCodes": [
+        "duplicate-id"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/poses/id=carry-bag"
+      "name": "rig root is not a bone",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/root",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "rig-root"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/poses/id=passing-right-stance"
+      "name": "missing parent",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/bones/id=torso/parent",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "rig-missing-parent"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/poses/id=stride-right-forward"
+      "name": "parent cycle",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/bones/id=torso/parent",
+          "value": "head"
+        }
+      ],
+      "expectCodes": [
+        "rig-cycle"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/poses/id=passing-left-stance"
-    }
-   ],
-   "expectCodes": [
-    "too-few-poses"
-   ]
-  },
-  {
-   "name": "fewer than two clips",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/clips/id=bag-swing"
+      "name": "second root",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/bones/id=head/parent",
+          "value": null
+        }
+      ],
+      "expectCodes": [
+        "rig-multiple-roots"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/clips/id=idle-breathing"
-    }
-   ],
-   "expectCodes": [
-    "too-few-clips"
-   ]
-  },
-  {
-   "name": "key times not ascending",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/keys/1/t",
-     "value": 5
-    }
-   ],
-   "expectCodes": [
-    "key-order",
-    "key-range"
-   ]
-  },
-  {
-   "name": "key time beyond the duration",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/keys/2/t",
-     "value": 9
-    }
-   ],
-   "expectCodes": [
-    "key-range"
-   ]
-  },
-  {
-   "name": "pose offset beyond the joint limit",
-   "patch": [
-    {
-     "op": "add",
-     "path": "/poses/id=stand/bones/shank-l",
-     "value": {
-      "angleDeg": 30
-     }
-    }
-   ],
-   "expectCodes": [
-    "joint-limit"
-   ]
-  },
-  {
-   "name": "clip key override beyond the joint limit",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/keys/1/bones/torso/angleDeg",
-     "value": 120
-    }
-   ],
-   "expectCodes": [
-    "joint-limit"
-   ]
-  },
-  {
-   "name": "fixed joint cannot be offset",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/rig/bones/id=head/joint",
-     "value": {
-      "type": "fixed"
-     }
+      "name": "shape on unknown bone",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/geometry/elevation/id=head/bone",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "add",
-     "path": "/poses/id=stand/bones/head",
-     "value": {
-      "angleDeg": 3
-     }
-    }
-   ],
-   "expectCodes": [
-    "joint-limit"
-   ]
-  },
-  {
-   "name": "negative mass",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/rig/bones/id=head/mass/kg",
-     "value": -1
-    }
-   ],
-   "expectCodes": [
-    "mass-negative"
-   ]
-  },
-  {
-   "name": "zero emissivity",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/materials/id=skin/emissivity",
-     "value": 0
-    }
-   ],
-   "expectCodes": [
-    "emissivity-range"
-   ]
-  },
-  {
-   "name": "emissivity above one",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/materials/id=skin/emissivity",
-     "value": 1.5
-    }
-   ],
-   "expectCodes": [
-    "emissivity-range"
-   ]
-  },
-  {
-   "name": "material without source",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/materials/id=skin/source"
-    }
-   ],
-   "expectCodes": [
-    "source-missing"
-   ]
-  },
-  {
-   "name": "mass without source",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/rig/bones/id=head/mass/source"
-    }
-   ],
-   "expectCodes": [
-    "source-missing"
-   ]
-  },
-  {
-   "name": "region without source",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/thermal/regions/id=feet/source"
-    }
-   ],
-   "expectCodes": [
-    "source-missing"
-   ]
-  },
-  {
-   "name": "emitter without source",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/thermal/emitters/id=nose-breath/source"
-    }
-   ],
-   "expectCodes": [
-    "source-missing"
-   ]
-  },
-  {
-   "name": "load without source",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/poses/id=carry-bag/loads/0/source"
-    }
-   ],
-   "expectCodes": [
-    "source-missing"
-   ]
-  },
-  {
-   "name": "empty elevation geometry",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/geometry/elevation",
-     "value": []
-    }
-   ],
-   "expectCodes": [
-    "elevation-empty"
-   ]
-  },
-  {
-   "name": "phase outside the clip",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=walk/phases/0/toS",
-     "value": 3
-    }
-   ],
-   "expectCodes": [
-    "phase-range"
-   ]
-  },
-  {
-   "name": "contact span outside the clip",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/contacts/0/toS",
-     "value": 99
-    }
-   ],
-   "expectCodes": [
-    "contact-range"
-   ]
-  },
-  {
-   "name": "empty German text",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/title/de",
-     "value": ""
-    }
-   ],
-   "expectCodes": [
-    "text-empty"
-   ]
-  },
-  {
-   "name": "missing English text",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/summary/en"
-    }
-   ],
-   "expectCodes": [
-    "text-empty"
-   ]
-  },
-  {
-   "name": "advance does not match the planted travel",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=walk/advanceM",
-     "value": 2.5
-    }
-   ],
-   "expectCodes": [
-    "clip-advance"
-   ]
-  },
-  {
-   "name": "load without placement",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/poses/id=carry-bag/loads/0/anchor"
-    }
-   ],
-   "expectCodes": [
-    "load-unplaced"
-   ]
-  },
-  {
-   "name": "unknown reference id",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/materials/id=skin/reference",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "closing key of a looping clip differs from the first key",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/keys/2/bones",
-     "value": {
-      "torso": {
-       "angleDeg": 5
-      }
-     }
-    }
-   ],
-   "expectCodes": [
-    "loop-closing"
-   ]
-  },
-  {
-   "name": "a gap in the contacts without supports",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/structure/supports",
-     "value": []
+      "name": "shape with unknown region",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/geometry/elevation/id=head/region",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/clips/id=walk/contacts/2"
-    }
-   ],
-   "expectCodes": [
-    "unsupported-instant"
-   ]
-  },
-  {
-   "name": "the same gap inside a ballistic phase is legitimate",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/structure/supports",
-     "value": []
+      "name": "shape with unknown material",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/geometry/elevation/id=head/material",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/clips/id=walk/contacts/2"
+      "name": "anchor on unknown bone",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/anchors/id=mouth/bone",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "add",
-     "path": "/clips/id=walk/phases/-",
-     "value": {
-      "id": "flight",
-      "fromS": 0.55,
-      "toS": 0.95,
-      "title": {
-       "en": "Flight",
-       "de": "Flug"
-      },
-      "ballistic": true
-     }
-    }
-   ],
-   "expectCodes": [],
-   "expectAbsent": [
-    "unsupported-instant"
-   ]
-  },
-  {
-   "name": "supports make gaps legitimate",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/structure/supports",
-     "value": [
-      "contact-l"
-     ]
+      "name": "pose offsets an unknown bone",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/poses/id=stand/bones/ghost",
+          "value": {
+            "angleDeg": 1
+          }
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/clips/id=walk/contacts/2"
-    }
-   ],
-   "expectCodes": [],
-   "expectAbsent": [
-    "unsupported-instant"
-   ]
-  },
-  {
-   "name": "a clip without any contact and without supports",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/structure/supports",
-     "value": []
+      "name": "pose lists an unknown contact",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/poses/id=stand/contacts/0",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "replace",
-     "path": "/clips/id=idle-breathing/contacts",
-     "value": []
-    }
-   ],
-   "expectCodes": [
-    "unsupported-instant"
-   ]
-  },
-  {
-   "name": "thermal region drawn by no shape",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/representations/100/geometry/elevation/id=head"
+      "name": "clip key uses an unknown pose",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/keys/0/pose",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
     {
-     "op": "remove",
-     "path": "/representations/100/geometry/elevation/id=neck"
-    }
-   ],
-   "expectCodes": [
-    "region-undrawn"
-   ]
-  },
-  {
-   "name": "body region without body parameters",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/thermal/regions/id=head/body"
-    }
-   ],
-   "expectCodes": [
-    "thermal-parameter-missing"
-   ]
-  },
-  {
-   "name": "height deviates from the drawing",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/dimensions/heightM",
-     "value": 2.5
-    }
-   ],
-   "expectCodes": [
-    "extent-height"
-   ]
-  },
-  {
-   "name": "width deviates from the drawing",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/dimensions/widthM",
-     "value": 2.5
-    }
-   ],
-   "expectCodes": [
-    "extent-width"
-   ]
-  },
-  {
-   "name": "scale left undecided",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/representations/500"
-    }
-   ],
-   "expectCodes": [
-    "rep-undecided"
-   ]
-  },
-  {
-   "name": "representation key and denominator disagree",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/200/denominator",
-     "value": 100
-    }
-   ],
-   "expectCodes": [
-    "rep-key-mismatch"
-   ]
-  },
-  {
-   "name": "unavailable decision without alternatives",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/500/alternatives",
-     "value": []
-    }
-   ],
-   "expectCodes": [
-    "alternative-missing"
-   ]
-  },
-  {
-   "name": "alternative scale is not authored",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/500/alternatives",
-     "value": [
-      {
-       "kind": "scale",
-       "denominator": 500
-      }
-     ]
-    }
-   ],
-   "expectCodes": [
-    "alternative-unresolved"
-   ]
-  },
-  {
-   "name": "alternative symbol does not exist",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/500/alternatives",
-     "value": [
-      {
-       "kind": "symbol",
-       "symbol": "ghost"
-      }
-     ]
-    }
-   ],
-   "expectCodes": [
-    "alternative-unresolved"
-   ]
-  },
-  {
-   "name": "valid range excludes its own denominator",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/validRange",
-     "value": {
-      "minDenominator": 110,
-      "maxDenominator": 140
-     }
-    }
-   ],
-   "expectCodes": [
-    "valid-range"
-   ]
-  },
-  {
-   "name": "valid ranges overlap",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/validRange",
-     "value": {
-      "minDenominator": 60,
-      "maxDenominator": 200
-     }
-    }
-   ],
-   "expectCodes": [
-    "valid-range-overlap"
-   ]
-  },
-  {
-   "name": "decision missing",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/representations/100/decisions/omitted"
-    }
-   ],
-   "expectCodes": [
-    "decision-missing"
-   ]
-  },
-  {
-   "name": "pen in model metres",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/pens/body",
-     "value": 0.0003
-    }
-   ],
-   "expectCodes": [
-    "pen-units"
-   ]
-  },
-  {
-   "name": "body pen is null",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/100/pens/body",
-     "value": null
-    }
-   ],
-   "expectCodes": [
-    "pen-required"
-   ]
-  },
-  {
-   "name": "default scale is not authored",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/presentation/defaultScale",
-     "value": 500
-    }
-   ],
-   "expectCodes": [
-    "default-scale-unavailable"
-   ]
-  },
-  {
-   "name": "unavailable decision without limiting size",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/representations/500/limitingSizeM",
-     "value": 0
-    }
-   ],
-   "expectCodes": [
-    "limiting-size"
-   ]
-  },
-  {
-   "name": "symbol shape not on the root bone",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/symbols/id=position-dot/geometry/elevation/0/bone",
-     "value": "head"
-    }
-   ],
-   "expectCodes": [
-    "symbol-bone"
-   ]
-  }
- ],
- "manifest": {
-  "$schema": "../🧬️schema/🔣️.json",
-  "version": "semio.staffage/v2",
-  "categories": [
-   {
-    "id": "humans",
-    "emoji": "👤",
-    "title": {
-     "en": "humans",
-     "de": "humans"
+      "name": "clip contact uses an unknown anchor",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=walk/contacts/0/anchor",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
-    "description": {
-     "en": "humans",
-     "de": "humans"
+    {
+      "name": "emitter on an unknown anchor",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/thermal/emitters/id=nose-breath/anchor",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
-    "folder": "humans"
-   },
-   {
-    "id": "animals",
-    "emoji": "👤",
-    "title": {
-     "en": "animals",
-     "de": "animals"
+    {
+      "name": "track target does not resolve",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/tracks/0/target",
+          "value": "emitter:ghost"
+        }
+      ],
+      "expectCodes": [
+        "track-target"
+      ]
     },
-    "description": {
-     "en": "animals",
-     "de": "animals"
+    {
+      "name": "structure support is unknown",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/structure/supports/0",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
-    "folder": "animals"
-   },
-   {
-    "id": "vegetation",
-    "emoji": "👤",
-    "title": {
-     "en": "vegetation",
-     "de": "vegetation"
+    {
+      "name": "presentation default pose is unknown",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/presentation/defaultPose",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
-    "description": {
-     "en": "vegetation",
-     "de": "vegetation"
+    {
+      "name": "presentation default clip is unknown",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/presentation/defaultClip",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
     },
-    "folder": "vegetation"
-   },
-   {
-    "id": "furniture",
-    "emoji": "👤",
-    "title": {
-     "en": "furniture",
-     "de": "furniture"
+    {
+      "name": "fewer than three poses",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/clips/id=bag-swing"
+        },
+        {
+          "op": "remove",
+          "path": "/poses/id=carry-bag"
+        },
+        {
+          "op": "remove",
+          "path": "/poses/id=passing-right-stance"
+        },
+        {
+          "op": "remove",
+          "path": "/poses/id=stride-right-forward"
+        },
+        {
+          "op": "remove",
+          "path": "/poses/id=passing-left-stance"
+        }
+      ],
+      "expectCodes": [
+        "too-few-poses"
+      ]
     },
-    "description": {
-     "en": "furniture",
-     "de": "furniture"
+    {
+      "name": "fewer than two clips",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/clips/id=bag-swing"
+        },
+        {
+          "op": "remove",
+          "path": "/clips/id=idle-breathing"
+        }
+      ],
+      "expectCodes": [
+        "too-few-clips"
+      ]
     },
-    "folder": "furniture"
-   },
-   {
-    "id": "objects",
-    "emoji": "👤",
-    "title": {
-     "en": "objects",
-     "de": "objects"
+    {
+      "name": "key times not ascending",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/keys/1/t",
+          "value": 5
+        }
+      ],
+      "expectCodes": [
+        "key-order",
+        "key-range"
+      ]
     },
-    "description": {
-     "en": "objects",
-     "de": "objects"
+    {
+      "name": "key time beyond the duration",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/keys/2/t",
+          "value": 9
+        }
+      ],
+      "expectCodes": [
+        "key-range"
+      ]
     },
-    "folder": "objects"
-   },
-   {
-    "id": "vehicles",
-    "emoji": "👤",
-    "title": {
-     "en": "vehicles",
-     "de": "vehicles"
+    {
+      "name": "pose offset beyond the joint limit",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/poses/id=stand/bones/shank-l",
+          "value": {
+            "angleDeg": 30
+          }
+        }
+      ],
+      "expectCodes": [
+        "joint-limit"
+      ]
     },
-    "description": {
-     "en": "vehicles",
-     "de": "vehicles"
+    {
+      "name": "clip key override beyond the joint limit",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/keys/1/bones/torso/angleDeg",
+          "value": 120
+        }
+      ],
+      "expectCodes": [
+        "joint-limit"
+      ]
     },
-    "folder": "vehicles"
-   },
-   {
-    "id": "machinery",
-    "emoji": "👤",
-    "title": {
-     "en": "machinery",
-     "de": "machinery"
+    {
+      "name": "fixed joint cannot be offset",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/bones/id=head/joint",
+          "value": {
+            "type": "fixed"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/poses/id=stand/bones/head",
+          "value": {
+            "angleDeg": 3
+          }
+        }
+      ],
+      "expectCodes": [
+        "joint-limit"
+      ]
     },
-    "description": {
-     "en": "machinery",
-     "de": "machinery"
+    {
+      "name": "negative mass",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rig/bones/id=head/mass/kg",
+          "value": -1
+        }
+      ],
+      "expectCodes": [
+        "mass-negative"
+      ]
     },
-    "folder": "machinery"
-   },
-   {
-    "id": "components",
-    "emoji": "👤",
-    "title": {
-     "en": "components",
-     "de": "components"
+    {
+      "name": "zero emissivity",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/materials/id=skin/emissivity",
+          "value": 0
+        }
+      ],
+      "expectCodes": [
+        "emissivity-range"
+      ]
     },
-    "description": {
-     "en": "components",
-     "de": "components"
+    {
+      "name": "emissivity above one",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/materials/id=skin/emissivity",
+          "value": 1.5
+        }
+      ],
+      "expectCodes": [
+        "emissivity-range"
+      ]
     },
-    "folder": "components"
-   }
+    {
+      "name": "material without source",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/materials/id=skin/source"
+        }
+      ],
+      "expectCodes": [
+        "source-missing"
+      ]
+    },
+    {
+      "name": "mass without source",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/rig/bones/id=head/mass/source"
+        }
+      ],
+      "expectCodes": [
+        "source-missing"
+      ]
+    },
+    {
+      "name": "region without source",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/thermal/regions/id=feet/source"
+        }
+      ],
+      "expectCodes": [
+        "source-missing"
+      ]
+    },
+    {
+      "name": "emitter without source",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/thermal/emitters/id=nose-breath/source"
+        }
+      ],
+      "expectCodes": [
+        "source-missing"
+      ]
+    },
+    {
+      "name": "load without source",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/poses/id=carry-bag/loads/0/source"
+        }
+      ],
+      "expectCodes": [
+        "source-missing"
+      ]
+    },
+    {
+      "name": "empty elevation geometry",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/geometry/elevation",
+          "value": []
+        }
+      ],
+      "expectCodes": [
+        "elevation-empty"
+      ]
+    },
+    {
+      "name": "phase outside the clip",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=walk/phases/0/toS",
+          "value": 3
+        }
+      ],
+      "expectCodes": [
+        "phase-range"
+      ]
+    },
+    {
+      "name": "contact span outside the clip",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/contacts/0/toS",
+          "value": 99
+        }
+      ],
+      "expectCodes": [
+        "contact-range"
+      ]
+    },
+    {
+      "name": "empty German text",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/title/de",
+          "value": ""
+        }
+      ],
+      "expectCodes": [
+        "text-empty"
+      ]
+    },
+    {
+      "name": "missing English text",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/summary/en"
+        }
+      ],
+      "expectCodes": [
+        "text-empty"
+      ]
+    },
+    {
+      "name": "advance does not match the planted travel",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=walk/advanceM",
+          "value": 2.5
+        }
+      ],
+      "expectCodes": [
+        "clip-advance"
+      ]
+    },
+    {
+      "name": "load without placement",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/poses/id=carry-bag/loads/0/anchor"
+        }
+      ],
+      "expectCodes": [
+        "load-unplaced"
+      ]
+    },
+    {
+      "name": "unknown reference id",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/materials/id=skin/reference",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
+    },
+    {
+      "name": "closing key of a looping clip differs from the first key",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/keys/2/bones",
+          "value": {
+            "torso": {
+              "angleDeg": 5
+            }
+          }
+        }
+      ],
+      "expectCodes": [
+        "loop-closing"
+      ]
+    },
+    {
+      "name": "a gap in the contacts without supports",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/structure/supports",
+          "value": []
+        },
+        {
+          "op": "remove",
+          "path": "/clips/id=walk/contacts/2"
+        }
+      ],
+      "expectCodes": [
+        "unsupported-instant"
+      ]
+    },
+    {
+      "name": "the same gap inside a ballistic phase is legitimate",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/structure/supports",
+          "value": []
+        },
+        {
+          "op": "remove",
+          "path": "/clips/id=walk/contacts/2"
+        },
+        {
+          "op": "add",
+          "path": "/clips/id=walk/phases/-",
+          "value": {
+            "id": "flight",
+            "fromS": 0.55,
+            "toS": 0.95,
+            "title": {
+              "en": "Flight",
+              "de": "Flug"
+            },
+            "ballistic": true
+          }
+        }
+      ],
+      "expectCodes": [],
+      "expectAbsent": [
+        "unsupported-instant"
+      ]
+    },
+    {
+      "name": "supports make gaps legitimate",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/structure/supports",
+          "value": [
+            "contact-l"
+          ]
+        },
+        {
+          "op": "remove",
+          "path": "/clips/id=walk/contacts/2"
+        }
+      ],
+      "expectCodes": [],
+      "expectAbsent": [
+        "unsupported-instant"
+      ]
+    },
+    {
+      "name": "a clip without any contact and without supports",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/structure/supports",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/clips/id=idle-breathing/contacts",
+          "value": []
+        }
+      ],
+      "expectCodes": [
+        "unsupported-instant"
+      ]
+    },
+    {
+      "name": "thermal region drawn by no shape",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/representations/100/geometry/elevation/id=head"
+        },
+        {
+          "op": "remove",
+          "path": "/representations/100/geometry/elevation/id=neck"
+        }
+      ],
+      "expectCodes": [
+        "region-undrawn"
+      ]
+    },
+    {
+      "name": "body region without body parameters",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/thermal/regions/id=head/body"
+        }
+      ],
+      "expectCodes": [
+        "thermal-parameter-missing"
+      ]
+    },
+    {
+      "name": "height deviates from the drawing",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/dimensions/heightM",
+          "value": 2.5
+        }
+      ],
+      "expectCodes": [
+        "extent-height"
+      ]
+    },
+    {
+      "name": "width deviates from the drawing",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/dimensions/widthM",
+          "value": 2.5
+        }
+      ],
+      "expectCodes": [
+        "extent-width"
+      ]
+    },
+    {
+      "name": "scale left undecided",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/representations/500"
+        }
+      ],
+      "expectCodes": [
+        "rep-undecided"
+      ]
+    },
+    {
+      "name": "representation key and denominator disagree",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/200/denominator",
+          "value": 100
+        }
+      ],
+      "expectCodes": [
+        "rep-key-mismatch"
+      ]
+    },
+    {
+      "name": "unavailable decision without alternatives",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/500",
+          "value": {
+            "status": "unavailable",
+            "denominator": 500,
+            "cause": "below-printable-feature",
+            "reason": {
+              "en": "Test decision: the scale is declared unavailable so that its defects can be patched.",
+              "de": "Testentscheidung: Der Maßstab wird für nicht verfügbar erklärt, damit seine Mängel eingesetzt werden können."
+            },
+            "limitingFeature": {
+              "en": "Test feature",
+              "de": "Testmerkmal"
+            },
+            "limitingSizeM": 0.01,
+            "alternatives": [
+              {
+                "kind": "scale",
+                "denominator": 100
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/representations/500/alternatives",
+          "value": []
+        }
+      ],
+      "expectCodes": [
+        "alternative-missing"
+      ]
+    },
+    {
+      "name": "alternative scale is not authored",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/500",
+          "value": {
+            "status": "unavailable",
+            "denominator": 500,
+            "cause": "below-printable-feature",
+            "reason": {
+              "en": "Test decision: the scale is declared unavailable so that its defects can be patched.",
+              "de": "Testentscheidung: Der Maßstab wird für nicht verfügbar erklärt, damit seine Mängel eingesetzt werden können."
+            },
+            "limitingFeature": {
+              "en": "Test feature",
+              "de": "Testmerkmal"
+            },
+            "limitingSizeM": 0.01,
+            "alternatives": [
+              {
+                "kind": "scale",
+                "denominator": 100
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/representations/500/alternatives",
+          "value": [
+            {
+              "kind": "scale",
+              "denominator": 500
+            }
+          ]
+        }
+      ],
+      "expectCodes": [
+        "alternative-unresolved"
+      ]
+    },
+    {
+      "name": "alternative symbol does not exist",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/500",
+          "value": {
+            "status": "unavailable",
+            "denominator": 500,
+            "cause": "below-printable-feature",
+            "reason": {
+              "en": "Test decision: the scale is declared unavailable so that its defects can be patched.",
+              "de": "Testentscheidung: Der Maßstab wird für nicht verfügbar erklärt, damit seine Mängel eingesetzt werden können."
+            },
+            "limitingFeature": {
+              "en": "Test feature",
+              "de": "Testmerkmal"
+            },
+            "limitingSizeM": 0.01,
+            "alternatives": [
+              {
+                "kind": "scale",
+                "denominator": 100
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/representations/500/alternatives",
+          "value": [
+            {
+              "kind": "symbol",
+              "symbol": "ghost"
+            }
+          ]
+        }
+      ],
+      "expectCodes": [
+        "alternative-unresolved"
+      ]
+    },
+    {
+      "name": "valid range excludes its own denominator",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/validRange",
+          "value": {
+            "minDenominator": 110,
+            "maxDenominator": 140
+          }
+        }
+      ],
+      "expectCodes": [
+        "valid-range"
+      ]
+    },
+    {
+      "name": "valid ranges overlap",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/validRange",
+          "value": {
+            "minDenominator": 60,
+            "maxDenominator": 200
+          }
+        }
+      ],
+      "expectCodes": [
+        "valid-range-overlap"
+      ]
+    },
+    {
+      "name": "decision missing",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/representations/100/decisions/omitted"
+        }
+      ],
+      "expectCodes": [
+        "decision-missing"
+      ]
+    },
+    {
+      "name": "pen in model metres",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/pens/body",
+          "value": 0.0003
+        }
+      ],
+      "expectCodes": [
+        "pen-units"
+      ]
+    },
+    {
+      "name": "body pen is null",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/pens/body",
+          "value": null
+        }
+      ],
+      "expectCodes": [
+        "pen-required"
+      ]
+    },
+    {
+      "name": "default scale is not authored",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/500",
+          "value": {
+            "status": "unavailable",
+            "denominator": 500,
+            "cause": "below-printable-feature",
+            "reason": {
+              "en": "Test decision: the scale is declared unavailable so that its defects can be patched.",
+              "de": "Testentscheidung: Der Maßstab wird für nicht verfügbar erklärt, damit seine Mängel eingesetzt werden können."
+            },
+            "limitingFeature": {
+              "en": "Test feature",
+              "de": "Testmerkmal"
+            },
+            "limitingSizeM": 0.01,
+            "alternatives": [
+              {
+                "kind": "scale",
+                "denominator": 100
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/presentation/defaultScale",
+          "value": 500
+        }
+      ],
+      "expectCodes": [
+        "default-scale-unavailable"
+      ]
+    },
+    {
+      "name": "unavailable decision without limiting size",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/500",
+          "value": {
+            "status": "unavailable",
+            "denominator": 500,
+            "cause": "below-printable-feature",
+            "reason": {
+              "en": "Test decision: the scale is declared unavailable so that its defects can be patched.",
+              "de": "Testentscheidung: Der Maßstab wird für nicht verfügbar erklärt, damit seine Mängel eingesetzt werden können."
+            },
+            "limitingFeature": {
+              "en": "Test feature",
+              "de": "Testmerkmal"
+            },
+            "limitingSizeM": 0.01,
+            "alternatives": [
+              {
+                "kind": "scale",
+                "denominator": 100
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/representations/500/limitingSizeM",
+          "value": 0
+        }
+      ],
+      "expectCodes": [
+        "limiting-size"
+      ]
+    },
+    {
+      "name": "symbol shape not on the root bone",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/symbols/id=position-dot/geometry/elevation/0/bone",
+          "value": "head"
+        }
+      ],
+      "expectCodes": [
+        "symbol-bone"
+      ]
+    }
   ],
-  "collections": [
-   {
-    "id": "all",
-    "title": {
-     "en": "All",
-     "de": "Alle"
-    },
-    "description": {
-     "en": "Everything",
-     "de": "Alles"
-    },
-    "assets": [
-     "sample-figure"
+  "manifest": {
+    "$schema": "../🧬️schema/🔣️.json",
+    "version": "semio.staffage/v2",
+    "categories": [
+      {
+        "id": "humans",
+        "emoji": "👤",
+        "title": {
+          "en": "humans",
+          "de": "humans"
+        },
+        "description": {
+          "en": "humans",
+          "de": "humans"
+        },
+        "folder": "humans"
+      },
+      {
+        "id": "animals",
+        "emoji": "👤",
+        "title": {
+          "en": "animals",
+          "de": "animals"
+        },
+        "description": {
+          "en": "animals",
+          "de": "animals"
+        },
+        "folder": "animals"
+      },
+      {
+        "id": "vegetation",
+        "emoji": "👤",
+        "title": {
+          "en": "vegetation",
+          "de": "vegetation"
+        },
+        "description": {
+          "en": "vegetation",
+          "de": "vegetation"
+        },
+        "folder": "vegetation"
+      },
+      {
+        "id": "furniture",
+        "emoji": "👤",
+        "title": {
+          "en": "furniture",
+          "de": "furniture"
+        },
+        "description": {
+          "en": "furniture",
+          "de": "furniture"
+        },
+        "folder": "furniture"
+      },
+      {
+        "id": "objects",
+        "emoji": "👤",
+        "title": {
+          "en": "objects",
+          "de": "objects"
+        },
+        "description": {
+          "en": "objects",
+          "de": "objects"
+        },
+        "folder": "objects"
+      },
+      {
+        "id": "vehicles",
+        "emoji": "👤",
+        "title": {
+          "en": "vehicles",
+          "de": "vehicles"
+        },
+        "description": {
+          "en": "vehicles",
+          "de": "vehicles"
+        },
+        "folder": "vehicles"
+      },
+      {
+        "id": "machinery",
+        "emoji": "👤",
+        "title": {
+          "en": "machinery",
+          "de": "machinery"
+        },
+        "description": {
+          "en": "machinery",
+          "de": "machinery"
+        },
+        "folder": "machinery"
+      },
+      {
+        "id": "components",
+        "emoji": "👤",
+        "title": {
+          "en": "components",
+          "de": "components"
+        },
+        "description": {
+          "en": "components",
+          "de": "components"
+        },
+        "folder": "components"
+      },
+      {
+        "id": "appliances",
+        "emoji": "🔌",
+        "title": {
+          "en": "appliances",
+          "de": "appliances"
+        },
+        "description": {
+          "en": "appliances",
+          "de": "appliances"
+        },
+        "folder": "appliances"
+      }
+    ],
+    "collections": [
+      {
+        "id": "all",
+        "title": {
+          "en": "All",
+          "de": "Alle"
+        },
+        "description": {
+          "en": "Everything",
+          "de": "Alles"
+        },
+        "assets": [
+          "sample-figure"
+        ]
+      }
+    ],
+    "entries": [
+      {
+        "id": "sample-figure",
+        "category": "humans",
+        "title": {
+          "en": "Sample figure",
+          "de": "Beispielfigur"
+        },
+        "heightM": 1.73,
+        "widthM": 0.37,
+        "poses": [
+          "stand",
+          "stride-left-forward",
+          "passing-left-stance",
+          "stride-right-forward",
+          "passing-right-stance",
+          "carry-bag"
+        ],
+        "clips": [
+          "walk",
+          "idle-breathing",
+          "bag-swing"
+        ],
+        "representations": {
+          "50": "authored",
+          "100": "authored",
+          "200": "authored",
+          "500": "authored"
+        },
+        "symbols": [
+          "position-dot"
+        ],
+        "analytics": [
+          "thermal",
+          "transport",
+          "structural"
+        ],
+        "exports": [
+          "svg",
+          "pdf",
+          "dxf",
+          "dwg",
+          "png-sequence",
+          "mp4",
+          "webm",
+          "component"
+        ],
+        "distinction": {
+          "en": "Engine fixture",
+          "de": "Engine-Fixture"
+        },
+        "completion": "authored"
+      }
     ]
-   }
-  ],
-  "entries": [
-   {
-    "id": "sample-figure",
-    "category": "humans",
-    "title": {
-     "en": "Sample figure",
-     "de": "Beispielfigur"
+  },
+  "manifestCases": [
+    {
+      "name": "consistent manifest",
+      "patch": [],
+      "expectCodes": []
     },
-    "heightM": 1.73,
-    "widthM": 0.37,
-    "poses": [
-     "stand",
-     "stride-left-forward",
-     "passing-left-stance",
-     "stride-right-forward",
-     "passing-right-stance",
-     "carry-bag"
-    ],
-    "clips": [
-     "walk",
-     "idle-breathing",
-     "bag-swing"
-    ],
-    "representations": {
-     "50": "authored",
-     "100": "authored",
-     "200": "authored",
-     "500": "unavailable"
+    {
+      "name": "height differs by more than 1 mm",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/entries/0/heightM",
+          "value": 2.4
+        }
+      ],
+      "expectCodes": [
+        "manifest-dimension-mismatch"
+      ]
     },
-    "symbols": [
-     "position-dot"
-    ],
-    "analytics": [
-     "thermal",
-     "transport",
-     "structural"
-    ],
-    "viewpoints": [
-     "elevation",
-     "plan"
-    ],
-    "exports": [
-     "svg",
-     "pdf",
-     "dxf",
-     "dwg",
-     "png-sequence",
-     "mp4",
-     "webm",
-     "component"
-    ],
-    "distinction": {
-     "en": "Engine fixture",
-     "de": "Engine-Fixture"
+    {
+      "name": "pose list differs",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/entries/0/poses/0"
+        }
+      ],
+      "expectCodes": [
+        "manifest-mismatch"
+      ]
     },
-    "completion": "authored"
-   }
+    {
+      "name": "category differs",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/entries/0/category",
+          "value": "animals"
+        }
+      ],
+      "expectCodes": [
+        "manifest-mismatch",
+        "manifest-count"
+      ]
+    },
+    {
+      "name": "entry without asset",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/entries/-",
+          "value": {
+            "id": "ghost",
+            "category": "humans",
+            "title": {
+              "en": "Sample figure",
+              "de": "Beispielfigur"
+            },
+            "heightM": 1.73,
+            "widthM": 0.37,
+            "poses": [
+              "stand",
+              "stride-left-forward",
+              "passing-left-stance",
+              "stride-right-forward",
+              "passing-right-stance",
+              "carry-bag"
+            ],
+            "clips": [
+              "walk",
+              "idle-breathing",
+              "bag-swing"
+            ],
+            "representations": {
+              "50": "authored",
+              "100": "authored",
+              "200": "authored",
+              "500": "authored"
+            },
+            "symbols": [
+              "position-dot"
+            ],
+            "analytics": [
+              "thermal",
+              "transport",
+              "structural"
+            ],
+            "exports": [
+              "svg",
+              "pdf",
+              "dxf",
+              "dwg",
+              "png-sequence",
+              "mp4",
+              "webm",
+              "component"
+            ],
+            "distinction": {
+              "en": "Engine fixture",
+              "de": "Engine-Fixture"
+            },
+            "completion": "authored"
+          }
+        }
+      ],
+      "expectCodes": [
+        "manifest-asset-missing",
+        "manifest-count"
+      ]
+    },
+    {
+      "name": "duplicate entry",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/entries/-",
+          "value": {
+            "id": "sample-figure",
+            "category": "humans",
+            "title": {
+              "en": "Sample figure",
+              "de": "Beispielfigur"
+            },
+            "heightM": 1.73,
+            "widthM": 0.37,
+            "poses": [
+              "stand",
+              "stride-left-forward",
+              "passing-left-stance",
+              "stride-right-forward",
+              "passing-right-stance",
+              "carry-bag"
+            ],
+            "clips": [
+              "walk",
+              "idle-breathing",
+              "bag-swing"
+            ],
+            "representations": {
+              "50": "authored",
+              "100": "authored",
+              "200": "authored",
+              "500": "authored"
+            },
+            "symbols": [
+              "position-dot"
+            ],
+            "analytics": [
+              "thermal",
+              "transport",
+              "structural"
+            ],
+            "exports": [
+              "svg",
+              "pdf",
+              "dxf",
+              "dwg",
+              "png-sequence",
+              "mp4",
+              "webm",
+              "component"
+            ],
+            "distinction": {
+              "en": "Engine fixture",
+              "de": "Engine-Fixture"
+            },
+            "completion": "authored"
+          }
+        }
+      ],
+      "expectCodes": [
+        "duplicate-id",
+        "manifest-count"
+      ]
+    },
+    {
+      "name": "collection lists an unknown asset",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/collections/0/assets/-",
+          "value": "ghost"
+        }
+      ],
+      "expectCodes": [
+        "unresolved-reference"
+      ]
+    },
+    {
+      "name": "asset without entry",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/entries/0"
+        }
+      ],
+      "expectCodes": [
+        "manifest-entry-missing",
+        "manifest-count"
+      ]
+    }
   ]
- },
- "manifestCases": [
-  {
-   "name": "consistent manifest",
-   "patch": [],
-   "expectCodes": []
-  },
-  {
-   "name": "height differs by more than 5 percent",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/entries/0/heightM",
-     "value": 2.4
-    }
-   ],
-   "expectCodes": [
-    "manifest-mismatch"
-   ]
-  },
-  {
-   "name": "pose list differs",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/entries/0/poses/0"
-    }
-   ],
-   "expectCodes": [
-    "manifest-mismatch"
-   ]
-  },
-  {
-   "name": "category differs",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/entries/0/category",
-     "value": "animals"
-    }
-   ],
-   "expectCodes": [
-    "manifest-mismatch",
-    "manifest-count"
-   ]
-  },
-  {
-   "name": "entry without asset",
-   "patch": [
-    {
-     "op": "add",
-     "path": "/entries/-",
-     "value": {
-      "id": "ghost",
-      "category": "humans",
-      "title": {
-       "en": "Sample figure",
-       "de": "Beispielfigur"
-      },
-      "heightM": 1.73,
-      "widthM": 0.37,
-      "poses": [
-       "stand",
-       "stride-left-forward",
-       "passing-left-stance",
-       "stride-right-forward",
-       "passing-right-stance",
-       "carry-bag"
-      ],
-      "clips": [
-       "walk",
-       "idle-breathing",
-       "bag-swing"
-      ],
-      "representations": {
-       "50": "authored",
-       "100": "authored",
-       "200": "authored",
-       "500": "unavailable"
-      },
-      "symbols": [
-       "position-dot"
-      ],
-      "analytics": [
-       "thermal",
-       "transport",
-       "structural"
-      ],
-      "viewpoints": [
-       "elevation",
-       "plan"
-      ],
-      "exports": [
-       "svg",
-       "pdf",
-       "dxf",
-       "dwg",
-       "png-sequence",
-       "mp4",
-       "webm",
-       "component"
-      ],
-      "distinction": {
-       "en": "Engine fixture",
-       "de": "Engine-Fixture"
-      },
-      "completion": "authored"
-     }
-    }
-   ],
-   "expectCodes": [
-    "manifest-asset-missing",
-    "manifest-count"
-   ]
-  },
-  {
-   "name": "duplicate entry",
-   "patch": [
-    {
-     "op": "add",
-     "path": "/entries/-",
-     "value": {
-      "id": "sample-figure",
-      "category": "humans",
-      "title": {
-       "en": "Sample figure",
-       "de": "Beispielfigur"
-      },
-      "heightM": 1.73,
-      "widthM": 0.37,
-      "poses": [
-       "stand",
-       "stride-left-forward",
-       "passing-left-stance",
-       "stride-right-forward",
-       "passing-right-stance",
-       "carry-bag"
-      ],
-      "clips": [
-       "walk",
-       "idle-breathing",
-       "bag-swing"
-      ],
-      "representations": {
-       "50": "authored",
-       "100": "authored",
-       "200": "authored",
-       "500": "unavailable"
-      },
-      "symbols": [
-       "position-dot"
-      ],
-      "analytics": [
-       "thermal",
-       "transport",
-       "structural"
-      ],
-      "viewpoints": [
-       "elevation",
-       "plan"
-      ],
-      "exports": [
-       "svg",
-       "pdf",
-       "dxf",
-       "dwg",
-       "png-sequence",
-       "mp4",
-       "webm",
-       "component"
-      ],
-      "distinction": {
-       "en": "Engine fixture",
-       "de": "Engine-Fixture"
-      },
-      "completion": "authored"
-     }
-    }
-   ],
-   "expectCodes": [
-    "duplicate-id",
-    "manifest-count"
-   ]
-  },
-  {
-   "name": "collection lists an unknown asset",
-   "patch": [
-    {
-     "op": "add",
-     "path": "/collections/0/assets/-",
-     "value": "ghost"
-    }
-   ],
-   "expectCodes": [
-    "unresolved-reference"
-   ]
-  },
-  {
-   "name": "asset without entry",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/entries/0"
-    }
-   ],
-   "expectCodes": [
-    "manifest-entry-missing",
-    "manifest-count"
-   ]
-  }
- ]
 }

@@ -1,0 +1,764 @@
+{
+ "id": "hydronic-coupling",
+ "oracle": "scipy solve_ivp (LSODA) of the nonlinear lumped balances of a circuit-heated plate and a water-coupled wall, CoolProp air properties",
+ "tolerances": {
+  "plateK": 0.05,
+  "waterK": 0.6,
+  "wallK": 0.6,
+  "steadyK": 0.05,
+  "plateauRel": 0.03,
+  "crossingS": 6,
+  "wetGapK": 6
+ },
+ "plateTimesS": [
+  30,
+  120,
+  300,
+  900
+ ],
+ "plates": [
+  {
+   "id": "upper-rated",
+   "level": 1.0,
+   "flowPosition": 0.16666666666666666,
+   "waterC": 73.33333333333333,
+   "supplyC": 75,
+   "steadyC": 71.51854098904101,
+   "responseC": [
+    40.0043631325501,
+    63.91106494955364,
+    71.07795345373883,
+    71.51850799018736
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "steel",
+      "title": {
+       "en": "steel",
+       "de": "steel"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.1,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 21,
+      "meanRadiantTempC": 21,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "heating",
+       "title": {
+        "en": "heating",
+        "de": "heating"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "plate",
+        "de": "plate"
+       },
+       "kind": "heater",
+       "model": "hydronic",
+       "material": "steel",
+       "areaM2": 0.2,
+       "characteristicLengthM": 0.6,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 22000.0,
+       "source": "illustrative",
+       "hydronic": {
+        "key": "heating",
+        "rows": [
+         {
+          "v": 0.515,
+          "supplyTempC": 55,
+          "returnTempC": 45
+         },
+         {
+          "v": 0.748,
+          "supplyTempC": 65,
+          "returnTempC": 55
+         },
+         {
+          "v": 1,
+          "supplyTempC": 75,
+          "returnTempC": 65
+         }
+        ],
+        "flowPosition": 0.16666666666666666,
+        "filmM2KW": 0.003
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "lower-rated",
+   "level": 1.0,
+   "flowPosition": 0.8333333333333334,
+   "waterC": 66.66666666666667,
+   "supplyC": 75,
+   "steadyC": 65.13255826997238,
+   "responseC": [
+    37.58529406898246,
+    58.467180210902015,
+    64.74448618854123,
+    65.13252867688193
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "steel",
+      "title": {
+       "en": "steel",
+       "de": "steel"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.1,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 21,
+      "meanRadiantTempC": 21,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "heating",
+       "title": {
+        "en": "heating",
+        "de": "heating"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "plate",
+        "de": "plate"
+       },
+       "kind": "heater",
+       "model": "hydronic",
+       "material": "steel",
+       "areaM2": 0.2,
+       "characteristicLengthM": 0.6,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 22000.0,
+       "source": "illustrative",
+       "hydronic": {
+        "key": "heating",
+        "rows": [
+         {
+          "v": 0.515,
+          "supplyTempC": 55,
+          "returnTempC": 45
+         },
+         {
+          "v": 0.748,
+          "supplyTempC": 65,
+          "returnTempC": 55
+         },
+         {
+          "v": 1,
+          "supplyTempC": 75,
+          "returnTempC": 65
+         }
+        ],
+        "flowPosition": 0.8333333333333334,
+        "filmM2KW": 0.003
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "middle-comfort",
+   "level": 0.748,
+   "flowPosition": 0.5,
+   "waterC": 60.0,
+   "supplyC": 65.0,
+   "steadyC": 58.7342998368035,
+   "responseC": [
+    35.16579766168056,
+    53.01786696892137,
+    58.399664832156205,
+    58.73427384316336
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "steel",
+      "title": {
+       "en": "steel",
+       "de": "steel"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.1,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 21,
+      "meanRadiantTempC": 21,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "heating",
+       "title": {
+        "en": "heating",
+        "de": "heating"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "plate",
+        "de": "plate"
+       },
+       "kind": "heater",
+       "model": "hydronic",
+       "material": "steel",
+       "areaM2": 0.2,
+       "characteristicLengthM": 0.6,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 22000.0,
+       "source": "illustrative",
+       "hydronic": {
+        "key": "heating",
+        "rows": [
+         {
+          "v": 0.515,
+          "supplyTempC": 55,
+          "returnTempC": 45
+         },
+         {
+          "v": 0.748,
+          "supplyTempC": 65,
+          "returnTempC": 55
+         },
+         {
+          "v": 1,
+          "supplyTempC": 75,
+          "returnTempC": 65
+         }
+        ],
+        "flowPosition": 0.5,
+        "filmM2KW": 0.003
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "middle-night",
+   "level": 0.515,
+   "flowPosition": 0.5,
+   "waterC": 50.0,
+   "supplyC": 55.0,
+   "steadyC": 49.112838944566974,
+   "responseC": [
+    31.53567750760483,
+    44.83310138778848,
+    48.86014013521387,
+    49.11281873359751
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "steel",
+      "title": {
+       "en": "steel",
+       "de": "steel"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.1,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 21,
+      "meanRadiantTempC": 21,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "heating",
+       "title": {
+        "en": "heating",
+        "de": "heating"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "plate",
+        "de": "plate"
+       },
+       "kind": "heater",
+       "model": "hydronic",
+       "material": "steel",
+       "areaM2": 0.2,
+       "characteristicLengthM": 0.6,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 22000.0,
+       "source": "illustrative",
+       "hydronic": {
+        "key": "heating",
+        "rows": [
+         {
+          "v": 0.515,
+          "supplyTempC": 55,
+          "returnTempC": 45
+         },
+         {
+          "v": 0.748,
+          "supplyTempC": 65,
+          "returnTempC": 55
+         },
+         {
+          "v": 1,
+          "supplyTempC": 75,
+          "returnTempC": 65
+         }
+        ],
+        "flowPosition": 0.5,
+        "filmM2KW": 0.003
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "middle-quarter",
+   "level": 0.25,
+   "flowPosition": 0.5,
+   "waterC": 35.077669902912625,
+   "supplyC": 37.504854368932044,
+   "steadyC": 34.69537077762529,
+   "responseC": [
+    26.116375813837358,
+    32.592078430929334,
+    34.56928236138428,
+    34.69536016155552
+   ],
+   "asset": {
+    "dimensions": {
+     "heightM": 1,
+     "massKg": 0
+    },
+    "materials": [
+     {
+      "id": "steel",
+      "title": {
+       "en": "steel",
+       "de": "steel"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.1,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 21,
+      "meanRadiantTempC": 21,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.1,
+      "pressurePa": 101325
+     },
+     "passengers": [],
+     "operating": [
+      {
+       "id": "heating",
+       "title": {
+        "en": "heating",
+        "de": "heating"
+       },
+       "levels": [
+        {
+         "v": 0,
+         "title": {
+          "en": "off",
+          "de": "aus"
+         }
+        },
+        {
+         "v": 1,
+         "title": {
+          "en": "rated",
+          "de": "Nennlast"
+         }
+        }
+       ]
+      }
+     ],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "plate",
+        "de": "plate"
+       },
+       "kind": "heater",
+       "model": "hydronic",
+       "material": "steel",
+       "areaM2": 0.2,
+       "characteristicLengthM": 0.6,
+       "geometry": "vertical-plate",
+       "skyViewFactor": 0.5,
+       "layers": [],
+       "heatCapacityJM2K": 22000.0,
+       "source": "illustrative",
+       "hydronic": {
+        "key": "heating",
+        "rows": [
+         {
+          "v": 0.515,
+          "supplyTempC": 55,
+          "returnTempC": 45
+         },
+         {
+          "v": 0.748,
+          "supplyTempC": 65,
+          "returnTempC": 55
+         },
+         {
+          "v": 1,
+          "supplyTempC": 75,
+          "returnTempC": 65
+         }
+        ],
+        "flowPosition": 0.5,
+        "filmM2KW": 0.003
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "coupled": {
+  "timesS": [
+   60,
+   120,
+   180,
+   190,
+   200,
+   240,
+   300
+  ],
+  "pointC": 100.0,
+  "wetFraction": 0.6,
+  "asset": {
+   "dimensions": {
+    "heightM": 1,
+    "massKg": 0
+   },
+   "materials": [
+    {
+     "id": "water",
+     "title": {
+      "en": "water",
+      "de": "water"
+     },
+     "emissivity": 0.96,
+     "solarAbsorptivity": 0.1,
+     "source": "literature",
+     "phaseChange": {
+      "transition": "boiling",
+      "pointC": 100.0,
+      "latentHeatJKg": 2256470.0
+     }
+    },
+    {
+     "id": "wall",
+     "title": {
+      "en": "wall",
+      "de": "wall"
+     },
+     "emissivity": 0.3,
+     "solarAbsorptivity": 0.1,
+     "source": "literature"
+    }
+   ],
+   "thermal": {
+    "environment": {
+     "airTempC": 21,
+     "meanRadiantTempC": 21,
+     "relativeHumidity": 0.5,
+     "windMS": 0.1,
+     "windDirectionDeg": 0,
+     "solarWM2": 0,
+     "diffuseFraction": 0.1,
+     "pressurePa": 101325
+    },
+    "passengers": [],
+    "operating": [
+     {
+      "id": "power",
+      "title": {
+       "en": "power",
+       "de": "power"
+      },
+      "levels": [
+       {
+        "v": 0,
+        "title": {
+         "en": "off",
+         "de": "aus"
+        }
+       },
+       {
+        "v": 1,
+        "title": {
+         "en": "rated",
+         "de": "Nennlast"
+        }
+       }
+      ]
+     }
+    ],
+    "emitters": [],
+    "assumptions": [],
+    "regions": [
+     {
+      "id": "water",
+      "title": {
+       "en": "water",
+       "de": "water"
+      },
+      "kind": "heater",
+      "model": "operating",
+      "material": "water",
+      "areaM2": 0.012,
+      "characteristicLengthM": 0.12,
+      "geometry": "vertical-plate",
+      "skyViewFactor": 0.5,
+      "layers": [],
+      "heatCapacityJM2K": 348800.0,
+      "source": "illustrative",
+      "operating": {
+       "key": "power",
+       "heatW": 1955.0
+      }
+     },
+     {
+      "id": "wall",
+      "title": {
+       "en": "wall",
+       "de": "wall"
+      },
+      "kind": "surface",
+      "model": "coupled",
+      "material": "wall",
+      "areaM2": 0.11,
+      "characteristicLengthM": 0.19,
+      "geometry": "vertical-plate",
+      "skyViewFactor": 0.5,
+      "layers": [
+       {
+        "id": "skin",
+        "title": {
+         "en": "skin",
+         "de": "skin"
+        },
+        "kind": "metal",
+        "material": "wall",
+        "resistanceM2KW": 4e-05,
+        "source": "illustrative"
+       }
+      ],
+      "heatCapacityJM2K": 3500.0,
+      "source": "illustrative",
+      "coupled": {
+       "region": "water",
+       "wetFraction": 0.6,
+       "filmM2KW": 0.0025
+      }
+     }
+    ]
+   }
+  },
+  "expected": {
+   "crossingS": 186.47881625448449,
+   "wallSteadyC": 97.03984857030888,
+   "plateauW": 1863.406124705039,
+   "rows": [
+    {
+     "waterC": 47.12300609639743,
+     "wallC": 40.5083518625522
+    },
+    {
+     "waterC": 72.43261490153124,
+     "wallC": 64.9484540800444
+    },
+    {
+     "waterC": 97.33700572266166,
+     "wallC": 88.91488126918284
+    },
+    {
+     "waterC": 100.0,
+     "wallC": 92.69904446342977
+    },
+    {
+     "waterC": 100.0,
+     "wallC": 94.90082264176701
+    },
+    {
+     "waterC": 100.0,
+     "wallC": 96.91380710972231
+    },
+    {
+     "waterC": 100.0,
+     "wallC": 97.0380462242419
+    }
+   ]
+  }
+ }
+}

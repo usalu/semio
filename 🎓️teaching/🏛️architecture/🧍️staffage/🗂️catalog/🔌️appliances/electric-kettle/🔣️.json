@@ -1,0 +1,2184 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "electric-kettle",
+    "category": "appliances",
+    "title": {
+      "en": "Electric Jug Kettle",
+      "de": "Elektrischer Wasserkocher"
+    },
+    "summary": {
+      "en": "A 1.7 L stainless jug kettle of 2 kW on its power base: it heats the water, warms its shell and the base plate and boils with steam at the spout and a rattling lid.",
+      "de": "Ein 1,7-l-Edelstahl-Wasserkocher von 2 kW auf seinem Sockel: er erwärmt das Wasser, seine Hülle und die Heizplatte und kocht mit Dampf am Ausguss und klapperndem Deckel."
+    },
+    "tags": [
+      "kettle",
+      "kitchen",
+      "water",
+      "boiling",
+      "steam",
+      "appliance",
+      "internal-gain"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "cengel-2015",
+          "citation": "Cengel, Y. A., Boles, M. A. (2015). Thermodynamics: An Engineering Approach, 8th ed., McGraw-Hill (specific heat 4.19 kJ/(kg K) and latent heat 2257 kJ/kg of water)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A 1.7 L jug kettle with a 2 kW concealed element in a 0.18 m power base, a stainless body of 0.15 m by 0.19 m tapering upwards, a spout at the left, a C-shaped polypropylene handle at the right, a domed lid with a button and a vertical water gauge strip. The asset mass massKg of 1.22 kg is the dry mass (base 0.55, body 0.45, handle 0.12, lid 0.1); the 1 L of water is the separate fluid bone of 1.0 kg, so the filled kettle weighs 2.22 kg. Heating 1 kg by 85 K from about 15 degC to 100 degC needs 356 kJ, which takes about 3 minutes at 2 kW; the element heats the water region directly (almost all of the 2 kW), so the boil clip follows the energy balance in real time. The water carries its phase change (boiling at 100 degC, 2.257 MJ/kg): at 100 degC the temperature holds and the surplus power evaporates the water at about 0.85 g/s, which the steam emitter follows. The origin is the centre of the base on the surface.",
+        "de": "Ein 1,7-l-Wasserkocher mit einem verdeckten 2-kW-Heizelement in einem 0,18 m breiten Sockel, einem Edelstahlkörper von 0,15 m mal 0,19 m, der sich nach oben verjüngt, einem Ausguss links, einem C-förmigen Polypropylengriff rechts, einem gewölbten Deckel mit Knopf und einem senkrechten Wasserstandsstreifen. Die Assetmasse massKg von 1,22 kg ist die Trockenmasse (Sockel 0,55, Körper 0,45, Griff 0,12, Deckel 0,1); der 1 l Wasser ist der getrennte Fluidknochen von 1,0 kg, der gefüllte Kocher wiegt also 2,22 kg. Das Erwärmen von 1 kg um 85 K von etwa 15 °C auf 100 °C braucht 356 kJ, bei 2 kW sind das etwa 3 Minuten; das Heizelement heizt die Wasserregion direkt (fast die vollen 2 kW), der Aufkoch-Clip folgt also in Echtzeit der Energiebilanz. Das Wasser trägt seine Phasenumwandlung (Sieden bei 100 °C, 2,257 MJ/kg): bei 100 °C bleibt die Temperatur stehen und die überschüssige Leistung verdampft das Wasser mit etwa 0,85 g/s, dem der Dampfemitter folgt. Der Ursprung ist die Mitte des Sockels auf der Unterlage."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.24,
+      "widthM": 0.245,
+      "depthM": 0.18,
+      "massKg": 1.22
+    },
+    "materials": [
+      {
+        "id": "stainless",
+        "title": {
+          "en": "Stainless steel",
+          "de": "Edelstahl"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7900,
+        "conductivityWmK": 16,
+        "specificHeatJKgK": 500,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "pp-plastic",
+        "title": {
+          "en": "Polypropylene",
+          "de": "Polypropylen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 900,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "Water",
+          "de": "Wasser"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 1000,
+        "conductivityWmK": 0.6,
+        "specificHeatJKgK": 4190,
+        "source": "literature",
+        "reference": "incropera-2018",
+        "phaseChange": {
+          "transition": "boiling",
+          "pointC": 100,
+          "latentHeatJKg": 2257000
+        }
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Power base with heating plate",
+            "de": "Sockel mit Heizplatte"
+          },
+          "lengthM": 0.18,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.55,
+            "comX": 0,
+            "comY": 0.015,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "body",
+          "parent": "base",
+          "x": 0,
+          "y": 0.03,
+          "angleDeg": 0,
+          "title": {
+            "en": "Jug body with spout",
+            "de": "Kannenkörper mit Ausguss"
+          },
+          "lengthM": 0.19,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.45,
+            "comX": 0,
+            "comY": 0.09,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "handle",
+          "parent": "body",
+          "x": 0.098,
+          "y": 0.09,
+          "angleDeg": 0,
+          "title": {
+            "en": "Handle with switch",
+            "de": "Griff mit Schalter"
+          },
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.12,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "water",
+          "parent": "body",
+          "x": 0,
+          "y": 0.01,
+          "angleDeg": 0,
+          "title": {
+            "en": "Water fill",
+            "de": "Wasserfüllung"
+          },
+          "lengthM": 0.13,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1,
+            "comX": 0,
+            "comY": 0.04,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "lid",
+          "parent": "body",
+          "x": 0,
+          "y": 0.175,
+          "angleDeg": 0,
+          "title": {
+            "en": "Lid, rattles when boiling",
+            "de": "Deckel, klappert beim Kochen"
+          },
+          "lengthM": 0.03,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 0.005
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0,
+            "comY": 0.01,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "base",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.17,
+        "footprintWidthM": 0.17,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "spout-tip",
+        "bone": "body",
+        "x": -0.112,
+        "y": 0.192,
+        "kind": "emitter",
+        "title": {
+          "en": "Spout opening",
+          "de": "Ausgussöffnung"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0,
+              "w": 0.14,
+              "h": 0.125,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "spout",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.14
+                ],
+                [
+                  -0.116,
+                  0.192
+                ],
+                [
+                  -0.07,
+                  0.175
+                ]
+              ],
+              "closed": true,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.075,
+                  0
+                ],
+                [
+                  0.075,
+                  0
+                ],
+                [
+                  0.07,
+                  0.175
+                ],
+                [
+                  -0.07,
+                  0.175
+                ]
+              ],
+              "closed": true,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "gauge",
+              "bone": "body",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.014,
+              "y": 0.02,
+              "w": 0.028,
+              "h": 0.12,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.028,
+                  0.08
+                ],
+                [
+                  0.022,
+                  0.075
+                ],
+                [
+                  0.027,
+                  -0.05
+                ],
+                [
+                  -0.025,
+                  -0.075
+                ],
+                [
+                  -0.025,
+                  -0.052
+                ],
+                [
+                  0.01,
+                  -0.035
+                ],
+                [
+                  0.007,
+                  0.058
+                ],
+                [
+                  -0.028,
+                  0.06
+                ]
+              ],
+              "closed": true,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.066,
+              "y": 0,
+              "w": 0.132,
+              "h": 0.016,
+              "region": "lid",
+              "material": "stainless"
+            },
+            {
+              "id": "lid-button",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.012,
+              "y": 0.016,
+              "w": 0.024,
+              "h": 0.016,
+              "region": "lid",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.03,
+              "region": "plate",
+              "material": "pp-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.09,
+              "ry": 0.09,
+              "region": "plate",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.075,
+              "ry": 0.075,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "body-shoulder",
+              "bone": "body",
+              "role": "detail",
+              "z": 2.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.07,
+              "ry": 0.07,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "spout",
+              "bone": "body",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.06,
+                  -0.026
+                ],
+                [
+                  -0.116,
+                  -0.012
+                ],
+                [
+                  -0.116,
+                  0.012
+                ],
+                [
+                  -0.06,
+                  0.026
+                ]
+              ],
+              "closed": true,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.07,
+              "y": -0.016,
+              "w": 0.055,
+              "h": 0.032,
+              "r": 0.012,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.066,
+              "ry": 0.066,
+              "region": "lid",
+              "material": "stainless"
+            },
+            {
+              "id": "lid-button",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.012,
+              "ry": 0.012,
+              "region": "lid",
+              "material": "pp-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.03,
+              "r": 0.004,
+              "region": "plate",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.075,
+                  0.03
+                ],
+                [
+                  0.075,
+                  0.03
+                ],
+                [
+                  0.07,
+                  0.205
+                ],
+                [
+                  -0.07,
+                  0.205
+                ]
+              ],
+              "closed": true,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "body-shoulder",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0725,
+                  0.12
+                ],
+                [
+                  0.0725,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.016,
+              "y": 0.045,
+              "w": 0.032,
+              "h": 0.155,
+              "r": 0.01,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "handle-grip",
+              "bone": "handle",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.06
+                ],
+                [
+                  0,
+                  0.185
+                ]
+              ],
+              "closed": false,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.066,
+              "y": 0.205,
+              "w": 0.132,
+              "h": 0.016,
+              "region": "lid",
+              "material": "stainless"
+            },
+            {
+              "id": "lid-button",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.012,
+              "y": 0.221,
+              "w": 0.024,
+              "h": 0.016,
+              "region": "lid",
+              "material": "pp-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.24 m wide jug kettle on its power base, 12 mm by 12 mm on paper: a tapered body with a spout at the left, a C-shaped handle at the right, a domed lid with a button and a water gauge strip. Front, 3.6 mm by 4.8 mm on paper: the jug seen from the handle side, the tapered stainless body on its round power base, the handle bar standing in front of it with a grip line, the lid and its button, which follows the lid when it lifts. Plan, 4.9 mm by 3.6 mm: the base disc, the round body with its shoulder ring, the spout at the left, the handle at the right and the lid with its button. Front, 3.6 mm by 4.8 mm on paper: the jug seen from the handle side, the tapered stainless body on its round power base, the handle bar standing in front of it with a grip line, the lid and its button, which follows the lid when it lifts. Plan, 4.9 mm by 3.6 mm: the base disc, the round body with its shoulder ring, the spout at the left, the handle at the right and the lid with its button.",
+            "de": "Ein 0,24 m breiter Wasserkocher auf seinem Sockel, auf Papier 12 mm mal 12 mm: ein sich verjüngender Körper mit Ausguss links, einem C-förmigen Griff rechts, einem gewölbten Deckel mit Knopf und einem Wasserstandsstreifen. Vorderansicht, 3,6 mm auf 4,8 mm: der Kocher von der Griffseite, der sich nach oben verjüngende Edelstahlkörper auf dem runden Stromsockel, davor der Griffbügel mit einer Grifflinie, der Deckel und sein Knopf, der dem Deckel beim Anheben folgt. Grundriss, 4,9 mm auf 3,6 mm: die Sockelscheibe, der runde Körper mit Schulterring, links die Tülle, rechts der Griff und der Deckel mit Knopf. Vorderansicht, 3,6 mm auf 4,8 mm: der Kocher von der Griffseite, der sich nach oben verjüngende Edelstahlkörper auf dem runden Stromsockel, davor der Griffbügel mit einer Grifflinie, der Deckel und sein Knopf, der dem Deckel beim Anheben folgt. Grundriss, 4,9 mm auf 3,6 mm: die Sockelscheibe, der runde Körper mit Schulterring, links die Tülle, rechts der Griff und der Deckel mit Knopf."
+          },
+          "retained": {
+            "en": "Base, tapered body, spout, handle, lid with button, the gauge window and the water behind it.",
+            "de": "Sockel, sich verjüngender Körper, Ausguss, Griff, Deckel mit Knopf, das Sichtfenster und das Wasser dahinter."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The switch, the limescale filter and the cord. The spout is hidden behind the body in front; the water and the gauge strip are not visible from the front or from above. The spout is hidden behind the body in front; the water and the gauge strip are not visible from the front or from above.",
+            "de": "Der Schalter, der Kalkfilter und das Kabel. Die Tülle ist in der Vorderansicht vom Körper verdeckt; Wasser und Anzeigestreifen sind von vorn und von oben nicht zu sehen. Die Tülle ist in der Vorderansicht vom Körper verdeckt; Wasser und Anzeigestreifen sind von vorn und von oben nicht zu sehen."
+          },
+          "thinElements": {
+            "en": "The gauge strip is 28 mm wide so that it prints; the handle neck is 35 mm.",
+            "de": "Der Wasserstandsstreifen ist 28 mm breit, damit er druckt; der Griffhals ist 35 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Plate, shell, handle, lid and water are five regions: in the thermal view the base plate and the water glow while the plastic handle stays cool.",
+            "de": "Platte, Hülle, Griff, Deckel und Wasser sind fünf Regionen: in der Thermalansicht glühen Heizplatte und Wasser, während der Kunststoffgriff kühl bleibt."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0,
+              "w": 0.13,
+              "h": 0.125,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.075,
+                  0
+                ],
+                [
+                  0.075,
+                  0
+                ],
+                [
+                  0.07,
+                  0.175
+                ],
+                [
+                  -0.07,
+                  0.175
+                ],
+                [
+                  -0.07,
+                  0.14
+                ],
+                [
+                  -0.116,
+                  0.192
+                ],
+                [
+                  -0.07,
+                  0.175
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shell",
+                "water"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.028,
+                  0.08
+                ],
+                [
+                  0.022,
+                  0.075
+                ],
+                [
+                  0.027,
+                  -0.05
+                ],
+                [
+                  -0.025,
+                  -0.075
+                ],
+                [
+                  -0.025,
+                  -0.052
+                ],
+                [
+                  0.01,
+                  -0.035
+                ],
+                [
+                  0.007,
+                  0.058
+                ],
+                [
+                  -0.028,
+                  0.06
+                ]
+              ],
+              "closed": true,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.066,
+              "y": 0,
+              "w": 0.132,
+              "h": 0.03,
+              "region": "lid",
+              "material": "stainless"
+            },
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.03,
+              "region": "plate",
+              "material": "pp-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.09,
+              "ry": 0.09,
+              "region": "plate",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.075,
+              "ry": 0.075,
+              "regions": [
+                "shell",
+                "water"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "spout",
+              "bone": "body",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.06,
+                  -0.026
+                ],
+                [
+                  -0.116,
+                  -0.012
+                ],
+                [
+                  -0.116,
+                  0.012
+                ],
+                [
+                  -0.06,
+                  0.026
+                ]
+              ],
+              "closed": true,
+              "region": "shell",
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.07,
+              "y": -0.016,
+              "w": 0.055,
+              "h": 0.032,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.066,
+              "ry": 0.066,
+              "region": "lid",
+              "material": "stainless"
+            }
+          ],
+          "front": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.03,
+              "region": "plate",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.075,
+                  0.03
+                ],
+                [
+                  0.075,
+                  0.03
+                ],
+                [
+                  0.07,
+                  0.205
+                ],
+                [
+                  -0.07,
+                  0.205
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shell",
+                "water"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.016,
+              "y": 0.045,
+              "w": 0.032,
+              "h": 0.155,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.066,
+              "y": 0.205,
+              "w": 0.132,
+              "h": 0.03,
+              "region": "lid",
+              "material": "stainless"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.4 mm wide jug: body with spout, handle, lid knob and base as five masses. Front, 1.8 mm by 2.4 mm: base, body, handle bar and lid as four masses. Plan, 2.45 mm by 1.8 mm: base disc, body disc, spout, handle and lid disc. Front, 1.8 mm by 2.4 mm: base, body, handle bar and lid as four masses. Plan, 2.45 mm by 1.8 mm: base disc, body disc, spout, handle and lid disc.",
+            "de": "Ein 2,4 mm breiter Krug: Körper mit Ausguss, Griff, Deckelknopf und Sockel als fünf Massen. Vorderansicht, 1,8 mm auf 2,4 mm: Sockel, Körper, Griffbügel und Deckel als vier Massen. Grundriss, 2,45 mm auf 1,8 mm: Sockelscheibe, Körperscheibe, Tülle, Griff und Deckelscheibe. Vorderansicht, 1,8 mm auf 2,4 mm: Sockel, Körper, Griffbügel und Deckel als vier Massen. Grundriss, 2,45 mm auf 1,8 mm: Sockelscheibe, Körperscheibe, Tülle, Griff und Deckelscheibe."
+          },
+          "retained": {
+            "en": "Body with spout in one outline, handle, lid with knob, base and the water block.",
+            "de": "Körper mit Ausguss in einer Kontur, Griff, Deckel mit Knopf, Sockel und der Wasserblock."
+          },
+          "merged": {
+            "en": "Spout and body are one outline, the gauge window is part of the water block (regions shell and water).",
+            "de": "Ausguss und Körper bilden eine Kontur, das Sichtfenster gehört zum Wasserblock (Regionen Hülle und Wasser)."
+          },
+          "omitted": {
+            "en": "Gauge strip, lid button as its own shape, switch. Lid button, grip line and shoulder ring. Lid button, grip line and shoulder ring.",
+            "de": "Wasserstandsstreifen, Deckelknopf als eigene Form, Schalter. Deckelknopf, Grifflinie und Schulterring. Deckelknopf, Grifflinie und Schulterring."
+          },
+          "thinElements": {
+            "en": "Lid raised to 30 mm so that it keeps 0.3 mm on paper.",
+            "de": "Deckel auf 30 mm erhöht, damit er 0,3 mm auf Papier behält."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail not drawn, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Body and water share the outline; handle, lid and plate stay own regions.",
+            "de": "Körper und Wasser teilen die Kontur; Griff, Deckel und Platte bleiben eigene Regionen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "body",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.078,
+                  0
+                ],
+                [
+                  0.078,
+                  0
+                ],
+                [
+                  0.072,
+                  0.175
+                ],
+                [
+                  -0.07,
+                  0.175
+                ],
+                [
+                  -0.07,
+                  0.14
+                ],
+                [
+                  -0.118,
+                  0.194
+                ],
+                [
+                  -0.07,
+                  0.177
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shell",
+                "water"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.028,
+                  0.08
+                ],
+                [
+                  0.024,
+                  0.075
+                ],
+                [
+                  0.03,
+                  -0.055
+                ],
+                [
+                  -0.025,
+                  -0.08
+                ],
+                [
+                  -0.025,
+                  -0.045
+                ],
+                [
+                  0.002,
+                  -0.03
+                ],
+                [
+                  0,
+                  0.05
+                ],
+                [
+                  -0.028,
+                  0.055
+                ]
+              ],
+              "closed": true,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0,
+              "w": 0.14,
+              "h": 0.04,
+              "region": "lid",
+              "material": "stainless"
+            },
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.095,
+              "y": 0,
+              "w": 0.19,
+              "h": 0.04,
+              "region": "plate",
+              "material": "pp-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.095,
+              "ry": 0.095,
+              "region": "plate",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "jug",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.118,
+                  -0.014
+                ],
+                [
+                  -0.0728,
+                  -0.028
+                ],
+                [
+                  -0.0675,
+                  -0.039
+                ],
+                [
+                  -0.039,
+                  -0.0675
+                ],
+                [
+                  0,
+                  -0.078
+                ],
+                [
+                  0.039,
+                  -0.0675
+                ],
+                [
+                  0.0675,
+                  -0.039
+                ],
+                [
+                  0.0759,
+                  -0.018
+                ],
+                [
+                  0.128,
+                  -0.018
+                ],
+                [
+                  0.128,
+                  0.018
+                ],
+                [
+                  0.0759,
+                  0.018
+                ],
+                [
+                  0.0675,
+                  0.039
+                ],
+                [
+                  0.039,
+                  0.0675
+                ],
+                [
+                  0,
+                  0.078
+                ],
+                [
+                  -0.039,
+                  0.0675
+                ],
+                [
+                  -0.0675,
+                  0.039
+                ],
+                [
+                  -0.0728,
+                  0.028
+                ],
+                [
+                  -0.118,
+                  0.014
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shell",
+                "lid",
+                "handle"
+              ],
+              "material": "stainless"
+            }
+          ],
+          "front": [
+            {
+              "id": "kettle",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  0
+                ],
+                [
+                  0.095,
+                  0
+                ],
+                [
+                  0.095,
+                  0.035
+                ],
+                [
+                  0.078,
+                  0.035
+                ],
+                [
+                  0.072,
+                  0.205
+                ],
+                [
+                  -0.072,
+                  0.205
+                ],
+                [
+                  -0.078,
+                  0.035
+                ],
+                [
+                  -0.095,
+                  0.035
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "plate",
+                "shell",
+                "water"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.017,
+              "y": 0.04,
+              "w": 0.034,
+              "h": 0.16,
+              "region": "handle",
+              "material": "pp-plastic"
+            },
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.205,
+              "w": 0.14,
+              "h": 0.04,
+              "region": "lid",
+              "material": "stainless"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.2 mm wide jug of four shapes: body with spout, handle, lid and base. Front, 0.9 mm by 1.2 mm: base, body, handle and thickened lid. Plan, 1.2 mm by 0.9 mm: base, body and lid discs with spout and handle. Front, 0.9 mm by 1.2 mm: base and body merged into one tapered mass with a thickened lid on top and the handle bar in front. Plan, 1.2 mm by 0.9 mm: the base disc under one jug outline in which body, lid, spout and handle are merged.",
+            "de": "Ein 1,2 mm breiter Krug aus vier Formen: Körper mit Ausguss, Griff, Deckel und Sockel. Vorderansicht, 0,9 mm auf 1,2 mm: Sockel, Körper, Griff und verstärkter Deckel. Grundriss, 1,2 mm auf 0,9 mm: Sockel-, Körper- und Deckelscheibe mit Tülle und Griff. Vorderansicht, 0,9 mm auf 1,2 mm: Sockel und Körper zu einer sich verjüngenden Masse verschmolzen, darauf ein verstärkter Deckel, davor der Griffbügel. Grundriss, 1,2 mm auf 0,9 mm: die Sockelscheibe unter einem Kocherumriss, in dem Körper, Deckel, Tülle und Griff verschmolzen sind."
+          },
+          "retained": {
+            "en": "The four masses.",
+            "de": "Die vier Massen."
+          },
+          "merged": {
+            "en": "Body, spout, gauge window and water share one outline.",
+            "de": "Körper, Ausguss, Sichtfenster und Wasser teilen eine Kontur."
+          },
+          "omitted": {
+            "en": "Water block, gauge, button and switch. All detail lines; the handle and spout are drawn slightly thicker than real. All detail lines and the separate water, spout, handle and lid shapes in plan; the handle and spout are drawn slightly thicker than real.",
+            "de": "Wasserblock, Sichtfenster, Knopf und Schalter. Alle Detaillinien; Griff und Tülle sind etwas dicker als in Wirklichkeit gezeichnet. Alle Detaillinien und die getrennten Wasser-, Tülle-, Griff- und Deckelformen im Grundriss; Griff und Tülle sind etwas dicker als in Wirklichkeit gezeichnet."
+          },
+          "thinElements": {
+            "en": "Lid and base are 40 mm tall (0.2 mm), the handle neck 27 mm.",
+            "de": "Deckel und Sockel sind 40 mm hoch (0,2 mm), der Griffhals 27 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail not drawn, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Body carries shell and water; handle, lid and plate keep their own regions.",
+            "de": "Der Körper trägt Hülle und Wasser; Griff, Deckel und Platte behalten ihre Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the asset is only 0.5 mm wide on paper and its smallest part, the 15 mm lid and base rims, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 0.5 mm breit auf Papier und sein kleinstes Teil, die 15 mm hohen Deckel- und Sockelränder, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 15 mm lid and base rims",
+          "de": "Die 15 mm hohen Deckel- und Sockelränder"
+        },
+        "limitingSizeM": 0.015,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The kettle is cold and filled.",
+          "de": "Der Wasserkocher ist kalt und gefüllt."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.8,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.05
+            },
+            "lid": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 0,
+            "steam-plume": 0
+          },
+          "operating": {
+            "power": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "Heating",
+          "de": "Heizt"
+        },
+        "description": {
+          "en": "The 2 kW element heats the water directly; the shell warms through and the vapour rises with the water temperature.",
+          "de": "Das 2-kW-Heizelement erwärmt das Wasser direkt; die Hülle erwärmt sich durch und der Dampf nimmt mit der Wassertemperatur zu."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.8,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.05
+            },
+            "lid": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 1,
+            "steam-plume": 0.4
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "boiling",
+        "title": {
+          "en": "Boiling",
+          "de": "Kocht"
+        },
+        "description": {
+          "en": "The water boils: steam leaves the spout and the lid rattles.",
+          "de": "Das Wasser kocht: Dampf tritt am Ausguss aus und der Deckel klappert."
+        },
+        "bones": {
+          "lid": {
+            "dy": 0.003
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "plate": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.8,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "shell": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.05
+            },
+            "lid": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 1,
+            "steam-plume": 1
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "boil",
+        "title": {
+          "en": "Boil",
+          "de": "Aufkochen"
+        },
+        "description": {
+          "en": "The kettle heats 1 L of water from about 15 degC to the boil in about three minutes at a constant 2 kW, then holds 100 degC and evaporates the water with steam at the spout.",
+          "de": "Der Wasserkocher erhitzt 1 l Wasser mit konstant 2 kW in etwa drei Minuten von etwa 15 °C bis zum Sieden, hält dann 100 °C und verdampft das Wasser mit Dampf am Ausguss."
+        },
+        "durationS": 200,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 1,
+            "pose": "heating",
+            "ease": "linear"
+          },
+          {
+            "t": 171,
+            "pose": "heating",
+            "ease": "linear"
+          },
+          {
+            "t": 184,
+            "pose": "boiling",
+            "ease": "step"
+          },
+          {
+            "t": 200,
+            "pose": "boiling",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 200
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Switched off",
+              "de": "Ausgeschaltet"
+            }
+          },
+          {
+            "id": "heat",
+            "fromS": 1,
+            "toS": 184,
+            "title": {
+              "en": "Heating",
+              "de": "Heizen"
+            }
+          },
+          {
+            "id": "boil",
+            "fromS": 184,
+            "toS": 200,
+            "title": {
+              "en": "Boiling",
+              "de": "Kochen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1,
+            "kind": "operating",
+            "title": {
+              "en": "Switched on",
+              "de": "Eingeschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:steam-plume",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.2
+              },
+              {
+                "t": 141,
+                "v": 0.4
+              },
+              {
+                "t": 184,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rattle",
+        "title": {
+          "en": "Rattle",
+          "de": "Klappern"
+        },
+        "description": {
+          "en": "The boiling lid lifts and falls in the steam.",
+          "de": "Der Deckel hebt und senkt sich im Dampf."
+        },
+        "durationS": 1.2,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "boiling",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.3,
+            "pose": "boiling",
+            "ease": "smooth",
+            "bones": {
+              "lid": {
+                "dy": 0.005
+              }
+            }
+          },
+          {
+            "t": 0.6,
+            "pose": "boiling",
+            "ease": "smooth",
+            "bones": {
+              "lid": {
+                "dy": 0.001
+              }
+            }
+          },
+          {
+            "t": 0.9,
+            "pose": "boiling",
+            "ease": "smooth",
+            "bones": {
+              "lid": {
+                "dy": 0.004
+              }
+            }
+          },
+          {
+            "t": 1.2,
+            "pose": "boiling",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 1.2
+          }
+        ],
+        "phases": [
+          {
+            "id": "rattle",
+            "fromS": 0,
+            "toS": 1.2,
+            "title": {
+              "en": "Rattling",
+              "de": "Klappern"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": [
+          {
+            "target": "emitter:steam-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.3,
+                "v": 0.9
+              },
+              {
+                "t": 0.6,
+                "v": 1
+              },
+              {
+                "t": 0.9,
+                "v": 0.9
+              },
+              {
+                "t": 1.2,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "power",
+          "title": {
+            "en": "Heating element",
+            "de": "Heizelement"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Heating at 2 kW",
+                "de": "Heizt mit 2 kW"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "plate",
+          "title": {
+            "en": "Base and heating plate",
+            "de": "Sockel und Heizplatte"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "pp-plastic",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.18,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "plate-skin",
+              "title": {
+                "en": "Base and heating plate",
+                "de": "Sockel und Heizplatte"
+              },
+              "kind": "polymer",
+              "material": "pp-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "power",
+            "heatW": 40
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "shell",
+          "title": {
+            "en": "Stainless jug shell",
+            "de": "Edelstahl-Kannenhülle"
+          },
+          "kind": "surface",
+          "model": "coupled",
+          "material": "stainless",
+          "areaM2": 0.11,
+          "characteristicLengthM": 0.19,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "shell-skin",
+              "title": {
+                "en": "Stainless jug shell",
+                "de": "Edelstahl-Kannenhülle"
+              },
+              "kind": "metal",
+              "material": "stainless",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.00004,
+              "heatCapacityJM2K": 2765,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2765,
+          "source": "authored-estimate",
+          "reference": "incropera-2018",
+          "coupled": {
+            "region": "water",
+            "wetFraction": 0.6,
+            "filmM2KW": 0.0025
+          }
+        },
+        {
+          "id": "water",
+          "title": {
+            "en": "Water fill and gauge",
+            "de": "Wasserfüllung und Wasserstand"
+          },
+          "kind": "water",
+          "model": "operating",
+          "material": "water",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.12,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "water-skin",
+              "title": {
+                "en": "Water fill and gauge",
+                "de": "Wasserfüllung und Wasserstand"
+              },
+              "kind": "polymer",
+              "material": "water",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.0021,
+              "heatCapacityJM2K": 348800,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 348800,
+          "operating": {
+            "key": "power",
+            "heatW": 1955
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "lid",
+          "title": {
+            "en": "Lid",
+            "de": "Deckel"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "stainless",
+          "areaM2": 0.025,
+          "characteristicLengthM": 0.14,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "lid-skin",
+              "title": {
+                "en": "Lid",
+                "de": "Deckel"
+              },
+              "kind": "metal",
+              "material": "stainless",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.00004,
+              "heatCapacityJM2K": 2000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2000,
+          "operating": {
+            "key": "power",
+            "heatW": 5
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "handle",
+          "title": {
+            "en": "Handle",
+            "de": "Griff"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pp-plastic",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "handle-skin",
+              "title": {
+                "en": "Handle",
+                "de": "Griff"
+              },
+              "kind": "polymer",
+              "material": "pp-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.05,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "steam",
+          "kind": "vent",
+          "title": {
+            "en": "Steam leaving the spout",
+            "de": "Dampf am Ausguss"
+          },
+          "anchor": "spout-tip",
+          "directionDeg": 60,
+          "diameterM": 0.03,
+          "operatingKey": "power",
+          "temperatureRiseK": 75,
+          "vapourKgPerKg": 0.3,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021",
+          "region": "water"
+        },
+        {
+          "id": "steam-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Plume above the spout",
+            "de": "Fahne über dem Ausguss"
+          },
+          "anchor": "spout-tip",
+          "directionDeg": 90,
+          "diameterM": 0.06,
+          "region": "shell",
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 2 kW element heats the water region directly at a constant 1955 W (plate 40, lid 5): 1 kg of water (1 L, 4186 J/(kg K)) rises by about 78 K from the room temperature (326 kJ), because the water under the closed lid starts at the room temperature (enclosed, no evaporative chilling). The jug shell is not heated by itself: below the fill level (60 percent of the wall) it follows the water through the inside water film of 0.0025 m2K/W, stores 0.7 mm of steel (2765 J/(m2 K)) and loses heat to the room, all of it taken from the water, so the boil still takes about 184 seconds. The region heat capacity is the water's per gauge area. At 100 degC the water's phase change caps the temperature and the surplus power after the wall losses evaporates it at 2.257 MJ/kg (about 0.8 g/s); the steam emitter releases exactly this vapour rate.",
+          "de": "Das 2-kW-Heizelement heizt die Wasserregion direkt mit konstant 1955 W (Platte 40, Deckel 5): 1 kg Wasser (1 l, 4186 J/(kg K)) steigt von der Raumtemperatur um etwa 78 K (326 kJ), denn das Wasser unter dem geschlossenen Deckel startet mit Raumtemperatur (eingeschlossen, keine Verdunstungskühlung). Die Kannenhülle wird nicht für sich geheizt: unterhalb des Füllstands (60 Prozent der Wand) folgt sie dem Wasser über den wasserseitigen Film von 0,0025 m2K/W, speichert 0,7 mm Stahl (2765 J/(m2 K)) und gibt Wärme an den Raum ab, alles aus dem Wasser, sodass das Aufkochen weiterhin etwa 184 Sekunden dauert. Die Wärmekapazität der Region ist die des Wassers je Wasserstandsfläche. Bei 100 °C deckelt die Phasenumwandlung des Wassers die Temperatur und die nach den Wandverlusten überschüssige Leistung verdampft es mit 2,257 MJ/kg (etwa 0,8 g/s); der Dampfemitter gibt genau diese Dampfrate ab."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 2.2 kg kettle stands on its base: a unilateral contact of 0.17 m diameter carries the weight.",
+          "de": "Der 2,2 kg schwere Wasserkocher steht auf seinem Sockel: ein einseitiger Kontakt von 0,17 m Durchmesser trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "boiling",
+      "defaultClip": "rattle",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -14,7 +14,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -26,6 +25,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -40,20 +40,21 @@ chip = _manim_module.chip
 cross_mark = _manim_module.cross_mark
 ripples = _manim_module.ripples
 house_section = _manim_module.house_section
-person_glyph = _manim_module.person_glyph
-lamp_glyph = _manim_module.lamp_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
 thermometer_glyph = _manim_module.thermometer_glyph
-radiator = _manim_module.radiator
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 highlight_param = _manim_module.highlight_param
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
@@ -250,19 +251,26 @@ def _month_bars(left, base_y, months, clean, *, width, height, color):
 
 
 #region Scenery
-def _stand(hs, x, color=P_ORANGE, storey=0):
-    """🧍 Occupant at true scale — 1.75 m in a 2.5 m storey, feet on the floor line at ``x``."""
+def _stand(hs, x, cast="shared-person-winter", storey=0, motion=True):
+    """🧍 Thermal occupant at true scale — 1.75 m in a 2.5 m storey, feet on the floor line at ``x``."""
     storey_h = hs["w_height"] / 2
-    height = 0.7 * storey_h
-    floor = hs["bottom_left"][1] + storey * storey_h
-    return person_glyph(np.array([x, floor + height / 2, 0.0]), color=color, scale=height / 0.66)
+    anchor = np.array([x, hs["bottom_left"][1] + storey * storey_h, 0.0])
+    unit = room_metre(storey_h)
+    return (staffage_motion if motion else staffage)(cast, unit=unit, anchor=anchor)
 
 
-def _heater(hs, x, color=P_RED):
-    """♨️ A 0.65 m panel with 0.12 m clearance at the house scale."""
-    metre = hs["w_height"] / 2 / 2.5
-    return radiator(np.array([x, hs["bottom_left"][1] + (0.12 + 0.65 / 2) * metre, 0.0]),
-                    color=color, height=0.65 * metre, width=1.3 * metre)
+def _heater(hs, x):
+    """🔆 Thermal panel radiator at the house scale."""
+    return staffage("shared-radiator-front-winter", unit=room_metre(hs["w_height"] / 2),
+                    anchor=np.array([x, hs["bottom_left"][1], 0.0]))
+
+
+def _lamp(top, height: float):
+    """💡 Thermal pendant lamp hanging from ``top`` and ``height`` long, with its bulb point for the heat ripples."""
+    cast = "shared-lamp-winter"
+    group = staffage(cast, unit=height / staffage_height(cast))
+    group.shift(top - group.get_top())
+    return {"group": group, "bulb": Point(group.get_bottom() + UP * 0.2 * height)}
 
 
 def _envelope(hs, color=P_PRIMARY):
@@ -325,7 +333,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Bedarf oder Verbrauch")
+        subtitle = section_heading(tr("Demand or consumption", "Bedarf oder Verbrauch"))
         din = _din_ref("GEG § 79 ff. · § 80")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -335,20 +343,20 @@ class Beat1_BedarfVsVerbrauch(Scene):
         def clear():
             return [FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din, caption)]
 
-        sheet = _certificate([0.0, -0.05], P_WHITE, "Energieausweis", width=3.2, height=3.4)
+        sheet = _certificate([0.0, -0.05], P_WHITE, tr("Energy certificate", "Energieausweis"), width=3.2, height=3.4)
         self.play(Create(sheet[0]), FadeIn(sheet[1]), run_time=1.6)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6)
 
         sx = -3.6
         left_c = np.array([sx, -0.05, 0.0])
-        bedarf_sheet = _certificate(left_c, BEDARF_CYAN, "Bedarfsausweis", width=3.2, height=3.4)
+        bedarf_sheet = _certificate(left_c, BEDARF_CYAN, tr("Demand-based certificate", "Bedarfsausweis"), width=3.2, height=3.4)
         row_x = sx - 1.3
         input_rows = VGroup(*[
             body_text(name, font_size=LABEL_FONT_SIZE - 1, color=BEDARF_CYAN).move_to(
                 np.array([row_x, y + 0.22, 0.0])).align_to(np.array([row_x, y, 0.0]), LEFT)
-            for name, y in zip(("Geometrie", "U-Werte", "Anlage"), _rule_ys(left_c, 3.4, 3))
+            for name, y in zip((tr("Geometry", "Geometrie"), tr("U-values", "U-Werte"), tr("System", "Anlage")), _rule_ys(left_c, 3.4, 3))
         ])
-        computed = body_text("berechnet", font_size=LABEL_FONT_SIZE - 1, color=BEDARF_CYAN).move_to(
+        computed = body_text(tr("calculated", "berechnet"), font_size=LABEL_FONT_SIZE - 1, color=BEDARF_CYAN).move_to(
             np.array([sx, -1.58, 0.0]))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bedarf_berechnung"))
@@ -361,10 +369,10 @@ class Beat1_BedarfVsVerbrauch(Scene):
         hx, hy = 3.6, -0.45
         house = house_section(np.array([hx, hy, 0.0]), scale=0.8)
         floor_y, level_y = house["bottom_left"][1], house["level_1"].get_center()[1]
-        norm_label = body_text("Norm-Randbedingungen", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
+        norm_label = body_text(tr("Standard boundary conditions", "Norm-Randbedingungen"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
             np.array([hx, 1.78, 0.0]))
-        norm_person = _stand(house, hx - 0.55, P_CYAN)
-        norm_lamp = lamp_glyph(np.array([hx - 0.05, level_y, 0.0]), drop=0.1)
+        norm_person = _stand(house, hx - 0.55)
+        norm_lamp = _lamp(np.array([hx - 0.05, level_y, 0.0]), 0.3)
         norm_therm = thermometer_glyph(np.array([hx + 0.45, floor_y + 0.2, 0.0]), height=0.55,
                                        color=P_CYAN, level=0.5)
         norm_temp = math_label(r"20\,\mathrm{°C}", at=np.array([hx + 0.7, floor_y + 0.42, 0.0]),
@@ -384,16 +392,16 @@ class Beat1_BedarfVsVerbrauch(Scene):
         hold_for(self, self.NARRATION, "bedarf_norm",
                  during=lambda rt: _heat([norm_person.get_top() + UP * 0.05, norm_radiator.get_top() + UP * 0.02], rt))
 
-        orange_sheet = _certificate([0.0, -0.05], VERBRAUCH_ORANGE, "Verbrauchsausweis", width=8.0, height=3.4,
+        orange_sheet = _certificate([0.0, -0.05], VERBRAUCH_ORANGE, tr("Consumption-based certificate", "Verbrauchsausweis"), width=8.0, height=3.4,
                                     rules=0)
         base_y = -1.35
         months, clean = ValueTracker(0.0), ValueTracker(0.0)
         bars = _month_bars(-3.4, base_y, months, clean, width=6.8, height=2.0, color=VERBRAUCH_ORANGE)
         bars_floor = Line(np.array([-3.4, base_y, 0.0]), np.array([3.4, base_y, 0.0]), color=P_WHITE, stroke_width=1.4)
-        month_read = math_readout(lambda: rf"{de_num(months.get_value())}\,\text{{Monate}}",
+        month_read = math_readout(lambda: rf"{label_number(months.get_value())}\;\text{{{tr('months', 'Monate')}}}",
                                   np.array([-3.4, 0.98, 0.0]), size=LABEL_FONT_SIZE, color=VERBRAUCH_ORANGE,
                                   edge="left")
-        corrected = body_text("witterungsbereinigt", font_size=LABEL_FONT_SIZE, color=BEDARF_CYAN).move_to(
+        corrected = body_text(tr("weather-corrected", "witterungsbereinigt"), font_size=LABEL_FONT_SIZE, color=BEDARF_CYAN).move_to(
             np.array([2.4, 0.98, 0.0]))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "verbrauch_daten"))
@@ -414,17 +422,17 @@ class Beat1_BedarfVsVerbrauch(Scene):
         hx2 = 0.0
         house2 = house_section(np.array([hx2, -0.3, 0.0]), scale=0.8)
         envelope = _envelope(house2)
-        walker = _stand(house2, hx2 - 0.65, P_ORANGE)
-        sleeper = _stand(house2, hx2 + 0.55, P_ORANGE, storey=1)
-        real_lamp = lamp_glyph(np.array([hx2 + 0.5, house2["level_1"].get_center()[1], 0.0]), drop=0.1)
+        walker = _stand(house2, hx2 - 0.65, "shared-person-winter")
+        sleeper = _stand(house2, hx2 + 0.55, "demand-certificate-sleeper", storey=1)
+        real_lamp = _lamp(np.array([hx2 + 0.5, house2["level_1"].get_center()[1], 0.0]), 0.3)
         row_a, box_a, items_a = math_panel([
-            ("bed", r"\text{Bedarf}", BEDARF_CYAN), (None, "=", P_WHITE),
-            ("geb", r"\text{Gebäude}\;|_{\,\text{Norm}}", P_PRIMARY),
+            ("bed", tr(r"\text{Demand}", r"\text{Bedarf}"), BEDARF_CYAN), (None, "=", P_WHITE),
+            ("geb", tr(r"\text{Building}\;|_{\,\text{standard}}", r"\text{Gebäude}\;|_{\,\text{Norm}}"), P_PRIMARY),
         ], size=BODY_FONT_SIZE + 2)
         row_b, box_b, items_b = math_panel([
-            ("ver", r"\text{Verbrauch}", VERBRAUCH_ORANGE), (None, "=", P_WHITE),
-            ("geb2", r"\text{Gebäude}", P_PRIMARY), (None, "+", P_WHITE),
-            ("use", r"\text{Nutzung}", VERBRAUCH_ORANGE),
+            ("ver", tr(r"\text{Consumption}", r"\text{Verbrauch}"), VERBRAUCH_ORANGE), (None, "=", P_WHITE),
+            ("geb2", tr(r"\text{Building}", r"\text{Gebäude}"), P_PRIMARY), (None, "+", P_WHITE),
+            ("use", tr(r"\text{Usage}", r"\text{Nutzung}"), VERBRAUCH_ORANGE),
         ], size=BODY_FONT_SIZE + 2)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "unterschied_bedarf"))
@@ -444,18 +452,18 @@ class Beat1_BedarfVsVerbrauch(Scene):
         hold_for(self, self.NARRATION, "unterschied_verbrauch",
                  during=lambda rt: _heat([walker.get_top(), sleeper.get_top()], rt))
 
-        cyan_sheet = _certificate([0.0, 0.2], BEDARF_CYAN, "Bedarfsausweis", width=2.6, height=2.8)
-        cyan_left = _certificate([-2.6, 0.2], BEDARF_CYAN, "Bedarfsausweis", width=2.6, height=2.8)
-        orange_right = _certificate([2.6, 0.2], VERBRAUCH_ORANGE, "Verbrauchsausweis", width=2.6, height=2.8)
-        oder = body_text("oder", font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(np.array([0.0, 0.2, 0.0]))
+        cyan_sheet = _certificate([0.0, 0.2], BEDARF_CYAN, tr("Demand-based certificate", "Bedarfsausweis"), width=2.6, height=2.8)
+        cyan_left = _certificate([-2.6, 0.2], BEDARF_CYAN, tr("Demand-based certificate", "Bedarfsausweis"), width=2.6, height=2.8)
+        orange_right = _certificate([2.6, 0.2], VERBRAUCH_ORANGE, tr("Consumption-based certificate", "Verbrauchsausweis"), width=2.6, height=2.8)
+        oder = body_text(tr("or", "oder"), font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(np.array([0.0, 0.2, 0.0]))
         row_c, box_c, items_c = math_panel([
-            ("neu", r"\text{Neubau}", P_PRIMARY), (None, r"\Rightarrow", P_WHITE),
-            ("bed", r"\text{Bedarfsausweis}", BEDARF_CYAN),
+            ("neu", tr(r"\text{New build}", r"\text{Neubau}"), P_PRIMARY), (None, r"\Rightarrow", P_WHITE),
+            ("bed", tr(r"\text{Demand certificate}", r"\text{Bedarfsausweis}"), BEDARF_CYAN),
         ], size=BODY_FONT_SIZE + 2)
         row_d, box_d, items_d = math_panel([
-            ("alt", r"\text{Bestand}", P_PRIMARY), (None, r"\Rightarrow", P_WHITE),
-            ("bed2", r"\text{Bedarf}", BEDARF_CYAN), (None, r"\text{oder}", P_WHITE),
-            ("ver", r"\text{Verbrauch}", VERBRAUCH_ORANGE),
+            ("alt", tr(r"\text{Existing}", r"\text{Bestand}"), P_PRIMARY), (None, r"\Rightarrow", P_WHITE),
+            ("bed2", tr(r"\text{Demand}", r"\text{Bedarf}"), BEDARF_CYAN), (None, tr(r"\text{or}", r"\text{oder}"), P_WHITE),
+            ("ver", tr(r"\text{Consumption}", r"\text{Verbrauch}"), VERBRAUCH_ORANGE),
         ], size=BODY_FONT_SIZE + 2)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wann_neubau"))
@@ -522,7 +530,7 @@ class Beat2_DieSkala(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Die Skala lesen")
+        subtitle = section_heading(tr("Reading the scale", "Die Skala lesen"))
         din = _din_ref("GEG § 86 · Anlage 10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -540,14 +548,14 @@ class Beat2_DieSkala(Scene):
         ])
         unit_label = math_label(UNIT, at=np.array([strip["center"][0] + strip["width"] / 2 + 0.2, band_y - 0.07, 0.0]),
                                 size=LABEL_FONT_SIZE - 4, color=P_PRIMARY, edge="left")
-        schematic_note = note_line("Klassenbreiten schematisch, nicht maßstäblich", color=P_PRIMARY)
+        schematic_note = note_line(tr("Class widths schematic, not to scale", "Klassenbreiten schematisch, nicht maßstäblich"), color=P_PRIMARY)
 
         def clear(*keep):
             return [FadeOut(m) for m in list(self.mobjects)
                     if m not in (subtitle, din, caption, *strip["bands"], *keep)]
 
-        sheet_l = _certificate([-2.6, 0.75], BEDARF_CYAN, "Bedarf", width=2.2, height=1.3, rules=2)
-        sheet_r = _certificate([2.6, 0.75], VERBRAUCH_ORANGE, "Verbrauch", width=2.2, height=1.3, rules=2)
+        sheet_l = _certificate([-2.6, 0.75], BEDARF_CYAN, tr("Demand", "Bedarf"), width=2.2, height=1.3, rules=2)
+        sheet_r = _certificate([2.6, 0.75], VERBRAUCH_ORANGE, tr("Consumption", "Verbrauch"), width=2.2, height=1.3, rules=2)
         feed_l = Arrow(np.array([-2.6, 0.06, 0.0]), np.array([-0.3, band_top + 0.04, 0.0]), buff=0.05,
                        color=BEDARF_CYAN, stroke_width=3, max_tip_length_to_length_ratio=0.12)
         feed_r = Arrow(np.array([2.6, 0.06, 0.0]), np.array([0.3, band_top + 0.04, 0.0]), buff=0.05,
@@ -563,8 +571,8 @@ class Beat2_DieSkala(Scene):
         self.play(GrowArrow(feed_l), GrowArrow(feed_r), run_time=1.4)
         hold_for(self, self.NARRATION, "skala_beide")
 
-        chip_end = chip("Endenergie", END_RED).move_to(np.array([-2.0, 0.7, 0.0]))
-        chip_prim = chip("Primärenergie", PRIM_VIOLET).move_to(np.array([2.0, 0.7, 0.0]))
+        chip_end = chip(tr("Final energy", "Endenergie"), END_RED).move_to(np.array([-2.0, 0.7, 0.0]))
+        chip_prim = chip(tr("Primary energy", "Primärenergie"), PRIM_VIOLET).move_to(np.array([2.0, 0.7, 0.0]))
         arrow_end = Arrow(chip_end.get_bottom(), np.array([-2.0, band_top + 0.04, 0.0]), buff=0.06,
                           color=END_RED, stroke_width=3, max_tip_length_to_length_ratio=0.12)
         arrow_prim = Arrow(chip_prim.get_bottom(), np.array([2.0, band_top + 0.04, 0.0]), buff=0.06,
@@ -589,16 +597,16 @@ class Beat2_DieSkala(Scene):
         gas_bar = _end_bar(gx, ground, v_gas, [(0, Q_NUTZ, BEDARF_CYAN), (Q_NUTZ, GAS_END, END_RED)])
         gas_ptr = _pointer(strip, v_gas, P_ORANGE)
         gas_read = math_readout(
-            lambda: rf"{de_num(v_gas.get_value())}\,{UNIT}",
+            lambda: rf"{label_number(v_gas.get_value())}\,{UNIT}",
             np.array([gx, ground + GAS_END * STAGE_U + 0.3, 0.0]),
             size=LABEL_FONT_SIZE - 1, color=P_ORANGE, edge="center",
         )
-        gas_name = body_text("Gaskessel", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
+        gas_name = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
             np.array([gx, ground - 0.25, 0.0]))
         qh_y = ground + Q_NUTZ * STAGE_U
-        nutz_label = math_label(r"\text{Nutzwärme}\;Q_{h}=100", at=np.array([gx + 0.55, ground + 0.5 * Q_NUTZ * STAGE_U, 0.0]),
+        nutz_label = math_label(tr(r"\text{Useful heat}\;Q_{h}=100", r"\text{Nutzwärme}\;Q_{h}=100"), at=np.array([gx + 0.55, ground + 0.5 * Q_NUTZ * STAGE_U, 0.0]),
                                 size=LABEL_FONT_SIZE - 2, color=BEDARF_CYAN, edge="left")
-        loss_label = body_text("Anlagenverluste", font_size=LABEL_FONT_SIZE - 3, color=END_RED)
+        loss_label = body_text(tr("System losses", "Anlagenverluste"), font_size=LABEL_FONT_SIZE - 3, color=END_RED)
         loss_label.move_to(np.array([gx + 0.55, ground + 1.2 * Q_NUTZ * STAGE_U, 0.0])).align_to(
             np.array([gx + 0.55, 0.0, 0.0]), LEFT)
 
@@ -624,16 +632,16 @@ class Beat2_DieSkala(Scene):
         wp_bar = _end_bar(wx, ground, v_wp, [(0, WP_END, END_RED)])
         wp_ptr = _pointer(strip, v_wp, AMBIENT_GREEN)
         wp_read = math_readout(
-            lambda: rf"{de_num(v_wp.get_value())}\,{UNIT}",
+            lambda: rf"{label_number(v_wp.get_value())}\,{UNIT}",
             np.array([wx, ground + Q_NUTZ * STAGE_U + 0.3, 0.0]),
             size=LABEL_FONT_SIZE - 1, color=AMBIENT_GREEN, edge="center",
         )
-        wp_name = body_text("Wärmepumpe", font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
+        wp_name = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
             np.array([wx, ground - 0.25, 0.0]))
         ambient = Rectangle(width=0.8, height=(Q_NUTZ - WP_END) * STAGE_U, color=AMBIENT_GREEN, stroke_width=1.2,
                             fill_color=AMBIENT_GREEN, fill_opacity=0.16).move_to(
             np.array([wx, ground + (WP_END + Q_NUTZ) / 2 * STAGE_U, 0.0]))
-        ambient_label = body_text("Umweltwärme", font_size=LABEL_FONT_SIZE - 3, color=AMBIENT_GREEN)
+        ambient_label = body_text(tr("Ambient heat", "Umweltwärme"), font_size=LABEL_FONT_SIZE - 3, color=AMBIENT_GREEN)
         ambient_label.move_to(np.array([wx - 0.55, ground + 0.65 * Q_NUTZ * STAGE_U, 0.0])).align_to(
             np.array([wx - 0.55, 0.0, 0.0]), RIGHT)
 
@@ -675,7 +683,7 @@ class Beat2_DieSkala(Scene):
                   *_heat(warm, 1.4), run_time=1.4)
         hold_for(self, self.NARRATION, "lesen", during=lambda rt: _heat(warm, rt))
 
-        ep_gas, ep_wp = de_num(GAS_END / Q_NUTZ, 2), de_num(WP_END / Q_NUTZ, 2)
+        ep_gas, ep_wp = label_number(GAS_END / Q_NUTZ, 2), label_number(WP_END / Q_NUTZ, 2)
         row, box, items = math_panel([
             ("qh", r"Q_{h}=100", BEDARF_CYAN), (None, r"\Rightarrow", P_WHITE),
             ("gas", rf"100\cdot{ep_gas}={GAS_END}\to\mathrm{{{_class_letter(GAS_END)}}}", P_ORANGE),
@@ -741,7 +749,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Was der Ausweis auslöst")
+        subtitle = section_heading(tr("What the certificate triggers", "Was der Ausweis auslöst"))
         din = _din_ref("GEG § 84 · § 87")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -754,7 +762,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         class_color = CLASSES[_class_index(GAS_END)][2]
         class_letter = CLASSES[_class_index(GAS_END)][0]
 
-        big_sheet = _certificate([0.0, 0.0], BEDARF_CYAN, "Energieausweis", width=3.2, height=3.4)
+        big_sheet = _certificate([0.0, 0.0], BEDARF_CYAN, tr("Energy certificate", "Energieausweis"), width=3.2, height=3.4)
         self.play(Create(big_sheet[0]), FadeIn(big_sheet[1]), run_time=1.6)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6)
 
@@ -762,13 +770,13 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         listing = RoundedRectangle(corner_radius=0, width=4.6, height=3.9, color=P_PRIMARY, stroke_width=_theme_module.CHROME_BORDER)
         listing.move_to(np.array([card_x, 0.0, 0.0]))
         listing.set_fill(P_DEEP_DARK, opacity=0.9)
-        listing_head = body_text("Pflichtangaben nach GEG § 87", font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+        listing_head = body_text(tr("Mandatory details per GEG § 87", "Pflichtangaben nach GEG § 87"), font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
         listing_head.next_to(listing.get_top(), DOWN, buff=0.22)
-        small_sheet = _certificate([2.0, 0.1], BEDARF_CYAN, "Energieausweis", width=2.4, height=2.7)
+        small_sheet = _certificate([2.0, 0.1], BEDARF_CYAN, tr("Energy certificate", "Energieausweis"), width=2.4, height=2.7)
         into_ad = Arrow(np.array([0.7, 0.1, 0.0]), np.array([listing.get_right()[0] + 0.12, 0.1, 0.0]), buff=0.0,
                         color=BEDARF_CYAN, stroke_width=3, max_tip_length_to_length_ratio=0.12)
 
-        keys = ("Ausweisart", "Endenergiekennwert", "wesentlicher Energieträger", "Baujahr (Wohngebäude)")
+        keys = (tr("Certificate type", "Ausweisart"), tr("Final energy indicator", "Endenergiekennwert"), tr("main energy carrier", "wesentlicher Energieträger"), tr("Year built (residential)", "Baujahr (Wohngebäude)"))
         row_y = (1.05, 0.45, -0.15, -0.75)
         key_texts = VGroup(*[
             body_text(k, font_size=LABEL_FONT_SIZE - 4, color=P_WHITE).set_opacity(0.75).move_to(
@@ -776,12 +784,12 @@ class Beat3_PflichtangabenUndFolgen(Scene):
             for k, y in zip(keys, row_y)
         ])
         value_at = [np.array([text_x, y - 0.29, 0.0]) for y in row_y]
-        v_type = body_text("Bedarfsausweis", font_size=LABEL_FONT_SIZE, color=BEDARF_CYAN)
+        v_type = body_text(tr("Demand-based certificate", "Bedarfsausweis"), font_size=LABEL_FONT_SIZE, color=BEDARF_CYAN)
         v_type.move_to(value_at[0]).align_to(value_at[0], LEFT)
         v_end = ValueTracker(0.0)
-        v_end_read = math_readout(lambda: rf"{de_num(v_end.get_value())}\,{UNIT}", value_at[1] + DOWN * 0.1,
+        v_end_read = math_readout(lambda: rf"{label_number(v_end.get_value())}\,{UNIT}", value_at[1] + DOWN * 0.1,
                                   size=LABEL_FONT_SIZE, color=END_RED, edge="left")
-        v_carrier = body_text("Erdgas", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        v_carrier = body_text(tr("Natural gas", "Erdgas"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         v_carrier.move_to(value_at[2]).align_to(value_at[2], LEFT)
         v_year = body_text("1996", font_size=LABEL_FONT_SIZE, color=P_WHITE)
         v_year.move_to(value_at[3]).align_to(value_at[3], LEFT)
@@ -809,10 +817,10 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         v_scale = ValueTracker(0.0)
         scale_ptr = _pointer(strip, v_scale, P_ORANGE)
         tag_y = -1.55
-        badge_tag = body_text("Effizienzklasse", font_size=LABEL_FONT_SIZE - 4, color=P_WHITE).set_opacity(0.75)
+        badge_tag = body_text(tr("Efficiency class", "Effizienzklasse"), font_size=LABEL_FONT_SIZE - 4, color=P_WHITE).set_opacity(0.75)
         badge_tag.move_to(np.array([text_x, tag_y, 0.0])).align_to(np.array([text_x, tag_y, 0.0]), LEFT)
         badge_spot = np.array([text_x + 3.0, tag_y, 0.0])
-        fly = math_label(rf"{de_num(GAS_END)}\,{UNIT}", at=value_at[1] + DOWN * 0.1,
+        fly = math_label(rf"{label_number(GAS_END)}\,{UNIT}", at=value_at[1] + DOWN * 0.1,
                          size=LABEL_FONT_SIZE, color=END_RED, edge="left")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "klasse"))
@@ -833,19 +841,20 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         self.play(ReplacementTransform(flight, badge), run_time=1.6)
         hold_for(self, self.NARRATION, "buchstabe")
 
-        h_wp = house_section(np.array([-3.2, -0.24, 0.0]), scale=0.55)
-        h_gas = house_section(np.array([3.2, -0.24, 0.0]), scale=0.55)
+        h_wp = house_section(np.array([-3.4, 0.3, 0.0]), scale=0.85)
+        h_gas = house_section(np.array([3.4, 0.3, 0.0]), scale=0.85)
         ground = float(h_wp["bottom_left"][1])
-        buyer = person_glyph(np.array([-0.8, ground + 0.66 * 1.5 / 2, 0.0]), color=P_ORANGE, scale=1.5)
-        tenant = person_glyph(np.array([0.8, ground + 0.66 * 1.5 / 2, 0.0]), color=P_YELLOW, scale=1.5)
+        unit_guest = room_metre(h_wp["w_height"] / 2)
+        buyer = staffage("demand-certificate-buyer", unit=unit_guest, anchor=np.array([-0.8, ground, 0.0]))
+        tenant = staffage_motion("shared-person-neutral", unit=unit_guest, anchor=np.array([0.8, ground, 0.0]))
         who = VGroup(
-            body_text("Käufer", font_size=LABEL_FONT_SIZE - 3, color=P_ORANGE).next_to(buyer, UP, buff=0.12),
-            body_text("Mieter", font_size=LABEL_FONT_SIZE - 3, color=P_YELLOW).next_to(tenant, UP, buff=0.12),
+            body_text(tr("Buyer", "Käufer"), font_size=LABEL_FONT_SIZE - 3, color=P_ORANGE).next_to(buyer, UP, buff=0.12),
+            body_text(tr("Tenant", "Mieter"), font_size=LABEL_FONT_SIZE - 3, color=P_YELLOW).next_to(tenant, UP, buff=0.12),
         )
         wp_color, wp_letter = CLASSES[_class_index(WP_END)][2], CLASSES[_class_index(WP_END)][0]
-        wp_badge = _class_badge(wp_letter, wp_color, np.array([-3.2, -1.5, 0.0]), size=0.55, font=BODY_FONT_SIZE)
-        gas_badge = _class_badge(class_letter, class_color, np.array([3.2, -1.5, 0.0]), size=0.55, font=BODY_FONT_SIZE)
-        compare = DoubleArrow(np.array([-2.5, -1.5, 0.0]), np.array([2.5, -1.5, 0.0]), buff=0.05, color=P_WHITE,
+        wp_badge = _class_badge(wp_letter, wp_color, np.array([-3.4, ground - 0.45, 0.0]), size=0.55, font=BODY_FONT_SIZE)
+        gas_badge = _class_badge(class_letter, class_color, np.array([3.4, ground - 0.45, 0.0]), size=0.55, font=BODY_FONT_SIZE)
+        compare = DoubleArrow(np.array([-2.7, ground - 0.45, 0.0]), np.array([2.7, ground - 0.45, 0.0]), buff=0.05, color=P_WHITE,
                               stroke_width=2.5, max_tip_length_to_length_ratio=0.1)
         warm_both = [h_wp["center"] + UP * 0.1, h_gas["center"] + UP * 0.1]
 
@@ -857,9 +866,9 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         self.play(GrowArrow(compare), *_heat(warm_both, 1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "vergleich", during=lambda rt: _heat(warm_both, rt))
 
-        doc = _certificate([-3.4, 0.0], BEDARF_CYAN, "Energieausweis", width=2.0, height=2.4)
-        costs = chip("genaue Kosten", P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, 0.8, 0.0]))
-        renovation = chip("Sanierungsaufwand", P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, -0.8, 0.0]))
+        doc = _certificate([-3.4, 0.0], BEDARF_CYAN, tr("Energy certificate", "Energieausweis"), width=2.0, height=2.4)
+        costs = chip(tr("exact costs", "genaue Kosten"), P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, 0.8, 0.0]))
+        renovation = chip(tr("Renovation effort", "Sanierungsaufwand"), P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, -0.8, 0.0]))
         to_costs = Arrow(np.array([-2.3, 0.1, 0.0]), costs.get_left() + LEFT * 0.1, buff=0.05, color=P_WHITE,
                          stroke_width=2.5, max_tip_length_to_length_ratio=0.1)
         to_renovation = Arrow(np.array([-2.3, -0.1, 0.0]), renovation.get_left() + LEFT * 0.1, buff=0.05,
@@ -878,12 +887,12 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         h_new = house_section(np.array([3.8, -0.24, 0.0]), scale=0.55)
         old_badge = _class_badge(class_letter, class_color, np.array([-3.8, -1.5, 0.0]), size=0.55, font=BODY_FONT_SIZE)
         new_badge = _class_badge(wp_letter, wp_color, np.array([3.8, -1.5, 0.0]), size=0.55, font=BODY_FONT_SIZE)
-        recommend = chip("Modernisierungsempfehlungen", AMBIENT_GREEN, font_size=LABEL_FONT_SIZE - 2)
+        recommend = chip(tr("Modernisation recommendations", "Modernisierungsempfehlungen"), AMBIENT_GREEN, font_size=LABEL_FONT_SIZE - 2)
         recommend.move_to(np.array([0.0, 0.5, 0.0]))
         better = Arrow(np.array([-2.0, -0.1, 0.0]), np.array([2.0, -0.1, 0.0]), buff=0.0,
                        color=AMBIENT_GREEN, stroke_width=3, max_tip_length_to_length_ratio=0.1)
         envelope_old = _envelope(h_old, AMBIENT_GREEN)
-        none_chip = chip("keine sinnvolle Maßnahme möglich", P_ORANGE, font_size=LABEL_FONT_SIZE - 2)
+        none_chip = chip(tr("no sensible measure possible", "keine sinnvolle Maßnahme möglich"), P_ORANGE, font_size=LABEL_FONT_SIZE - 2)
         none_chip.move_to(np.array([0.0, 0.5, 0.0]))
         no_measure = cross_mark(P_RED, 0.2).move_to(np.array([0.0, -0.1, 0.0]))
         warm_old = [h_old["center"] + UP * 0.1]

@@ -198,7 +198,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return _engine.Wait(0.05)
 
     def step(self, key, *animations, seconds=1.2, then=(), later=None, between=None, after=()):
-        """⏱️ A clause in two phases: `animations` first, then (after `between()`) `then`; swarms keep their own timing when seconds or later is None."""
+        """🕰️ A clause in two phases: `animations` first, then (after `between()`) `then`; swarms keep their own timing when seconds or later is None."""
         if not then and not after and seconds is not None:
             return super().step(key, *animations, seconds=seconds)
         art = _visuals._art
@@ -225,12 +225,12 @@ class Beat4_Energy(_visuals.ClipScene):
         return _morph.token(label, kind=kind, color=color, size=size).move_to(np.array([at[0], at[1], 0.0]))
 
     def _cell_pt(self, a1, window=None):
-        """📍 Centre of a cell of the current (or given) window."""
+        """🎯 Centre of a cell of the current (or given) window."""
         left, top, right, bottom = (window or self.win).rect(a1)
         return np.array([(left + right) / 2, (top + bottom) / 2, 0.0])
 
     def _static(self, state, dims=(), highlight=()):
-        """🧊 A still copy of the live capsule at the same place, whose parts can fly off as morph sources."""
+        """🗿 A still copy of the live capsule at the same place, whose parts can fly off as morph sources."""
         return self.capsule_axon(self.cap, at=tuple(state.at), scale=state.scale, view=state.view, bolts=state.bolts, dims=dims, hatch=state.hatch, highlight=highlight)
 
     def _arrows(self, state, rows, grow=1.0):
@@ -310,7 +310,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return group
 
     def _arrow(self, drawing, row, grow, state):
-        """➡️ One heat-flow arrow out of a surface (row 99: the air): length and width are proportional to its U·A (H_V for the air); hidden faces start outside the body on a dashed lead."""
+        """🏹 One heat-flow arrow out of a surface (row 99: the air): length and width are proportional to its U·A (H_V for the air); hidden faces start outside the body on a dashed lead."""
         air = row == 99
         face = "air" if air else ROWS[row]
         ua = self._num(self.T, "B12" if air else f"F{row}")
@@ -339,7 +339,7 @@ class Beat4_Energy(_visuals.ClipScene):
                               self._say("= 1 W/K", base + np.array([ARROW_PER_UA + 0.15, 0.0, 0.0]), size=SMALL, color=MUTED, anchor="l"))
 
     def _volume_box(self, drawing, amount):
-        """🧊 The interior air volume as a translucent box inside the capsule: right wall, front wall and ceiling."""
+        """📦 The interior air volume as a translucent box inside the capsule: right wall, front wall and ceiling."""
         faces = _usable_volume_faces(self.cap)
         return _engine.VGroup(*[_draft.polygon([drawing.at(*p) for p in face], BLUE, 0.22 * amount, BLUE, _draft.W_THIN, 0.9 * amount) for face in faces])
 
@@ -407,7 +407,7 @@ class Beat4_Energy(_visuals.ClipScene):
         self.vals_stacked = self.books["shared_roof_floor"][1]
         self.win, self.frames, self.temp, self.short = None, [], [], []
 
-    def _title(self):
+    def _heading(self):
         """📑 Subtitle chip: the example building and the sheet in the title."""
         return _fonts.section_heading(self.tr("Nakagin Capsule Tower · Energy", "Nakagin Capsule Tower · Energie")).to_edge(_engine.UP, buff=0.3).to_edge(_engine.LEFT, buff=0.4)
 
@@ -417,7 +417,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return note.move_to(np.array([6.85 - note.width / 2, 3.62 - note.height / 2 + 0.06, 0.0]))
 
     def _slot_types(self):
-        """🧱 The type of every capsule slot of the tower, keyed by drawing key."""
+        """🗃️ The type of every capsule slot of the tower, keyed by drawing key."""
         return {slot.path + (slot.item,): slot.type for slot in _nakagin.slots()}
 
     def present_energy(self):
@@ -437,7 +437,7 @@ class Beat4_Energy(_visuals.ClipScene):
         self.win = self._window(T, (1, 10), "B1", "A:B")
         cs = self.cs = self._cap_state()
         capsule = self._capsule((self.dx, 0.1, 0.0), 0.6, cs)
-        title = self._title()
+        title = self._heading()
         first = next(key for key in sorted(kinds) if kinds[key] == "A")
         flyer, flyer_tab = tower.parts["capsules"][first].copy(), tower.parts["capsules"][first].copy()
         big = self.capsule_axon(self.cap, at=(self.dx, 0.1, 0.0), scale=0.6)
@@ -690,7 +690,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return group
 
     def _annual_tiles(self, at):
-        """🧱 Annual demand as a product of tiles: loss per kelvin times degree days times 24 h per day, divided by 1000; then the demand divided by the floor area."""
+        """🪵 Annual demand as a product of tiles: loss per kelvin times degree days times 24 h per day, divided by 1000; then the demand divided by the floor area."""
         T, CL = self.T, self.CL
 
         def tile(x, y, label, fn, color):
@@ -750,7 +750,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return self.live(lambda: self._stack_shape(at), lambda: round(self.vs.t.get_value(), 3))
 
     def _stack_shape(self, at):
-        """📊 One still frame of the stacked bar: two segments and their two labels."""
+        """🥞 One still frame of the stacked bar: two segments and their two labels."""
         T = self.T
         a, b = self._num(T, "B11"), self._num(T, "B12")
         total = a + b
@@ -764,7 +764,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return bar
 
     def _names(self, at):
-        """🏷️ The defined names of the Climate sheet with their live values, and the climate source and period."""
+        """📛 The defined names of the Climate sheet with their live values, and the climate source and period."""
         CL = self.CL
         rows = [("theta_i", "B2"), ("theta_e", "B3"), ("heating_degree_days", "B5"), ("attached_factor", "B6"), ("air_change", "B7"), ("air_heat_capacity", "B8")]
         group = _engine.VGroup()
@@ -784,7 +784,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return group
 
     def _counts(self, at):
-        """🔢 Capsule count per type from the Program sheet, as live chips in the type colours, two by two."""
+        """🔣 Capsule count per type from the Program sheet, as live chips in the type colours, two by two."""
         group = _engine.VGroup()
         for i, key in enumerate("ABCD"):
             x, y = at[0] - 1.0 + (i % 2) * 2.0, at[1] - (i // 2) * 0.5
@@ -792,7 +792,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return group
 
     def _shape(self, at):
-        """🧊 Two capsules: five exposed faces, and heated neighbours above and below; shell per floor area and demand from the engine."""
+        """🏠 Two capsules: five exposed faces, and heated neighbours above and below; shell per floor area and demand from the engine."""
         T, EN = self.T, self.EN
         base, alt = self.vals_base, self.vals_stacked
         shell = lambda vals, rows: sum(vals[(T, f"D{r}")] for r in rows)
@@ -811,7 +811,7 @@ class Beat4_Energy(_visuals.ClipScene):
         return group
 
     def _recap(self, window, small, chain, counted):
-        """🔁 The closing legend of terms in the language of the clip."""
+        """📜 The closing legend of terms in the language of the clip."""
         terms = [("U", self.tr("U-value", "U-Wert"), "W/(m²·K)"), ("U·A", self.tr("heat loss of one surface", "Wärmeverlust einer Fläche"), "W/K"),
                  ("b", self.tr("attached factor of the back wall", "Anbindungsfaktor der Rückwand"), "1"), ("H_T", self.tr("transmission loss", "Transmissionswärmeverlust"), "W/K"),
                  ("n", self.tr("air change rate", "Luftwechselrate"), "1/h"), ("H_V", self.tr("ventilation loss", "Lüftungswärmeverlust"), "W/K"),

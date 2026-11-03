@@ -1,0 +1,26 @@
+{
+  "title": "Top Front and Side Views for Every Staffage",
+  "emoji": "🧊️",
+  "status": "open",
+  "description": "Every staffage must have a top view, front view and side view for all poses, clips, scales, etc. Make plan (top) and front geometry mandatory for every authored representation of every catalog asset next to the elevation (side), remove the optional viewpoint list, handcraft the missing front and plan drawings for all ~135 assets at every authored scale, guard it with a language-agnostic orthographic-consistency test checked by a third-party oracle, and make every consumer (depiction, print suitability, copy check, exporter, casts, React app, site) offer all three views.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2779"
+  },
+  "goal": "🎯updatedexamples",
+  "sessions": [
+    "6ab5a87a-8ec4-431b-978d-50afc233d19e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-01 21:56:09",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Every staffage must have a top view, front view and side view for all poses, clips, scales, etc. Make plan (top) and front geometry mandatory for every authored representation of every catalog asset next to the elevation (side), remove the optional viewpoint list, handcraft the missing front and plan drawings for all ~135 assets at every authored scale, guard it with a language-agnostic orthographic-consistency test checked by a third-party oracle, and make every consumer (depiction, print suitability, copy check, exporter, casts, React app, site) offer all three views.",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    }
+  ]
+}

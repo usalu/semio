@@ -7,6 +7,6 @@
       "@teaching/staffage": ["./🟦️.ts"]
     }
   },
-  "include": ["./🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/*.ts", "../../🧪️tests/*/🟦️.ts"],
+  "include": ["./🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/*.ts", "../../🧪️tests/*/🟦️.ts", "../../🧪️tests/*/*.d.ts", "../../🧪️tests/🔭️multiview-coverage/*.ts"],
   "exclude": ["**/node_modules/**"]
 }

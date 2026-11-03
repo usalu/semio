@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "fit": {"width": 5.4, "height": 4.4},
+  "tower": 0,
+  "storeys": 1,
+  "capsules": 3,
+  "lean": {
+    "polygon": [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+    "fill": "#c0392b",
+    "stroke": "#2e86c1",
+    "width": 0.45,
+    "maximum_attributes": 14
+  },
+  "memory": {"order_rows": 3, "limit": 2},
+  "recolour": "#27ae60"
+}

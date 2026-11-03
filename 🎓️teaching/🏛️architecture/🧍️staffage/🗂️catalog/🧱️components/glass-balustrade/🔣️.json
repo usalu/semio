@@ -79,13 +79,13 @@
       ],
       "notes": {
         "en": "Shown in section: the glass is a one-metre strip, cantilevered from a fixed clamp, and its normal load acts in the section plane. The manifest width 2.0 m is the panel length, not drawn.",
-        "de": "Im Schnitt gezeigt: das Glas ist ein ein Meter breiter Streifen, am festen Klemmteil eingespannt; seine Normallast wirkt in der Schnittebene. Die Manifestbreite 2,0 m ist die Feldlänge und wird nicht gezeichnet."
+        "de": "Im Schnitt gezeigt: das Glas ist ein 1 m breiter Streifen, am festen Klemmteil eingespannt; seine Normallast wirkt in der Schnittebene. Die Manifestbreite 2,0 m ist die Feldlänge und wird nicht gezeichnet."
       }
     },
     "dimensions": {
       "heightM": 1.1,
       "widthM": 0.3,
-      "depthM": 2.0,
+      "depthM": 2,
       "massKg": 59.13
     },
     "materials": [
@@ -102,7 +102,7 @@
         "strengthPa": 45000000,
         "source": "literature",
         "reference": "en-12898",
-        "conductivityWmK": 1.0,
+        "conductivityWmK": 1,
         "specificHeatJKgK": 750
       },
       {
@@ -150,7 +150,7 @@
           },
           "section": {
             "areaM2": 0.0215,
-            "secondMomentM4": 8.28198e-07,
+            "secondMomentM4": 8.28198e-7,
             "extremeFibreM": 0.01075,
             "material": "glass",
             "title": {
@@ -198,275 +198,6 @@
       }
     ],
     "representations": {
-      "500": {
-        "status": "unavailable",
-        "denominator": 500,
-        "reason": {
-          "en": "A balustrade section is 0.30 x 1.10 m, i.e. 0.6 x 2.2 mm at 1:500; the 21.5 mm glass is 0.04 mm and the 42 mm handrail 0.08 mm thick, far below every printable stroke; a line would overstate the glass by a factor of three.",
-          "de": "Ein Brüstungsschnitt ist 0,30 x 1,10 m groß, bei 1:500 also 0,6 x 2,2 mm; das 21,5-mm-Glas ist 0,04 mm und der 42-mm-Handlauf 0,08 mm dick, weit unter jeder druckbaren Strichstärke; eine Linie würde das Glas um das Dreifache überzeichnen."
-        },
-        "limitingFeature": {
-          "en": "Laminated glass thickness 21.5 mm",
-          "de": "Verbundglasdicke 21,5 mm"
-        },
-        "limitingSizeM": 0.0215,
-        "alternatives": [
-          {
-            "kind": "scale",
-            "denominator": 200
-          },
-          {
-            "kind": "symbol",
-            "symbol": "balustrade-plan"
-          }
-        ]
-      },
-      "200": {
-        "status": "authored",
-        "denominator": 200,
-        "validRange": {
-          "minDenominator": 150,
-          "maxDenominator": 350
-        },
-        "pens": {
-          "body": 0.18,
-          "detail": 0.1,
-          "texture": null,
-          "glazing": 0.1,
-          "ground": 0.25
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "shoe-block",
-              "bone": "panel",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.35,
-              "region": "clamp-steel",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.15
-                ],
-                [
-                  0.0,
-                  -0.15
-                ],
-                [
-                  0.125,
-                  -0.15
-                ],
-                [
-                  0.125,
-                  0.15
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "glass-line",
-              "bone": "panel",
-              "role": "glazing",
-              "z": 3,
-              "filled": false,
-              "tone": 0.92,
-              "region": "panel-glass",
-              "material": "glass",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0.125,
-                  0.0
-                ],
-                [
-                  1.07,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "handrail-disc",
-              "bone": "panel",
-              "role": "body",
-              "z": 4,
-              "filled": true,
-              "tone": 0.35,
-              "region": "handrail-steel",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "ellipse",
-              "cx": 1.0735,
-              "cy": 0.0,
-              "rx": 0.0265,
-              "ry": 0.0265
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "A glass line standing on a small steel shoe with a round handrail on top; 5.5 mm tall on paper.",
-            "de": "Eine Glaslinie auf einem kleinen Stahlschuh mit rundem Handlauf darauf; 5,5 mm hoch auf dem Papier."
-          },
-          "retained": {
-            "en": "Shoe (1.5 x 0.625 mm), the glass line (4.7 mm) and the handrail disc (0.265 mm).",
-            "de": "Schuh (1,5 x 0,625 mm), die Glaslinie (4,7 mm) und die Handlaufscheibe (0,265 mm)."
-          },
-          "merged": {
-            "en": "The two glass panes with the PVB layer are one glass line; gaskets and bolts are merged into the shoe.",
-            "de": "Die zwei Glasscheiben mit der PVB-Schicht sind eine Glaslinie; Dichtungen und Schrauben sind im Schuh zusammengefasst."
-          },
-          "omitted": {
-            "en": "Laminate layers, gaskets, bolts, the shoe slot and the handrail wall.",
-            "de": "Verbundschichten, Dichtungen, Schrauben, der Schuhschlitz und die Handlaufwand."
-          },
-          "thinElements": {
-            "en": "The 21.5 mm glass is a 0.1 mm pen line (20 mm); the 42.4 mm handrail is a filled disc of 53 mm diameter (0.265 mm, the smallest filled feature that prints with a margin); the shoe is drawn 125 mm tall instead of 100 mm for the same reason.",
-            "de": "Das 21,5-mm-Glas ist eine Linie mit 0,1 mm Feder (20 mm); der 42,4-mm-Handlauf ist eine gefüllte Scheibe von 53 mm Durchmesser (0,265 mm, die kleinste gefüllte Einzelheit, die mit Reserve druckt); der Schuh ist aus demselben Grund 125 statt 100 mm hoch gezeichnet."
-          },
-          "hatching": {
-            "en": "No hatch.",
-            "de": "Keine Schraffur."
-          },
-          "styles": {
-            "en": "Dark shoe and handrail, a thin light glass line.",
-            "de": "Dunkler Schuh und Handlauf, eine dünne helle Glaslinie."
-          },
-          "overlays": {
-            "en": "Shoe, glass line and handrail are separate overlay cells; the loaded glass line shows the load path from the handrail to the shoe.",
-            "de": "Schuh, Glaslinie und Handlauf sind getrennte Überlagerungszellen; die belastete Glaslinie zeigt den Lastpfad vom Handlauf zum Schuh."
-          }
-        }
-      },
-      "100": {
-        "status": "authored",
-        "denominator": 100,
-        "validRange": {
-          "minDenominator": 75,
-          "maxDenominator": 150
-        },
-        "pens": {
-          "body": 0.25,
-          "detail": 0.13,
-          "texture": 0.1,
-          "glazing": 0.1,
-          "ground": 0.35
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "shoe-base",
-              "bone": "panel",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.35,
-              "region": "clamp-steel",
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.15
-                ],
-                [
-                  0.0,
-                  -0.15
-                ],
-                [
-                  0.1,
-                  -0.15
-                ],
-                [
-                  0.1,
-                  0.15
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "glass-sheet",
-              "bone": "panel",
-              "role": "glazing",
-              "z": 3,
-              "filled": false,
-              "tone": 0.92,
-              "region": "panel-glass",
-              "material": "glass",
-              "penMm": 0.2,
-              "kind": "poly",
-              "points": [
-                [
-                  0.1,
-                  0.0
-                ],
-                [
-                  1.08,
-                  0.0
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "handrail-tube",
-              "bone": "panel",
-              "role": "body",
-              "z": 4,
-              "filled": true,
-              "tone": 0.35,
-              "region": "handrail-steel",
-              "material": "steel",
-              "kind": "ellipse",
-              "cx": 1.079,
-              "cy": 0.0,
-              "rx": 0.0212,
-              "ry": 0.0212
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "A light glass strip rising from a dark steel shoe to a round handrail.",
-            "de": "Ein heller Glasstreifen, der aus einem dunklen Stahlschuh zu einem runden Handlauf aufsteigt."
-          },
-          "retained": {
-            "en": "Shoe (3 x 1 mm), glass strip (0.22 x 9.8 mm) and handrail (0.42 mm).",
-            "de": "Schuh (3 x 1 mm), Glasstreifen (0,22 x 9,8 mm) und Handlauf (0,42 mm)."
-          },
-          "merged": {
-            "en": "Laminate layers and gaskets are merged into the glass strip and the shoe.",
-            "de": "Verbundschichten und Dichtungen sind im Glasstreifen und im Schuh zusammengefasst."
-          },
-          "omitted": {
-            "en": "Bolts (14 mm, 0.14 mm), the shoe slot and the PVB layer.",
-            "de": "Schrauben (14 mm, 0,14 mm), der Schuhschlitz und die PVB-Schicht."
-          },
-          "thinElements": {
-            "en": "The glass is a single 0.2 mm stroke (20 mm, real 21.5 mm); a filled 0.215 mm strip would be below the printable feature.",
-            "de": "Das Glas ist ein einzelner 0,2-mm-Strich (20 mm, real 21,5 mm); ein gefüllter 0,215-mm-Streifen läge unter dem druckbaren Merkmal."
-          },
-          "hatching": {
-            "en": "No hatch: the shoe is 1 mm tall, the glass 0.2 mm wide.",
-            "de": "Keine Schraffur: der Schuh ist 1 mm hoch, das Glas 0,2 mm breit."
-          },
-          "styles": {
-            "en": "Outline 0.25 mm; dark steel, light glass.",
-            "de": "Kontur 0,25 mm; dunkler Stahl, helles Glas."
-          },
-          "overlays": {
-            "en": "Shoe, glass and handrail are separate overlay cells.",
-            "de": "Schuh, Glas und Handlauf sind getrennte Überlagerungszellen."
-          }
-        }
-      },
       "50": {
         "status": "authored",
         "denominator": 50,
@@ -509,11 +240,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.15
                 ],
                 [
-                  0.0,
+                  0,
                   -0.15
                 ],
                 [
@@ -676,32 +407,328 @@
               "hatch": "steel",
               "kind": "ellipse",
               "cx": 1.079,
-              "cy": 0.0,
+              "cy": 0,
               "rx": 0.0212,
               "ry": 0.0212
+            }
+          ],
+          "front": [
+            {
+              "id": "shoe-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.1
+            },
+            {
+              "id": "bolt-front-0",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "rect",
+              "x": -0.807,
+              "y": 0.043,
+              "w": 0.014,
+              "h": 0.014,
+              "r": 0.007
+            },
+            {
+              "id": "bolt-front-1",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "rect",
+              "x": -0.407,
+              "y": 0.043,
+              "w": 0.014,
+              "h": 0.014,
+              "r": 0.007
+            },
+            {
+              "id": "bolt-front-2",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "rect",
+              "x": -0.007,
+              "y": 0.043,
+              "w": 0.014,
+              "h": 0.014,
+              "r": 0.007
+            },
+            {
+              "id": "bolt-front-3",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "rect",
+              "x": 0.393,
+              "y": 0.043,
+              "w": 0.014,
+              "h": 0.014,
+              "r": 0.007
+            },
+            {
+              "id": "bolt-front-4",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "rect",
+              "x": 0.793,
+              "y": 0.043,
+              "w": 0.014,
+              "h": 0.014,
+              "r": 0.007
+            },
+            {
+              "id": "glass-front",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0.1,
+              "w": 1.96,
+              "h": 0.98
+            },
+            {
+              "id": "glass-reflex-a",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "region": "panel-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.62,
+                  0.3
+                ],
+                [
+                  -0.34,
+                  0.86
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-reflex-b",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "region": "panel-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.5,
+                  0.3
+                ],
+                [
+                  -0.22,
+                  0.86
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handrail-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1,
+              "y": 1.0578,
+              "w": 2,
+              "h": 0.0424
+            },
+            {
+              "id": "handrail-cap-left",
+              "bone": "panel",
+              "role": "detail",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": -1,
+              "cy": 1.079,
+              "rx": 0.004,
+              "ry": 0.0212
+            },
+            {
+              "id": "handrail-cap-right",
+              "bone": "panel",
+              "role": "detail",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1,
+              "cy": 1.079,
+              "rx": 0.004,
+              "ry": 0.0212
+            }
+          ],
+          "plan": [
+            {
+              "id": "shoe-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -1,
+              "w": 0.3,
+              "h": 2
+            },
+            {
+              "id": "gasket-a-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 0.01075,
+              "y": -1,
+              "w": 0.0165,
+              "h": 2
+            },
+            {
+              "id": "gasket-b-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.0275,
+              "y": -1,
+              "w": 0.0165,
+              "h": 2
+            },
+            {
+              "id": "glass-plan",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.01075,
+              "y": -0.98,
+              "w": 0.0215,
+              "h": 1.96
+            },
+            {
+              "id": "handrail-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.0212,
+              "y": -1,
+              "w": 0.0424,
+              "h": 2
+            },
+            {
+              "id": "handrail-axis-plan",
+              "bone": "panel",
+              "role": "texture",
+              "z": 5,
+              "filled": false,
+              "tone": 0.9,
+              "region": "handrail-steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.99
+                ],
+                [
+                  0,
+                  0.99
+                ]
+              ],
+              "closed": false
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "The section of a clamped glass balustrade: a hatched steel shoe with a slot, two EPDM gaskets around the laminated glass, bolts and a hatched tube handrail.",
-            "de": "Der Schnitt einer eingespannten Glasbrüstung: ein schraffierter Stahlschuh mit Schlitz, zwei EPDM-Dichtungen um das Verbundglas, Schrauben und ein schraffierter Rohrhandlauf."
+            "en": "The section of a clamped glass balustrade: a hatched steel shoe with a slot, two EPDM gaskets around the laminated glass, bolts and a hatched tube handrail. Front view (2.0 m panel): the shoe with five clamp bolt heads, the laminated glass sheet with two reflex strokes entering the shoe into the slot, and the tube handrail with its end caps. Plan view: the shoe from above, its slot with both gaskets and the glass edge, closed by the handrail tube on the centre line.",
+            "de": "Der Schnitt einer eingespannten Glasbrüstung: ein schraffierter Stahlschuh mit Schlitz, zwei EPDM-Dichtungen um das Verbundglas, Schrauben und ein schraffierter Rohrhandlauf. Vorderansicht (2,0 m Feld): der Schuh mit fünf Klemmschraubenköpfen, die Verbundglasscheibe mit zwei Reflexstrichen, die in den Schuhschlitz eintritt, und der Rohrhandlauf mit seinen Endkappen. Draufsicht: der Schuh von oben, sein Schlitz mit beiden Dichtungen und der Glaskante, überdeckt vom Handlaufrohr auf der Mittellinie."
           },
           "retained": {
-            "en": "Shoe (6 x 2 mm) with its 1.1 mm slot, gaskets (0.33 x 1.6 mm), glass (0.43 x 21 mm) running into the slot, two bolts (0.28 mm), handrail (0.85 mm).",
-            "de": "Schuh (6 x 2 mm) mit 1,1 mm Schlitz, Dichtungen (0,33 x 1,6 mm), Glas (0,43 x 21 mm) bis in den Schlitz, zwei Schrauben (0,28 mm), Handlauf (0,85 mm)."
+            "en": "Shoe (6 x 2 mm) with its 1.1 mm slot, gaskets (0.33 x 1.6 mm), glass (0.43 x 21 mm) running into the slot, two bolts (0.28 mm), handrail (0.85 mm). Front: shoe 40 x 2 mm, bolts 0.28 mm, glass 39.2 x 19.6 mm, handrail 40 x 0.85 mm. Plan: shoe 6 x 40 mm, gaskets 0.33 mm, glass 0.43 mm.",
+            "de": "Schuh (6 x 2 mm) mit 1,1 mm Schlitz, Dichtungen (0,33 x 1,6 mm), Glas (0,43 x 21 mm) bis in den Schlitz, zwei Schrauben (0,28 mm), Handlauf (0,85 mm). Vorderansicht: Schuh 40 x 2 mm, Schrauben 0,28 mm, Glas 39,2 x 19,6 mm, Handlauf 40 x 0,85 mm. Draufsicht: Schuh 6 x 40 mm, Dichtungen 0,33 mm, Glas 0,43 mm."
           },
           "merged": {
             "en": "The two 10 mm glass panes and the PVB are one glass body.",
             "de": "Die zwei 10-mm-Glasscheiben und das PVB sind ein Glaskörper."
           },
           "omitted": {
-            "en": "The 2 mm tube wall (0.04 mm), the setting blocks and the base anchors.",
-            "de": "Die 2-mm-Rohrwand (0,04 mm), die Klotzungen und die Fußanker."
+            "en": "The 2 mm tube wall (0.04 mm), the setting blocks and the base anchors. Front: the glass edge inside the slot, the handrail wall. Plan: the shoe bolts (they sit in the side of the shoe) and the PVB layer.",
+            "de": "Die 2-mm-Rohrwand (0,04 mm), die Klotzungen und die Fußanker. Vorderansicht: die Glaskante im Schlitz, die Handlaufwand. Draufsicht: die Schuhschrauben (sie sitzen in der Seite des Schuhs) und die PVB-Schicht."
           },
           "thinElements": {
-            "en": "The 1.5 mm PVB layer is omitted: inside a 0.43 mm glass body a line would leave white channels of 0.115 mm, below the printable gap; the slot is widened to 55 mm so the gaskets are 0.33 mm wide filled strips; the handrail wall is not resolved and the tube is drawn solid with hatch.",
-            "de": "Die 1,5-mm-PVB-Schicht entfällt: in einem 0,43 mm breiten Glaskörper ließe eine Linie weiße Kanäle von 0,115 mm, unter der druckbaren Lücke; der Schlitz ist auf 55 mm erweitert, damit die Dichtungen 0,33 mm breite gefüllte Streifen sind; die Handlaufwand wird nicht aufgelöst, das Rohr ist voll mit Schraffur gezeichnet."
+            "en": "The 1.5 mm PVB layer is omitted: inside a 0.43 mm glass body a line would leave white channels of 0.115 mm, below the printable gap; the slot is widened to 55 mm so the gaskets are 0.33 mm wide filled strips; the handrail wall is not resolved and the tube is drawn solid with hatch. The 21.5 mm glass edge in plan is a 0.43 mm filled strip, the gaskets 0.33 mm; the handrail tube (0.85 mm) covers their inner parts, as seen from above.",
+            "de": "Die 1,5-mm-PVB-Schicht entfällt: in einem 0,43 mm breiten Glaskörper ließe eine Linie weiße Kanäle von 0,115 mm, unter der druckbaren Lücke; der Schlitz ist auf 55 mm erweitert, damit die Dichtungen 0,33 mm breite gefüllte Streifen sind; die Handlaufwand wird nicht aufgelöst, das Rohr ist voll mit Schraffur gezeichnet. Die 21,5-mm-Glaskante in der Draufsicht ist ein gefüllter Streifen von 0,43 mm, die Dichtungen 0,33 mm; das Handlaufrohr (0,85 mm) überdeckt ihre inneren Teile, wie von oben gesehen."
           },
           "hatching": {
             "en": "Cut steel is hatched at 45 degrees, 0.6 mm (DIN ISO 128-50); glass is not hatched, which is the convention for glass.",
@@ -716,18 +743,496 @@
             "de": "Schuhgruppe, Glas und Handlauf sind getrennte Überlagerungszellen; das PVB gehört zur Glaszelle."
           }
         }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "shoe-base",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.15
+                ],
+                [
+                  0,
+                  -0.15
+                ],
+                [
+                  0.1,
+                  -0.15
+                ],
+                [
+                  0.1,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-sheet",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": false,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0
+                ],
+                [
+                  1.08,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handrail-tube",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.079,
+              "cy": 0,
+              "rx": 0.0212,
+              "ry": 0.0212
+            }
+          ],
+          "front": [
+            {
+              "id": "shoe-base-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.1
+            },
+            {
+              "id": "glass-sheet-front",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.2,
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0.1,
+              "w": 1.96,
+              "h": 0.98
+            },
+            {
+              "id": "glass-reflex-a",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "region": "panel-glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.62,
+                  0.3
+                ],
+                [
+                  -0.34,
+                  0.86
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-reflex-b",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.2,
+              "region": "panel-glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.5,
+                  0.3
+                ],
+                [
+                  -0.22,
+                  0.86
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handrail-tube-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -1,
+              "y": 1.0578,
+              "w": 2,
+              "h": 0.0424
+            }
+          ],
+          "plan": [
+            {
+              "id": "shoe-base-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -1,
+              "w": 0.3,
+              "h": 2
+            },
+            {
+              "id": "handrail-tube-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.0212,
+              "y": -1,
+              "w": 0.0424,
+              "h": 2
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A light glass strip rising from a dark steel shoe to a round handrail. Front view: dark shoe base, a light glass sheet with two reflex strokes and the round handrail as a strip. Plan view: the shoe as a 3 mm wide bar with the handrail strip on its centre line.",
+            "de": "Ein heller Glasstreifen, der aus einem dunklen Stahlschuh zu einem runden Handlauf aufsteigt. Vorderansicht: dunkler Schuhfuß, eine helle Glasscheibe mit zwei Reflexstrichen und der runde Handlauf als Streifen. Draufsicht: der Schuh als 3 mm breiter Balken mit dem Handlaufstreifen auf der Mittellinie."
+          },
+          "retained": {
+            "en": "Shoe (3 x 1 mm), glass strip (0.22 x 9.8 mm) and handrail (0.42 mm). Front: shoe 20 x 1 mm, glass 19.6 x 9.8 mm, handrail 20 x 0.42 mm. Plan: shoe 3 x 20 mm, handrail 0.42 x 20 mm.",
+            "de": "Schuh (3 x 1 mm), Glasstreifen (0,22 x 9,8 mm) und Handlauf (0,42 mm). Vorderansicht: Schuh 20 x 1 mm, Glas 19,6 x 9,8 mm, Handlauf 20 x 0,42 mm. Draufsicht: Schuh 3 x 20 mm, Handlauf 0,42 x 20 mm."
+          },
+          "merged": {
+            "en": "Laminate layers and gaskets are merged into the glass strip and the shoe.",
+            "de": "Verbundschichten und Dichtungen sind im Glasstreifen und im Schuh zusammengefasst."
+          },
+          "omitted": {
+            "en": "Bolts (14 mm, 0.14 mm), the shoe slot and the PVB layer. Plan: the glass edge (21.5 mm) and the gaskets are hidden below the 42 mm handrail. Front: bolts and the glass edge inside the shoe slot.",
+            "de": "Schrauben (14 mm, 0,14 mm), der Schuhschlitz und die PVB-Schicht. Draufsicht: Glaskante (21,5 mm) und Dichtungen liegen unter dem 42-mm-Handlauf. Vorderansicht: Schrauben und Glaskante im Schuhschlitz."
+          },
+          "thinElements": {
+            "en": "The glass is a single 0.2 mm stroke (20 mm, real 21.5 mm); a filled 0.215 mm strip would be below the printable feature.",
+            "de": "Das Glas ist ein einzelner 0,2-mm-Strich (20 mm, real 21,5 mm); ein gefüllter 0,215-mm-Streifen läge unter dem druckbaren Merkmal."
+          },
+          "hatching": {
+            "en": "No hatch: the shoe is 1 mm tall, the glass 0.2 mm wide.",
+            "de": "Keine Schraffur: der Schuh ist 1 mm hoch, das Glas 0,2 mm breit."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm; dark steel, light glass.",
+            "de": "Kontur 0,25 mm; dunkler Stahl, helles Glas."
+          },
+          "overlays": {
+            "en": "Shoe, glass and handrail are separate overlay cells.",
+            "de": "Schuh, Glas und Handlauf sind getrennte Überlagerungszellen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "shoe-block",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.15
+                ],
+                [
+                  0,
+                  -0.15
+                ],
+                [
+                  0.125,
+                  -0.15
+                ],
+                [
+                  0.125,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-line",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": false,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.125,
+                  0
+                ],
+                [
+                  1.07,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handrail-disc",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.0735,
+              "cy": 0,
+              "rx": 0.0265,
+              "ry": 0.0265
+            }
+          ],
+          "front": [
+            {
+              "id": "shoe-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.125
+            },
+            {
+              "id": "glass-front",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.125,
+              "w": 2,
+              "h": 0.945
+            },
+            {
+              "id": "handrail-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -1,
+              "y": 1.047,
+              "w": 2,
+              "h": 0.053
+            }
+          ],
+          "plan": [
+            {
+              "id": "shoe-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -1,
+              "w": 0.3,
+              "h": 2
+            },
+            {
+              "id": "handrail-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.0265,
+              "y": -1,
+              "w": 0.053,
+              "h": 2
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A glass line standing on a small steel shoe with a round handrail on top; 5.5 mm tall on paper. Front view: the 2.0 m long panel as a glass sheet between a steel shoe strip and the handrail strip. Plan view: the 0.30 m wide shoe from above with the handrail strip on its centre line.",
+            "de": "Eine Glaslinie auf einem kleinen Stahlschuh mit rundem Handlauf darauf; 5,5 mm hoch auf dem Papier. Vorderansicht: das 2,0 m lange Feld als Glasscheibe zwischen Schuhstreifen aus Stahl und Handlaufstreifen. Draufsicht: der 0,30 m breite Schuh von oben mit dem Handlaufstreifen auf der Mittellinie."
+          },
+          "retained": {
+            "en": "Shoe (1.5 x 0.625 mm), the glass line (4.7 mm) and the handrail disc (0.265 mm). Front: shoe strip (10 x 0.625 mm), glass sheet (10 x 4.7 mm) and handrail strip (10 x 0.265 mm). Plan: shoe (1.5 x 10 mm) and handrail (0.265 x 10 mm).",
+            "de": "Schuh (1,5 x 0,625 mm), die Glaslinie (4,7 mm) und die Handlaufscheibe (0,265 mm). Vorderansicht: Schuhstreifen (10 x 0,625 mm), Glasscheibe (10 x 4,7 mm) und Handlaufstreifen (10 x 0,265 mm). Draufsicht: Schuh (1,5 x 10 mm) und Handlauf (0,265 x 10 mm)."
+          },
+          "merged": {
+            "en": "The two glass panes with the PVB layer are one glass line; gaskets and bolts are merged into the shoe.",
+            "de": "Die zwei Glasscheiben mit der PVB-Schicht sind eine Glaslinie; Dichtungen und Schrauben sind im Schuh zusammengefasst."
+          },
+          "omitted": {
+            "en": "Laminate layers, gaskets, bolts, the shoe slot and the handrail wall. In plan the glass edge and the gaskets lie below the handrail (42 mm wide) and are not drawn; the bolts are not visible from either side.",
+            "de": "Verbundschichten, Dichtungen, Schrauben, der Schuhschlitz und die Handlaufwand. In der Draufsicht liegen Glaskante und Dichtungen unter dem Handlauf (42 mm breit) und werden nicht gezeichnet; die Schrauben sind von keiner Seite sichtbar."
+          },
+          "thinElements": {
+            "en": "The 21.5 mm glass is a 0.1 mm pen line (20 mm); the 42.4 mm handrail is a filled disc of 53 mm diameter (0.265 mm, the smallest filled feature that prints with a margin); the shoe is drawn 125 mm tall instead of 100 mm for the same reason.",
+            "de": "Das 21,5-mm-Glas ist eine Linie mit 0,1 mm Feder (20 mm); der 42,4-mm-Handlauf ist eine gefüllte Scheibe von 53 mm Durchmesser (0,265 mm, die kleinste gefüllte Einzelheit, die mit Reserve druckt); der Schuh ist aus demselben Grund 125 statt 100 mm hoch gezeichnet."
+          },
+          "hatching": {
+            "en": "No hatch.",
+            "de": "Keine Schraffur."
+          },
+          "styles": {
+            "en": "Dark shoe and handrail, a thin light glass line.",
+            "de": "Dunkler Schuh und Handlauf, eine dünne helle Glaslinie."
+          },
+          "overlays": {
+            "en": "Shoe, glass line and handrail are separate overlay cells; the loaded glass line shows the load path from the handrail to the shoe.",
+            "de": "Schuh, Glaslinie und Handlauf sind getrennte Überlagerungszellen; die belastete Glaslinie zeigt den Lastpfad vom Handlauf zum Schuh."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "A balustrade section is 0.30 x 1.10 m, i.e. 0.6 x 2.2 mm at 1:500; the 21.5 mm glass is 0.04 mm and the 42 mm handrail 0.08 mm thick, far below every printable stroke; a line would overstate the glass by a factor of three.",
+          "de": "Ein Brüstungsschnitt ist 0,30 x 1,10 m groß, bei 1:500 also 0,6 x 2,2 mm; das 21,5-mm-Glas ist 0,04 mm und der 42-mm-Handlauf 0,08 mm dick, weit unter jeder druckbaren Strichstärke; eine Linie würde das Glas um das Dreifache überzeichnen."
+        },
+        "limitingFeature": {
+          "en": "Laminated glass thickness 21.5 mm",
+          "de": "Verbundglasdicke 21,5 mm"
+        },
+        "limitingSizeM": 0.0215,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "symbol",
+            "symbol": "glass-balustrade-symbol"
+          }
+        ]
       }
     },
     "symbols": [
       {
-        "id": "balustrade-plan",
+        "id": "glass-balustrade-symbol",
         "title": {
-          "en": "Glass balustrade in plan",
-          "de": "Glasbrüstung im Grundriss"
+          "en": "Glass balustrade, conventional sign",
+          "de": "Glasbrüstung, Zeichen"
         },
         "description": {
-          "en": "The plan sign of a glass balustrade panel seen from above: the tube handrail as a long narrow bar over the glass line, the floor shoe as a dashed-style outline behind it.",
-          "de": "Das Grundrisszeichen eines Glasbrüstungsfeldes von oben: der Rohrhandlauf als langer schmaler Balken über der Glaslinie, der Bodenschuh als Umriss dahinter."
+          "en": "The conventional sign of a glass balustrade panel in all three views at real size: in plan the tube handrail as a narrow bar over the glass line with the floor shoe as an outline; in the front view the panel face with shoe, glass and handrail bar; in the side view the section across the panel with the shoe block, the glass line and the handrail disc.",
+          "de": "Das Zeichen eines Glasbrüstungsfeldes in allen drei Ansichten in wahrer Größe: im Grundriss der Rohrhandlauf als schmaler Balken über der Glaslinie mit dem Bodenschuh als Umriss; in der Vorderansicht die Feldfläche mit Schuh, Glas und Handlaufbalken; in der Seitenansicht der Schnitt quer zum Feld mit Schuhblock, Glaslinie und Handlaufscheibe."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -746,65 +1251,110 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
-          "plan": [
+          "elevation": [
             {
-              "id": "handrail",
-              "bone": "panel",
+              "id": "shoe-block",
               "role": "body",
-              "z": 1,
-              "filled": true,
+              "z": 2,
+              "filled": false,
               "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
-                  0,
-                  -0.0212
+                  -0.15,
+                  0
                 ],
                 [
-                  2.0,
-                  -0.0212
+                  0.15,
+                  0
                 ],
                 [
-                  2.0,
-                  0.0212
+                  0.15,
+                  0.125
                 ],
                 [
-                  0,
-                  0.0212
+                  -0.15,
+                  0.125
                 ]
               ],
               "closed": true,
-              "region": "handrail-steel"
+              "bone": "panel"
             },
             {
-              "id": "shoe-outline",
-              "bone": "panel",
-              "role": "detail",
-              "z": 1,
+              "id": "glass-line",
+              "role": "glazing",
+              "z": 3,
               "filled": false,
-              "tone": 0.5,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
               "kind": "poly",
               "points": [
                 [
                   0,
-                  -0.15
-                ],
-                [
-                  2.0,
-                  -0.15
-                ],
-                [
-                  2.0,
-                  0.15
+                  0.125
                 ],
                 [
                   0,
-                  0.15
+                  1.07
                 ]
               ],
-              "closed": true,
-              "region": "clamp-steel"
+              "closed": false,
+              "bone": "panel"
+            },
+            {
+              "id": "handrail-disc",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 1.0735,
+              "rx": 0.0265,
+              "ry": 0.0265,
+              "bone": "panel"
+            }
+          ],
+          "plan": [
+            {
+              "id": "shoe-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -1,
+              "w": 0.3,
+              "h": 2
+            },
+            {
+              "id": "handrail-plan",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.0265,
+              "y": -1,
+              "w": 0.053,
+              "h": 2
             },
             {
               "id": "glass-line",
@@ -812,26 +1362,76 @@
               "role": "glazing",
               "z": 1,
               "filled": false,
-              "tone": 0.9,
+              "tone": 0.5,
               "kind": "poly",
               "points": [
                 [
                   0,
-                  0
+                  -1
                 ],
                 [
-                  2.0,
-                  0
+                  0,
+                  1
                 ]
               ],
               "closed": false,
               "region": "panel-glass"
             }
+          ],
+          "front": [
+            {
+              "id": "shoe-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.125
+            },
+            {
+              "id": "glass-front",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": false,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.125,
+              "w": 2,
+              "h": 0.945
+            },
+            {
+              "id": "handrail-front",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -1,
+              "y": 1.047,
+              "w": 2,
+              "h": 0.053
+            }
           ]
         },
         "dimensionalNote": {
-          "en": "Real size: panel length 2.00 m; handrail 42.4 mm wide, shoe 0.30 m deep. At 1:500 the sign is 4 mm long and the handrail is drawn by its pen.",
-          "de": "Echte Größe: Feldlänge 2,00 m; Handlauf 42,4 mm breit, Schuh 0,30 m tief. Bei 1:500 ist das Zeichen 4 mm lang und der Handlauf entsteht durch die Federbreite."
+          "en": "Real size in every view: panel length 2.00 m, height 1.10 m, shoe 0.30 m deep; the handrail tube is 53 mm. At 1:500 the sign is 4 mm long and the handrail is drawn by its pen.",
+          "de": "Echte Größe in jeder Ansicht: Feldlänge 2,00 m, Höhe 1,10 m, Schuh 0,30 m tief; das Handlaufrohr misst 53 mm. Bei 1:500 ist das Zeichen 4 mm lang und der Handlauf entsteht durch die Federbreite."
         }
       }
     ],
@@ -853,7 +1453,7 @@
           "regions": {
             "panel-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "clamp-steel": {
               "exposedFraction": 1,
@@ -861,7 +1461,7 @@
             },
             "handrail-steel": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -885,7 +1485,7 @@
           "regions": {
             "panel-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "clamp-steel": {
               "exposedFraction": 1,
@@ -893,7 +1493,7 @@
             },
             "handrail-steel": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -931,7 +1531,7 @@
           "regions": {
             "panel-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "clamp-steel": {
               "exposedFraction": 1,
@@ -939,7 +1539,7 @@
             },
             "handrail-steel": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -976,7 +1576,7 @@
           "regions": {
             "panel-glass": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "clamp-steel": {
               "exposedFraction": 1,
@@ -984,7 +1584,7 @@
             },
             "handrail-steel": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1260,9 +1860,6 @@
     "presentation": {
       "defaultPose": "handrail-line-load",
       "defaultClip": "handrail-push",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

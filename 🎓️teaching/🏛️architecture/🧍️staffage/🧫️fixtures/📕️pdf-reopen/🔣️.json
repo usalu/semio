@@ -22,5 +22,5 @@
     ] }
   ],
   "legends": [],
-  "metadata": { "asset": "walking-commuter", "title": { "en": "Walking commuter", "de": "Gehender Pendler" }, "query": { "kind": "pose", "pose": "walking" }, "timeS": 1.25, "view": "dark-line", "viewpoint": "side", "scale": { "denominator": 100 }, "paperUnits": "mm", "modelUnits": "m", "mmPerMetre": 10, "origin": { "xMm": 0, "yMm": 33 } }
+  "metadata": { "asset": "walking-commuter", "title": { "en": "Walking commuter", "de": "Gehender Pendler" }, "query": { "kind": "pose", "pose": "walking" }, "timeS": 1.25, "view": "dark-line", "viewpoint": "elevation", "fidelity": "physical", "scale": { "denominator": 100 }, "paperUnits": "mm", "modelUnits": "m", "mmPerMetre": 10, "origin": { "xMm": 0, "yMm": 33 } }
 }

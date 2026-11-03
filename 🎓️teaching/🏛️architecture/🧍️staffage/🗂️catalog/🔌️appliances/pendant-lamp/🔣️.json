@@ -1,0 +1,2942 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "pendant-lamp",
+    "category": "appliances",
+    "title": {
+      "en": "Pendant Lamp with Incandescent Bulb",
+      "de": "Pendelleuchte mit Glühlampe"
+    },
+    "summary": {
+      "en": "A 0.8 m pendant luminaire with an enamelled dome shade 0.266 m wide and a 60 W incandescent bulb hanging below the rim: 95 % (57 W) leave as heat in its surfaces and the visible 3 W warm the room where the walls absorb them, so all 60 W end as heat in the room; the glass and the shade are the warm surfaces.",
+      "de": "Eine 0,8 m lange Pendelleuchte mit emailliertem Kuppelschirm von 0,266 m Breite und einer 60-W-Glühlampe, die unter dem Rand hängt: 95 % (57 W) verlassen die Flächen als Wärme und die sichtbaren 3 W erwärmen den Raum dort, wo die Wände sie absorbieren, sodass alle 60 W als Wärme im Raum enden; Glas und Schirm sind die warmen Flächen."
+    },
+    "tags": [
+      "pendant-lamp",
+      "luminaire",
+      "incandescent",
+      "internal-gain",
+      "electrical",
+      "heat-source"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A3)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-60064",
+          "citation": "IEC 60064: Tungsten filament lamps for domestic and similar general lighting purposes - Performance requirements (bulb envelope A60 with 60 mm diameter, E27 cap, rated power and luminous efficacy)."
+        },
+        {
+          "id": "iec-60061-1",
+          "citation": "IEC 60061-1: Lamp caps and holders together with gauges for the control of interchangeability and safety - Part 1: Lamp caps (E27 Edison screw cap, 27 mm)."
+        },
+        {
+          "id": "reg-ec-244-2009",
+          "citation": "Commission Regulation (EC) No 244/2009 of 18 March 2009 implementing Directive 2005/32/EC with regard to ecodesign requirements for non-directional household lamps (phase-out of incandescent lamps; context of the 60 W class)."
+        },
+        {
+          "id": "vdi-2078-2015",
+          "citation": "VDI 2078:2015 Calculation of thermal loads and room temperatures (internal heat sources of office equipment and lighting)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Elevation of a pendant luminaire with a ceiling rose, a 0.52 m textile cord, a brass collar, a domed enamelled shade (0.266 m wide, 0.133 m high) and an A60 incandescent bulb with an E27 cap (0.060 m diameter, 0.105 m long, IEC 60064 and IEC 60061-1) hanging out of the open rim. The origin is the lowest point of the bulb; the rose lies 0.8 m above it, so a call site places the origin 0.8 m under the ceiling. Dimensions and mass 0.62 kg are rounded from this product class (authored estimate). Electrical power at level 1 is the rated 60 W, which ends entirely as heat in the room: an incandescent lamp turns about 95 % of its power into infrared radiation and heat and the visible light is absorbed by the room surfaces. The asset releases it in the surfaces of the lamp: 34 W at the glass (about 130 to 160 degrees Celsius), 17 W at the shade that the radiation and the rising hot air warm, 6 W at the cap and the collar (0.005 m2, an E27 cap of 27 mm diameter with its collar, about 100 degrees Celsius); together 57 W, 95 % of the rating, and the remaining 3 W leave as visible light that the room surfaces absorb; the split is an authored estimate.",
+        "de": "Ansicht einer Pendelleuchte mit Deckenrosette, 0,52 m langem Textilkabel, Messinghülse, gewölbtem emailliertem Schirm (0,266 m breit, 0,133 m hoch) und einer A60-Glühlampe mit E27-Sockel (0,060 m Durchmesser, 0,105 m Länge, IEC 60064 und IEC 60061-1), die aus dem offenen Rand herabhängt. Der Ursprung ist der tiefste Punkt der Lampe; die Rosette liegt 0,8 m darüber, sodass ein Aufrufer den Ursprung 0,8 m unter der Decke setzt. Maße und Masse von 0,62 kg sind aus dieser Produktklasse gerundet (Schätzwert). Die elektrische Leistung auf Stufe 1 ist die Nennleistung von 60 W, die vollständig als Wärme im Raum endet: eine Glühlampe wandelt etwa 95 % ihrer Leistung in Infrarotstrahlung und Wärme um, und das sichtbare Licht wird von den Raumflächen absorbiert. Das Asset gibt sie in den Flächen der Leuchte ab: 34 W am Glas (etwa 130 bis 160 Grad Celsius), 17 W am Schirm, den Strahlung und aufsteigende Heißluft erwärmen, 6 W an Sockel und Hülse (0,005 m2, ein E27-Sockel von 27 mm Durchmesser mit Hülse, etwa 100 Grad Celsius); zusammen 57 W, 95 % der Nennleistung, und die übrigen 3 W verlassen die Leuchte als sichtbares Licht, das die Raumflächen absorbieren; die Aufteilung ist ein Schätzwert."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.8,
+      "widthM": 0.266,
+      "depthM": 0.266,
+      "massKg": 0.62
+    },
+    "materials": [
+      {
+        "id": "bulb-glass",
+        "title": {
+          "en": "Clear soda-lime glass",
+          "de": "Klares Kalk-Natron-Glas"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1,
+        "specificHeatJKgK": 840,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "brass-lacquered",
+        "title": {
+          "en": "Lacquered brass",
+          "de": "Lackiertes Messing"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 8500,
+        "conductivityWmK": 110,
+        "specificHeatJKgK": 380,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "enamel-white",
+        "title": {
+          "en": "White enamel on steel",
+          "de": "Weißes Email auf Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "textile-cord",
+        "title": {
+          "en": "Textile-sheathed PVC cord",
+          "de": "Textilummanteltes PVC-Kabel"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 1300,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1300,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "rose-polymer",
+        "title": {
+          "en": "White thermoset rose",
+          "de": "Weiße Duroplastrosette"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1400,
+        "conductivityWmK": 0.3,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "rose",
+      "bones": [
+        {
+          "id": "rose",
+          "parent": null,
+          "title": {
+            "en": "Ceiling rose",
+            "de": "Deckenrosette"
+          },
+          "x": 0,
+          "y": 0.8,
+          "angleDeg": 0,
+          "lengthM": 0.024,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.06,
+            "comX": 0,
+            "comY": -0.012,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "cord",
+          "parent": "rose",
+          "title": {
+            "en": "Cord",
+            "de": "Kabel"
+          },
+          "x": 0,
+          "y": -0.024,
+          "angleDeg": 0,
+          "lengthM": 0.521,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.07,
+            "comX": 0,
+            "comY": -0.26,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "holder",
+          "parent": "cord",
+          "title": {
+            "en": "Brass collar",
+            "de": "Messinghülse"
+          },
+          "x": 0,
+          "y": -0.521,
+          "angleDeg": 0,
+          "lengthM": 0.03,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.07,
+            "comX": 0,
+            "comY": -0.015,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "shade",
+          "parent": "holder",
+          "title": {
+            "en": "Enamelled shade",
+            "de": "Emaillierter Schirm"
+          },
+          "x": 0,
+          "y": -0.03,
+          "angleDeg": 0,
+          "lengthM": 0.1385,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.39,
+            "comX": 0,
+            "comY": -0.06,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "bulb",
+          "parent": "shade",
+          "title": {
+            "en": "Incandescent bulb with cap",
+            "de": "Glühlampe mit Sockel"
+          },
+          "x": 0,
+          "y": -0.225,
+          "angleDeg": 0,
+          "lengthM": 0.105,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.03,
+            "comX": 0,
+            "comY": 0.05,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "ceiling-hook",
+        "bone": "rose",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Ceiling hook behind the rose",
+          "de": "Deckenhaken hinter der Rosette"
+        },
+        "support": "pin",
+        "normalDeg": 90,
+        "footprintLengthM": 0.02,
+        "footprintWidthM": 0.02
+      },
+      {
+        "id": "shade-top",
+        "bone": "shade",
+        "x": 0,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Top of the shade",
+          "de": "Scheitel des Schirms"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.05 -0.024 L 0.05 -0.024 L 0.05 -0.016 C 0.05 -0.006 0.042 0 0.032 0 L -0.032 0 C -0.042 0 -0.05 -0.006 -0.05 -0.016 Z",
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "cord",
+              "bone": "cord",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.0033,
+              "y": -0.521,
+              "w": 0.0066,
+              "h": 0.521,
+              "region": "cord",
+              "material": "textile-cord"
+            },
+            {
+              "id": "collar",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.01 0 L 0.01 0 L 0.0105 -0.006 L 0.0155 -0.0075 L 0.0155 -0.03 L -0.0155 -0.03 L -0.0155 -0.0075 L -0.0105 -0.006 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.017 0 C -0.06 0 -0.11 -0.03 -0.13 -0.133 L -0.133 -0.133 L -0.133 -0.1385 L 0.133 -0.1385 L 0.133 -0.133 L 0.13 -0.133 C 0.11 -0.03 0.06 0 0.017 0 Z",
+              "region": "shade",
+              "material": "enamel-white"
+            },
+            {
+              "id": "shade-light",
+              "bone": "shade",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  -0.05
+                ],
+                [
+                  -0.108,
+                  -0.09
+                ],
+                [
+                  -0.114,
+                  -0.118
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bulb-cap",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.0135 0.078 L 0.0135 0.078 L 0.0135 0.105 L -0.0135 0.105 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "cap-thread",
+              "bone": "bulb",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0135,
+                  0.0865
+                ],
+                [
+                  0.0135,
+                  0.0865
+                ],
+                [
+                  0.0135,
+                  0.0955
+                ],
+                [
+                  -0.0135,
+                  0.0955
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bulb-glass",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 C 0.014 0 0.03 0.014 0.03 0.032 C 0.03 0.046 0.023 0.054 0.0185 0.063 C 0.016 0.069 0.0143 0.073 0.0138 0.078 L -0.0138 0.078 C -0.0143 0.073 -0.016 0.069 -0.0185 0.063 C -0.023 0.054 -0.03 0.046 -0.03 0.032 C -0.03 0.014 -0.014 0 0 0 Z",
+              "region": "bulb-glass",
+              "material": "bulb-glass"
+            },
+            {
+              "id": "filament",
+              "bone": "bulb",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0055,
+                  0.074
+                ],
+                [
+                  -0.0055,
+                  0.06
+                ],
+                [
+                  -0.004,
+                  0.044
+                ],
+                [
+                  -0.002,
+                  0.037
+                ],
+                [
+                  0,
+                  0.044
+                ],
+                [
+                  0.002,
+                  0.037
+                ],
+                [
+                  0.004,
+                  0.044
+                ],
+                [
+                  0.0055,
+                  0.06
+                ],
+                [
+                  0.0055,
+                  0.074
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.133,
+                  0.0
+                ],
+                [
+                  0.13186,
+                  0.01736
+                ],
+                [
+                  0.12847,
+                  0.03442
+                ],
+                [
+                  0.12288,
+                  0.0509
+                ],
+                [
+                  0.11518,
+                  0.0665
+                ],
+                [
+                  0.10552,
+                  0.08097
+                ],
+                [
+                  0.09405,
+                  0.09405
+                ],
+                [
+                  0.08097,
+                  0.10552
+                ],
+                [
+                  0.0665,
+                  0.11518
+                ],
+                [
+                  0.0509,
+                  0.12288
+                ],
+                [
+                  0.03442,
+                  0.12847
+                ],
+                [
+                  0.01736,
+                  0.13186
+                ],
+                [
+                  0.0,
+                  0.133
+                ],
+                [
+                  -0.01736,
+                  0.13186
+                ],
+                [
+                  -0.03442,
+                  0.12847
+                ],
+                [
+                  -0.0509,
+                  0.12288
+                ],
+                [
+                  -0.0665,
+                  0.11518
+                ],
+                [
+                  -0.08097,
+                  0.10552
+                ],
+                [
+                  -0.09405,
+                  0.09405
+                ],
+                [
+                  -0.10552,
+                  0.08097
+                ],
+                [
+                  -0.11518,
+                  0.0665
+                ],
+                [
+                  -0.12288,
+                  0.0509
+                ],
+                [
+                  -0.12847,
+                  0.03442
+                ],
+                [
+                  -0.13186,
+                  0.01736
+                ],
+                [
+                  -0.133,
+                  0.0
+                ],
+                [
+                  -0.13186,
+                  -0.01736
+                ],
+                [
+                  -0.12847,
+                  -0.03442
+                ],
+                [
+                  -0.12288,
+                  -0.0509
+                ],
+                [
+                  -0.11518,
+                  -0.0665
+                ],
+                [
+                  -0.10552,
+                  -0.08097
+                ],
+                [
+                  -0.09405,
+                  -0.09405
+                ],
+                [
+                  -0.08097,
+                  -0.10552
+                ],
+                [
+                  -0.0665,
+                  -0.11518
+                ],
+                [
+                  -0.0509,
+                  -0.12288
+                ],
+                [
+                  -0.03442,
+                  -0.12847
+                ],
+                [
+                  -0.01736,
+                  -0.13186
+                ],
+                [
+                  0.0,
+                  -0.133
+                ],
+                [
+                  0.01736,
+                  -0.13186
+                ],
+                [
+                  0.03442,
+                  -0.12847
+                ],
+                [
+                  0.0509,
+                  -0.12288
+                ],
+                [
+                  0.0665,
+                  -0.11518
+                ],
+                [
+                  0.08097,
+                  -0.10552
+                ],
+                [
+                  0.09405,
+                  -0.09405
+                ],
+                [
+                  0.10552,
+                  -0.08097
+                ],
+                [
+                  0.11518,
+                  -0.0665
+                ],
+                [
+                  0.12288,
+                  -0.0509
+                ],
+                [
+                  0.12847,
+                  -0.03442
+                ],
+                [
+                  0.13186,
+                  -0.01736
+                ]
+              ],
+              "closed": true,
+              "region": "shade",
+              "material": "enamel-white"
+            },
+            {
+              "id": "plan-shade-rim",
+              "bone": "shade",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1235,
+                  0.0
+                ],
+                [
+                  0.12224,
+                  0.01758
+                ],
+                [
+                  0.1185,
+                  0.03479
+                ],
+                [
+                  0.11234,
+                  0.0513
+                ],
+                [
+                  0.10389,
+                  0.06677
+                ],
+                [
+                  0.09334,
+                  0.08088
+                ],
+                [
+                  0.08088,
+                  0.09334
+                ],
+                [
+                  0.06677,
+                  0.10389
+                ],
+                [
+                  0.0513,
+                  0.11234
+                ],
+                [
+                  0.03479,
+                  0.1185
+                ],
+                [
+                  0.01758,
+                  0.12224
+                ],
+                [
+                  0.0,
+                  0.1235
+                ],
+                [
+                  -0.01758,
+                  0.12224
+                ],
+                [
+                  -0.03479,
+                  0.1185
+                ],
+                [
+                  -0.0513,
+                  0.11234
+                ],
+                [
+                  -0.06677,
+                  0.10389
+                ],
+                [
+                  -0.08088,
+                  0.09334
+                ],
+                [
+                  -0.09334,
+                  0.08088
+                ],
+                [
+                  -0.10389,
+                  0.06677
+                ],
+                [
+                  -0.11234,
+                  0.0513
+                ],
+                [
+                  -0.1185,
+                  0.03479
+                ],
+                [
+                  -0.12224,
+                  0.01758
+                ],
+                [
+                  -0.1235,
+                  0.0
+                ],
+                [
+                  -0.12224,
+                  -0.01758
+                ],
+                [
+                  -0.1185,
+                  -0.03479
+                ],
+                [
+                  -0.11234,
+                  -0.0513
+                ],
+                [
+                  -0.10389,
+                  -0.06677
+                ],
+                [
+                  -0.09334,
+                  -0.08088
+                ],
+                [
+                  -0.08088,
+                  -0.09334
+                ],
+                [
+                  -0.06677,
+                  -0.10389
+                ],
+                [
+                  -0.0513,
+                  -0.11234
+                ],
+                [
+                  -0.03479,
+                  -0.1185
+                ],
+                [
+                  -0.01758,
+                  -0.12224
+                ],
+                [
+                  0.0,
+                  -0.1235
+                ],
+                [
+                  0.01758,
+                  -0.12224
+                ],
+                [
+                  0.03479,
+                  -0.1185
+                ],
+                [
+                  0.0513,
+                  -0.11234
+                ],
+                [
+                  0.06677,
+                  -0.10389
+                ],
+                [
+                  0.08088,
+                  -0.09334
+                ],
+                [
+                  0.09334,
+                  -0.08088
+                ],
+                [
+                  0.10389,
+                  -0.06677
+                ],
+                [
+                  0.11234,
+                  -0.0513
+                ],
+                [
+                  0.1185,
+                  -0.03479
+                ],
+                [
+                  0.12224,
+                  -0.01758
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plan-rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.0
+                ],
+                [
+                  0.04904,
+                  0.00975
+                ],
+                [
+                  0.04619,
+                  0.01913
+                ],
+                [
+                  0.04157,
+                  0.02778
+                ],
+                [
+                  0.03536,
+                  0.03536
+                ],
+                [
+                  0.02778,
+                  0.04157
+                ],
+                [
+                  0.01913,
+                  0.04619
+                ],
+                [
+                  0.00975,
+                  0.04904
+                ],
+                [
+                  0.0,
+                  0.05
+                ],
+                [
+                  -0.00975,
+                  0.04904
+                ],
+                [
+                  -0.01913,
+                  0.04619
+                ],
+                [
+                  -0.02778,
+                  0.04157
+                ],
+                [
+                  -0.03536,
+                  0.03536
+                ],
+                [
+                  -0.04157,
+                  0.02778
+                ],
+                [
+                  -0.04619,
+                  0.01913
+                ],
+                [
+                  -0.04904,
+                  0.00975
+                ],
+                [
+                  -0.05,
+                  0.0
+                ],
+                [
+                  -0.04904,
+                  -0.00975
+                ],
+                [
+                  -0.04619,
+                  -0.01913
+                ],
+                [
+                  -0.04157,
+                  -0.02778
+                ],
+                [
+                  -0.03536,
+                  -0.03536
+                ],
+                [
+                  -0.02778,
+                  -0.04157
+                ],
+                [
+                  -0.01913,
+                  -0.04619
+                ],
+                [
+                  -0.00975,
+                  -0.04904
+                ],
+                [
+                  0.0,
+                  -0.05
+                ],
+                [
+                  0.00975,
+                  -0.04904
+                ],
+                [
+                  0.01913,
+                  -0.04619
+                ],
+                [
+                  0.02778,
+                  -0.04157
+                ],
+                [
+                  0.03536,
+                  -0.03536
+                ],
+                [
+                  0.04157,
+                  -0.02778
+                ],
+                [
+                  0.04619,
+                  -0.01913
+                ],
+                [
+                  0.04904,
+                  -0.00975
+                ]
+              ],
+              "closed": true,
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "plan-rose-face",
+              "bone": "rose",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  0.032,
+                  0.0
+                ],
+                [
+                  0.0312,
+                  0.00712
+                ],
+                [
+                  0.02883,
+                  0.01388
+                ],
+                [
+                  0.02502,
+                  0.01995
+                ],
+                [
+                  0.01995,
+                  0.02502
+                ],
+                [
+                  0.01388,
+                  0.02883
+                ],
+                [
+                  0.00712,
+                  0.0312
+                ],
+                [
+                  0.0,
+                  0.032
+                ],
+                [
+                  -0.00712,
+                  0.0312
+                ],
+                [
+                  -0.01388,
+                  0.02883
+                ],
+                [
+                  -0.01995,
+                  0.02502
+                ],
+                [
+                  -0.02502,
+                  0.01995
+                ],
+                [
+                  -0.02883,
+                  0.01388
+                ],
+                [
+                  -0.0312,
+                  0.00712
+                ],
+                [
+                  -0.032,
+                  0.0
+                ],
+                [
+                  -0.0312,
+                  -0.00712
+                ],
+                [
+                  -0.02883,
+                  -0.01388
+                ],
+                [
+                  -0.02502,
+                  -0.01995
+                ],
+                [
+                  -0.01995,
+                  -0.02502
+                ],
+                [
+                  -0.01388,
+                  -0.02883
+                ],
+                [
+                  -0.00712,
+                  -0.0312
+                ],
+                [
+                  0.0,
+                  -0.032
+                ],
+                [
+                  0.00712,
+                  -0.0312
+                ],
+                [
+                  0.01388,
+                  -0.02883
+                ],
+                [
+                  0.01995,
+                  -0.02502
+                ],
+                [
+                  0.02502,
+                  -0.01995
+                ],
+                [
+                  0.02883,
+                  -0.01388
+                ],
+                [
+                  0.0312,
+                  -0.00712
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.05 0.776 L 0.05 0.776 L 0.05 0.784 C 0.05 0.794 0.042 0.8 0.032 0.8 L -0.032 0.8 C -0.042 0.8 -0.05 0.794 -0.05 0.784 Z",
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "cord",
+              "bone": "cord",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.0033,
+              "y": 0.255,
+              "w": 0.0066,
+              "h": 0.521,
+              "region": "cord",
+              "material": "textile-cord"
+            },
+            {
+              "id": "collar",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.01 0.255 L 0.01 0.255 L 0.0105 0.249 L 0.0155 0.2475 L 0.0155 0.225 L -0.0155 0.225 L -0.0155 0.2475 L -0.0105 0.249 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.017 0.225 C -0.06 0.225 -0.11 0.195 -0.13 0.092 L -0.133 0.092 L -0.133 0.0865 L 0.133 0.0865 L 0.133 0.092 L 0.13 0.092 C 0.11 0.195 0.06 0.225 0.017 0.225 Z",
+              "region": "shade",
+              "material": "enamel-white"
+            },
+            {
+              "id": "shade-light",
+              "bone": "shade",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.095,
+                  0.175
+                ],
+                [
+                  -0.108,
+                  0.135
+                ],
+                [
+                  -0.114,
+                  0.107
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bulb-cap",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.0135 0.078 L 0.0135 0.078 L 0.0135 0.105 L -0.0135 0.105 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "cap-thread",
+              "bone": "bulb",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0135,
+                  0.0865
+                ],
+                [
+                  0.0135,
+                  0.0865
+                ],
+                [
+                  0.0135,
+                  0.0955
+                ],
+                [
+                  -0.0135,
+                  0.0955
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bulb-glass",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 C 0.014 0 0.03 0.014 0.03 0.032 C 0.03 0.046 0.023 0.054 0.0185 0.063 C 0.016 0.069 0.0143 0.073 0.0138 0.078 L -0.0138 0.078 C -0.0143 0.073 -0.016 0.069 -0.0185 0.063 C -0.023 0.054 -0.03 0.046 -0.03 0.032 C -0.03 0.014 -0.014 0 0 0 Z",
+              "region": "bulb-glass",
+              "material": "bulb-glass"
+            },
+            {
+              "id": "filament",
+              "bone": "bulb",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0055,
+                  0.074
+                ],
+                [
+                  -0.0055,
+                  0.06
+                ],
+                [
+                  -0.004,
+                  0.044
+                ],
+                [
+                  -0.002,
+                  0.037
+                ],
+                [
+                  0.0,
+                  0.044
+                ],
+                [
+                  0.002,
+                  0.037
+                ],
+                [
+                  0.004,
+                  0.044
+                ],
+                [
+                  0.0055,
+                  0.06
+                ],
+                [
+                  0.0055,
+                  0.074
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A hanging sign 0.8 m by 0.27 m, 16 mm by 5.3 mm on paper: a ceiling rose, a thin cord, a brass collar, a domed enamel shade with a rolled rim and a pear-shaped bulb hanging out of it. Front view: the lamp is turned about its vertical axis, so the front view repeats the side view, redrawn from the same rotationally symmetric parts. Top view: the 0.266 m shade disc under the 0.1 m ceiling rose, which hides the cord, the lampholder and the bulb.",
+            "de": "Ein hängendes Zeichen von 0,8 m mal 0,27 m, auf Papier 16 mm mal 5,3 mm: eine Deckenrosette, ein dünnes Kabel, eine Messinghülse, ein gewölbter Emailleschirm mit Wulstrand und eine birnenförmige Glühlampe, die daraus herabhängt. Vorderansicht: die Leuchte ist um ihre senkrechte Achse drehsymmetrisch, die Vorderansicht wiederholt daher die Seitenansicht, aus denselben drehsymmetrischen Teilen neu gezeichnet. Draufsicht: die Schirmscheibe von 0,266 m unter der Deckenrosette von 0,1 m, die Kabel, Fassung und Lampe verdeckt."
+          },
+          "retained": {
+            "en": "Overall height 0.8 m, shade width 0.266 m, bulb diameter 0.06 m and length 0.105 m (E27, A60), the cord drop, the rolled rim, the brass cap with thread and the filament with its two support wires.",
+            "de": "Gesamthöhe 0,8 m, Schirmbreite 0,266 m, Lampendurchmesser 0,06 m und Länge 0,105 m (E27, A60), die Abhängung, der Wulstrand, die Messingkappe mit Gewinde und die Wendel mit ihren beiden Haltedrähten."
+          },
+          "merged": {
+            "en": "Rose and canopy collar are one chamfered disc; the socket inside the shade is hidden behind it.",
+            "de": "Rosette und Baldachinkragen sind eine gefaste Scheibe; die Fassung im Schirm ist dahinter verdeckt."
+          },
+          "omitted": {
+            "en": "The pull-switch, the cable knot, the bulb text and the socket inside the dome. The top view omits cord, lampholder and bulb, which hide under the rose and the shade.",
+            "de": "Der Zugschalter, der Kabelknoten, die Lampenbeschriftung und die Fassung im Schirm. Die Draufsicht lässt Kabel, Fassung und Lampe weg, die unter Rosette und Schirm verdeckt sind."
+          },
+          "thinElements": {
+            "en": "The 6.6 mm cord is a 0.13 mm line and relies on the 0.18 mm pen; the filament is a 0.13 mm detail line with a 1 mm coil.",
+            "de": "Das 6,6 mm dicke Kabel ist eine 0,13 mm breite Linie und stützt sich auf den 0,18-mm-Strich; die Wendel ist ein 0,13-mm-Detailzug mit einer 1-mm-Wicklung."
+          },
+          "hatching": {
+            "en": "None; the highlight on the shade is one detail line.",
+            "de": "Keine; das Glanzlicht am Schirm ist ein Detailzug."
+          },
+          "styles": {
+            "en": "Rose 0.7, cord 0.15, brass 0.45, shade 0.4 with a light highlight, bulb glass 0.9 very light; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Rosette 0,7, Kabel 0,15, Messing 0,45, Schirm 0,4 mit hellem Glanzlicht, Lampenglas 0,9 sehr hell; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Bulb glass, shade, cap with collar, cord and rose are separate regions: in the thermal view the glass and the shade glow, the cord and rose stay cool.",
+            "de": "Lampenglas, Schirm, Kappe mit Hülse, Kabel und Rosette sind getrennte Regionen: in der Thermalansicht glühen Glas und Schirm, Kabel und Rosette bleiben kühl."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.05 -0.024 L 0.05 -0.024 L 0.05 -0.016 C 0.05 -0.006 0.042 0 0.032 0 L -0.032 0 C -0.042 0 -0.05 -0.006 -0.05 -0.016 Z",
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "cord",
+              "bone": "cord",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.0045,
+              "y": -0.521,
+              "w": 0.009,
+              "h": 0.521,
+              "region": "cord",
+              "material": "textile-cord"
+            },
+            {
+              "id": "collar",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.01 0 L 0.01 0 L 0.0105 -0.006 L 0.0155 -0.0075 L 0.0155 -0.03 L -0.0155 -0.03 L -0.0155 -0.0075 L -0.0105 -0.006 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.017 0 C -0.06 0 -0.11 -0.03 -0.13 -0.133 L 0.13 -0.133 C 0.11 -0.03 0.06 0 0.017 0 Z",
+              "region": "shade",
+              "material": "enamel-white"
+            },
+            {
+              "id": "bulb-cap",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.0135 0.078 L 0.0135 0.078 L 0.0135 0.105 L -0.0135 0.105 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "bulb-glass",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 C 0.014 0 0.03 0.014 0.03 0.032 C 0.03 0.046 0.023 0.054 0.0185 0.063 C 0.016 0.069 0.0143 0.073 0.0138 0.078 L -0.0138 0.078 C -0.0143 0.073 -0.016 0.069 -0.0185 0.063 C -0.023 0.054 -0.03 0.046 -0.03 0.032 C -0.03 0.014 -0.014 0 0 0 Z",
+              "region": "bulb-glass",
+              "material": "bulb-glass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.133,
+                  0.0
+                ],
+                [
+                  0.13136,
+                  0.02081
+                ],
+                [
+                  0.12649,
+                  0.0411
+                ],
+                [
+                  0.1185,
+                  0.06038
+                ],
+                [
+                  0.1076,
+                  0.07818
+                ],
+                [
+                  0.09405,
+                  0.09405
+                ],
+                [
+                  0.07818,
+                  0.1076
+                ],
+                [
+                  0.06038,
+                  0.1185
+                ],
+                [
+                  0.0411,
+                  0.12649
+                ],
+                [
+                  0.02081,
+                  0.13136
+                ],
+                [
+                  0.0,
+                  0.133
+                ],
+                [
+                  -0.02081,
+                  0.13136
+                ],
+                [
+                  -0.0411,
+                  0.12649
+                ],
+                [
+                  -0.06038,
+                  0.1185
+                ],
+                [
+                  -0.07818,
+                  0.1076
+                ],
+                [
+                  -0.09405,
+                  0.09405
+                ],
+                [
+                  -0.1076,
+                  0.07818
+                ],
+                [
+                  -0.1185,
+                  0.06038
+                ],
+                [
+                  -0.12649,
+                  0.0411
+                ],
+                [
+                  -0.13136,
+                  0.02081
+                ],
+                [
+                  -0.133,
+                  0.0
+                ],
+                [
+                  -0.13136,
+                  -0.02081
+                ],
+                [
+                  -0.12649,
+                  -0.0411
+                ],
+                [
+                  -0.1185,
+                  -0.06038
+                ],
+                [
+                  -0.1076,
+                  -0.07818
+                ],
+                [
+                  -0.09405,
+                  -0.09405
+                ],
+                [
+                  -0.07818,
+                  -0.1076
+                ],
+                [
+                  -0.06038,
+                  -0.1185
+                ],
+                [
+                  -0.0411,
+                  -0.12649
+                ],
+                [
+                  -0.02081,
+                  -0.13136
+                ],
+                [
+                  0.0,
+                  -0.133
+                ],
+                [
+                  0.02081,
+                  -0.13136
+                ],
+                [
+                  0.0411,
+                  -0.12649
+                ],
+                [
+                  0.06038,
+                  -0.1185
+                ],
+                [
+                  0.07818,
+                  -0.1076
+                ],
+                [
+                  0.09405,
+                  -0.09405
+                ],
+                [
+                  0.1076,
+                  -0.07818
+                ],
+                [
+                  0.1185,
+                  -0.06038
+                ],
+                [
+                  0.12649,
+                  -0.0411
+                ],
+                [
+                  0.13136,
+                  -0.02081
+                ]
+              ],
+              "closed": true,
+              "region": "shade",
+              "material": "enamel-white"
+            },
+            {
+              "id": "plan-rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.0
+                ],
+                [
+                  0.04875,
+                  0.01113
+                ],
+                [
+                  0.04505,
+                  0.02169
+                ],
+                [
+                  0.03909,
+                  0.03117
+                ],
+                [
+                  0.03117,
+                  0.03909
+                ],
+                [
+                  0.02169,
+                  0.04505
+                ],
+                [
+                  0.01113,
+                  0.04875
+                ],
+                [
+                  0.0,
+                  0.05
+                ],
+                [
+                  -0.01113,
+                  0.04875
+                ],
+                [
+                  -0.02169,
+                  0.04505
+                ],
+                [
+                  -0.03117,
+                  0.03909
+                ],
+                [
+                  -0.03909,
+                  0.03117
+                ],
+                [
+                  -0.04505,
+                  0.02169
+                ],
+                [
+                  -0.04875,
+                  0.01113
+                ],
+                [
+                  -0.05,
+                  0.0
+                ],
+                [
+                  -0.04875,
+                  -0.01113
+                ],
+                [
+                  -0.04505,
+                  -0.02169
+                ],
+                [
+                  -0.03909,
+                  -0.03117
+                ],
+                [
+                  -0.03117,
+                  -0.03909
+                ],
+                [
+                  -0.02169,
+                  -0.04505
+                ],
+                [
+                  -0.01113,
+                  -0.04875
+                ],
+                [
+                  0.0,
+                  -0.05
+                ],
+                [
+                  0.01113,
+                  -0.04875
+                ],
+                [
+                  0.02169,
+                  -0.04505
+                ],
+                [
+                  0.03117,
+                  -0.03909
+                ],
+                [
+                  0.03909,
+                  -0.03117
+                ],
+                [
+                  0.04505,
+                  -0.02169
+                ],
+                [
+                  0.04875,
+                  -0.01113
+                ]
+              ],
+              "closed": true,
+              "region": "rose",
+              "material": "rose-polymer"
+            }
+          ],
+          "front": [
+            {
+              "id": "rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.05 0.776 L 0.05 0.776 L 0.05 0.784 C 0.05 0.794 0.042 0.8 0.032 0.8 L -0.032 0.8 C -0.042 0.8 -0.05 0.794 -0.05 0.784 Z",
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "cord",
+              "bone": "cord",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.0045,
+              "y": 0.255,
+              "w": 0.009,
+              "h": 0.521,
+              "region": "cord",
+              "material": "textile-cord"
+            },
+            {
+              "id": "collar",
+              "bone": "holder",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.01 0.255 L 0.01 0.255 L 0.0105 0.249 L 0.0155 0.2475 L 0.0155 0.225 L -0.0155 0.225 L -0.0155 0.2475 L -0.0105 0.249 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.017 0.225 C -0.06 0.225 -0.11 0.195 -0.13 0.092 L 0.13 0.092 C 0.11 0.195 0.06 0.225 0.017 0.225 Z",
+              "region": "shade",
+              "material": "enamel-white"
+            },
+            {
+              "id": "bulb-cap",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.0135 0.078 L 0.0135 0.078 L 0.0135 0.105 L -0.0135 0.105 Z",
+              "region": "lampholder",
+              "material": "brass-lacquered"
+            },
+            {
+              "id": "bulb-glass",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 C 0.014 0 0.03 0.014 0.03 0.032 C 0.03 0.046 0.023 0.054 0.0185 0.063 C 0.016 0.069 0.0143 0.073 0.0138 0.078 L -0.0138 0.078 C -0.0143 0.073 -0.016 0.069 -0.0185 0.063 C -0.023 0.054 -0.03 0.046 -0.03 0.032 C -0.03 0.014 -0.014 0 0 0 Z",
+              "region": "bulb-glass",
+              "material": "bulb-glass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A hanging bell 8 mm by 2.7 mm on paper: a disc, a cord, a collar, a plain dome and a pear below its rim. Front view: the rotationally symmetric side view redrawn. Top view: the 0.266 m shade disc under the 0.1 m rose.",
+            "de": "Eine hängende Glocke von 8 mm mal 2,7 mm auf Papier: eine Scheibe, ein Kabel, eine Hülse, eine schlichte Kuppel und eine Birne unter ihrem Rand. Vorderansicht: die drehsymmetrische Seitenansicht neu gezeichnet. Draufsicht: die Schirmscheibe von 0,266 m unter der Rosette von 0,1 m."
+          },
+          "retained": {
+            "en": "Height 0.8 m, shade width 0.26 m, bulb diameter 0.06 m and length 0.105 m, the cord drop, the brass collar and cap.",
+            "de": "Höhe 0,8 m, Schirmbreite 0,26 m, Lampendurchmesser 0,06 m und Länge 0,105 m, die Abhängung, Messinghülse und -kappe."
+          },
+          "merged": {
+            "en": "The rolled rim joins the dome; collar and cap read as brass accents above and below the shade.",
+            "de": "Der Wulstrand geht in der Kuppel auf; Hülse und Kappe lesen sich als Messingakzente über und unter dem Schirm."
+          },
+          "omitted": {
+            "en": "Thread lines, filament and its supports, the highlight on the shade, the pull-switch. The top view omits the rim line, cord, lampholder and bulb.",
+            "de": "Gewindelinien, Wendel und Haltedrähte, das Glanzlicht am Schirm, der Zugschalter. Die Draufsicht lässt Randlinie, Kabel, Fassung und Lampe weg."
+          },
+          "thinElements": {
+            "en": "The cord is widened from 6.6 to 9 mm (0.09 mm paper) so that fill and 0.18 mm pen reach the feature width.",
+            "de": "Das Kabel ist von 6,6 auf 9 mm verbreitert (0,09 mm Papier), damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rose 0.7, cord 0.15, brass 0.45, shade 0.4, glass 0.9; one body pen of 0.18 mm.",
+            "de": "Rosette 0,7, Kabel 0,15, Messing 0,45, Schirm 0,4, Glas 0,9; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Each part keeps its region: the glass and shade carry the heat of the lamp.",
+            "de": "Jedes Teil behält seine Region: Glas und Schirm tragen die Wärme der Lampe."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.05 -0.03 L 0.05 -0.03 L 0.05 0 L -0.05 0 Z",
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "cord",
+              "bone": "cord",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.007,
+              "y": -0.521,
+              "w": 0.014,
+              "h": 0.521,
+              "region": "cord",
+              "material": "textile-cord"
+            },
+            {
+              "id": "shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.025 0.03 L 0.025 0.03 L 0.025 0 C 0.06 0 0.11 -0.03 0.133 -0.1385 L -0.133 -0.1385 C -0.11 -0.03 -0.06 0 -0.025 0 Z",
+              "regions": [
+                "shade",
+                "lampholder"
+              ],
+              "material": "enamel-white"
+            },
+            {
+              "id": "bulb",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 0 C 0.014 0 0.03 0.014 0.03 0.032 C 0.03 0.046 0.023 0.054 0.0185 0.063 L 0.0135 0.08 L -0.0135 0.08 L -0.0185 0.063 C -0.023 0.054 -0.03 0.046 -0.03 0.032 C -0.03 0.014 -0.014 0 0 0 Z",
+              "region": "bulb-glass",
+              "material": "bulb-glass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.133,
+                  0.0
+                ],
+                [
+                  0.13044,
+                  0.02595
+                ],
+                [
+                  0.12288,
+                  0.0509
+                ],
+                [
+                  0.11059,
+                  0.07389
+                ],
+                [
+                  0.09405,
+                  0.09405
+                ],
+                [
+                  0.07389,
+                  0.11059
+                ],
+                [
+                  0.0509,
+                  0.12288
+                ],
+                [
+                  0.02595,
+                  0.13044
+                ],
+                [
+                  0.0,
+                  0.133
+                ],
+                [
+                  -0.02595,
+                  0.13044
+                ],
+                [
+                  -0.0509,
+                  0.12288
+                ],
+                [
+                  -0.07389,
+                  0.11059
+                ],
+                [
+                  -0.09405,
+                  0.09405
+                ],
+                [
+                  -0.11059,
+                  0.07389
+                ],
+                [
+                  -0.12288,
+                  0.0509
+                ],
+                [
+                  -0.13044,
+                  0.02595
+                ],
+                [
+                  -0.133,
+                  0.0
+                ],
+                [
+                  -0.13044,
+                  -0.02595
+                ],
+                [
+                  -0.12288,
+                  -0.0509
+                ],
+                [
+                  -0.11059,
+                  -0.07389
+                ],
+                [
+                  -0.09405,
+                  -0.09405
+                ],
+                [
+                  -0.07389,
+                  -0.11059
+                ],
+                [
+                  -0.0509,
+                  -0.12288
+                ],
+                [
+                  -0.02595,
+                  -0.13044
+                ],
+                [
+                  0.0,
+                  -0.133
+                ],
+                [
+                  0.02595,
+                  -0.13044
+                ],
+                [
+                  0.0509,
+                  -0.12288
+                ],
+                [
+                  0.07389,
+                  -0.11059
+                ],
+                [
+                  0.09405,
+                  -0.09405
+                ],
+                [
+                  0.11059,
+                  -0.07389
+                ],
+                [
+                  0.12288,
+                  -0.0509
+                ],
+                [
+                  0.13044,
+                  -0.02595
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "shade",
+                "lampholder"
+              ],
+              "material": "enamel-white"
+            },
+            {
+              "id": "plan-rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.0
+                ],
+                [
+                  0.0483,
+                  0.01294
+                ],
+                [
+                  0.0433,
+                  0.025
+                ],
+                [
+                  0.03536,
+                  0.03536
+                ],
+                [
+                  0.025,
+                  0.0433
+                ],
+                [
+                  0.01294,
+                  0.0483
+                ],
+                [
+                  0.0,
+                  0.05
+                ],
+                [
+                  -0.01294,
+                  0.0483
+                ],
+                [
+                  -0.025,
+                  0.0433
+                ],
+                [
+                  -0.03536,
+                  0.03536
+                ],
+                [
+                  -0.0433,
+                  0.025
+                ],
+                [
+                  -0.0483,
+                  0.01294
+                ],
+                [
+                  -0.05,
+                  0.0
+                ],
+                [
+                  -0.0483,
+                  -0.01294
+                ],
+                [
+                  -0.0433,
+                  -0.025
+                ],
+                [
+                  -0.03536,
+                  -0.03536
+                ],
+                [
+                  -0.025,
+                  -0.0433
+                ],
+                [
+                  -0.01294,
+                  -0.0483
+                ],
+                [
+                  0.0,
+                  -0.05
+                ],
+                [
+                  0.01294,
+                  -0.0483
+                ],
+                [
+                  0.025,
+                  -0.0433
+                ],
+                [
+                  0.03536,
+                  -0.03536
+                ],
+                [
+                  0.0433,
+                  -0.025
+                ],
+                [
+                  0.0483,
+                  -0.01294
+                ]
+              ],
+              "closed": true,
+              "region": "rose",
+              "material": "rose-polymer"
+            }
+          ],
+          "front": [
+            {
+              "id": "rose",
+              "bone": "rose",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.05 0.77 L 0.05 0.77 L 0.05 0.8 L -0.05 0.8 Z",
+              "region": "rose",
+              "material": "rose-polymer"
+            },
+            {
+              "id": "cord",
+              "bone": "cord",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.007,
+              "y": 0.255,
+              "w": 0.014,
+              "h": 0.521,
+              "region": "cord",
+              "material": "textile-cord"
+            },
+            {
+              "id": "shade",
+              "bone": "shade",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.025 0.255 L 0.025 0.255 L 0.025 0.225 C 0.06 0.225 0.11 0.195 0.133 0.0865 L -0.133 0.0865 C -0.11 0.195 -0.06 0.225 -0.025 0.225 Z",
+              "regions": [
+                "shade",
+                "lampholder"
+              ],
+              "material": "enamel-white"
+            },
+            {
+              "id": "bulb",
+              "bone": "bulb",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 0 C 0.014 0 0.03 0.014 0.03 0.032 C 0.03 0.046 0.023 0.054 0.0185 0.063 L 0.0135 0.08 L -0.0135 0.08 L -0.0185 0.063 C -0.023 0.054 -0.03 0.046 -0.03 0.032 C -0.03 0.014 -0.014 0 0 0 Z",
+              "region": "bulb-glass",
+              "material": "bulb-glass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A hanging sign 4 mm by 1.3 mm on paper: a bar, a cord, a trapezoid shade and a pear below it. Front view: the rotationally symmetric side view redrawn. Top view: the 0.266 m shade disc under the 0.1 m rose.",
+            "de": "Ein hängendes Zeichen von 4 mm mal 1,3 mm auf Papier: ein Balken, ein Kabel, ein trapezförmiger Schirm und darunter eine Birne. Vorderansicht: die drehsymmetrische Seitenansicht neu gezeichnet. Draufsicht: die Schirmscheibe von 0,266 m unter der Rosette von 0,1 m."
+          },
+          "retained": {
+            "en": "Height 0.8 m, shade width 0.266 m, bulb diameter 0.06 m, the cord drop and the bulb hanging below the rim.",
+            "de": "Höhe 0,8 m, Schirmbreite 0,266 m, Lampendurchmesser 0,06 m, die Abhängung und die unter dem Rand hängende Lampe."
+          },
+          "merged": {
+            "en": "Collar and shade are one shape; the brass cap is hidden in it and its region joins the shade shape as a merged region.",
+            "de": "Hülse und Schirm sind eine Form; die Messingkappe ist darin verborgen und ihre Region wird der Schirmform zusammengeführt."
+          },
+          "omitted": {
+            "en": "Rolled rim, thread, filament, highlight and the pull-switch. The top view omits cord and bulb.",
+            "de": "Wulstrand, Gewinde, Wendel, Glanzlicht und Zugschalter. Die Draufsicht lässt Kabel und Lampe weg."
+          },
+          "thinElements": {
+            "en": "The cord is widened from 6.6 to 14 mm (0.07 mm paper) and the rose from 24 to 30 mm so that fill and 0.18 mm pen reach the feature width.",
+            "de": "Das Kabel ist von 6,6 auf 14 mm (0,07 mm Papier) und die Rosette von 24 auf 30 mm verbreitert, damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rose 0.7, cord 0.15, shade 0.4, glass 0.85; one body pen of 0.18 mm.",
+            "de": "Rosette 0,7, Kabel 0,15, Schirm 0,4, Glas 0,85; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The shade shape lists shade and lampholder as merged regions; the bulb is its own region.",
+            "de": "Die Schirmform führt Schirm und Fassung als zusammengeführte Regionen; die Lampe ist eine eigene Region."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the 0.8 m lamp is 1.6 mm tall and its cord 0.013 mm wide, the bulb is a 0.12 mm dot, below every print profile.",
+          "de": "Bei 1:500 ist die 0,8 m lange Lampe 1,6 mm hoch, ihr Kabel 0,013 mm breit und die Glühlampe ein 0,12-mm-Punkt, unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "Cord diameter of 6.6 mm",
+          "de": "Kabeldurchmesser von 6,6 mm"
+        },
+        "limitingSizeM": 0.0066,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "on",
+        "title": {
+          "en": "Lit",
+          "de": "Eingeschaltet"
+        },
+        "description": {
+          "en": "The 60 W bulb burns: the glass and the shade are hot, the cap is warm, a plume rises through the shade.",
+          "de": "Die 60-W-Glühlampe brennt: Glas und Schirm sind heiß, die Kappe ist warm, durch den Schirm steigt eine Fahne auf."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "ceiling-hook"
+        ],
+        "thermal": {
+          "regions": {
+            "bulb-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "lampholder": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "shade": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cord": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rose": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "shade-plume": 1
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "dimmed",
+        "title": {
+          "en": "Dimmed to 40 %",
+          "de": "Auf 40 % gedimmt"
+        },
+        "description": {
+          "en": "The incandescent bulb runs at 40 % power, 24 W: the glass is lukewarm.",
+          "de": "Die Glühlampe läuft mit 40 % Leistung, 24 W: das Glas ist handwarm."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "ceiling-hook"
+        ],
+        "thermal": {
+          "regions": {
+            "bulb-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "lampholder": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "shade": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cord": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rose": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "shade-plume": 0.5
+          },
+          "operating": {
+            "power": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Ausgeschaltet"
+        },
+        "description": {
+          "en": "Switched off, everything at room temperature.",
+          "de": "Ausgeschaltet, alles hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "ceiling-hook"
+        ],
+        "thermal": {
+          "regions": {
+            "bulb-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "lampholder": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0
+            },
+            "shade": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "cord": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "rose": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "shade-plume": 0
+          },
+          "operating": {
+            "power": 0
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "switch-on-warm-up",
+        "title": {
+          "en": "Switch on and warm up",
+          "de": "Einschalten und aufwärmen"
+        },
+        "description": {
+          "en": "The cold lamp is switched on after five seconds: the glass reaches its working temperature within a minute and the shade warms over four minutes.",
+          "de": "Die kalte Lampe wird nach fünf Sekunden eingeschaltet: das Glas erreicht binnen einer Minute seine Betriebstemperatur und der Schirm wärmt sich in vier Minuten auf."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "on",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "on",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "ceiling-hook",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "Lit, warming up",
+              "de": "Brennt, wärmt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Switched on",
+              "de": "Eingeschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:shade-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "switch-off-cool-down",
+        "title": {
+          "en": "Switch off and cool down",
+          "de": "Ausschalten und abkühlen"
+        },
+        "description": {
+          "en": "The hot lamp is switched off after five seconds: the glass cools within a minute, the shade and the cap follow within five minutes.",
+          "de": "Die heiße Lampe wird nach fünf Sekunden ausgeschaltet: das Glas kühlt binnen einer Minute, Schirm und Kappe folgen in fünf Minuten."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "on",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "ceiling-hook",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "lit",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Lit",
+              "de": "Brennt"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "Off, cooling",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "shutdown",
+            "title": {
+              "en": "Switched off",
+              "de": "Ausgeschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:shade-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "power",
+          "title": {
+            "en": "Electrical power",
+            "de": "Elektrische Leistung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.4,
+              "title": {
+                "en": "Dimmed (24 W)",
+                "de": "Gedimmt (24 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Lit (60 W)",
+                "de": "Eingeschaltet (60 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "bulb-glass",
+          "title": {
+            "en": "Bulb glass envelope",
+            "de": "Glaskolben der Glühlampe"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "bulb-glass",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.06,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "envelope",
+              "title": {
+                "en": "Soda-lime glass 0.8 mm",
+                "de": "Kalk-Natron-Glas 0,8 mm"
+              },
+              "kind": "glass",
+              "material": "bulb-glass",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.0008,
+              "heatCapacityJM2K": 1700,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 1700,
+          "operating": {
+            "key": "power",
+            "heatW": 34
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60064"
+        },
+        {
+          "id": "lampholder",
+          "title": {
+            "en": "Bulb cap, socket and collar",
+            "de": "Lampensockel, Fassung und Hülse"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "brass-lacquered",
+          "areaM2": 0.005,
+          "characteristicLengthM": 0.05,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "brass-shell",
+              "title": {
+                "en": "Lacquered brass 0.6 mm",
+                "de": "Lackiertes Messing 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "brass-lacquered",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 0.000006,
+              "heatCapacityJM2K": 4600,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4600,
+          "operating": {
+            "key": "power",
+            "heatW": 2.5
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60064"
+        },
+        {
+          "id": "shade",
+          "title": {
+            "en": "Enamelled shade",
+            "de": "Emaillierter Schirm"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "enamel-white",
+          "areaM2": 0.11,
+          "characteristicLengthM": 0.26,
+          "geometry": "sphere",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "shade-steel",
+              "title": {
+                "en": "Enamelled steel sheet 0.6 mm",
+                "de": "Emailliertes Stahlblech 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-white",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 0.000012,
+              "heatCapacityJM2K": 2800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2800,
+          "operating": {
+            "key": "power",
+            "heatW": 20.5
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "cord",
+          "title": {
+            "en": "Textile-sheathed cord",
+            "de": "Textilummanteltes Kabel"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "textile-cord",
+          "areaM2": 0.0108,
+          "characteristicLengthM": 0.0066,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sheath",
+              "title": {
+                "en": "PVC cable with textile sheath 1.5 mm",
+                "de": "PVC-Leitung mit Textilmantel 1,5 mm"
+              },
+              "kind": "polymer",
+              "material": "textile-cord",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.0075,
+              "heatCapacityJM2K": 2000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2000,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "rose",
+          "title": {
+            "en": "Ceiling rose",
+            "de": "Deckenrosette"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "rose-polymer",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.1,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0,
+          "layers": [
+            {
+              "id": "rose-shell",
+              "title": {
+                "en": "Polymer rose 3 mm",
+                "de": "Kunststoffrosette 3 mm"
+              },
+              "kind": "polymer",
+              "material": "rose-polymer",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.015,
+              "heatCapacityJM2K": 4200,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4200,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "shade-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Hot air rising over the shade",
+            "de": "Heißluft über dem Schirm"
+          },
+          "anchor": "shade-top",
+          "directionDeg": 90,
+          "diameterM": 0.3,
+          "region": "shade",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 60 W end entirely as heat in the room: the glass releases 34 W, the shade 20.5 W (it intercepts the bulb's radiation and hot air) and the cap with the collar 2.5 W at level 1 (57 W, 95 %), which keeps the cap near 100 degrees C, below the glass; the light output of about 3 W leaves the lamp as radiation and is absorbed by the room surfaces, where it is counted.",
+          "de": "Die 60 W enden vollständig als Wärme im Raum: das Glas gibt bei Stufe 1 34 W ab, der Schirm 20,5 W (er fängt Strahlung und Heißluft der Lampe ab) und Sockel mit Hülse 2,5 W (57 W, 95 %); so bleibt der Sockel bei rund 100 °C, unter dem Glas; die Lichtleistung von etwa 3 W verlässt die Leuchte als Strahlung und wird von den Raumflächen absorbiert und dort mitgezählt."
+        },
+        {
+          "en": "The regions exchange no heat with each other; the shade share stands for the radiation and the hot air from the bulb that the shade intercepts.",
+          "de": "Die Regionen tauschen keine Wärme miteinander aus; der Schirmanteil steht für die Strahlung und die Heißluft der Lampe, die der Schirm auffängt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "ceiling-hook"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid chain hanging from a pin at the ceiling hook; the 0.62 kg weight is carried in tension by the cord, no sway.",
+          "de": "Eine starre Kette, die an einem Festlager am Deckenhaken hängt; das Gewicht von 0,62 kg trägt das Kabel auf Zug, keine Pendelbewegung."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "on",
+      "defaultClip": "switch-on-warm-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

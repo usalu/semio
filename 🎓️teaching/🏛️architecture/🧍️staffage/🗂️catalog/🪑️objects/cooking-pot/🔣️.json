@@ -1,0 +1,2204 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "cooking-pot",
+    "category": "objects",
+    "title": {
+      "en": "Stock Pot with Boiling Water",
+      "de": "Kochtopf mit kochendem Wasser"
+    },
+    "summary": {
+      "en": "A 0.17 m stainless saucepan cut open through its axis with 1 L of water that warms on a flame and boils: a steam plume of vapour rises from the bobbing surface.",
+      "de": "Ein 0,17 m großer Edelstahl-Kochtopf, durch die Achse aufgeschnitten, mit 1 l Wasser, das auf einer Flamme warm wird und kocht: aus der wogenden Oberfläche steigt eine Dampffahne auf."
+    },
+    "tags": [
+      "pot",
+      "cooking",
+      "water",
+      "steam",
+      "boiling",
+      "latent-heat",
+      "kitchen",
+      "plume"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "cengel-2015",
+          "citation": "Cengel, Y. A., Boles, M. A. (2015). Thermodynamics: An Engineering Approach, 8th ed., McGraw-Hill (heating water at 4.19 kJ/(kg K), latent heat of vaporisation 2257 kJ/kg at 100 degC)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A stainless saucepan of 0.16 m inner width (0.172 m outer) and 0.10 m height with 0.8 mm walls, a 5 mm sandwich base and two side handles reaching to 0.25 m overall, filled with 1 L of water to 50 mm. It is cut open through its axis so that the water, the hot base and the wall read in the thermal view. Pot and handles are 0.64 kg, the water 1.0 kg; the origin is the centre of the base on the hob. Heating 1 kg of water by 80 K takes 335 kJ and evaporating it 2257 kJ (Cengel). The 1 kg of water needs 419 kJ from 0 to 100 degC and about 331 kJ for the 79 K from the room: the hob delivers 1.2 kW into the pot (gas-hob), so the open pot boils after about 5 minutes; at 100 degC the phase change of the water holds the temperature and turns the surplus heat into steam.",
+        "de": "Ein Edelstahl-Kochtopf von 0,16 m Innenweite (0,172 m außen) und 0,10 m Höhe mit 0,8 mm Wänden, einem 5 mm starken Sandwichboden und zwei Seitengriffen bis 0,25 m Gesamtbreite, mit 1 l Wasser bis 50 mm gefüllt. Er ist durch die Achse aufgeschnitten, damit Wasser, heißer Boden und Wand in der Thermalansicht lesbar sind. Topf und Griffe wiegen 0,64 kg, das Wasser 1,0 kg; der Ursprung ist die Mitte des Bodens auf dem Kochfeld. Die Erwärmung von 1 kg Wasser um 80 K braucht 335 kJ, das Verdampfen 2257 kJ (Cengel). Das 1 kg Wasser braucht von 0 auf 100 °C 419 kJ und für die 79 K ab Raumtemperatur rund 331 kJ: das Kochfeld liefert 1,2 kW in den Topf (gas-hob), sodass der offene Topf nach etwa 5 Minuten kocht; bei 100 °C hält der Phasenwechsel des Wassers die Temperatur und macht die überschüssige Wärme zu Dampf."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.1,
+      "widthM": 0.25,
+      "depthM": 0.172,
+      "massKg": 1.64
+    },
+    "materials": [
+      {
+        "id": "stainless",
+        "title": {
+          "en": "Stainless steel",
+          "de": "Edelstahl"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7900,
+        "conductivityWmK": 16,
+        "specificHeatJKgK": 500,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "Water",
+          "de": "Wasser"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 1000,
+        "conductivityWmK": 0.6,
+        "specificHeatJKgK": 4190,
+        "source": "literature",
+        "reference": "incropera-2018",
+        "phaseChange": {
+          "transition": "boiling",
+          "pointC": 100,
+          "latentHeatJKg": 2257000
+        }
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "pot",
+      "bones": [
+        {
+          "id": "pot",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Pot wall and base",
+            "de": "Topfwand und -boden"
+          },
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.54,
+            "comX": 0,
+            "comY": 0.025,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "handles",
+          "parent": "pot",
+          "x": 0,
+          "y": 0.07,
+          "angleDeg": 0,
+          "title": {
+            "en": "Side handles",
+            "de": "Seitengriffe"
+          },
+          "lengthM": 0.25,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "water",
+          "parent": "pot",
+          "x": 0,
+          "y": 0.005,
+          "angleDeg": 0,
+          "title": {
+            "en": "Water fill",
+            "de": "Wasserfüllung"
+          },
+          "lengthM": 0.05,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1,
+            "comX": 0,
+            "comY": 0.025,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "surface",
+          "parent": "water",
+          "x": 0,
+          "y": 0.05,
+          "angleDeg": 0,
+          "title": {
+            "en": "Water surface, bobs when boiling",
+            "de": "Wasseroberfläche, wogt beim Kochen"
+          },
+          "lengthM": 0.02,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.004,
+            "maxM": 0.004
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "pot",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.15,
+        "footprintWidthM": 0.15,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "steam-top",
+        "bone": "surface",
+        "x": 0,
+        "y": 0.015,
+        "kind": "emitter",
+        "title": {
+          "en": "Above the water surface",
+          "de": "Über der Wasseroberfläche"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.08,
+              "y": 0,
+              "w": 0.16,
+              "h": 0.05,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "surface",
+              "bone": "surface",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0
+                ],
+                [
+                  -0.04,
+                  0.002
+                ],
+                [
+                  0,
+                  -0.001
+                ],
+                [
+                  0.04,
+                  0.002
+                ],
+                [
+                  0.08,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "wall-left",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.086,
+              "y": 0,
+              "w": 0.006,
+              "h": 0.1,
+              "region": "wall",
+              "material": "stainless"
+            },
+            {
+              "id": "wall-right",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.08,
+              "y": 0,
+              "w": 0.006,
+              "h": 0.1,
+              "region": "wall",
+              "material": "stainless"
+            },
+            {
+              "id": "base",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.086,
+              "y": 0,
+              "w": 0.172,
+              "h": 0.008,
+              "region": "base",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-left",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.125,
+              "y": -0.006,
+              "w": 0.041,
+              "h": 0.014,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-right",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.084,
+              "y": -0.006,
+              "w": 0.041,
+              "h": 0.014,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ],
+          "front": [
+            {
+              "id": "wall-end",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.086,
+              "y": 0.008,
+              "w": 0.172,
+              "h": 0.092,
+              "region": "wall",
+              "material": "stainless"
+            },
+            {
+              "id": "base-end",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.086,
+              "y": 0,
+              "w": 0.172,
+              "h": 0.008,
+              "region": "base",
+              "material": "stainless"
+            },
+            {
+              "id": "rim-line",
+              "bone": "pot",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.086,
+                  0.094
+                ],
+                [
+                  0.086,
+                  0.094
+                ]
+              ],
+              "closed": false,
+              "region": "wall"
+            },
+            {
+              "id": "handle-end",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.01,
+              "y": 0.062,
+              "w": 0.02,
+              "h": 0.016,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-rivet",
+              "bone": "handles",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.004,
+              "y": 0.066,
+              "w": 0.008,
+              "h": 0.008,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ],
+          "plan": [
+            {
+              "id": "pot-top",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.086,
+              "ry": 0.086,
+              "region": "wall",
+              "material": "stainless"
+            },
+            {
+              "id": "rim-inner",
+              "bone": "pot",
+              "role": "detail",
+              "z": 3.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.08,
+              "ry": 0.08,
+              "region": "wall",
+              "material": "stainless"
+            },
+            {
+              "id": "water-top",
+              "bone": "water",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.072,
+              "ry": 0.072,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "bubble-a",
+              "bone": "surface",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": -0.03,
+              "cy": 0.02,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "bubble-b",
+              "bone": "surface",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.025,
+              "cy": 0.03,
+              "rx": 0.005,
+              "ry": 0.005,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "bubble-c",
+              "bone": "surface",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": -0.02,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "bubble-d",
+              "bone": "surface",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.04,
+              "cy": -0.015,
+              "rx": 0.005,
+              "ry": 0.005,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "bubble-e",
+              "bone": "surface",
+              "role": "detail",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": -0.04,
+              "cy": -0.03,
+              "rx": 0.005,
+              "ry": 0.005,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "handle-left",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.125,
+              "y": -0.01,
+              "w": 0.041,
+              "h": 0.02,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-right",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.084,
+              "y": -0.01,
+              "w": 0.041,
+              "h": 0.02,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "rivet-left",
+              "bone": "handles",
+              "role": "detail",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": -0.108,
+              "cy": 0,
+              "rx": 0.003,
+              "ry": 0.003,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "rivet-right",
+              "bone": "handles",
+              "role": "detail",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "ellipse",
+              "cx": 0.108,
+              "cy": 0,
+              "rx": 0.003,
+              "ry": 0.003,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.25 m wide saucepan cut open through its axis: two thin walls, a thick base, water to 50 mm and a handle at each side. Front: wall, base and rim line with the near handle and its rivet end-on; plan: pot wall, rim ring, water disc with five boiling bubbles and the two riveted handle lugs.",
+            "de": "Ein 0,25 m breiter Kochtopf, durch die Achse aufgeschnitten: zwei dünne Wände, ein dicker Boden, Wasser bis 50 mm und je ein Griff an den Seiten. Vorderansicht: Wand, Boden und Randlinie mit dem nahen Griff und seiner Niete von vorn; Draufsicht: Topfwand, Randring, Wasserscheibe mit fünf Kochblasen und die beiden vernieteten Grifflaschen."
+          },
+          "retained": {
+            "en": "Walls, base, both handles, the water body and its surface line. The bubbles are bound to the surface bone and mark the boiling pose in plan.",
+            "de": "Wände, Boden, beide Griffe, der Wasserkörper und seine Oberflächenlinie. Die Blasen sind an den Oberflächenknochen gebunden und kennzeichnen die kochende Pose in der Draufsicht."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The rim bead, the lid and the base disc seam.",
+            "de": "Der Randwulst, der Deckel und die Bodenfuge."
+          },
+          "thinElements": {
+            "en": "Walls are drawn 6 mm instead of 4 mm so that they print.",
+            "de": "Die Wände sind 6 mm statt 4 mm stark gezeichnet, damit sie drucken."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Wall, base, handle and water are four regions; the water body warms through, the surface line is the water region too.",
+            "de": "Wand, Boden, Griff und Wasser sind vier Regionen; der Wasserkörper erwärmt sich durch, die Oberflächenlinie gehört ebenfalls zur Wasserregion."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.08,
+              "y": 0,
+              "w": 0.16,
+              "h": 0.05,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "pot",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.086,
+                  0
+                ],
+                [
+                  0.086,
+                  0
+                ],
+                [
+                  0.086,
+                  0.1
+                ],
+                [
+                  0.08,
+                  0.1
+                ],
+                [
+                  0.08,
+                  0.008
+                ],
+                [
+                  -0.08,
+                  0.008
+                ],
+                [
+                  -0.08,
+                  0.1
+                ],
+                [
+                  -0.086,
+                  0.1
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "wall",
+                "base"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle-left",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.125,
+              "y": -0.008,
+              "w": 0.041,
+              "h": 0.016,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-right",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.084,
+              "y": -0.008,
+              "w": 0.041,
+              "h": 0.016,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ],
+          "front": [
+            {
+              "id": "pot-end",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.086,
+              "y": 0,
+              "w": 0.172,
+              "h": 0.1,
+              "regions": [
+                "wall",
+                "base"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle-end",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.01,
+              "y": 0.062,
+              "w": 0.02,
+              "h": 0.016,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ],
+          "plan": [
+            {
+              "id": "pot-top",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.086,
+                  0.0
+                ],
+                [
+                  0.08526,
+                  0.01123
+                ],
+                [
+                  0.08307,
+                  0.02226
+                ],
+                [
+                  0.07945,
+                  0.03291
+                ],
+                [
+                  0.07448,
+                  0.043
+                ],
+                [
+                  0.06823,
+                  0.05235
+                ],
+                [
+                  0.06081,
+                  0.06081
+                ],
+                [
+                  0.05235,
+                  0.06823
+                ],
+                [
+                  0.043,
+                  0.07448
+                ],
+                [
+                  0.03291,
+                  0.07945
+                ],
+                [
+                  0.02226,
+                  0.08307
+                ],
+                [
+                  0.01123,
+                  0.08526
+                ],
+                [
+                  0.0,
+                  0.086
+                ],
+                [
+                  -0.01123,
+                  0.08526
+                ],
+                [
+                  -0.02226,
+                  0.08307
+                ],
+                [
+                  -0.03291,
+                  0.07945
+                ],
+                [
+                  -0.043,
+                  0.07448
+                ],
+                [
+                  -0.05235,
+                  0.06823
+                ],
+                [
+                  -0.06081,
+                  0.06081
+                ],
+                [
+                  -0.06823,
+                  0.05235
+                ],
+                [
+                  -0.07448,
+                  0.043
+                ],
+                [
+                  -0.07945,
+                  0.03291
+                ],
+                [
+                  -0.08307,
+                  0.02226
+                ],
+                [
+                  -0.08526,
+                  0.01123
+                ],
+                [
+                  -0.086,
+                  0.0
+                ],
+                [
+                  -0.08526,
+                  -0.01123
+                ],
+                [
+                  -0.08307,
+                  -0.02226
+                ],
+                [
+                  -0.07945,
+                  -0.03291
+                ],
+                [
+                  -0.07448,
+                  -0.043
+                ],
+                [
+                  -0.06823,
+                  -0.05235
+                ],
+                [
+                  -0.06081,
+                  -0.06081
+                ],
+                [
+                  -0.05235,
+                  -0.06823
+                ],
+                [
+                  -0.043,
+                  -0.07448
+                ],
+                [
+                  -0.03291,
+                  -0.07945
+                ],
+                [
+                  -0.02226,
+                  -0.08307
+                ],
+                [
+                  -0.01123,
+                  -0.08526
+                ],
+                [
+                  -0.0,
+                  -0.086
+                ],
+                [
+                  0.01123,
+                  -0.08526
+                ],
+                [
+                  0.02226,
+                  -0.08307
+                ],
+                [
+                  0.03291,
+                  -0.07945
+                ],
+                [
+                  0.043,
+                  -0.07448
+                ],
+                [
+                  0.05235,
+                  -0.06823
+                ],
+                [
+                  0.06081,
+                  -0.06081
+                ],
+                [
+                  0.06823,
+                  -0.05235
+                ],
+                [
+                  0.07448,
+                  -0.043
+                ],
+                [
+                  0.07945,
+                  -0.03291
+                ],
+                [
+                  0.08307,
+                  -0.02226
+                ],
+                [
+                  0.08526,
+                  -0.01123
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "wall",
+                "base"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "water-top",
+              "bone": "water",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.07,
+              "ry": 0.07,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "handle-left",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.125,
+              "y": -0.01,
+              "w": 0.041,
+              "h": 0.02,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-right",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.084,
+              "y": -0.01,
+              "w": 0.041,
+              "h": 0.02,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.5 mm wide cut pot: one U-shaped wall, the water block and two handle stubs. Front: the wall strip with the base line and the near handle end-on; plan: the pot ring with the water disc and the two handle lugs.",
+            "de": "Ein 2,5 mm breiter aufgeschnittener Topf: eine U-förmige Wand, der Wasserblock und zwei Griffstummel. Vorderansicht: der Wandstreifen mit Bodenlinie und dem nahen Griff von vorn; Draufsicht: der Topfring mit der Wasserscheibe und den beiden Grifflaschen."
+          },
+          "retained": {
+            "en": "The U-shaped wall, water block and handles. The rim ring stays 0.018 m wide so it prints as a separate band around the water.",
+            "de": "Die U-förmige Wand, der Wasserblock und die Griffe. Der Randring bleibt 0,018 m breit und druckt so als eigenes Band um das Wasser."
+          },
+          "merged": {
+            "en": "Wall and base are one U (regions wall and base).",
+            "de": "Wand und Boden sind ein U (Regionen Wand und Boden)."
+          },
+          "omitted": {
+            "en": "Surface line and rim bead.",
+            "de": "Oberflächenlinie und Randwulst."
+          },
+          "thinElements": {
+            "en": "Walls are 8 mm (0.08 mm) in the U, drawn with the 0.18 mm pen.",
+            "de": "Die Wände sind 8 mm (0,08 mm) im U, mit dem 0,18-mm-Stift gezeichnet."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail none mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail keiner mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "The U carries wall and base as merged regions; water and handles stay separate.",
+            "de": "Das U trägt Wand und Boden als zusammengeführte Regionen; Wasser und Griffe bleiben getrennt."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "water",
+              "bone": "water",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.005,
+              "w": 0.17,
+              "h": 0.045,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "pot",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.086,
+                  0
+                ],
+                [
+                  0.086,
+                  0
+                ],
+                [
+                  0.086,
+                  0.1
+                ],
+                [
+                  0.078,
+                  0.1
+                ],
+                [
+                  0.078,
+                  0.012
+                ],
+                [
+                  -0.078,
+                  0.012
+                ],
+                [
+                  -0.078,
+                  0.1
+                ],
+                [
+                  -0.086,
+                  0.1
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "wall",
+                "base"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handles",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.125,
+              "y": -0.006,
+              "w": 0.25,
+              "h": 0.04,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ],
+          "front": [
+            {
+              "id": "pot-end",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.086,
+              "y": 0,
+              "w": 0.172,
+              "h": 0.1,
+              "regions": [
+                "wall",
+                "base"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "handle-end",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.012,
+              "y": 0.064,
+              "w": 0.024,
+              "h": 0.036,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ],
+          "plan": [
+            {
+              "id": "pot-top",
+              "bone": "pot",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.086,
+                  0.0
+                ],
+                [
+                  0.08526,
+                  0.01123
+                ],
+                [
+                  0.08307,
+                  0.02226
+                ],
+                [
+                  0.07945,
+                  0.03291
+                ],
+                [
+                  0.07448,
+                  0.043
+                ],
+                [
+                  0.06823,
+                  0.05235
+                ],
+                [
+                  0.06081,
+                  0.06081
+                ],
+                [
+                  0.05235,
+                  0.06823
+                ],
+                [
+                  0.043,
+                  0.07448
+                ],
+                [
+                  0.03291,
+                  0.07945
+                ],
+                [
+                  0.02226,
+                  0.08307
+                ],
+                [
+                  0.01123,
+                  0.08526
+                ],
+                [
+                  0.0,
+                  0.086
+                ],
+                [
+                  -0.01123,
+                  0.08526
+                ],
+                [
+                  -0.02226,
+                  0.08307
+                ],
+                [
+                  -0.03291,
+                  0.07945
+                ],
+                [
+                  -0.043,
+                  0.07448
+                ],
+                [
+                  -0.05235,
+                  0.06823
+                ],
+                [
+                  -0.06081,
+                  0.06081
+                ],
+                [
+                  -0.06823,
+                  0.05235
+                ],
+                [
+                  -0.07448,
+                  0.043
+                ],
+                [
+                  -0.07945,
+                  0.03291
+                ],
+                [
+                  -0.08307,
+                  0.02226
+                ],
+                [
+                  -0.08526,
+                  0.01123
+                ],
+                [
+                  -0.086,
+                  0.0
+                ],
+                [
+                  -0.08526,
+                  -0.01123
+                ],
+                [
+                  -0.08307,
+                  -0.02226
+                ],
+                [
+                  -0.07945,
+                  -0.03291
+                ],
+                [
+                  -0.07448,
+                  -0.043
+                ],
+                [
+                  -0.06823,
+                  -0.05235
+                ],
+                [
+                  -0.06081,
+                  -0.06081
+                ],
+                [
+                  -0.05235,
+                  -0.06823
+                ],
+                [
+                  -0.043,
+                  -0.07448
+                ],
+                [
+                  -0.03291,
+                  -0.07945
+                ],
+                [
+                  -0.02226,
+                  -0.08307
+                ],
+                [
+                  -0.01123,
+                  -0.08526
+                ],
+                [
+                  -0.0,
+                  -0.086
+                ],
+                [
+                  0.01123,
+                  -0.08526
+                ],
+                [
+                  0.02226,
+                  -0.08307
+                ],
+                [
+                  0.03291,
+                  -0.07945
+                ],
+                [
+                  0.043,
+                  -0.07448
+                ],
+                [
+                  0.05235,
+                  -0.06823
+                ],
+                [
+                  0.06081,
+                  -0.06081
+                ],
+                [
+                  0.06823,
+                  -0.05235
+                ],
+                [
+                  0.07448,
+                  -0.043
+                ],
+                [
+                  0.07945,
+                  -0.03291
+                ],
+                [
+                  0.08307,
+                  -0.02226
+                ],
+                [
+                  0.08526,
+                  -0.01123
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "wall",
+                "base"
+              ],
+              "material": "stainless"
+            },
+            {
+              "id": "water-top",
+              "bone": "water",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.055,
+              "ry": 0.055,
+              "region": "water",
+              "material": "water"
+            },
+            {
+              "id": "handle-left",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.125,
+              "y": -0.012,
+              "w": 0.045,
+              "h": 0.024,
+              "region": "handle",
+              "material": "stainless"
+            },
+            {
+              "id": "handle-right",
+              "bone": "handles",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.08,
+              "y": -0.012,
+              "w": 0.045,
+              "h": 0.024,
+              "region": "handle",
+              "material": "stainless"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1.25 mm wide pot with a bar across the rim for both handles. Front: the pot as a 0.172 m wide wall strip with the near handle end-on in front; plan: the pot disc with the water disc inside and the two handle stubs on the x axis.",
+            "de": "Ein 1,25 mm breiter Topf mit einem Balken über dem Rand für beide Griffe. Vorderansicht: der Topf als 0,172 m breiter Wandstreifen mit dem nahen Griff von vorn davor; Draufsicht: die Topfscheibe mit der Wasserscheibe darin und den beiden Grifflaschen auf der x-Achse."
+          },
+          "retained": {
+            "en": "U-shaped wall, water block and a handle bar.",
+            "de": "U-förmige Wand, Wasserblock und ein Griffbalken."
+          },
+          "merged": {
+            "en": "Both handles are one bar through the wall.",
+            "de": "Beide Griffe sind ein Balken durch die Wand."
+          },
+          "omitted": {
+            "en": "Surface line, rim bead and the water gap at the wall. The water is hidden behind the wall in front; the thin rim is merged into the pot disc in plan.",
+            "de": "Oberflächenlinie, Randwulst und die Wasserlücke an der Wand. Das Wasser liegt in der Vorderansicht hinter der Wand; der dünne Rand geht in der Draufsicht in der Topfscheibe auf."
+          },
+          "thinElements": {
+            "en": "Walls thickened from 4 to 15 mm, handle bar from 14 to 40 mm.",
+            "de": "Wände von 4 auf 15 mm verdickt, Griffbalken von 14 auf 40 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail none mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail keiner mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Wall and base merged, handles one region, water its own.",
+            "de": "Wand und Boden zusammengeführt, Griffe eine Region, Wasser eine eigene."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the asset is only 0.5 mm wide on paper and its smallest part, the 4 mm pot wall, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 0.5 mm breit auf Papier und sein kleinstes Teil, die 4 mm starke Topfwand, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 4 mm pot wall",
+          "de": "Die 4 mm starke Topfwand"
+        },
+        "limitingSizeM": 0.004,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "cold",
+        "title": {
+          "en": "Cold",
+          "de": "Kalt"
+        },
+        "description": {
+          "en": "Water of room temperature stands in the pot.",
+          "de": "Raumwarmes Wasser steht im Topf."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "wall": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.95,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            },
+            "base": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.1,
+              "contact": {
+                "fraction": 0.9,
+                "tempC": 21
+              }
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 0,
+            "steam-plume": 0
+          },
+          "operating": {
+            "heat": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "Heating",
+          "de": "Aufheizen"
+        },
+        "description": {
+          "en": "The pot stands on a flame: water and wall warm up, a little vapour rises.",
+          "de": "Der Topf steht auf einer Flamme: Wasser und Wand erwärmen sich, etwas Dampf steigt auf."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "wall": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.95,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            },
+            "base": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.1,
+              "contact": {
+                "fraction": 0.9,
+                "tempC": 100
+              }
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 1,
+            "steam-plume": 0.3
+          },
+          "operating": {
+            "heat": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "boiling",
+        "title": {
+          "en": "Boiling",
+          "de": "Kochend"
+        },
+        "description": {
+          "en": "The water boils at 100 degrees: the surface bobs and a dense steam plume rises.",
+          "de": "Das Wasser kocht bei 100 Grad: die Oberfläche wogt und eine dichte Dampffahne steigt auf."
+        },
+        "bones": {
+          "surface": {
+            "dy": 0.002
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "wall": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.95,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            },
+            "base": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.1,
+              "contact": {
+                "fraction": 0.9,
+                "tempC": 100
+              }
+            },
+            "handle": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "water": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "steam": 1,
+            "steam-plume": 1
+          },
+          "operating": {
+            "heat": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "heat-to-boil",
+        "title": {
+          "en": "Heat to boil",
+          "de": "Zum Kochen bringen"
+        },
+        "description": {
+          "en": "One litre of cold water warms for about 5 minutes at 1.2 kW until it boils; at 100 degC the temperature stops and the burner heat leaves as steam.",
+          "de": "Ein Liter kaltes Wasser erwärmt sich bei 1,2 kW etwa 5 Minuten lang, bis es kocht; bei 100 °C bleibt die Temperatur stehen und die Brennerwärme verlässt den Topf als Dampf."
+        },
+        "durationS": 379,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "cold",
+            "ease": "step"
+          },
+          {
+            "t": 1,
+            "pose": "heating",
+            "ease": "linear"
+          },
+          {
+            "t": 319,
+            "pose": "boiling",
+            "ease": "step"
+          },
+          {
+            "t": 379,
+            "pose": "boiling",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 379
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Switched off",
+              "de": "Ausgeschaltet"
+            }
+          },
+          {
+            "id": "warm",
+            "fromS": 1,
+            "toS": 160,
+            "title": {
+              "en": "Warming",
+              "de": "Erwärmen"
+            }
+          },
+          {
+            "id": "near",
+            "fromS": 160,
+            "toS": 319,
+            "title": {
+              "en": "Nearly boiling",
+              "de": "Fast kochend"
+            }
+          },
+          {
+            "id": "boil",
+            "fromS": 319,
+            "toS": 379,
+            "title": {
+              "en": "Boiling",
+              "de": "Kochen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1,
+            "kind": "ignition",
+            "title": {
+              "en": "Burner lit",
+              "de": "Brenner an"
+            },
+            "target": "heat"
+          },
+          {
+            "t": 319,
+            "kind": "operating",
+            "title": {
+              "en": "Boiling starts",
+              "de": "Sieden beginnt"
+            },
+            "target": "heat"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:heat",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:steam-plume",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.05
+              },
+              {
+                "t": 255,
+                "v": 0.3
+              },
+              {
+                "t": 319,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "boil",
+        "title": {
+          "en": "Rolling boil",
+          "de": "Siedendes Wasser"
+        },
+        "description": {
+          "en": "The surface bobs up and down while the steam keeps rising.",
+          "de": "Die Oberfläche wogt auf und ab, während der Dampf weiter aufsteigt."
+        },
+        "durationS": 1.5,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "boiling",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.4,
+            "pose": "boiling",
+            "ease": "smooth",
+            "bones": {
+              "surface": {
+                "dy": 0.004
+              }
+            }
+          },
+          {
+            "t": 0.8,
+            "pose": "boiling",
+            "ease": "smooth",
+            "bones": {
+              "surface": {
+                "dy": -0.002
+              }
+            }
+          },
+          {
+            "t": 1.15,
+            "pose": "boiling",
+            "ease": "smooth",
+            "bones": {
+              "surface": {
+                "dy": 0.003
+              }
+            }
+          },
+          {
+            "t": 1.5,
+            "pose": "boiling",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 1.5
+          }
+        ],
+        "phases": [
+          {
+            "id": "bob",
+            "fromS": 0,
+            "toS": 1.5,
+            "title": {
+              "en": "Bobbing",
+              "de": "Wogen"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": [
+          {
+            "target": "emitter:steam-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.4,
+                "v": 1
+              },
+              {
+                "t": 0.8,
+                "v": 0.85
+              },
+              {
+                "t": 1.15,
+                "v": 1
+              },
+              {
+                "t": 1.5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "heat",
+          "title": {
+            "en": "Heat from the hob",
+            "de": "Wärme vom Kochfeld"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Cold",
+                "de": "Kalt"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Heating at 1.2 kW",
+                "de": "Heizt mit 1,2 kW"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "wall",
+          "title": {
+            "en": "Pot wall",
+            "de": "Topfwand"
+          },
+          "kind": "surface",
+          "model": "coupled",
+          "material": "stainless",
+          "areaM2": 0.054,
+          "characteristicLengthM": 0.1,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "wall-skin",
+              "title": {
+                "en": "Pot wall",
+                "de": "Topfwand"
+              },
+              "kind": "metal",
+              "material": "stainless",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 5e-05,
+              "heatCapacityJM2K": 1000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018",
+          "coupled": {
+            "region": "water",
+            "wetFraction": 0.5,
+            "filmM2KW": 0.0025
+          }
+        },
+        {
+          "id": "base",
+          "title": {
+            "en": "Pot base",
+            "de": "Topfboden"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "stainless",
+          "areaM2": 0.0232,
+          "characteristicLengthM": 0.172,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "base-skin",
+              "title": {
+                "en": "Pot base",
+                "de": "Topfboden"
+              },
+              "kind": "metal",
+              "material": "stainless",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.0001,
+              "heatCapacityJM2K": 1200,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1200,
+          "operating": {
+            "key": "heat",
+            "heatW": 12
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "handle",
+          "title": {
+            "en": "Handles",
+            "de": "Griffe"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stainless",
+          "areaM2": 0.003,
+          "characteristicLengthM": 0.035,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "handle-skin",
+              "title": {
+                "en": "Handles",
+                "de": "Griffe"
+              },
+              "kind": "metal",
+              "material": "stainless",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.0001,
+              "heatCapacityJM2K": 2500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "water",
+          "title": {
+            "en": "Water",
+            "de": "Wasser"
+          },
+          "kind": "water",
+          "model": "operating",
+          "material": "water",
+          "areaM2": 0.0201,
+          "characteristicLengthM": 0.16,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "water-skin",
+              "title": {
+                "en": "Water",
+                "de": "Wasser"
+              },
+              "kind": "polymer",
+              "material": "water",
+              "thicknessM": 0.05,
+              "resistanceM2KW": 0.0017,
+              "heatCapacityJM2K": 208259,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 208259,
+          "operating": {
+            "key": "heat",
+            "heatW": 1173
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "steam",
+          "kind": "vent",
+          "title": {
+            "en": "Steam leaving the water surface",
+            "de": "Dampf von der Wasseroberfläche"
+          },
+          "anchor": "steam-top",
+          "directionDeg": 90,
+          "diameterM": 0.16,
+          "operatingKey": "heat",
+          "volumeFlowM3S": 0.004,
+          "temperatureRiseK": 75,
+          "vapourKgPerKg": 0.3,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021",
+          "region": "water"
+        },
+        {
+          "id": "steam-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Plume above the boiling water",
+            "de": "Fahne über dem kochenden Wasser"
+          },
+          "anchor": "steam-top",
+          "directionDeg": 90,
+          "diameterM": 0.16,
+          "region": "water",
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The burner delivers about 2.5 kW of gas and about 1.2 kW of it enters the pot (about 50 percent efficiency): 1173 W reach the water through the base and 12 W stay in the sandwich base (the last 15 W pass the pot in the flame). The wall is not heated by itself: below the fill level (half of the wall height) it follows the water through the inside film of 0.0025 m2K/W and takes its heat from the water, so it reads within a few kelvin of the water. The other regions are lumped and do not conduct to each other, so each carries the heat it absorbs. The water region holds 1 kg (1 L) with the heat capacity of the water per surface area, 1 kg x 4186 J/(kg K) / 0.0201 m2: about 331 kJ lift it by 79 K in about 5 minutes, the order of the 419 kJ of the physics lesson (1 kg, 100 K). At 100 degC the phase change of the water caps the temperature and the surplus power evaporates it at 2.257 MJ/kg; the steam emitter releases exactly this vapour rate.",
+          "de": "Der Brenner liefert etwa 2,5 kW Gas, davon gelangen etwa 1,2 kW in den Topf (rund 50 Prozent Wirkungsgrad): 1173 W erreichen das Wasser über den Boden und 12 W bleiben im Sandwichboden (die letzten 15 W ziehen in der Flamme am Topf vorbei). Die Wand wird nicht für sich geheizt: unterhalb des Füllstands (die halbe Wandhöhe) folgt sie dem Wasser über den inneren Film von 0,0025 m2K/W und nimmt ihre Wärme dem Wasser, sodass sie wenige Kelvin unter dem Wasser liegt. Die übrigen Regionen sind konzentriert und leiten nicht untereinander, daher trägt jede die Wärme, die sie aufnimmt. Die Wasserregion fasst 1 kg (1 l) mit der Wärmekapazität des Wassers je Oberflächenfläche, 1 kg x 4186 J/(kg K) / 0.0201 m2: rund 331 kJ heben es um 79 K in etwa 5 Minuten, in der Größenordnung der 419 kJ der Physiklektion (1 kg, 100 K). Bei 100 °C deckelt der Phasenwechsel des Wassers die Temperatur und die überschüssige Leistung verdampft es mit 2,257 MJ/kg; der Dampfemitter gibt genau diese Dampfrate ab."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 1.6 kg filled pot stands on its base: a unilateral contact of 0.15 m diameter carries the weight.",
+          "de": "Der 1,6 kg schwere gefüllte Topf steht auf seinem Boden: ein einseitiger Kontakt von 0,15 m Durchmesser trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "boiling",
+      "defaultClip": "boil",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

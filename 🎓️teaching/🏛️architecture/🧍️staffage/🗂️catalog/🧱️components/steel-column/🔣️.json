@@ -83,9 +83,9 @@
       }
     },
     "dimensions": {
-      "heightM": 3.0,
+      "heightM": 3,
       "widthM": 0.3,
-      "depthM": 0.2,
+      "depthM": 0.26,
       "massKg": 183.93
     },
     "materials": [
@@ -134,7 +134,7 @@
           },
           "section": {
             "areaM2": 0.00781,
-            "secondMomentM4": 5.696e-05,
+            "secondMomentM4": 0.00005696,
             "extremeFibreM": 0.1,
             "material": "steel",
             "title": {
@@ -200,508 +200,6 @@
       }
     ],
     "representations": {
-      "500": {
-        "status": "authored",
-        "denominator": 500,
-        "validRange": {
-          "minDenominator": 350,
-          "maxDenominator": 1000
-        },
-        "pens": {
-          "body": 0.13,
-          "detail": null,
-          "texture": null,
-          "glazing": null,
-          "ground": 0.18
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "column",
-              "bone": "column",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.4,
-              "regions": [
-                "column-flange",
-                "column-web",
-                "base-plate",
-                "cap-plate"
-              ],
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.15
-                ],
-                [
-                  0.0,
-                  -0.15
-                ],
-                [
-                  0.02,
-                  -0.15
-                ],
-                [
-                  0.02,
-                  -0.1
-                ],
-                [
-                  2.98,
-                  -0.1
-                ],
-                [
-                  2.98,
-                  -0.12
-                ],
-                [
-                  3.0,
-                  -0.12
-                ],
-                [
-                  3.0,
-                  0.12
-                ],
-                [
-                  2.98,
-                  0.12
-                ],
-                [
-                  2.98,
-                  0.1
-                ],
-                [
-                  0.02,
-                  0.1
-                ],
-                [
-                  0.02,
-                  0.15
-                ]
-              ],
-              "closed": true
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "One composed vertical bar 0.20 m wide and 3.00 m high (0.4 x 6 mm) with the 20 mm base and head plates as step-outs of the outline.",
-            "de": "Ein zusammengesetzter senkrechter Balken, 0,20 m breit und 3,00 m hoch (0,4 x 6 mm), mit den 20-mm-Fuß- und Kopfplatten als Absätzen der Kontur."
-          },
-          "retained": {
-            "en": "Height, flange width 0.20 m and the plate widths 0.30 m and 0.24 m.",
-            "de": "Höhe, Flanschbreite 0,20 m und die Plattenbreiten 0,30 m und 0,24 m."
-          },
-          "merged": {
-            "en": "Flanges, web, plates, stiffeners and nuts are one solid.",
-            "de": "Flansche, Steg, Platten, Rippen und Muttern sind ein Körper."
-          },
-          "omitted": {
-            "en": "Flange edge lines, fillets, stiffeners, anchor nuts and bolts, splice line.",
-            "de": "Flanschkanten, Hohlkehlen, Rippen, Ankermuttern und -bolzen, Stoßlinie."
-          },
-          "thinElements": {
-            "en": "The stiffeners (0.12 m) and plates (0.04 mm) are below printable size and carried only in the step-out of the outline.",
-            "de": "Rippen (0,12 m) und Platten (0,04 mm) liegen unter der druckbaren Größe und stecken nur in den Absätzen der Kontur."
-          },
-          "hatching": {
-            "en": "No hatch: the elevation is not cut and the bar is 0.4 mm wide.",
-            "de": "Keine Schraffur: die Ansicht ist nicht geschnitten und der Balken 0,4 mm breit."
-          },
-          "styles": {
-            "en": "Dark solid bar reads as steel.",
-            "de": "Der dunkle Vollbalken liest sich als Stahl."
-          },
-          "overlays": {
-            "en": "Overlays colour the whole bar with the area-weighted values of flange, web, base and head plate (labelled merged).",
-            "de": "Überlagerungen färben den ganzen Balken mit den flächengewichteten Werten von Flansch, Steg, Fuß- und Kopfplatte (als zusammengefasst gekennzeichnet)."
-          }
-        }
-      },
-      "200": {
-        "status": "authored",
-        "denominator": 200,
-        "validRange": {
-          "minDenominator": 150,
-          "maxDenominator": 350
-        },
-        "pens": {
-          "body": 0.18,
-          "detail": 0.1,
-          "texture": null,
-          "glazing": 0.1,
-          "ground": 0.25
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "column-bar",
-              "bone": "column",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.4,
-              "regions": [
-                "column-flange",
-                "column-web"
-              ],
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.05,
-                  0.1
-                ],
-                [
-                  0.05,
-                  -0.1
-                ],
-                [
-                  2.95,
-                  -0.1
-                ],
-                [
-                  2.95,
-                  0.1
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "base-plate-slab",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "base-plate",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.15
-                ],
-                [
-                  0.0,
-                  -0.15
-                ],
-                [
-                  0.05,
-                  -0.15
-                ],
-                [
-                  0.05,
-                  0.15
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "cap-plate-slab",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "cap-plate",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  2.95,
-                  0.12
-                ],
-                [
-                  2.95,
-                  -0.12
-                ],
-                [
-                  3.0,
-                  -0.12
-                ],
-                [
-                  3.0,
-                  0.12
-                ]
-              ],
-              "closed": true
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "A 1 mm wide steel bar with a wider base plate and a head plate.",
-            "de": "Ein 1 mm breiter Stahlbalken mit breiterer Fußplatte und Kopfplatte."
-          },
-          "retained": {
-            "en": "Column bar, base plate (1.5 mm) and head plate (1.2 mm) at their true widths.",
-            "de": "Stützenbalken, Fußplatte (1,5 mm) und Kopfplatte (1,2 mm) in wahrer Breite."
-          },
-          "merged": {
-            "en": "Flanges and web are one bar shape.",
-            "de": "Flansche und Steg bilden eine Balkenform."
-          },
-          "omitted": {
-            "en": "Stiffeners, nuts, bolts, fillet and flange edge lines, splice line.",
-            "de": "Rippen, Muttern, Bolzen, Hohlkehlen- und Flanschkantenlinien, Stoßlinie."
-          },
-          "thinElements": {
-            "en": "The 20 mm plates are drawn 50 mm thick (0.25 mm, the smallest filled feature that prints with a margin); the bar is shortened by the same 30 mm per end so the overall height stays 3.00 m.",
-            "de": "Die 20-mm-Platten sind 50 mm dick gezeichnet (0,25 mm, die kleinste gefüllte Einzelheit, die mit Reserve druckt); der Balken ist an jedem Ende um dieselben 30 mm gekürzt, sodass die Gesamthöhe 3,00 m bleibt."
-          },
-          "hatching": {
-            "en": "No hatch.",
-            "de": "Keine Schraffur."
-          },
-          "styles": {
-            "en": "Dark bar, lighter plates.",
-            "de": "Dunkler Balken, hellere Platten."
-          },
-          "overlays": {
-            "en": "Bar (merged flange and web), base plate and head plate are separate overlay cells.",
-            "de": "Balken (Flansch und Steg zusammengefasst), Fuß- und Kopfplatte sind getrennte Überlagerungszellen."
-          }
-        }
-      },
-      "100": {
-        "status": "authored",
-        "denominator": 100,
-        "validRange": {
-          "minDenominator": 75,
-          "maxDenominator": 150
-        },
-        "pens": {
-          "body": 0.25,
-          "detail": 0.13,
-          "texture": 0.1,
-          "glazing": 0.1,
-          "ground": 0.35
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "column-web-bar",
-              "bone": "column",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.45,
-              "regions": [
-                "column-flange",
-                "column-web"
-              ],
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.035,
-                  0.1
-                ],
-                [
-                  0.035,
-                  -0.1
-                ],
-                [
-                  2.965,
-                  -0.1
-                ],
-                [
-                  2.965,
-                  0.1
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "base-plate-block",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "base-plate",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.15
-                ],
-                [
-                  0.0,
-                  -0.15
-                ],
-                [
-                  0.035,
-                  -0.15
-                ],
-                [
-                  0.035,
-                  0.15
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "stiffener-left",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "base-plate",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0.035,
-                  0.1
-                ],
-                [
-                  0.035,
-                  0.15
-                ],
-                [
-                  0.2,
-                  0.13
-                ],
-                [
-                  0.2,
-                  0.1
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "stiffener-right",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "base-plate",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0.035,
-                  -0.1
-                ],
-                [
-                  0.035,
-                  -0.15
-                ],
-                [
-                  0.2,
-                  -0.13
-                ],
-                [
-                  0.2,
-                  -0.1
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "cap-plate-block",
-              "bone": "column",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "cap-plate",
-              "material": "steel",
-              "penMm": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  2.965,
-                  0.12
-                ],
-                [
-                  2.965,
-                  -0.12
-                ],
-                [
-                  3.0,
-                  -0.12
-                ],
-                [
-                  3.0,
-                  0.12
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "splice-joint",
-              "bone": "column",
-              "role": "detail",
-              "z": 1.5,
-              "filled": false,
-              "tone": 0.3,
-              "region": "column-web",
-              "kind": "poly",
-              "points": [
-                [
-                  1.5,
-                  0.1
-                ],
-                [
-                  1.5,
-                  -0.1
-                ]
-              ],
-              "closed": false
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "A 2 mm wide column bar, a base plate with two stiffener gussets and a head plate; the steel column reads as an H-section seen onto its web.",
-            "de": "Ein 2 mm breiter Stützenbalken, Fußplatte mit zwei Rippen und Kopfplatte; die Stahlstütze liest sich als H-Profil mit Blick auf den Steg."
-          },
-          "retained": {
-            "en": "Plates, two trapezoid gussets (1 x 1.5 mm) and the splice joint at 1.50 m.",
-            "de": "Platten, zwei Trapezrippen (1 x 1,5 mm) und der Montagestoß bei 1,50 m."
-          },
-          "merged": {
-            "en": "Flange and web share the bar shape; the 15 mm flange edges (0.15 mm) are merged into the outline.",
-            "de": "Flansch und Steg teilen sich die Balkenform; die 15-mm-Flanschkanten (0,15 mm) gehen in der Kontur auf."
-          },
-          "omitted": {
-            "en": "Flange edge lines, fillet lines, anchor nuts and bolts (0.36 x 0.48 mm).",
-            "de": "Flanschkantenlinien, Hohlkehlenlinien, Ankermuttern und -bolzen (0,36 x 0,48 mm)."
-          },
-          "thinElements": {
-            "en": "The 20 mm plates are drawn 35 mm thick (0.35 mm, above the 0.2 mm feature minimum); the bar is shortened accordingly. The gussets are drawn as trapezoids with a 30 mm flat top, so no filled tip is thinner than the printable feature.",
-            "de": "Die 20-mm-Platten sind 35 mm dick gezeichnet (0,35 mm, über dem Mindestmerkmal von 0,2 mm); der Balken ist entsprechend gekürzt. Die Rippen sind als Trapeze mit 30 mm breiter Oberkante gezeichnet, sodass keine gefüllte Spitze dünner ist als das druckbare Merkmal."
-          },
-          "hatching": {
-            "en": "No hatch: the elevation is not a cut.",
-            "de": "Keine Schraffur: die Ansicht ist kein Schnitt."
-          },
-          "styles": {
-            "en": "Outline 0.25 mm; dark column, lighter plates.",
-            "de": "Kontur 0,25 mm; dunkle Stütze, hellere Platten."
-          },
-          "overlays": {
-            "en": "Bar cell (merged flange and web), plates with stiffeners and head plate; the bar carries the merged value.",
-            "de": "Balkenzelle (Flansch und Steg zusammengefasst), Platten mit Rippen und Kopfplatte; der Balken trägt den zusammengefassten Wert."
-          }
-        }
-      },
       "50": {
         "status": "authored",
         "denominator": 50,
@@ -895,11 +393,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.15
                 ],
                 [
-                  0.0,
+                  0,
                   -0.15
                 ],
                 [
@@ -1095,11 +593,11 @@
                   -0.12
                 ],
                 [
-                  3.0,
+                  3,
                   -0.12
                 ],
                 [
-                  3.0,
+                  3,
                   0.12
                 ]
               ],
@@ -1147,12 +645,371 @@
               ],
               "closed": false
             }
+          ],
+          "front": [
+            {
+              "id": "flange-face",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "column-flange",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.02,
+              "w": 0.2,
+              "h": 2.96
+            },
+            {
+              "id": "base-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0,
+              "w": 0.26,
+              "h": 0.02
+            },
+            {
+              "id": "stiffener-a",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.008,
+              "y": 0.02,
+              "w": 0.016,
+              "h": 0.09
+            },
+            {
+              "id": "cap-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.11,
+              "y": 2.98,
+              "w": 0.22,
+              "h": 0.02
+            },
+            {
+              "id": "splice-line",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.35,
+              "region": "column-flange",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  1.5
+                ],
+                [
+                  0.1,
+                  1.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "splice-mark",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.4,
+              "region": "column-flange",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  1.5
+                ],
+                [
+                  0.13,
+                  1.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "anchor-nut-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.112,
+              "y": 0.02,
+              "w": 0.024,
+              "h": 0.018
+            },
+            {
+              "id": "anchor-bolt-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.35,
+              "region": "base-plate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.038
+                ],
+                [
+                  -0.1,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "anchor-nut-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.088,
+              "y": 0.02,
+              "w": 0.024,
+              "h": 0.018
+            },
+            {
+              "id": "anchor-bolt-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.35,
+              "region": "base-plate",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.038
+                ],
+                [
+                  0.1,
+                  0.075
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "base-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.13,
+              "w": 0.3,
+              "h": 0.26
+            },
+            {
+              "id": "stiffener-a",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.008,
+              "w": 0.05,
+              "h": 0.016
+            },
+            {
+              "id": "stiffener-b",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.008,
+              "w": 0.05,
+              "h": 0.016
+            },
+            {
+              "id": "cap-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "regions": [
+                "cap-plate",
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.22
+            },
+            {
+              "id": "anchor-nut-00",
+              "bone": "column",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": -0.125,
+              "cy": -0.1,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "anchor-bolt-00",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "base-plate",
+              "kind": "ellipse",
+              "cx": -0.125,
+              "cy": -0.1,
+              "rx": 0.005,
+              "ry": 0.005
+            },
+            {
+              "id": "anchor-nut-01",
+              "bone": "column",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": -0.125,
+              "cy": 0.1,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "anchor-bolt-01",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "base-plate",
+              "kind": "ellipse",
+              "cx": -0.125,
+              "cy": 0.1,
+              "rx": 0.005,
+              "ry": 0.005
+            },
+            {
+              "id": "anchor-nut-10",
+              "bone": "column",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0.125,
+              "cy": -0.1,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "anchor-bolt-10",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "base-plate",
+              "kind": "ellipse",
+              "cx": 0.125,
+              "cy": -0.1,
+              "rx": 0.005,
+              "ry": 0.005
+            },
+            {
+              "id": "anchor-nut-11",
+              "bone": "column",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 0.125,
+              "cy": 0.1,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "anchor-bolt-11",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.35,
+              "region": "base-plate",
+              "kind": "ellipse",
+              "cx": 0.125,
+              "cy": 0.1,
+              "rx": 0.005,
+              "ry": 0.005
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "The H-section seen onto its web: flange edges, web with fillet lines, base plate with two stiffener gussets, anchor nuts and bolts, head plate and a splice joint; the column reads as a rolled steel member.",
-            "de": "Das H-Profil mit Blick auf den Steg: Flanschkanten, Steg mit Hohlkehlenlinien, Fußplatte mit zwei Rippen, Ankermuttern und -bolzen, Kopfplatte und ein Montagestoß; die Stütze liest sich als gewalztes Stahlprofil."
+            "en": "The H-section seen onto its web: flange edges, web with fillet lines, base plate with two stiffener gussets, anchor nuts and bolts, head plate and a splice joint; the column reads as a rolled steel member. Front and plan: the front is the flange face with the near gusset edge-on, the two near anchor nuts and bolts, the splice and the cut-plane marker; the plan is the top view with the head plate (20 mm) over the base plate, two gussets and four anchor nuts with bolt ends; the far nuts are hidden behind the near ones in the front.",
+            "de": "Das H-Profil mit Blick auf den Steg: Flanschkanten, Steg mit Hohlkehlenlinien, Fußplatte mit zwei Rippen, Ankermuttern und -bolzen, Kopfplatte und ein Montagestoß; die Stütze liest sich als gewalztes Stahlprofil. Vorder- und Draufsicht: Die Vorderansicht ist die Flanschfläche mit der vorderen Rippe in Kantenansicht, den zwei vorderen Ankermuttern und -bolzen, dem Stoß und der Schnittmarke; die Draufsicht ist die Sicht von oben mit der Kopfplatte (20 mm) über der Fußplatte, zwei Rippen und vier Ankermuttern mit Bolzenenden; die hinteren Muttern sind in der Vorderansicht hinter den vorderen verdeckt."
           },
           "retained": {
             "en": "Flange thickness 15 mm (0.3 mm), fillet lines, 20 mm plates at true thickness (0.4 mm), trapezoid gussets 0.05 x 0.09 m (30 mm flat top), nuts 18 x 24 mm (0.36 x 0.48 mm), bolts, splice and cut-plane marker.",
@@ -1183,18 +1040,874 @@
             "de": "Flanschkanten, Steg (Hohlkehlenlinien), Fußplattengruppe und Kopfplatte sind getrennte Überlagerungszellen, so erscheinen besonnte Flansche und verschattete Stegkammern verschieden."
           }
         }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "column-web-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  0.1
+                ],
+                [
+                  0.035,
+                  -0.1
+                ],
+                [
+                  2.965,
+                  -0.1
+                ],
+                [
+                  2.965,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "base-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.15
+                ],
+                [
+                  0,
+                  -0.15
+                ],
+                [
+                  0.035,
+                  -0.15
+                ],
+                [
+                  0.035,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stiffener-left",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  0.1
+                ],
+                [
+                  0.035,
+                  0.15
+                ],
+                [
+                  0.2,
+                  0.13
+                ],
+                [
+                  0.2,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stiffener-right",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  -0.1
+                ],
+                [
+                  0.035,
+                  -0.15
+                ],
+                [
+                  0.2,
+                  -0.13
+                ],
+                [
+                  0.2,
+                  -0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cap-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.965,
+                  0.12
+                ],
+                [
+                  2.965,
+                  -0.12
+                ],
+                [
+                  3,
+                  -0.12
+                ],
+                [
+                  3,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "splice-joint",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "column-web",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.1
+                ],
+                [
+                  1.5,
+                  -0.1
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "column-flange-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.035,
+              "w": 0.2,
+              "h": 2.93
+            },
+            {
+              "id": "base-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0,
+              "w": 0.26,
+              "h": 0.035
+            },
+            {
+              "id": "stiffener-edge",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.01,
+              "y": 0.035,
+              "w": 0.02,
+              "h": 0.165
+            },
+            {
+              "id": "cap-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.11,
+              "y": 2.965,
+              "w": 0.22,
+              "h": 0.035
+            },
+            {
+              "id": "splice-joint",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.35,
+              "region": "column-flange",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  1.5
+                ],
+                [
+                  0.1,
+                  1.5
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "base-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.13,
+              "w": 0.3,
+              "h": 0.26
+            },
+            {
+              "id": "stiffener-a",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 0.1,
+              "y": -0.01,
+              "w": 0.05,
+              "h": 0.02
+            },
+            {
+              "id": "stiffener-b",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.01,
+              "w": 0.05,
+              "h": 0.02
+            },
+            {
+              "id": "cap-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "cap-plate",
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.22
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2 mm wide column bar, a base plate with two stiffener gussets and a head plate; the steel column reads as an H-section seen onto its web. Front and plan: the front shows the flange face, the edge of the near gusset (20 mm) and the splice joint; the plan shows the head plate over the base plate with the two gussets sticking out of the head plate on the web axis.",
+            "de": "Ein 2 mm breiter Stützenbalken, Fußplatte mit zwei Rippen und Kopfplatte; die Stahlstütze liest sich als H-Profil mit Blick auf den Steg. Vorder- und Draufsicht: Die Vorderansicht zeigt die Flanschfläche, die Kante der vorderen Rippe (20 mm) und den Montagestoß; die Draufsicht zeigt die Kopfplatte über der Fußplatte, die beiden Rippen ragen auf der Stegachse unter der Kopfplatte hervor."
+          },
+          "retained": {
+            "en": "Plates, two trapezoid gussets (1 x 1.5 mm) and the splice joint at 1.50 m.",
+            "de": "Platten, zwei Trapezrippen (1 x 1,5 mm) und der Montagestoß bei 1,50 m."
+          },
+          "merged": {
+            "en": "Flange and web share the bar shape; the 15 mm flange edges (0.15 mm) are merged into the outline.",
+            "de": "Flansch und Steg teilen sich die Balkenform; die 15-mm-Flanschkanten (0,15 mm) gehen in der Kontur auf."
+          },
+          "omitted": {
+            "en": "Flange edge lines, fillet lines, anchor nuts and bolts (0.36 x 0.48 mm).",
+            "de": "Flanschkantenlinien, Hohlkehlenlinien, Ankermuttern und -bolzen (0,36 x 0,48 mm)."
+          },
+          "thinElements": {
+            "en": "The 20 mm plates are drawn 35 mm thick (0.35 mm, above the 0.2 mm feature minimum); the bar is shortened accordingly. The gussets are drawn as trapezoids with a 30 mm flat top, so no filled tip is thinner than the printable feature.",
+            "de": "Die 20-mm-Platten sind 35 mm dick gezeichnet (0,35 mm, über dem Mindestmerkmal von 0,2 mm); der Balken ist entsprechend gekürzt. Die Rippen sind als Trapeze mit 30 mm breiter Oberkante gezeichnet, sodass keine gefüllte Spitze dünner ist als das druckbare Merkmal."
+          },
+          "hatching": {
+            "en": "No hatch: the elevation is not a cut.",
+            "de": "Keine Schraffur: die Ansicht ist kein Schnitt."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm; dark column, lighter plates.",
+            "de": "Kontur 0,25 mm; dunkle Stütze, hellere Platten."
+          },
+          "overlays": {
+            "en": "Bar cell (merged flange and web), plates with stiffeners and head plate; the bar carries the merged value.",
+            "de": "Balkenzelle (Flansch und Steg zusammengefasst), Platten mit Rippen und Kopfplatte; der Balken trägt den zusammengefassten Wert."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "column-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.1
+                ],
+                [
+                  0.05,
+                  -0.1
+                ],
+                [
+                  2.95,
+                  -0.1
+                ],
+                [
+                  2.95,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "base-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.15
+                ],
+                [
+                  0,
+                  -0.15
+                ],
+                [
+                  0.05,
+                  -0.15
+                ],
+                [
+                  0.05,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cap-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.95,
+                  0.12
+                ],
+                [
+                  2.95,
+                  -0.12
+                ],
+                [
+                  3,
+                  -0.12
+                ],
+                [
+                  3,
+                  0.12
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "column-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.05,
+              "w": 0.2,
+              "h": 2.9
+            },
+            {
+              "id": "base-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0,
+              "w": 0.26,
+              "h": 0.05
+            },
+            {
+              "id": "cap-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.11,
+              "y": 2.95,
+              "w": 0.22,
+              "h": 0.05
+            }
+          ],
+          "plan": [
+            {
+              "id": "base-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.13,
+              "w": 0.3,
+              "h": 0.26
+            },
+            {
+              "id": "cap-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "regions": [
+                "cap-plate",
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.22
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1 mm wide steel bar with a wider base plate and a head plate. Front and plan: the front shows the flange face as one bar between the two plates; the plan is the top view (not the cut sign): head plate over base plate, the profile below the head plate stays hidden.",
+            "de": "Ein 1 mm breiter Stahlbalken mit breiterer Fußplatte und Kopfplatte. Vorder- und Draufsicht: Die Vorderansicht zeigt die Flanschfläche als einen Balken zwischen den beiden Platten; die Draufsicht ist die Sicht von oben (nicht das Schnittzeichen): Kopfplatte über der Fußplatte, das Profil unter der Kopfplatte bleibt verdeckt."
+          },
+          "retained": {
+            "en": "Column bar, base plate (1.5 mm) and head plate (1.2 mm) at their true widths.",
+            "de": "Stützenbalken, Fußplatte (1,5 mm) und Kopfplatte (1,2 mm) in wahrer Breite."
+          },
+          "merged": {
+            "en": "Flanges and web are one bar shape.",
+            "de": "Flansche und Steg bilden eine Balkenform."
+          },
+          "omitted": {
+            "en": "Stiffeners, nuts, bolts, fillet and flange edge lines, splice line.",
+            "de": "Rippen, Muttern, Bolzen, Hohlkehlen- und Flanschkantenlinien, Stoßlinie."
+          },
+          "thinElements": {
+            "en": "The 20 mm plates are drawn 50 mm thick (0.25 mm, the smallest filled feature that prints with a margin); the bar is shortened by the same 30 mm per end so the overall height stays 3.00 m.",
+            "de": "Die 20-mm-Platten sind 50 mm dick gezeichnet (0,25 mm, die kleinste gefüllte Einzelheit, die mit Reserve druckt); der Balken ist an jedem Ende um dieselben 30 mm gekürzt, sodass die Gesamthöhe 3,00 m bleibt."
+          },
+          "hatching": {
+            "en": "No hatch.",
+            "de": "Keine Schraffur."
+          },
+          "styles": {
+            "en": "Dark bar, lighter plates.",
+            "de": "Dunkler Balken, hellere Platten."
+          },
+          "overlays": {
+            "en": "Bar (merged flange and web), base plate and head plate are separate overlay cells.",
+            "de": "Balken (Flansch und Steg zusammengefasst), Fuß- und Kopfplatte sind getrennte Überlagerungszellen."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web",
+                "base-plate",
+                "cap-plate"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.15
+                ],
+                [
+                  0,
+                  -0.15
+                ],
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  0.02,
+                  -0.1
+                ],
+                [
+                  2.98,
+                  -0.1
+                ],
+                [
+                  2.98,
+                  -0.12
+                ],
+                [
+                  3,
+                  -0.12
+                ],
+                [
+                  3,
+                  0.12
+                ],
+                [
+                  2.98,
+                  0.12
+                ],
+                [
+                  2.98,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.15
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web",
+                "base-plate",
+                "cap-plate"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  0
+                ],
+                [
+                  0.13,
+                  0
+                ],
+                [
+                  0.13,
+                  0.02
+                ],
+                [
+                  0.1,
+                  0.02
+                ],
+                [
+                  0.1,
+                  2.98
+                ],
+                [
+                  0.11,
+                  2.98
+                ],
+                [
+                  0.11,
+                  3
+                ],
+                [
+                  -0.11,
+                  3
+                ],
+                [
+                  -0.11,
+                  2.98
+                ],
+                [
+                  -0.1,
+                  2.98
+                ],
+                [
+                  -0.1,
+                  0.02
+                ],
+                [
+                  -0.13,
+                  0.02
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "base-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.13,
+              "w": 0.3,
+              "h": 0.26
+            },
+            {
+              "id": "cap-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "cap-plate",
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.11,
+              "w": 0.24,
+              "h": 0.22
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One composed vertical bar 0.20 m wide and 3.00 m high (0.4 x 6 mm) with the 20 mm base and head plates as step-outs of the outline. Front and plan: the front is the flange face with the 0.26 m base plate and the 0.22 m head plate as one outline; the plan is the 0.30 x 0.26 m base plate under the 0.24 x 0.22 m head plate, the roof of the column seen from above.",
+            "de": "Ein zusammengesetzter senkrechter Balken, 0,20 m breit und 3,00 m hoch (0,4 x 6 mm), mit den 20-mm-Fuß- und Kopfplatten als Absätzen der Kontur. Vorder- und Draufsicht: Die Vorderansicht ist die Flanschfläche mit der 0,26 m breiten Fußplatte und der 0,22 m breiten Kopfplatte in einem Umriss; die Draufsicht zeigt die Fußplatte 0,30 x 0,26 m unter der Kopfplatte 0,24 x 0,22 m, das Dach der Stütze von oben."
+          },
+          "retained": {
+            "en": "Height, flange width 0.20 m and the plate widths 0.30 m and 0.24 m.",
+            "de": "Höhe, Flanschbreite 0,20 m und die Plattenbreiten 0,30 m und 0,24 m."
+          },
+          "merged": {
+            "en": "Flanges, web, plates, stiffeners and nuts are one solid.",
+            "de": "Flansche, Steg, Platten, Rippen und Muttern sind ein Körper."
+          },
+          "omitted": {
+            "en": "Flange edge lines, fillets, stiffeners, anchor nuts and bolts, splice line.",
+            "de": "Flanschkanten, Hohlkehlen, Rippen, Ankermuttern und -bolzen, Stoßlinie."
+          },
+          "thinElements": {
+            "en": "The stiffeners (0.12 m) and plates (0.04 mm) are below printable size and carried only in the step-out of the outline.",
+            "de": "Rippen (0,12 m) und Platten (0,04 mm) liegen unter der druckbaren Größe und stecken nur in den Absätzen der Kontur."
+          },
+          "hatching": {
+            "en": "No hatch: the elevation is not cut and the bar is 0.4 mm wide.",
+            "de": "Keine Schraffur: die Ansicht ist nicht geschnitten und der Balken 0,4 mm breit."
+          },
+          "styles": {
+            "en": "Dark solid bar reads as steel.",
+            "de": "Der dunkle Vollbalken liest sich als Stahl."
+          },
+          "overlays": {
+            "en": "Overlays colour the whole bar with the area-weighted values of flange, web, base and head plate (labelled merged).",
+            "de": "Überlagerungen färben den ganzen Balken mit den flächengewichteten Werten von Flansch, Steg, Fuß- und Kopfplatte (als zusammengefasst gekennzeichnet)."
+          }
+        }
       }
     },
     "symbols": [
       {
-        "id": "section-plan",
+        "id": "steel-column-symbol",
         "title": {
-          "en": "HEB 200 column, cut in plan",
-          "de": "Stütze HEB 200, im Grundriss geschnitten"
+          "en": "HEB 200 column, conventional sign",
+          "de": "Stütze HEB 200, Zeichen"
         },
         "description": {
-          "en": "The conventional plan sign of a steel column: the rolled H-section cut above the base plate, hatched at 1:50 and solid black at 1:100 and 1:200 (DIN 1356-1, DIN ISO 128-50).",
-          "de": "Das übliche Grundrisszeichen einer Stahlstütze: das gewalzte H-Profil über der Fußplatte geschnitten, bei 1:50 schraffiert und bei 1:100 und 1:200 schwarz gefüllt (DIN 1356-1, DIN ISO 128-50)."
+          "en": "The conventional sign of a steel column in all three views at real size: in plan the rolled H-section cut above the base plate, hatched at 1:50 and solid black at 1:100 and 1:200, with the base plate below as an outline (DIN 1356-1); in the side and front view the shaft with base plate and cap plate.",
+          "de": "Das Zeichen einer Stahlstütze in allen drei Ansichten in wahrer Größe: im Grundriss das gewalzte H-Profil über der Fußplatte geschnitten, bei 1:50 schraffiert und bei 1:100 und 1:200 schwarz, mit der Fußplatte darunter als Umriss (DIN 1356-1); in Seiten- und Vorderansicht der Schaft mit Fuß- und Kopfplatte."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -1224,7 +1937,103 @@
           }
         ],
         "geometry": {
-          "elevation": [],
+          "elevation": [
+            {
+              "id": "column-bar",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.05
+                ],
+                [
+                  0.1,
+                  0.05
+                ],
+                [
+                  0.1,
+                  2.95
+                ],
+                [
+                  -0.1,
+                  2.95
+                ]
+              ],
+              "closed": true,
+              "bone": "column"
+            },
+            {
+              "id": "base-plate-slab",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0
+                ],
+                [
+                  0.15,
+                  0
+                ],
+                [
+                  0.15,
+                  0.05
+                ],
+                [
+                  -0.15,
+                  0.05
+                ]
+              ],
+              "closed": true,
+              "bone": "column"
+            },
+            {
+              "id": "cap-plate-slab",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  2.95
+                ],
+                [
+                  0.12,
+                  2.95
+                ],
+                [
+                  0.12,
+                  3
+                ],
+                [
+                  -0.12,
+                  3
+                ]
+              ],
+              "closed": true,
+              "bone": "column"
+            }
+          ],
           "plan": [
             {
               "id": "section",
@@ -1288,12 +2097,93 @@
               "region": "column-flange",
               "material": "steel",
               "hatch": "steel"
+            },
+            {
+              "id": "base-plate-outline",
+              "bone": "column",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  -0.13
+                ],
+                [
+                  0.15,
+                  -0.13
+                ],
+                [
+                  0.15,
+                  0.13
+                ],
+                [
+                  -0.15,
+                  0.13
+                ]
+              ],
+              "closed": true,
+              "region": "base-plate"
+            }
+          ],
+          "front": [
+            {
+              "id": "column-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0.05,
+              "w": 0.2,
+              "h": 2.9
+            },
+            {
+              "id": "base-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0,
+              "w": 0.26,
+              "h": 0.05
+            },
+            {
+              "id": "cap-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": -0.11,
+              "y": 2.95,
+              "w": 0.22,
+              "h": 0.05
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Real size: 200 x 200 mm with 15 mm flanges and a 9 mm web; the fillets of the rolled section are not drawn. At 1:200 the sign is 1 mm square.",
-          "de": "Echte Größe: 200 x 200 mm mit 15 mm Flanschen und 9 mm Steg; die Hohlkehlen des Walzprofils sind nicht gezeichnet. Bei 1:200 ist das Zeichen 1 mm groß."
+          "en": "Real size: HEB 200 of 200 x 200 mm with 15 mm flanges and a 9 mm web, on a 300 x 260 mm base plate, 3.00 m high; the fillets of the rolled section are not drawn. At 1:200 the cut section is 1 mm square.",
+          "de": "Echte Größe: HEB 200 mit 200 x 200 mm, 15 mm Flanschen und 9 mm Steg auf einer Fußplatte von 300 x 260 mm, 3,00 m hoch; die Hohlkehlen des Walzprofils sind nicht gezeichnet. Bei 1:200 ist der Schnitt 1 mm groß."
         }
       }
     ],
@@ -1327,7 +2217,7 @@
             },
             "cap-plate": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1380,7 +2270,7 @@
             },
             "cap-plate": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1429,7 +2319,7 @@
             },
             "cap-plate": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             }
           },
           "emitters": {}
@@ -1634,7 +2524,7 @@
           "model": "passive",
           "material": "steel",
           "areaM2": 1.38,
-          "characteristicLengthM": 3.0,
+          "characteristicLengthM": 3,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.6,
           "layers": [],
@@ -1690,7 +2580,7 @@
           "areaM2": 0.1,
           "characteristicLengthM": 0.1,
           "geometry": "horizontal-plate-up",
-          "skyViewFactor": 1.0,
+          "skyViewFactor": 1,
           "layers": [],
           "heatCapacityJM2K": 70000,
           "source": "authored-estimate",
@@ -1739,9 +2629,6 @@
     "presentation": {
       "defaultPose": "eccentric-load",
       "defaultClip": "eccentric-load-sweep",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

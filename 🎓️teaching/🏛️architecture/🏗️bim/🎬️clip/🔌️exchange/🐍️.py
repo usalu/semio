@@ -17,6 +17,7 @@ _visuals = importlib.import_module("🎓️teaching.🏛️architecture.🏗️b
 _d = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
 _core = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
+_art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _engine = importlib.import_module("manim")
 
 INK, MUTED, ARCH, STRUCT, DATA, GOOD, WARN = _d.INK, _d.MUTED, _d.ARCH, _d.STRUCT, _d.DATA, _d.GOOD, _d.WARN
@@ -28,6 +29,7 @@ Q_SCALE = 0.05
 Q_STACK = 0.09
 R_SCALE = 0.004
 STAR = "*"
+PERSON_HEIGHT = 1.75
 LOAD_COLORS = (("self_weight", STRUCT), ("finishes", ARCH), ("imposed", DATA))
 
 
@@ -263,7 +265,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
         return item[self.language()] if isinstance(item, dict) else str(item)
 
     def _basis(self, entry):
-        """🔖 Distinguish authored provenance from calculated runtime quantities."""
+        """📜 Distinguish authored provenance from calculated runtime quantities."""
         labels={"sourced":("sourced","belegt"),"inferred":("inferred","abgeleitet"),"assumed":("assumed","angenommen"),"derived":("calculated","berechnet")}
         basis=entry.get("basis")
         if basis not in labels:
@@ -279,7 +281,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
         return group
 
     def present_exchange(self):
-        """🎬 The whole exchange story of the clip, beat by beat."""
+        """🎥 The whole exchange story of the clip, beat by beat."""
         f = self._facts()
         left, right = self._beat_interface(f)
         self._beat_semantic(f, left, right)
@@ -350,7 +352,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
         return d
 
     def _strip(self, f, c, point, scale, *, dims=True, supports=False, marks=True, ghost=True):
-        """📏 Actual section profiles and occupied regional slabs collapse to their own analysis nodes."""
+        """🗜️ Actual section profiles and occupied regional slabs collapse to their own analysis nodes."""
         x=f.b3["x"]
         members={m["source_tag"]:m for m in f.analysis["members"] if m["kind"]=="curve"}
         nodes={n["id"]:n["position"] for n in f.analysis["nodes"]}
@@ -490,7 +492,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
                                        *rings, *[w for pair in wires.values() for w in pair]])
 
     def _beat_properties(self, f):
-        """🧱 Type, LoadBearing flag, material, profile radius and extrusion depth, each wired from its STEP token to the drawn piloti."""
+        """🔩 Type, LoadBearing flag, material, profile radius and extrusion depth, each wired from its STEP token to the drawn piloti."""
         s = self._s
         panel = self.step_panel(_pick(f.excerpt, "'LoadBearing'", "IFCPROPERTYSET(", "IFCCOLUMNTYPE(", "IFCCOLUMN(", "IFCEXTRUDEDAREASOLID(", "IFCMATERIAL(", "IFCCIRCLEPROFILEDEF("), (-4.1, 0.2, 0), width=5.3)
         thumb = self.villa_plan("ground", (6.05, 2.62, 0), 0.055, model=f.m, highlight=(TAG,), thumbnail=True, halo=0.1)
@@ -607,7 +609,6 @@ class Beat5_Interfaces(_visuals.ClipScene):
     def _beat_purpose(self, f):
         """🎯 The slab in the plan, the chosen analysis target and the collapse of the section along axis 3 to the mid-surface."""
         s = self._s
-        analysis = f.analysis
         plan = self.villa_plan("first", (-4.2, 1.1, 0), 0.19, model=f.m, highlight=(SLAB, TAG), layers=("structure", "architecture"), grid=False, labels=False)
         cut = _engine.VGroup(_d.polyline([plan.at(f.b3["x"], -0.4, 0), plan.at(f.b3["x"], f.g["box"]["width"] + 0.4, 0)], DATA, _d.W_THIN, 0.8, dash=0.14),
                              _d.segments([(plan.at(f.b3["x"], 0, 0), plan.at(f.b3["x"], f.g["grid"]["y"][2], 0))], DATA, _d.W_CUT))
@@ -615,7 +616,6 @@ class Beat5_Interfaces(_visuals.ClipScene):
         target = _engine.VGroup(
             self.label("Target: structural analysis model", "Ziel: Tragwerksanalysemodell", (-6.7, -1.55, 0), size=S_SMALL, color=STRUCT, anchor="l"),
             self.label("IFC structural analysis domain (schema section)", "IFC-Domäne Tragwerksanalyse (Schemabereich)", (-6.7, -1.9, 0), size=S_SMALL, color=MUTED, anchor="l"))
-        slab = f.slab
         facts = self.label(f"{SLAB} · {self.quantity(f.g['box']['length'], 'm', 1)} × {self.quantity(f.g['box']['width'], 'm', 1)} · net {self.quantity(f.qs['area'], 'm²', 1)}{STAR}",
                            f"{SLAB} · {self.quantity(f.g['box']['length'], 'm', 1)} × {self.quantity(f.g['box']['width'], 'm', 1)} · netto {self.quantity(f.qs['area'], 'm²', 1)}{STAR}",
                            (-6.7, -2.3, 0), size=S_SMALL, color=DATA, anchor="l")
@@ -738,7 +738,6 @@ class Beat5_Interfaces(_visuals.ClipScene):
         s = self._s
         trib = f.trib
         by_tag = {p["tag"]: p for p in trib["pilotis"]}
-        mine = by_tag[TAG]
         edge = next(p for p in trib["pilotis"] if p["kind"] == "edge" and p["tag"] != TAG)
         corner = min((p for p in trib["pilotis"] if p["tag"] not in (TAG, edge["tag"])), key=lambda p: p["area"])
         chosen = (TAG, edge["tag"], corner["tag"])
@@ -817,7 +816,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
         self._s = SimpleNamespace(off=[titles, original, middle, back, rows_a, rows_b, strikes_b, returned, shape, counts, export, reimport, inset, key])
 
     def _beat_slab(self, f):
-        """🗺️ Both slab openings are subtracted while the salon gives one named architectural context."""
+        """🕳️ Both slab openings are subtracted while the salon gives one named architectural context."""
         s = self._s
         slab = f.analysis["slab"]
         v = _engine.ValueTracker(0)
@@ -866,17 +865,17 @@ class Beat5_Interfaces(_visuals.ClipScene):
         order = [key for key, _ in LOAD_COLORS]
         level = {key: _engine.ValueTracker(0) for key in order}
         top, thick = f.slab["top"], f.slab["thickness"]
-        view = _d.View("section", (-3.25, 0.4, 0), 2.2, (f.b3["x"], f.b3["y"], top - thick / 2), axis="y")
+        view = _d.View("section", (-3.25, 0.1, 0), 1.3, (f.b3["x"], f.b3["y"], top - thick / 2), axis="y")
         y0, y1 = f.b3["y"] - 0.95, f.b3["y"] + 0.95
         skin = 0.05
         at = lambda y, z: view(f.b3["x"], y, z)
         body = _hatched([at(y0, top - thick), at(y1, top - thick), at(y1, top), at(y0, top)], _d.CONCRETE, 0.35, STRUCT, _d.W_EDGE, 0.05)
         finish = _d.polygon([at(y0, top), at(y1, top), at(y1, top + skin), at(y0, top + skin)], ARCH, 0.55, ARCH, _d.W_EDGE)
-        spots = np.linspace(y0 + 0.3, y1 - 0.3, 4)
-        people = _engine.VGroup(*[_engine.Circle(radius=0.05, stroke_color=DATA, stroke_width=_d.W_EDGE, fill_opacity=1, fill_color=DATA).move_to(at(y, top + skin) + np.array([0, 0.28, 0])) for y in spots])
-        stems = _d.segments([(at(y, top + skin) + np.array([0, 0.03, 0]), at(y, top + skin) + np.array([0, 0.23, 0])) for y in spots], DATA, _d.W_EDGE)
+        spots = np.linspace(y0 + 0.4, y1 - 0.4, 3)
+        cast = "shared-person-relaxed-line"
+        people = _engine.VGroup(*[_art.staffage(cast, unit=PERSON_HEIGHT * view.scale / _art.staffage_height(cast), anchor=at(y, top + skin), color=DATA) for y in spots])
         post = _hatched([at(f.b3["y"] - f.b3["radius"], top - thick - 0.4), at(f.b3["y"] + f.b3["radius"], top - thick - 0.4), at(f.b3["y"] + f.b3["radius"], top - thick), at(f.b3["y"] - f.b3["radius"], top - thick)], _d.CONCRETE, 0.6, DATA, _d.W_EDGE, 0.05)
-        floor = _engine.VGroup(post, self.text(self.tr("section through SL-1 (axis 3, at 19)", "Schnitt durch SL-1 (Achse 3, bei 19)"), (-3.25, 2.2, 0), size=S_SMALL, color=MUTED), self.text(TAG, at(f.b3["y"], top - thick - 0.4) + np.array([0, -0.2, 0]), size=S_SMALL, color=DATA),
+        floor = _engine.VGroup(post, self.text(self.tr("section through SL-1 (axis 3, at 19)", "Schnitt durch SL-1 (Achse 3, bei 19)"), (-3.25, 3.0, 0), size=S_SMALL, color=MUTED), self.text(TAG, at(f.b3["y"], top - thick - 0.4) + np.array([0, -0.2, 0]), size=S_SMALL, color=DATA),
                                self.dimension(at(y0, top - thick), at(y0, top), "t = " + self.quantity(thick, "m") + STAR, offset=0.35, color=DATA),
                                _d.segments([(at(y0 - 0.3, top - thick), at(y1 + 0.3, top - thick))], INK, _d.W_THIN, 0.5))
         marks = _engine.VGroup(self.label(self.tr(f"self-weight {self.number(loads['self_weight']['density'], 0)} kN/m³ × {self.number(thick)} m", f"Eigengewicht {self.number(loads['self_weight']['density'], 0)} kN/m³ × {self.number(thick)} m"),
@@ -909,10 +908,10 @@ class Beat5_Interfaces(_visuals.ClipScene):
                   _seq((*[_engine.FadeOut(m) for m in s.off], _in(body), _in(finish), _engine.FadeIn(floor), _engine.FadeIn(marks[0]), _engine.FadeIn(bar), _engine.FadeIn(equation), _engine.FadeIn(legend)),
                        (_to(level["self_weight"], loads["self_weight"]["value"], 1.4),),
                        (_engine.FadeIn(marks[1]), _to(level["finishes"], loads["finishes"]["value"], 1.0)),
-                       (_engine.FadeIn(marks[2]), _engine.FadeIn(people), _engine.Create(stems), _to(level["imposed"], loads["imposed"]["value"], 1.0)),
+                       (_engine.FadeIn(marks[2]), _engine.FadeIn(people), _to(level["imposed"], loads["imposed"]["value"], 1.0)),
                        (_engine.FadeIn(times), _engine.FadeIn(who), _engine.FadeIn(key))),
                   seconds=6.5)
-        self._s = SimpleNamespace(off=[body, finish, floor, marks, people, stems, bar, equation, legend, times, who, key])
+        self._s = SimpleNamespace(off=[body, finish, floor, marks, people, bar, equation, legend, times, who, key])
 
     def _beat_cells(self, f):
         """🔲 Show the actual irregular nearest-support cell clipped to the authored slab."""
@@ -959,7 +958,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
         self._s = SimpleNamespace(off=[chip, left, right, view, forth, back, table, note, never])
 
     def _beat_loss(self, f):
-        """✂️ Ribbon windows, infill walls and render colour stay behind; translating back does not bring them back."""
+        """🫥 Ribbon windows, infill walls and render colour stay behind; translating back does not bring them back."""
         s = self._s
         analysis = f.analysis
         wanted = ("IfcWindow:element", "IfcOpeningElement:element", "IfcWall.STANDARD:element", "IfcWall.STANDARD:material.layer.render")

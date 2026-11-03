@@ -38,7 +38,7 @@ highlight_param = _manim_module.highlight_param
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 house_section = _manim_module.house_section
 sun_glyph = _manim_module.sun_glyph
 radiation_ray = _manim_module.radiation_ray
@@ -56,6 +56,7 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
@@ -226,7 +227,7 @@ class Beat1_TransmissionOpaque(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Opake Bauteile unter Sommerstrahlung")
+        subtitle = section_heading(tr("Opaque components under summer radiation", "Opake Bauteile unter Sommerstrahlung"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -377,7 +378,7 @@ class Beat3_LueftungslastImSommer(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Die Luft als zweite Last")
+        subtitle = section_heading(tr("Air as the second load", "Die Luft als zweite Last"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -427,16 +428,16 @@ class Beat3_LueftungslastImSommer(Scene):
             return lambda: np.array([label_x, (seg(k)[0] + seg(k)[1]) / 2 + dy, 0.0])
 
         bar = always_redraw(stack)
-        read_op = math_readout(lambda: rf"\dot{{Q}}_{{T}} \approx {de_num(round(t_op.get_value(), -1))}\,\mathrm{{W}}",
+        read_op = math_readout(lambda: rf"\dot{{Q}}_{{T}} \approx {label_number(round(t_op.get_value(), -1))}\,\mathrm{{W}}",
                                mid(0, 0.16), size=LABEL_FONT_SIZE + 1, color=OPAQUE)
-        sub_op = math_label(rf"{de_num(UA_OPAQUE)}\,\mathrm{{W/K}} \cdot {de_num(D_THETA_EQ)}\,\mathrm{{K}}",
+        sub_op = math_label(rf"{label_number(UA_OPAQUE)}\,\mathrm{{W/K}} \cdot {label_number(D_THETA_EQ)}\,\mathrm{{K}}",
                             np.array([label_x, bar_y0 + W_OPAQUE * unit / 2 - 0.2, 0.0]), size=LABEL_FONT_SIZE - 2,
                             color=P_WHITE, edge="left")
-        read_s = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} \approx {de_num(round(t_s.get_value(), -1))}\,\mathrm{{W}}",
+        read_s = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} \approx {label_number(round(t_s.get_value(), -1))}\,\mathrm{{W}}",
                               mid(1, 0.12), size=LABEL_FONT_SIZE + 1, color=SENS)
-        read_l = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} \approx {de_num(round(t_l.get_value(), -1))}\,\mathrm{{W}}",
+        read_l = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} \approx {label_number(round(t_l.get_value(), -1))}\,\mathrm{{W}}",
                               mid(2), size=LABEL_FONT_SIZE + 1, color=LATENT)
-        gain_tag = body_text("Wärmegewinn", font_size=LABEL_FONT_SIZE - 2, color=SENS)
+        gain_tag = body_text(tr("Heat gain", "Wärmegewinn"), font_size=LABEL_FONT_SIZE - 2, color=SENS)
         gain_tag.add_updater(lambda m: m.move_to(np.array([label_x + m.width / 2, (seg(1)[0] + seg(1)[1]) / 2 - 0.16, 0.0])))
 
         chip_y = 2.3
@@ -457,7 +458,7 @@ class Beat3_LueftungslastImSommer(Scene):
 
         #region sensible load — reminder from the Lüftung video
         caption = swap_caption(self, caption, subtitle_text(N, "sens"))
-        chip_now = _back_chip("← Lüftung · Kapitel 3:", r"\dot{Q}_{\mathrm{V,sens}}").move_to(np.array([0.6, chip_y, 0.0]))
+        chip_now = _back_chip(tr("← Ventilation · Chapter 3:", "← Lüftung · Kapitel 3:"), r"\dot{Q}_{\mathrm{V,sens}}").move_to(np.array([0.6, chip_y, 0.0]))
         self.play(*[open_window(w, run_time=0.9) for w in h["windows"]], Create(guides), FadeIn(drops), FadeIn(chip_now),
                   *roof_heat(0.9), run_time=0.9)
         self.play(_ramp(t_s, 0.4 * W_SENS, rate_func=rush_into), *air(0.7), run_time=0.7)
@@ -468,7 +469,7 @@ class Beat3_LueftungslastImSommer(Scene):
 
         #region latent load — reminder from the Lüftung video
         caption = swap_caption(self, caption, subtitle_text(N, "lat"))
-        new_chip = _back_chip("← Lüftung · Kapitel 3:", r"\dot{Q}_{\mathrm{V,lat}}").move_to(chip_now)
+        new_chip = _back_chip(tr("← Ventilation · Chapter 3:", "← Lüftung · Kapitel 3:"), r"\dot{Q}_{\mathrm{V,lat}}").move_to(chip_now)
         self.play(FadeOut(chip_now), FadeIn(new_chip), *air(0.6), run_time=0.6)
         chip_now = new_chip
         self.play(_ramp(t_l, 0.4 * W_LAT, rate_func=rush_into), *air(0.7), run_time=0.7)
@@ -488,12 +489,12 @@ class Beat3_LueftungslastImSommer(Scene):
         brace = dim_arrow(np.array([bar_x - bar_w / 2 - 0.25, lo_s, 0.0]), np.array([bar_x - bar_w / 2 - 0.25, hi_l, 0.0]),
                           color=P_WHITE)
         mid_y = (lo_s + hi_l) / 2
-        ql = math_label(rf"\dot{{Q}}_{{\mathrm{{L}}}} \approx {de_num(W_SENS + W_LAT)}\,\mathrm{{W}}",
+        ql = math_label(rf"\dot{{Q}}_{{\mathrm{{L}}}} \approx {label_number(W_SENS + W_LAT)}\,\mathrm{{W}}",
                         np.array([bar_x - bar_w / 2 - 0.5, mid_y + 0.2, 0.0]), size=BODY_FONT_SIZE, color=P_WHITE, edge="right")
-        ratio = math_label(rf"\dot{{Q}}_{{\mathrm{{L}}}} / \dot{{Q}}_{{T}} \approx {de_num((W_SENS + W_LAT) / W_OPAQUE, 1)}",
+        ratio = math_label(rf"\dot{{Q}}_{{\mathrm{{L}}}} / \dot{{Q}}_{{T}} \approx {label_number((W_SENS + W_LAT) / W_OPAQUE, 1)}",
                            np.array([bar_x - bar_w / 2 - 0.5, mid_y - 0.2, 0.0]), size=LABEL_FONT_SIZE + 1, color=P_WHITE,
                            edge="right")
-        new_chip = _back_chip("← Lüftung · Kapitel 3:", r"\dot{Q}_{\mathrm{V,sens}} + \dot{Q}_{\mathrm{V,lat}}").move_to(chip_now)
+        new_chip = _back_chip(tr("← Ventilation · Chapter 3:", "← Lüftung · Kapitel 3:"), r"\dot{Q}_{\mathrm{V,sens}} + \dot{Q}_{\mathrm{V,lat}}").move_to(chip_now)
         self.play(FadeIn(sum_row), Create(sum_box), FadeOut(chip_now), FadeIn(new_chip), *air(0.8), run_time=0.8)
         chip_now = new_chip
         self.play(Create(brace), FadeIn(ql), FadeIn(ratio), *air(1.0), run_time=1.0)
@@ -502,8 +503,8 @@ class Beat3_LueftungslastImSommer(Scene):
 
         #region recovery and window strategies
         caption = swap_caption(self, caption, subtitle_text(N, "close"))
-        chip_wrg = _back_chip("← Lüftung · Kapitel 5:", r"\eta_{\mathrm{WRG}}")
-        chip_win = _back_chip("← Lüftung · Kapitel 4: Fenster · Quer · Nacht")
+        chip_wrg = _back_chip(tr("← Ventilation · Chapter 5:", "← Lüftung · Kapitel 5:"), r"\eta_{\mathrm{WRG}}")
+        chip_win = _back_chip(tr("← Ventilation · Chapter 4: Windows · Cross · Night", "← Lüftung · Kapitel 4: Fenster · Quer · Nacht"))
         chips = VGroup(chip_wrg, chip_win).arrange(RIGHT, buff=0.3).move_to(np.array([0.2, chip_y, 0.0]))
         for part in gain_tag.get_family():
             part.clear_updaters()

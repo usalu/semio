@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { frameSchedule } from "../../🔨️modules/📤️export/🎞️frames/🟦️.ts";
 import { encodeClip, videoCapabilities, type VideoFrame } from "../../🔨️modules/📤️export/🎥️video/🟦️.ts";
 import { parseArguments, runExport } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
-import { tool, withScratch } from "../🧰️support/🧰️.ts";
+import { requireTool, tool, withScratch } from "../🧰️support/🧰️.ts";
 
 type Probe = { streams: { pix_fmt: string; r_frame_rate: string; nb_read_frames: string; tags?: Record<string, string>; codec_name: string; width: number; height: number }[]; format: { duration: string }; packets?: { pts_time: string }[] };
 const probe = (file: string, extra: readonly string[] = []): Probe => JSON.parse(tool("ffprobe", ["-v", "error", ...extra, "-count_frames", "-show_streams", "-show_format", "-show_packets", "-of", "json", file])) as Probe;
@@ -29,6 +29,9 @@ describe("🎞️ frame schedule", () => {
     expect(() => frameSchedule({ durationS: 0, loop: true }, 25)).toThrow();
   });
 });
+
+requireTool("ffmpeg");
+requireTool("ffprobe");
 
 describe("🎬️ encoded clips", () => {
   it("MP4 from the CLI: 12 fps constant, scheduled frame count, yuv420p", async () => {
@@ -65,7 +68,7 @@ describe("🎬️ encoded clips", () => {
     const width = 32, height = 32;
     const frame = (value: number): VideoFrame => { const data = new Uint8ClampedArray(width * height * 4); for (let at = 0; at < data.length; at += 4) data.set([value, 255 - value, 128, at % 8 === 0 ? 255 : 128], at); return { data, width, height }; };
     const source = async function* (): AsyncGenerator<VideoFrame> { for (const value of [10, 10, 80, 200, 200]) yield frame(value); };
-    const clip = await encodeClip(source(), "mp4", { fps: 10, frameCount: 5 });
+    const clip = await encodeClip(source(), "mp4", { viewpoint: "plan", fps: 10, frameCount: 5 });
     expect(clip.alpha).toBe("none");
     expect(clip.frames).toBe(5);
     await withScratch((directory) => {
@@ -78,7 +81,9 @@ describe("🎬️ encoded clips", () => {
       expect(readFileSync(file).length).toBe(clip.bytes.length);
     });
   });
+});
 
+describe("🎬️ video capabilities", () => {
   it("probes capabilities honestly: the first-party MP4 writer is always there, MediaRecorder codecs only when the host has them", () => {
     const caps = videoCapabilities();
     expect(caps.codecs.find((entry) => entry.engine === "first-party")?.available).toBe(true);

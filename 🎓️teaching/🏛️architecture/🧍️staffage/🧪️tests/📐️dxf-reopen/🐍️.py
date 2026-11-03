@@ -18,6 +18,7 @@ print(json.dumps({
     "extmin": list(document.header["$EXTMIN"]),
     "extmax": list(document.header["$EXTMAX"]),
     "handseed": document.header["$HANDSEED"],
+    "projectname": document.header.get("$PROJECTNAME"),
     "errors": [str(e.message) for e in auditor.errors],
     "fixes": [str(e.message) for e in auditor.fixes],
     "layers": {layer.dxf.name: {"aci": layer.dxf.color, "lineweight": layer.dxf.lineweight} for layer in document.layers},

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "casts": {
+    "hosta-200": { "asset": "hosta-clump", "pose": "summer-full", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 200 },
+    "hosta-50": { "asset": "hosta-clump", "pose": "summer-full", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 50 },
+    "pine-200": { "asset": "scots-pine", "pose": "calm", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 200 },
+    "palm-50": { "asset": "date-palm", "pose": "calm", "view": "dark-line", "viewpoint": "elevation", "theme": "dark", "scale": 50 }
+  }
+}

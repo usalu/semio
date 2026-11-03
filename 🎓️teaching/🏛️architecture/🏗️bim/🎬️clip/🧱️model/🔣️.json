@@ -2727029,17 +2727029,20 @@
       "first": {
         "value": 2,
         "unit": "kN/m²",
-        "basis": "assumed"
+        "basis": "assumed",
+        "category": "a-floors"
       },
       "solarium": {
         "value": 2,
         "unit": "kN/m²",
-        "basis": "assumed"
+        "basis": "assumed",
+        "category": "a-floors"
       },
       "roof": {
         "value": 1,
         "unit": "kN/m²",
-        "basis": "assumed"
+        "basis": "assumed",
+        "category": "h-roofs"
       }
     }
   },

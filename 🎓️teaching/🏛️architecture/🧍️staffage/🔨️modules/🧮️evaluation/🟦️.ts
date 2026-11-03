@@ -5,20 +5,24 @@
  * (distributed loads to eight equivalent resultants per bone segment, scaled by `load:<id>` tracks), binds the thermal inputs and derives segment accelerations and the centre-of-mass
  * velocity by central differences of the evaluated clip with h = 1/240 s. Equal inputs yield bit-identical outputs.
  *
- * Plan shapes are drawn in the plan plane (x, depth); they follow their bone only by the bone's x travel from rest. `bounds` is the extent of the selected elevation geometry except the role `ground` (the drawn extent; the rig extent is {@link rigBounds}), and of the rig when nothing is drawn.
+ * One three-dimensional chain ({@link solveChain}) carries every view: each bone exposes its 3D `frame`, `tip` and the lateral `z` of its anchors, and the elevation, front (lateral, up) and plan (ahead, lateral) shapes are carried from the rest frame to the current frame of their bone by that one transform ({@link carry}) and projected. Only a `followTip` rect or poly on a bone that lies along the viewing axis grows outwards, and a plan capsule with `followTip` follows the origin and the tip of its bone. `bounds` is the extent of the selected elevation geometry except the role `ground` (the drawn extent; the rig extent is {@link rigBounds}), and of the rig when nothing is drawn.
  * Clip queries live on the absolute timeline: the pose wraps, `cycle` counts the loops, planted root advance and respiration continue.
  *
  * @see ../../🧬️schema/🟦️.ts — `Asset`, `Shape`
  * @see ../🔗️contracts/🟦️.ts — `EvaluatedState`, `EvaluationQuery`
  * @see https://www.w3.org/TR/SVG11/paths.html — the path grammar
  */
-import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, Shape, Slug, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, Shape, Slug, Solid, Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { Affine, EvaluatedBone, EvaluatedShape, EvaluatedState, EvaluationQuery, Point, RepresentationSelector, RespirationState, WorldForce } from "../🔗️contracts/🟦️.ts";
 import { PLANT_HZ, clipOf, cycleOf, poseOf, sampleClip, samplePose, transition, wrapTime } from "../🎞️animation/🟦️.ts";
 import { respirationOffsets, respirationState } from "../💨️transport/🫁️respiration/🟦️.ts";
+import { unionPolygons } from "../🔺️polygon/🟦️.ts";
 import { RepresentationError, pickRepresentation } from "../🖨️representation/🧭️pick/🟦️.ts";
+import { ViewMissingError } from "../🎨️depiction/🔭️views/🟦️.ts";
 import type { Sample } from "../🎞️animation/🟦️.ts";
-import { apply, effectiveOffset, rotationRad, sinCosDeg, solveRig } from "../🦴️rig/🟦️.ts";
+import { apply, carry, effectiveOffset, restFrames, rotationRad, sinCosDeg, solveChain, solveRig } from "../🦴️rig/🟦️.ts";
+import type { Frame3, SolvedFrame } from "../🦴️rig/🟦️.ts";
+import { nearness, project } from "../🎨️depiction/🔭️views/🟦️.ts";
 
 export { clipOf, poseOf };
 
@@ -109,7 +113,7 @@ const NUMBER = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
 const PARAMETERS: Readonly<Record<string, number>> = { m: 2, l: 2, h: 1, v: 1, c: 6, s: 4, q: 4, t: 2, a: 7, z: 0 };
 const PATHS = new Map<string, FlatPath>();
 
-/** 〰️ Parses and flattens an SVG path string; throws with the offset on malformed input. */
+/** 🧵️ Parses and flattens an SVG path string; throws with the offset on malformed input. */
 export function flattenPath(d: string): FlatPath {
   const cached = PATHS.get(d);
   if (cached !== undefined) return cached;
@@ -300,6 +304,7 @@ export function flattenGeometry(shape: Shape): FlatPath {
     case "rect": return { rings: [roundedRect(shape.x, shape.y, shape.w, shape.h, shape.r ?? 0)], closed: true };
     case "poly": return { rings: [shape.points.map(([x, y]) => ({ x, y }))], closed: shape.closed };
     case "path": return flattenPath(shape.d);
+    case "member": return { rings: [], closed: true };
   }
 }
 //#endregion 〰️Flattening
@@ -313,14 +318,356 @@ function restWorld(asset: Asset): Record<Slug, Affine> {
   return rest;
 }
 
-function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: Viewpoint, identity: boolean): EvaluatedShape {
+const CIRCLE_SEGMENTS = 64;
+const UNION_CIRCLE_SEGMENTS = 32;
+
+/** 🧊️ The current and the rest 3D frames of the bones of a spread or twisted rig. */
+type Chain3 = { readonly now: Readonly<Record<Slug, SolvedFrame>>; readonly rest: Readonly<Record<Slug, SolvedFrame>> };
+
+const REST3 = new WeakMap<Asset, Record<Slug, SolvedFrame>>();
+
+function restOf(asset: Asset): Record<Slug, SolvedFrame> {
+  let rest = REST3.get(asset);
+  if (rest === undefined) REST3.set(asset, (rest = restFrames(asset.rig)));
+  return rest;
+}
+
+/** ➡️ A front or plan point of a bone carried by the 3D transform from its rest frame to its current frame and projected to the view: a plan point `(x, y)` is the rest point (x, height of the bone origin, lateral y), a front point `(x, y)` the rest point (forward position of the bone origin, height y, lateral x). */
+function carryPoint(kin: Chain3, bone: Slug, viewpoint: Viewpoint, p: Point, depth?: number): Point {
+  const rest = kin.rest[bone]!.frame;
+  const now = kin.now[bone]!.frame;
+  if (viewpoint === "plan") {
+    const q = carry(rest, now, [p.x, depth ?? rest.o[1], p.y]);
+    return { x: q[0], y: q[2] };
+  }
+  const q = carry(rest, now, [depth ?? rest.o[0], p.y, p.x]);
+  return { x: q[2], y: q[1] };
+}
+
+/** 👁️ Whether a bone has at least half of its length as extent in the view at rest (height in front, forward position in plan); a bone along the viewing axis has none and its `followTip` shapes grow outwards instead. */
+function inView(asset: Asset, bone: Slug, viewpoint: Viewpoint): boolean {
+  const length = boneOf(asset, bone).lengthM;
+  const rest = restWorld(asset)[bone]!;
+  const tip = apply(rest, length, 0);
+  return length > 0 && Math.abs(viewpoint === "front" ? tip.y - rest[5] : tip.x - rest[4]) >= 0.5 * length;
+}
+
+type Vec3 = readonly [number, number, number];
+
+const vec3 = (v: Vec3): { readonly x: number; readonly y: number; readonly z: number } => ({ x: v[0], y: v[1], z: v[2] });
+
+const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const norm = (a: Vec3): Vec3 => {
+  const l = Math.hypot(a[0], a[1], a[2]);
+  return [a[0] / l, a[1] / l, a[2] / l];
+};
+
+/** 🔺️ The convex hull of points (monotone chain), counter-clockwise. */
+function hull(points: readonly Point[]): Point[] {
+  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+  if (sorted.length < 3) return sorted;
+  const turn = (o: Point, a: Point, b: Point): number => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const build = (input: readonly Point[]): Point[] => {
+    const out: Point[] = [];
+    for (const p of input) {
+      while (out.length >= 2 && turn(out[out.length - 2]!, out[out.length - 1]!, p) <= 0) out.pop();
+      out.push(p);
+    }
+    out.pop();
+    return out;
+  };
+  return [...build(sorted), ...build([...sorted].reverse())];
+}
+
+/** ✂️ Douglas-Peucker simplification of a ring to a tolerance in metres (the first and the farthest point are kept). */
+function simplifyRing(ring: readonly Point[], tolerance: number): Point[] {
+  if (ring.length <= 8) return [...ring];
+  const keep = new Array<boolean>(ring.length).fill(false);
+  let far = 0;
+  let best = -1;
+  ring.forEach((p, i) => {
+    const d = Math.hypot(p.x - ring[0]!.x, p.y - ring[0]!.y);
+    if (d > best) [far, best] = [i, d];
+  });
+  keep[0] = keep[far] = true;
+  const visit = (from: number, to: number): void => {
+    const a = ring[from % ring.length]!;
+    const b = ring[to % ring.length]!;
+    const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    let at = -1;
+    let worst = tolerance;
+    for (let i = from + 1; i < to; i++) {
+      const p = ring[i % ring.length]!;
+      const d = Math.abs((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x)) / length;
+      if (d > worst) [at, worst] = [i, d];
+    }
+    if (at >= 0) {
+      keep[at % ring.length] = true;
+      visit(from, at);
+      visit(at, to);
+    }
+  };
+  visit(0, far);
+  visit(far, ring.length);
+  return ring.filter((_, i) => keep[i]);
+}
+
+const projected = (viewpoint: Viewpoint, q: Vec3): Point => project(viewpoint, vec3(q));
+
+type MemberShape = Extract<Shape, { readonly kind: "member" }>;
+
+const MEMBER_SEGMENTS = 32;
+
+/** 🧱️ The corners of the two end sections of a `member` solid in world metres: the end points are carried by the frames of their bones (`from` by the shape's own bone, `to` by `to.bone`); a rectangular section has the width `widthM` along the part of the normal `v` of the start bone perpendicular to the bar and the depth `depthM` along the remaining perpendicular axis (the frame completes the orthonormal triple `bar`, width, depth), a circular section is `MEMBER_SEGMENTS` points of the diameter `diameterM` about the bar. */
+export function memberSections(member: MemberShape, frameOf: (id: Slug) => Frame3): readonly [readonly Vec3[], readonly Vec3[]] {
+  const at = (id: Slug, p: { readonly x: number; readonly y: number; readonly z: number }): Vec3 => {
+    const f = frameOf(id);
+    return [f.o[0] + p.x * f.u[0] + p.y * f.v[0] + p.z * f.w[0], f.o[1] + p.x * f.u[1] + p.y * f.v[1] + p.z * f.w[1], f.o[2] + p.x * f.u[2] + p.y * f.v[2] + p.z * f.w[2]];
+  };
+  const bone = member.bone;
+  const a = at(member.from.bone ?? bone, member.from);
+  const b = at(member.to.bone ?? bone, member.to);
+  const bar = norm([b[0] - a[0], b[1] - a[1], b[2] - a[2]]);
+  const start = frameOf(member.from.bone ?? bone);
+  const across = (reference: Vec3): Vec3 => {
+    const k = dot(reference, bar);
+    return [reference[0] - k * bar[0], reference[1] - k * bar[1], reference[2] - k * bar[2]];
+  };
+  const normal = across(start.v);
+  const width = norm(Math.hypot(...normal) > 1e-9 ? normal : across(start.w));
+  const depth = cross(bar, width);
+  const { section } = member;
+  const offsets: readonly (readonly [number, number])[] =
+    section.kind === "circle"
+      ? Array.from({ length: MEMBER_SEGMENTS }, (_, i) => [(section.d / 2) * Math.cos((2 * Math.PI * i) / MEMBER_SEGMENTS), (section.d / 2) * Math.sin((2 * Math.PI * i) / MEMBER_SEGMENTS)] as const)
+      : ([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([s, t]) => [(s * section.w) / 2, (t * section.h) / 2] as const);
+  const corner = (centre: Vec3, [s, t]: readonly [number, number]): Vec3 => [centre[0] + s * width[0] + t * depth[0], centre[1] + s * width[1] + t * depth[1], centre[2] + s * width[2] + t * depth[2]];
+  return [offsets.map((o) => corner(a, o)), offsets.map((o) => corner(b, o))];
+}
+
+/** 🧊️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering linearly along u to `zTip` at the bone length (clamped to the bone), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
+function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: Viewpoint, length: number): Point[][] {
+  const rings = profile.map((ring) => simplifyRing(ring, 0.0003));
+  const now = kin.now[bone]!.frame;
+  const rest = kin.rest[bone]!.frame;
+  const place = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];
+  if (solid.kind === "extruded") {
+    const lateral = solid.sweep === "w";
+    const base = lateral ? rest.o[2] : 0;
+    const span = (a: number): readonly [number, number] => {
+      if (solid.zTip === undefined) return [solid.z0 - base, solid.z1 - base];
+      const t = length > 0 ? Math.min(Math.max(a / length, 0), 1) : 0;
+      return [solid.z0 + (solid.zTip[0] - solid.z0) * t - base, solid.z1 + (solid.zTip[1] - solid.z1) * t - base];
+    };
+    const at = (p: Point, c: number): Point => projected(viewpoint, lateral ? place(p.x, p.y, c) : place(p.x, c, p.y));
+    return rings.flatMap((ring) => {
+      const low = ring.map((p) => at(p, span(p.x)[0]));
+      const high = ring.map((p) => at(p, span(p.x)[1]));
+      const sweeps = low.map((p, i) => [p, low[(i + 1) % low.length]!, high[(i + 1) % high.length]!, high[i]!]);
+      return unionPolygons([low, high, ...sweeps]);
+    });
+  }
+  const axisRest = kin.rest[solid.axisBone]!.frame;
+  const axisNow = kin.now[solid.axisBone]!.frame;
+  const axisAt: Vec3 = [axisRest.o[0] + solid.axisX, axisRest.o[1], axisRest.o[2] + (solid.axisZ ?? 0)];
+  const origin = carry(axisRest, axisNow, axisAt);
+  const shift: Vec3 = [0, 0, 0];
+  const profileZ = axisAt[2] - rest.o[2];
+  const axis = norm(axisNow[solid.axis]);
+  const e1 = norm(Math.hypot(...cross(axis, [0, 0, 1])) > 1e-9 ? cross(axis, [0, 0, 1]) : cross(axis, [1, 0, 0]));
+  const e2 = cross(axis, e1);
+  const circle = (p: Point): Point[] => {
+    const q = place(p.x, p.y, profileZ);
+    const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
+    const h = dot(d, axis);
+    const radial: Vec3 = [d[0] - h * axis[0], d[1] - h * axis[1], d[2] - h * axis[2]];
+    const r = Math.hypot(...radial);
+    return Array.from({ length: UNION_CIRCLE_SEGMENTS }, (_, i) => {
+      const t = (2 * Math.PI * i) / UNION_CIRCLE_SEGMENTS;
+      return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + r * (Math.cos(t) * e1[0] + Math.sin(t) * e2[0]), origin[1] + shift[1] + h * axis[1] + r * (Math.cos(t) * e1[1] + Math.sin(t) * e2[1]), origin[2] + shift[2] + h * axis[2] + r * (Math.cos(t) * e1[2] + Math.sin(t) * e2[2])]);
+    });
+  };
+  if (solid.mirror !== true && viewpoint !== "plan") {
+    const forward = carry(axisRest, axisNow, [axisAt[0] + 1, axisAt[1], axisAt[2]]);
+    const f0: Vec3 = [forward[0] - origin[0], forward[1] - origin[1], forward[2] - origin[2]];
+    const lateral: Vec3 = (() => {
+      const k = dot([0, 0, 1], axis);
+      return norm([0 - k * axis[0], 0 - k * axis[1], 1 - k * axis[2]]);
+    })();
+    const along: Vec3 = [f0[0] - dot(f0, axis) * axis[0], f0[1] - dot(f0, axis) * axis[1], f0[2] - dot(f0, axis) * axis[2]];
+    const meridian = Math.hypot(...along) > 1e-6 ? norm(along) : norm(solid.axis === "v" ? axisNow.u : axisNow.v);
+    return rings.map((ring) =>
+      ring.map((p) => {
+        const q = place(p.x, p.y, profileZ);
+        const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
+        const h = dot(d, axis);
+        const rho = dot(d, meridian);
+        const direction = viewpoint === "elevation" ? meridian : lateral;
+        return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + rho * direction[0], origin[1] + shift[1] + h * axis[1] + rho * direction[1], origin[2] + shift[2] + h * axis[2] + rho * direction[2]]);
+      }),
+    );
+  }
+  return rings.flatMap((ring) => unionPolygons(ring.map((p, i) => hull([...circle(p), ...circle(ring[(i + 1) % ring.length]!)]))));
+}
+
+/** 🧊️ The projected displacement of the origin and of the tip of a bone from the rest pose, `[ahead, up, left]`. */
+function displacement(kin: Chain3, bone: Slug, length: number): { readonly origin: readonly [number, number, number]; readonly tip: readonly [number, number, number] } {
+  const now = kin.now[bone]!.frame;
+  const rest = kin.rest[bone]!.frame;
+  const at = (f: Frame3, s: number): [number, number, number] => [f.o[0] + f.u[0] * s, f.o[1] + f.u[1] * s, f.o[2] + f.u[2] * s];
+  const [o1, o0, t1, t0] = [at(now, 0), at(rest, 0), at(now, length), at(rest, length)];
+  return { origin: [o1[0] - o0[0], o1[1] - o0[1], o1[2] - o0[2]], tip: [t1[0] - t0[0], t1[1] - t0[1], t1[2] - t0[2]] };
+}
+
+/** 📏️ The depth a flat front or plan shape is carried at: the height (plan) or the forward position (front) of the middle of its elevation twin (same id, same bone) at rest, so a rigid part far from the bone origin pivots about its true place; without a twin the rest position of the bone origin (author such a part as a solid instead). */
+type DepthProfile = (key: number) => number;
+
+const DEPTH_SAMPLES = 48;
+const DEPTHS = new WeakMap<Shape, DepthProfile | null>();
+
+function depthProfile(asset: Asset, shape: Shape, twins: ReadonlyMap<string, readonly Shape[]> | undefined, viewpoint: Viewpoint): DepthProfile | undefined {
+  const cached = DEPTHS.get(shape);
+  if (cached !== undefined) return cached ?? undefined;
+  const sources = twins?.get(`${shape.id} ${shape.bone}`) ?? twins?.get(`* ${shape.bone}`);
+  const rest = restWorld(asset)[shape.bone]!;
+  const plan = viewpoint === "plan";
+  const rings = (sources ?? []).flatMap((source) => flattenGeometry(source).rings.map((ring) => ring.map((p) => apply(rest, p.x, p.y))));
+  const keys = rings.flat().map((p) => (plan ? p.x : p.y));
+  if (keys.length === 0) {
+    DEPTHS.set(shape, null);
+    return undefined;
+  }
+  if (twins?.has(`${shape.id} ${shape.bone}`) === true) {
+    const own = rings.flat().map((p) => (plan ? p.y : p.x));
+    const middle = (Math.min(...own) + Math.max(...own)) / 2;
+    const constant: DepthProfile = () => middle;
+    DEPTHS.set(shape, constant);
+    return constant;
+  }
+  const lo = Math.min(...keys);
+  const hi = Math.max(...keys);
+  const depths: number[] = [];
+  for (let i = 0; i < DEPTH_SAMPLES; i++) {
+    const key = lo + ((hi - lo) * i) / (DEPTH_SAMPLES - 1);
+    let low = Number.POSITIVE_INFINITY;
+    let high = Number.NEGATIVE_INFINITY;
+    for (const ring of rings)
+      for (let j = 0; j < ring.length; j++) {
+        const a = ring[j]!;
+        const b = ring[(j + 1) % ring.length]!;
+        const [ka, kb, da, db] = plan ? [a.x, b.x, a.y, b.y] : [a.y, b.y, a.x, b.x];
+        if (Math.min(ka, kb) - 1e-12 > key || Math.max(ka, kb) + 1e-12 < key) continue;
+        for (const v of kb === ka ? [da, db] : [da + ((db - da) * (key - ka)) / (kb - ka)]) {
+          low = Math.min(low, v);
+          high = Math.max(high, v);
+        }
+      }
+    depths.push(Number.isFinite(low) ? (low + high) / 2 : Number.NaN);
+  }
+  const across = rings.flat().map((p) => (plan ? p.y : p.x));
+  const fallback = (Math.min(...across) + Math.max(...across)) / 2;
+  const filled = depths.map((d) => (Number.isNaN(d) ? fallback : d));
+  const profile: DepthProfile = (key) => {
+    if (hi === lo) return filled[0]!;
+    const f = Math.min(Math.max((key - lo) / (hi - lo), 0), 1) * (DEPTH_SAMPLES - 1);
+    const i = Math.min(Math.floor(f), DEPTH_SAMPLES - 2);
+    return filled[i]! + (filled[i + 1]! - filled[i]!) * (f - i);
+  };
+  DEPTHS.set(shape, profile);
+  return profile;
+}
+
+/** 📐️ A front or plan shape placed by the single 3D path: every shape is carried by the transform from the rest frame to the current frame of its bone and projected to the view (rotations about any axis, spread, twist and the sagittal swing alike); a revolved or extruded solid is built in 3D from its profile ({@link solid3}); a plan capsule with `followTip` has its first end follow the origin and its second the tip of the bone; a `followTip` rect or poly on a bone that has no extent in the view (a bone along the viewing axis) additionally grows from the displacement of the origin to that of the tip, by the lateral position across the shape from its inner end to its outer end. */
+function placeProjected(asset: Asset, shape: Shape, flat: { readonly rings: readonly (readonly Point[])[]; readonly closed: boolean }, kin: Chain3, viewpoint: Exclude<Viewpoint, "elevation">, twins: ReadonlyMap<string, readonly Shape[]> | undefined): EvaluatedShape {
+  const bone = boneOf(asset, shape.bone);
+  const plan = viewpoint === "plan";
+  const moved = displacement(kin, shape.bone, bone.lengthM);
+  if (plan && shape.kind === "capsule" && shape.followTip === true) return { shape, rings: [capsule(shape.x0 + moved.origin[0], shape.y0 + moved.origin[2], shape.x1 + moved.tip[0], shape.y1 + moved.tip[2], shape.r0, shape.r1)], closed: true };
+  const grows = (shape.kind === "rect" || shape.kind === "poly") && shape.followTip === true && !inView(asset, shape.bone, viewpoint);
+  const profile = grows ? undefined : depthProfile(asset, shape, twins, viewpoint);
+  const carried = flat.rings.map((ring) => ring.map((p) => carryPoint(kin, shape.bone, viewpoint, p, profile?.(plan ? p.x : p.y))));
+  const outward = Math.sign(moved.tip[2] - moved.origin[2]);
+  if (!grows || outward === 0) return { shape, rings: carried, closed: flat.closed };
+  const across = flat.rings.flat().map((p) => (plan ? p.y : p.x));
+  const lo = Math.min(...across);
+  const hi = Math.max(...across);
+  const dx = moved.tip[0] - moved.origin[0];
+  const dy = moved.tip[1] - moved.origin[1];
+  const dz = moved.tip[2] - moved.origin[2];
+  const rings = carried.map((ring, i) =>
+    ring.map((p, j) => {
+      const c = across[0] === undefined ? 0 : plan ? flat.rings[i]![j]!.y : flat.rings[i]![j]!.x;
+      const u = hi === lo ? 1 : outward > 0 ? (c - lo) / (hi - lo) : (hi - c) / (hi - lo);
+      return plan ? { x: p.x + dx * u, y: p.y + dz * u } : { x: p.x + dz * u, y: p.y + dy * u };
+    }),
+  );
+  return { shape, rings, closed: flat.closed };
+}
+
+/** 🧊️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. A `solid` is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */
+export function shapeDepth(state: EvaluatedState, shape: Shape, viewpoint: Viewpoint): number {
+  const vec = (v: { readonly x: number; readonly y: number; readonly z: number }): Vec3 => [v.x, v.y, v.z];
+  const frameOf = (id: Slug): Frame3 => {
+    const f = state.bones[id]!.frame;
+    return { o: vec(f.o), u: vec(f.u), v: vec(f.v), w: vec(f.w) };
+  };
+  return state.bones[shape.bone] === undefined ? 0 : shapeDepthIn(state.asset, frameOf, shape, viewpoint);
+}
+
+/** 🧊️ The rest-pose counterpart of {@link shapeDepth}: how near the shape is when every bone is at rest. */
+export function restShapeDepth(asset: Asset, shape: Shape, viewpoint: Viewpoint): number {
+  const rest = restOf(asset);
+  return rest[shape.bone] === undefined ? 0 : shapeDepthIn(asset, (id) => rest[id]!.frame, shape, viewpoint);
+}
+
+function shapeDepthIn(asset: Asset, frameOf: (id: Slug) => Frame3, shape: Shape, viewpoint: Viewpoint): number {
+  const now = frameOf(shape.bone);
+  if (shape.kind === "member") {
+    const [start, end] = memberSections(shape, frameOf);
+    return Math.max(...[...start, ...end].map((q) => nearness(viewpoint, vec3(q))));
+  }
+  const rest = restOf(asset)[shape.bone];
+  if (rest === undefined) return 0;
+  const points = flattenGeometry(shape).rings.flat();
+  if (points.length === 0) return 0;
+  const plan = viewpoint === "plan";
+  const profile = DEPTHS.get(shape) ?? undefined;
+  const local = (p: Point, c: number): Vec3 => [now.o[0] + p.x * now.u[0] + p.y * now.v[0] + c * now.w[0], now.o[1] + p.x * now.u[1] + p.y * now.v[1] + c * now.w[1], now.o[2] + p.x * now.u[2] + p.y * now.v[2] + c * now.w[2]];
+  const world = (p: Point): Vec3 => {
+    if (viewpoint === "elevation") return local(p, 0);
+    if (shape.solid !== undefined) return local(p, shape.solid.kind === "extruded" ? (shape.solid.z0 + shape.solid.z1) / 2 - rest.frame.o[2] : 0);
+    return plan ? carry(rest.frame, now, [p.x, profile?.(p.x) ?? rest.frame.o[1], p.y]) : carry(rest.frame, now, [profile?.(p.y) ?? rest.frame.o[0], p.y, p.x]);
+  };
+  return Math.max(...points.map((p) => nearness(viewpoint, vec3(world(p)))));
+}
+
+/** 🚫️ Thrown when a `member` is drawn in paper units (a nominal symbol): a bar has no paper-millimetre outline, so the symbol must draw it with planar shapes and the member is never silently dropped. */
+export class MemberInPaperUnitsError extends Error {
+  readonly asset: string;
+  readonly shape: string;
+
+  constructor(asset: string, shape: string) {
+    super(`member "${shape}" of asset "${asset}" cannot be drawn in paper units: a nominal symbol draws planar shapes only`);
+    this.name = "MemberInPaperUnitsError";
+    this.asset = asset;
+    this.shape = shape;
+  }
+}
+
+function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: Viewpoint, identity: boolean, kin: Chain3 | undefined = undefined, twins: ReadonlyMap<string, readonly Shape[]> | undefined = undefined): EvaluatedShape {
   const matrix = world[shape.bone];
   if (matrix === undefined) throw new Error(`shape "${shape.id}" of asset "${asset.id}" is bound to unknown bone "${shape.bone}"`);
   const flat = flattenGeometry(shape);
+  if (identity && shape.kind === "member") throw new MemberInPaperUnitsError(asset.id, shape.id);
   if (identity) return { shape, rings: flat.rings, closed: flat.closed };
-  const dx = viewpoint === "plan" ? matrix[4] - restWorld(asset)[shape.bone]![4] : 0;
-  const rings = flat.rings.map((ring) => ring.map((p) => (viewpoint === "plan" ? { x: p.x + dx, y: p.y } : apply(matrix, p.x, p.y))));
-  return { shape, rings, closed: flat.closed };
+  if (shape.kind === "member" && kin !== undefined) {
+    const [start, end] = memberSections(shape, (id) => kin.now[id]!.frame);
+    return { shape, rings: [hull([...start, ...end].map((q) => projected(viewpoint, q)))], closed: true };
+  }
+  if (kin !== undefined && shape.solid !== undefined) return { shape, rings: solid3(shape.solid, flat.rings, kin, shape.bone, viewpoint, boneOf(asset, shape.bone).lengthM), closed: true };
+  if (viewpoint === "elevation" || kin === undefined) return { shape, rings: flat.rings.map((ring) => ring.map((p) => apply(matrix, p.x, p.y))), closed: flat.closed };
+  return placeProjected(asset, shape, flat, kin, viewpoint, twins);
 }
 
 function anchorOf(asset: Asset, id: Slug): Anchor {
@@ -335,29 +682,33 @@ function boneOf(asset: Asset, id: Slug): Bone {
   return bone;
 }
 
-function worldForces(asset: Asset, load: AppliedLoad, scale: number, world: Readonly<Record<Slug, Affine>>): WorldForce[] {
+/** 🧲️ The forces of one authored load at its 3D position: anchor, bone point or bone segment, placed by the bone frames (so a lateral `z`, `fzN` and the `x`, `y` moments are kept) and scaled by the load track. */
+function worldForces(asset: Asset, load: AppliedLoad, scale: number, frames: Readonly<Record<Slug, SolvedFrame>>): WorldForce[] {
   const base = { kind: load.kind, title: load.title };
   const forces: WorldForce[] = [];
-  const placeAt = (): { bone: Slug; at: Point } => {
+  const place = (bone: Slug, a: number, b: number, c: number): { readonly x: number; readonly y: number; readonly z: number } => {
+    const f = frames[bone]!.frame;
+    return { x: f.o[0] + a * f.u[0] + b * f.v[0] + c * f.w[0], y: f.o[1] + a * f.u[1] + b * f.v[1] + c * f.w[1], z: f.o[2] + a * f.u[2] + b * f.v[2] + c * f.w[2] };
+  };
+  const placeAt = (): { bone: Slug; at: { readonly x: number; readonly y: number; readonly z: number } } => {
     if (load.anchor !== undefined) {
       const anchor = anchorOf(asset, load.anchor);
-      return { bone: anchor.bone, at: apply(world[anchor.bone]!, anchor.x, anchor.y) };
+      return { bone: anchor.bone, at: place(anchor.bone, anchor.x, anchor.y, anchor.z ?? 0) };
     }
-    if (load.bone !== undefined) return { bone: load.bone, at: apply(world[boneOf(asset, load.bone).id]!, load.x ?? 0, load.y ?? 0) };
+    if (load.bone !== undefined) return { bone: load.bone, at: place(boneOf(asset, load.bone).id, load.x ?? 0, load.y ?? 0, load.z ?? 0) };
     throw new Error(`load "${load.id}" of asset "${asset.id}" has neither anchor nor bone`);
   };
-  const hasPoint = load.fxN !== 0 || load.fyN !== 0 || (load.momentNm ?? 0) !== 0;
+  const hasPoint = [load.fxN, load.fyN, load.fzN ?? 0, load.momentXNm ?? 0, load.momentYNm ?? 0, load.momentNm ?? 0].some((v) => v !== 0);
   if (hasPoint || load.distributed === undefined) {
     const { bone, at } = placeAt();
-    forces.push({ id: load.id, at, fxN: load.fxN * scale, fyN: load.fyN * scale, momentNm: (load.momentNm ?? 0) * scale, bone, ...base });
+    forces.push({ id: load.id, at: { x: at.x, y: at.y }, z: at.z, fxN: load.fxN * scale, fyN: load.fyN * scale, fzN: (load.fzN ?? 0) * scale, mxNm: (load.momentXNm ?? 0) * scale, myNm: (load.momentYNm ?? 0) * scale, mzNm: (load.momentNm ?? 0) * scale, bone, ...base });
   }
   const d = load.distributed;
   if (d !== undefined) {
-    const matrix = world[boneOf(asset, d.bone).id]!;
     const length = (d.toM - d.fromM) / DISTRIBUTED_SUBPOINTS;
     for (let i = 0; i < DISTRIBUTED_SUBPOINTS; i++) {
-      const s = d.fromM + (i + 0.5) * length;
-      forces.push({ id: `${load.id}#${i + 1}`, at: apply(matrix, s, 0), fxN: d.wxNPerM * length * scale, fyN: d.wyNPerM * length * scale, momentNm: 0, bone: d.bone, ...base });
+      const at = place(boneOf(asset, d.bone).id, d.fromM + (i + 0.5) * length, 0, 0);
+      forces.push({ id: `${load.id}#${i + 1}`, at: { x: at.x, y: at.y }, z: at.z, fxN: d.wxNPerM * length * scale, fyN: d.wyNPerM * length * scale, fzN: (d.wzNPerM ?? 0) * length * scale, mxNm: 0, myNm: 0, mzNm: 0, bone: d.bone, ...base });
     }
   }
   return forces;
@@ -365,70 +716,93 @@ function worldForces(asset: Asset, load: AppliedLoad, scale: number, world: Read
 //#endregion 🌍️Placement
 
 //#region ⚙️Kinematics
-function massCentres(asset: Asset, world: Readonly<Record<Slug, Affine>>): Record<Slug, { readonly at: Point; readonly kg: number }> {
-  const result: Record<Slug, { at: Point; kg: number }> = {};
-  for (const bone of asset.rig.bones) if (bone.mass !== undefined && bone.mass.kg > 0) result[bone.id] = { at: apply(world[bone.id]!, bone.mass.comX, bone.mass.comY), kg: bone.mass.kg };
+type Mass3 = { readonly at: { readonly x: number; readonly y: number; readonly z: number }; readonly kg: number };
+
+function massCentres(asset: Asset, frames: Readonly<Record<Slug, SolvedFrame>>): Record<Slug, Mass3> {
+  const result: Record<Slug, Mass3> = {};
+  for (const bone of asset.rig.bones)
+    if (bone.mass !== undefined && bone.mass.kg > 0) {
+      const f = frames[bone.id]!.frame;
+      const { comX, comY } = bone.mass;
+      result[bone.id] = { at: { x: f.o[0] + comX * f.u[0] + comY * f.v[0], y: f.o[1] + comX * f.u[1] + comY * f.v[1], z: f.o[2] + comX * f.u[2] + comY * f.v[2] }, kg: bone.mass.kg };
+    }
   return result;
 }
 
-function centreOf(masses: Readonly<Record<Slug, { readonly at: Point; readonly kg: number }>>): Point {
+function centreOf(masses: Readonly<Record<Slug, Mass3>>): { x: number; y: number; z: number } {
   let m = 0;
-  let x = 0;
-  let y = 0;
+  let [x, y, z] = [0, 0, 0];
   for (const { at, kg } of Object.values(masses)) {
     m += kg;
     x += at.x * kg;
     y += at.y * kg;
+    z += at.z * kg;
   }
-  return m === 0 ? { x: 0, y: 0 } : { x: x / m, y: y / m };
+  return m === 0 ? { x: 0, y: 0, z: 0 } : { x: x / m, y: y / m, z: z / m };
 }
 
 type Timeline = { readonly sampleAt: (timeS: number) => Sample; readonly loop: boolean; readonly durationS: number };
 
 function kinematics(asset: Asset, timeline: Timeline | null, timeS: number): EvaluatedState["kinematics"] {
   const massed = asset.rig.bones.filter((bone) => bone.mass !== undefined && bone.mass.kg > 0).map((bone) => bone.id);
-  const zero: Record<Slug, Point> = {};
-  for (const id of massed) zero[id] = { x: 0, y: 0 };
-  if (timeline === null || massed.length === 0) return { comVelocity: { x: 0, y: 0 }, segmentAccelerations: zero };
+  const zero: Record<Slug, { x: number; y: number; z: number }> = {};
+  for (const id of massed) zero[id] = { x: 0, y: 0, z: 0 };
+  if (timeline === null || massed.length === 0) return { comVelocity: { x: 0, y: 0, z: 0 }, segmentAccelerations: zero };
   const h = KINEMATIC_STEP_S;
   const mid = timeline.loop ? timeS : wrapTime(timeS, timeline.durationS, false);
   const lo = timeline.loop ? mid - h : Math.max(mid - h, 0);
   const hi = timeline.loop ? mid + h : Math.min(mid + h, timeline.durationS);
   const at = (t: number) => {
     const sample = timeline.sampleAt(t);
-    return massCentres(asset, solveRig(asset.rig, sample.offsets, sample.root));
+    return massCentres(asset, solveChain(asset.rig, sample.offsets, sample.root));
   };
   const before = at(lo);
   const now = at(mid);
   const after = at(hi);
   const symmetric = timeline.loop || (mid - h >= 0 && mid + h <= timeline.durationS);
+  const held = !timeline.loop && (timeS < 0 || timeS > timeline.durationS);
+  const direction = mid - h < 0 ? 1 : -1;
+  const reach = [1, 2, 3].map((k) => mid + direction * k * h);
+  const oneSided = !symmetric && !held && reach.every((t) => t >= 0 && t <= timeline.durationS);
+  const side = oneSided ? reach.map(at) : [];
   const span = hi - lo;
-  const accelerations: Record<Slug, Point> = {};
+  const accelerations: Record<Slug, { x: number; y: number; z: number }> = {};
+  const axes = ["x", "y", "z"] as const;
   for (const id of massed) {
     const a = before[id]!.at;
     const b = now[id]!.at;
     const c = after[id]!.at;
-    accelerations[id] = symmetric ? { x: (c.x - 2 * b.x + a.x) / (h * h), y: (c.y - 2 * b.y + a.y) / (h * h) } : { x: 0, y: 0 };
+    if (symmetric) accelerations[id] = { x: (c.x - 2 * b.x + a.x) / (h * h), y: (c.y - 2 * b.y + a.y) / (h * h), z: (c.z - 2 * b.z + a.z) / (h * h) };
+    else if (oneSided) {
+      const [p1, p2, p3] = side.map((s) => s[id]!.at) as [Mass3["at"], Mass3["at"], Mass3["at"]];
+      const d = (axis: (typeof axes)[number]): number => (2 * b[axis] - 5 * p1[axis] + 4 * p2[axis] - p3[axis]) / (h * h);
+      accelerations[id] = { x: d("x"), y: d("y"), z: d("z") };
+    } else accelerations[id] = { x: 0, y: 0, z: 0 };
   }
   const p0 = centreOf(before);
   const p1 = centreOf(after);
-  return { comVelocity: span > 0 ? { x: (p1.x - p0.x) / span, y: (p1.y - p0.y) / span } : { x: 0, y: 0 }, segmentAccelerations: accelerations };
+  return { comVelocity: span > 0 ? { x: (p1.x - p0.x) / span, y: (p1.y - p0.y) / span, z: (p1.z - p0.z) / span } : { x: 0, y: 0, z: 0 }, segmentAccelerations: accelerations };
 }
 //#endregion ⚙️Kinematics
 
-type Geometry = { readonly representation: EvaluatedState["representation"]; readonly elevation: readonly Shape[]; readonly plan: readonly Shape[]; readonly paper: boolean; readonly paperUnits?: boolean };
+type Geometry = { readonly representation: EvaluatedState["representation"]; readonly elevation: readonly Shape[]; readonly front: readonly Shape[]; readonly plan: readonly Shape[]; readonly paper: boolean; readonly paperUnits?: boolean };
+
+function viewOf(asset: Asset, shapes: readonly Shape[] | undefined, viewpoint: Viewpoint): readonly Shape[] {
+  if (shapes === undefined) throw new ViewMissingError(asset.id, viewpoint);
+  return shapes;
+}
 
 function geometryOf(asset: Asset, selector: RepresentationSelector | undefined): Geometry {
-  if (selector === undefined) return { representation: { kind: "none" }, elevation: [], plan: [], paper: false };
+  if (selector === undefined) return { representation: { kind: "none" }, elevation: [], front: [], plan: [], paper: false };
   if (selector.kind === "symbol") {
     const symbol = asset.symbols.find((candidate) => candidate.id === selector.symbol);
     if (symbol === undefined) throw new Error(`asset "${asset.id}" has no symbol "${selector.symbol}"; symbols: ${asset.symbols.map((s) => s.id).join(", ")}`);
-    return { representation: { kind: "symbol", symbol: symbol.id }, elevation: symbol.geometry.elevation, plan: symbol.geometry.plan ?? [], paper: true, paperUnits: symbol.units === "paper-mm" };
+    return { representation: { kind: "symbol", symbol: symbol.id }, elevation: symbol.geometry.elevation, front: viewOf(asset, symbol.geometry.front, "front"), plan: viewOf(asset, symbol.geometry.plan, "plan"), paper: true, paperUnits: symbol.units === "paper-mm" };
   }
   const picked = pickRepresentation(asset, selector.scale.denominator);
   if (picked.kind === "unavailable") throw new RepresentationError(picked, asset.id);
   const { representation } = picked;
-  return { representation: { kind: "scale", denominator: picked.denominator, requested: picked.requested, exact: picked.exact }, elevation: representation.geometry.elevation, plan: representation.geometry.plan ?? [], paper: false };
+  return { representation: { kind: "scale", denominator: picked.denominator, requested: picked.requested, exact: picked.exact }, elevation: representation.geometry.elevation, front: viewOf(asset, representation.geometry.front, "front"), plan: viewOf(asset, representation.geometry.plan, "plan"), paper: false };
 }
 
 type Extent = { minX: number; minY: number; maxX: number; maxY: number };
@@ -457,9 +831,10 @@ function withRespiration(asset: Asset, query: EvaluationQuery, sample: Sample): 
   if (ids.length === 0) return { sample, respiration };
   const offsets = { ...sample.offsets };
   for (const id of ids) {
-    const base = offsets[id];
+    if (!asset.rig.bones.some((bone) => bone.id === id)) throw new Error(`respiration of asset "${asset.id}" drives unknown bone "${id}"`);
+    const base = offsets[id] ?? { angleDeg: 0, abductionDeg: 0, twistDeg: 0, dx: 0, dy: 0 };
     const add = extra[id]!;
-    if (base !== undefined) offsets[id] = { angleDeg: base.angleDeg + (add.angleDeg ?? 0), dx: base.dx + (add.dx ?? 0), dy: base.dy + (add.dy ?? 0) };
+    offsets[id] = { angleDeg: base.angleDeg + (add.angleDeg ?? 0), abductionDeg: base.abductionDeg + (add.abductionDeg ?? 0), twistDeg: base.twistDeg + (add.twistDeg ?? 0), dx: base.dx + (add.dx ?? 0), dy: base.dy + (add.dy ?? 0) };
   }
   return { sample: { ...sample, offsets }, respiration };
 }
@@ -474,28 +849,48 @@ function sampleQuery(asset: Asset, query: EvaluationQuery): { readonly sample: S
   return { sample: sampleClip(asset, clip, query.timeS), timeline: { sampleAt: (t) => sampleClip(asset, clip, t), loop: false, durationS: clip.durationS } };
 }
 
-/** 🧮️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the wrapped or clamped clip time (the query's own time for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */
+/** 🎬️ The sample every view of a query is placed from: pose, clip or transition offsets and root with the respiration offsets added. */
+export function sampleOf(asset: Asset, query: EvaluationQuery): Sample {
+  return withRespiration(asset, query, sampleQuery(asset, query).sample).sample;
+}
+
+/** ▶️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the wrapped or clamped clip time (the query's own time for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */
 export function evaluate(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
   const geometry = geometryOf(asset, selector);
   const { sample: pure, timeline } = sampleQuery(asset, query);
   const { sample, respiration } = withRespiration(asset, query, pure);
   const world = solveRig(asset.rig, sample.offsets, sample.root);
+  const kin: Chain3 = { now: solveChain(asset.rig, sample.offsets, sample.root), rest: restOf(asset) };
   const bones: Record<Slug, EvaluatedBone> = {};
   for (const bone of asset.rig.bones) {
     const matrix = world[bone.id]!;
     const effective = effectiveOffset(bone, sample.offsets[bone.id]);
-    bones[bone.id] = { id: bone.id, world: matrix, origin: apply(matrix, 0, 0), tip: apply(matrix, bone.lengthM, 0), angleRad: rotationRad(matrix), offset: effective };
+    const f = kin.now[bone.id]!.frame;
+    const tip = vec3([f.o[0] + f.u[0] * bone.lengthM, f.o[1] + f.u[1] * bone.lengthM, f.o[2] + f.u[2] * bone.lengthM]);
+    bones[bone.id] = { id: bone.id, world: matrix, origin: apply(matrix, 0, 0), tip, frame: { o: vec3(f.o), u: vec3(f.u), v: vec3(f.v), w: vec3(f.w) }, angleRad: rotationRad(matrix), offset: effective };
+  }
+  const twins = new Map<string, Shape[]>();
+  for (const shape of geometry.elevation) {
+    if (shape.solid !== undefined) continue;
+    twins.set(`${shape.id} ${shape.bone}`, [shape]);
+    if (shape.role !== "ground") twins.set(`* ${shape.bone}`, [...(twins.get(`* ${shape.bone}`) ?? []), shape]);
   }
   const shapes: Record<Viewpoint, EvaluatedShape[]> = {
-    elevation: geometry.elevation.map((shape) => placeShape(asset, shape, world, "elevation", geometry.paper)),
-    plan: geometry.plan.map((shape) => placeShape(asset, shape, world, "plan", geometry.paper)),
+    elevation: geometry.elevation.map((shape) => placeShape(asset, shape, world, "elevation", geometry.paper, kin)),
+    front: geometry.front.map((shape) => placeShape(asset, shape, world, "front", geometry.paper, kin, twins)),
+    plan: geometry.plan.map((shape) => placeShape(asset, shape, world, "plan", geometry.paper, kin, twins)),
   };
-  const anchors: Record<Slug, { anchor: Anchor; at: Point }> = {};
-  for (const anchor of asset.anchors) anchors[anchor.id] = { anchor, at: apply(world[anchor.bone]!, anchor.x, anchor.y) };
+  const anchors: Record<Slug, { anchor: Anchor; at: Point; z: number }> = {};
+  for (const anchor of asset.anchors) {
+    const f = kin.now[anchor.bone]!.frame;
+    const side = anchor.z ?? 0;
+    const flat = apply(world[anchor.bone]!, anchor.x, anchor.y);
+    anchors[anchor.id] = { anchor, at: { x: flat.x + side * f.w[0], y: flat.y + side * f.w[1] }, z: f.o[2] + anchor.x * f.u[2] + anchor.y * f.v[2] + side * f.w[2] };
+  }
   const loads: WorldForce[] = [];
   for (const load of sample.loads) {
     const scale = sample.loadScales[load.id] ?? 1;
-    if (scale !== 0) loads.push(...worldForces(asset, load, scale, world));
+    if (scale !== 0) loads.push(...worldForces(asset, load, scale, kin.now));
   }
   const drawn = geometry.paperUnits === true ? [] : shapes.elevation.filter((evaluated) => evaluated.shape.role !== "ground").flatMap((evaluated) => evaluated.rings.flat());
   const extent = extentOf(drawn);
@@ -504,9 +899,11 @@ export function evaluate(asset: Asset, query: EvaluationQuery, selector?: Repres
   return {
     asset,
     query,
-    timeS: query.kind === "pose" ? (query.timeS ?? 0) : sample.timeS,
+    timeS: query.timeS ?? 0,
+    clipTimeS: query.kind === "pose" ? 0 : sample.clipTimeS,
     frame: sample.frame,
     phase: sample.phase,
+    root: { x: sample.root.x, y: sample.root.y, z: 0, angleDeg: sample.root.angleDeg },
     bones,
     shapes,
     anchors,

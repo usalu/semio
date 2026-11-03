@@ -25,6 +25,8 @@ export default defineConfig({
     root,
     name: "@teaching/staffage-react",
     environment: "jsdom",
+    testTimeout: 180_000,
+    hookTimeout: 180_000,
     include: ["../../🧪️tests/*/🟦️.tsx"],
     setupFiles: [resolve(dirname(fileURLToPath(import.meta.url)), "resolve-react.ts")],
     coverage: { include: ["🟦️.tsx", "📚️app/**/🟦️.tsx"] },

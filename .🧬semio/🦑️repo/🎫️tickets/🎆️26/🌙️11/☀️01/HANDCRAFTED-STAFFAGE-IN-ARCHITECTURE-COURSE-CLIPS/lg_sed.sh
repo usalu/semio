@@ -1,0 +1,5 @@
+S="🎓️teaching/🏛️architecture/🧍️staffage"
+T="$S/🧪️tests/🎭️cast-export/🟦️.ts"
+sed -i -e 's/ language: vectors\.language }/ }/; s/, { language: "en" })/)/; s/{ language: "en", signal: controller\.signal }/{ signal: controller.signal }/; s/{ language: cancellation\.language, signal/{ signal/; s/, { language: cancellation\.language })/)/; s/, "--lang", cancellation\.language//; s/language: "en" | "de"; //' "$T"
+sed -i '/^  "language": "en",$/d' "$S/🧫️fixtures/🎭️cast-export/🔣️.json" "$S/🧫️fixtures/🎭️cast-cancellation/🔣️.json"
+sed -i 's/\[1\/1\] Rendering cast frames/[1\/1] Rendering cast frames \/ Besetzungsbilder werden gerendert/' "$S/🧫️fixtures/🎭️cast-cancellation/🔣️.json" "$S/🧪️tests/🎭️cast-export/🥒️.feature"

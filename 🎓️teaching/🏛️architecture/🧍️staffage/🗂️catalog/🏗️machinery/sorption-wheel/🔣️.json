@@ -1,0 +1,1984 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "sorption-wheel",
+    "category": "machinery",
+    "title": {
+      "en": "Desiccant Sorption Wheel",
+      "de": "Sorptionsrad"
+    },
+    "summary": {
+      "en": "A 0.62 m desiccant wheel seen face-on: a honeycomb silica-gel matrix on spokes turns slowly inside a casing ring; coil-heated regeneration air at 70 degC dries it through the hot sector, and the process air leaves dry and warmed by the adsorption heat.",
+      "de": "Ein 0,62 m großes Sorptionsrad in der Frontansicht: eine Silicagel-Wabenmatrix auf Speichen dreht sich langsam in einem Gehäusering; durch den heißen Sektor trocknet vom Heizregister auf 70 degC erwärmte Regenerationsluft sie aus, und die Prozessluft verlässt das Rad trocken und durch die Adsorptionswärme erwärmt."
+    },
+    "tags": [
+      "sorption-wheel",
+      "desiccant",
+      "dec",
+      "dehumidification",
+      "regeneration",
+      "air-handling",
+      "appliance"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-308-1997",
+          "citation": "DIN EN 308:1997 Heat exchangers - Test procedures for establishing performance of air to air and flue gases heat recovery devices."
+        },
+        {
+          "id": "vdi-3803-2010",
+          "citation": "VDI 3803 Part 1:2010 Air-conditioning - Central air-handling units - Structural and technical principles."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "ashrae-2020-equipment",
+          "citation": "ASHRAE (2020). Handbook - HVAC Systems and Equipment, SI edition, Atlanta (desiccant dehumidification and pressure-drying equipment)."
+        },
+        {
+          "id": "henning-2007",
+          "citation": "Henning, H.-M. (2007). Solar assisted air conditioning of buildings - an overview. Applied Thermal Engineering 27(10), 1734-1749."
+        }
+      ],
+      "notes": {
+        "en": "A rotary desiccant dehumidifier wheel of a small sorption air handler: a 0.57 m silica-gel coated honeycomb matrix of 0.2 m depth in a 0.62 m galvanised casing ring on a stand, driven by a belt motor at 12 revolutions per hour (5 minutes per turn); a 90 degree sector is closed off for regeneration. The mass is 22 kg (casing and stand 6, matrix 14, sector plates and seals 2). Air side at the room reference (21 degC, 7.8 g/kg): the process stream of 0.4 m3/s (1440 m3/h, 2.1 m/s over the 270 degree face of 0.19 m2) loses 3.4 g/kg of moisture, which releases 0.48 kg/s x 3.4 g/kg x 2.8 MJ/kg = 4.6 kW of adsorption heat; with about 0.9 kW carried over by the matrix from the regeneration sector (14 kg x 920 J/kgK x 20 K per 300 s) the dry air leaves 11 K warmer at 4.4 g/kg. The regeneration stream of 0.14 m3/s (a third of the process flow over the 90 degree sector of 0.064 m2) is heated by the upstream heating coil to 70 degC (7.9 kW from room air), takes up 4.6 kW of desorption heat and 0.9 kW for the matrix, and leaves about 33 K above the room at 17.8 g/kg. That is a thermal coefficient of performance of 4.6 / 7.9 = 0.6, the usual range of solar-assisted desiccant cooling. The surface heats are only the free-convection and radiation losses of the matrix faces at the temperatures the air sets: 0.064 m2 at about 60 degC loses 28 W, 0.19 m2 at about 32 degC loses 18 W. The origin is the centre of the casing on the base line of the stand, x at the hub.",
+        "de": "Ein rotierendes Sorptionsrad eines kleinen Sorptionslüftungsgeräts: eine silicagelbeschichtete Wabenmatrix von 0,57 m Durchmesser und 0,2 m Tiefe in einem 0,62 m großen verzinkten Gehäusering auf einem Fuß, über einen Riemenmotor mit 12 Umdrehungen je Stunde (5 Minuten je Umdrehung) angetrieben; ein 90-Grad-Sektor ist für die Regeneration abgetrennt. Die Masse beträgt 22 kg (Gehäuse und Fuß 6, Matrix 14, Sektorbleche und Dichtungen 2). Luftseite am Raumbezug (21 degC, 7,8 g/kg): der Prozessstrom von 0,4 m3/s (1440 m3/h, 2,1 m/s über die 270-Grad-Fläche von 0,19 m2) verliert 3,4 g/kg Feuchte, das setzt 0,48 kg/s x 3,4 g/kg x 2,8 MJ/kg = 4,6 kW Adsorptionswärme frei; mit rund 0,9 kW, die die Matrix aus dem Regenerationssektor mitbringt (14 kg x 920 J/kgK x 20 K je 300 s), verlässt die trockene Luft das Rad 11 K wärmer mit 4,4 g/kg. Der Regenerationsstrom von 0,14 m3/s (ein Drittel des Prozessstroms über den 90-Grad-Sektor von 0,064 m2) wird vom vorgeschalteten Heizregister auf 70 degC erwärmt (7,9 kW aus Raumluft), nimmt 4,6 kW Desorptionswärme und 0,9 kW für die Matrix auf und verlässt das Rad rund 33 K über dem Raum mit 17,8 g/kg. Das ergibt eine thermische Leistungszahl von 4,6 / 7,9 = 0,6, den üblichen Bereich solargestützter Sorptionskühlung. Die Oberflächenwärmen sind nur die Verluste der Matrixflächen durch freie Konvektion und Strahlung bei den Temperaturen, die die Luft vorgibt: 0,064 m2 bei rund 60 degC verlieren 28 W, 0,19 m2 bei rund 32 degC verlieren 18 W. Der Ursprung liegt auf der Grundlinie des Fußes, x an der Nabe."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.62,
+      "widthM": 0.62,
+      "depthM": 0.22,
+      "massKg": 22
+    },
+    "materials": [
+      {
+        "id": "galvanised-steel",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 480,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "silica-gel",
+        "title": {
+          "en": "Silica-gel honeycomb",
+          "de": "Silicagel-Wabe"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 700,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 920,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "casing",
+      "bones": [
+        {
+          "id": "casing",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Casing ring with stand",
+            "de": "Gehäusering mit Fuß"
+          },
+          "lengthM": 0.62,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 6,
+            "comX": 0,
+            "comY": 0.31,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "seal",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.31,
+          "angleDeg": 0,
+          "title": {
+            "en": "Regeneration sector with seals",
+            "de": "Regenerationssektor mit Dichtungen"
+          },
+          "lengthM": 0.29,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2,
+            "comX": 0.15,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rotor",
+          "parent": "casing",
+          "x": 0,
+          "y": 0.31,
+          "angleDeg": 0,
+          "title": {
+            "en": "Rotating desiccant matrix",
+            "de": "Rotierende Sorptionsmatrix"
+          },
+          "lengthM": 0.285,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 14,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "casing",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.24,
+        "footprintWidthM": 0.2,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "process-collar",
+        "bone": "casing",
+        "x": 0.2,
+        "y": 0.12,
+        "kind": "emitter",
+        "title": {
+          "en": "Dry process air leaving the lower right of the disc",
+          "de": "Trockene Prozessluft unten rechts an der Scheibe"
+        }
+      },
+      {
+        "id": "regen-collar",
+        "bone": "casing",
+        "x": 0.27,
+        "y": 0.31,
+        "kind": "emitter",
+        "title": {
+          "en": "Moist regeneration air leaving the hot sector",
+          "de": "Feuchte Regenerationsluft am heißen Sektor"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.285,
+              "ry": 0.285,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "honeycomb",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M -0.05196 -0.23 L -0.06928 -0.22 L -0.0866 -0.23 L -0.0866 -0.25 L -0.06928 -0.26 L -0.05196 -0.25 Z M -0.01732 -0.23 L -0.03464 -0.22 L -0.05196 -0.23 L -0.05196 -0.25 L -0.03464 -0.26 L -0.01732 -0.25 Z M 0.01732 -0.23 L 0 -0.22 L -0.01732 -0.23 L -0.01732 -0.25 L 0 -0.26 L 0.01732 -0.25 Z M 0.05196 -0.23 L 0.03464 -0.22 L 0.01732 -0.23 L 0.01732 -0.25 L 0.03464 -0.26 L 0.05196 -0.25 Z M 0.0866 -0.23 L 0.06928 -0.22 L 0.05196 -0.23 L 0.05196 -0.25 L 0.06928 -0.26 L 0.0866 -0.25 Z M -0.10392 -0.2 L -0.12124 -0.19 L -0.13856 -0.2 L -0.13856 -0.22 L -0.12124 -0.23 L -0.10392 -0.22 Z M -0.06928 -0.2 L -0.0866 -0.19 L -0.10392 -0.2 L -0.10392 -0.22 L -0.0866 -0.23 L -0.06928 -0.22 Z M -0.03464 -0.2 L -0.05196 -0.19 L -0.06928 -0.2 L -0.06928 -0.22 L -0.05196 -0.23 L -0.03464 -0.22 Z M 0 -0.2 L -0.01732 -0.19 L -0.03464 -0.2 L -0.03464 -0.22 L -0.01732 -0.23 L 0 -0.22 Z M 0.03464 -0.2 L 0.01732 -0.19 L 0 -0.2 L 0 -0.22 L 0.01732 -0.23 L 0.03464 -0.22 Z M 0.06928 -0.2 L 0.05196 -0.19 L 0.03464 -0.2 L 0.03464 -0.22 L 0.05196 -0.23 L 0.06928 -0.22 Z M 0.10392 -0.2 L 0.0866 -0.19 L 0.06928 -0.2 L 0.06928 -0.22 L 0.0866 -0.23 L 0.10392 -0.22 Z M 0.13856 -0.2 L 0.12124 -0.19 L 0.10392 -0.2 L 0.10392 -0.22 L 0.12124 -0.23 L 0.13856 -0.22 Z M -0.15588 -0.17 L -0.17321 -0.16 L -0.19053 -0.17 L -0.19053 -0.19 L -0.17321 -0.2 L -0.15588 -0.19 Z M -0.12124 -0.17 L -0.13856 -0.16 L -0.15588 -0.17 L -0.15588 -0.19 L -0.13856 -0.2 L -0.12124 -0.19 Z M -0.0866 -0.17 L -0.10392 -0.16 L -0.12124 -0.17 L -0.12124 -0.19 L -0.10392 -0.2 L -0.0866 -0.19 Z M -0.05196 -0.17 L -0.06928 -0.16 L -0.0866 -0.17 L -0.0866 -0.19 L -0.06928 -0.2 L -0.05196 -0.19 Z M -0.01732 -0.17 L -0.03464 -0.16 L -0.05196 -0.17 L -0.05196 -0.19 L -0.03464 -0.2 L -0.01732 -0.19 Z M 0.01732 -0.17 L 0 -0.16 L -0.01732 -0.17 L -0.01732 -0.19 L 0 -0.2 L 0.01732 -0.19 Z M 0.05196 -0.17 L 0.03464 -0.16 L 0.01732 -0.17 L 0.01732 -0.19 L 0.03464 -0.2 L 0.05196 -0.19 Z M 0.0866 -0.17 L 0.06928 -0.16 L 0.05196 -0.17 L 0.05196 -0.19 L 0.06928 -0.2 L 0.0866 -0.19 Z M 0.12124 -0.17 L 0.10392 -0.16 L 0.0866 -0.17 L 0.0866 -0.19 L 0.10392 -0.2 L 0.12124 -0.19 Z M 0.15588 -0.17 L 0.13856 -0.16 L 0.12124 -0.17 L 0.12124 -0.19 L 0.13856 -0.2 L 0.15588 -0.19 Z M 0.19053 -0.17 L 0.17321 -0.16 L 0.15588 -0.17 L 0.15588 -0.19 L 0.17321 -0.2 L 0.19053 -0.19 Z M -0.17321 -0.14 L -0.19053 -0.13 L -0.20785 -0.14 L -0.20785 -0.16 L -0.19053 -0.17 L -0.17321 -0.16 Z M -0.13856 -0.14 L -0.15588 -0.13 L -0.17321 -0.14 L -0.17321 -0.16 L -0.15588 -0.17 L -0.13856 -0.16 Z M -0.10392 -0.14 L -0.12124 -0.13 L -0.13856 -0.14 L -0.13856 -0.16 L -0.12124 -0.17 L -0.10392 -0.16 Z M -0.06928 -0.14 L -0.0866 -0.13 L -0.10392 -0.14 L -0.10392 -0.16 L -0.0866 -0.17 L -0.06928 -0.16 Z M -0.03464 -0.14 L -0.05196 -0.13 L -0.06928 -0.14 L -0.06928 -0.16 L -0.05196 -0.17 L -0.03464 -0.16 Z M 0 -0.14 L -0.01732 -0.13 L -0.03464 -0.14 L -0.03464 -0.16 L -0.01732 -0.17 L 0 -0.16 Z M 0.03464 -0.14 L 0.01732 -0.13 L 0 -0.14 L 0 -0.16 L 0.01732 -0.17 L 0.03464 -0.16 Z M 0.06928 -0.14 L 0.05196 -0.13 L 0.03464 -0.14 L 0.03464 -0.16 L 0.05196 -0.17 L 0.06928 -0.16 Z M 0.10392 -0.14 L 0.0866 -0.13 L 0.06928 -0.14 L 0.06928 -0.16 L 0.0866 -0.17 L 0.10392 -0.16 Z M 0.13856 -0.14 L 0.12124 -0.13 L 0.10392 -0.14 L 0.10392 -0.16 L 0.12124 -0.17 L 0.13856 -0.16 Z M 0.17321 -0.14 L 0.15588 -0.13 L 0.13856 -0.14 L 0.13856 -0.16 L 0.15588 -0.17 L 0.17321 -0.16 Z M 0.20785 -0.14 L 0.19053 -0.13 L 0.17321 -0.14 L 0.17321 -0.16 L 0.19053 -0.17 L 0.20785 -0.16 Z M -0.19053 -0.11 L -0.20785 -0.1 L -0.22517 -0.11 L -0.22517 -0.13 L -0.20785 -0.14 L -0.19053 -0.13 Z M -0.15588 -0.11 L -0.17321 -0.1 L -0.19053 -0.11 L -0.19053 -0.13 L -0.17321 -0.14 L -0.15588 -0.13 Z M -0.12124 -0.11 L -0.13856 -0.1 L -0.15588 -0.11 L -0.15588 -0.13 L -0.13856 -0.14 L -0.12124 -0.13 Z M -0.0866 -0.11 L -0.10392 -0.1 L -0.12124 -0.11 L -0.12124 -0.13 L -0.10392 -0.14 L -0.0866 -0.13 Z M -0.05196 -0.11 L -0.06928 -0.1 L -0.0866 -0.11 L -0.0866 -0.13 L -0.06928 -0.14 L -0.05196 -0.13 Z M -0.01732 -0.11 L -0.03464 -0.1 L -0.05196 -0.11 L -0.05196 -0.13 L -0.03464 -0.14 L -0.01732 -0.13 Z M 0.01732 -0.11 L 0 -0.1 L -0.01732 -0.11 L -0.01732 -0.13 L 0 -0.14 L 0.01732 -0.13 Z M 0.05196 -0.11 L 0.03464 -0.1 L 0.01732 -0.11 L 0.01732 -0.13 L 0.03464 -0.14 L 0.05196 -0.13 Z M 0.0866 -0.11 L 0.06928 -0.1 L 0.05196 -0.11 L 0.05196 -0.13 L 0.06928 -0.14 L 0.0866 -0.13 Z M 0.12124 -0.11 L 0.10392 -0.1 L 0.0866 -0.11 L 0.0866 -0.13 L 0.10392 -0.14 L 0.12124 -0.13 Z M 0.15588 -0.11 L 0.13856 -0.1 L 0.12124 -0.11 L 0.12124 -0.13 L 0.13856 -0.14 L 0.15588 -0.13 Z M 0.19053 -0.11 L 0.17321 -0.1 L 0.15588 -0.11 L 0.15588 -0.13 L 0.17321 -0.14 L 0.19053 -0.13 Z M 0.22517 -0.11 L 0.20785 -0.1 L 0.19053 -0.11 L 0.19053 -0.13 L 0.20785 -0.14 L 0.22517 -0.13 Z M -0.20785 -0.08 L -0.22517 -0.07 L -0.24249 -0.08 L -0.24249 -0.1 L -0.22517 -0.11 L -0.20785 -0.1 Z M -0.17321 -0.08 L -0.19053 -0.07 L -0.20785 -0.08 L -0.20785 -0.1 L -0.19053 -0.11 L -0.17321 -0.1 Z M -0.13856 -0.08 L -0.15588 -0.07 L -0.17321 -0.08 L -0.17321 -0.1 L -0.15588 -0.11 L -0.13856 -0.1 Z M -0.10392 -0.08 L -0.12124 -0.07 L -0.13856 -0.08 L -0.13856 -0.1 L -0.12124 -0.11 L -0.10392 -0.1 Z M -0.06928 -0.08 L -0.0866 -0.07 L -0.10392 -0.08 L -0.10392 -0.1 L -0.0866 -0.11 L -0.06928 -0.1 Z M -0.03464 -0.08 L -0.05196 -0.07 L -0.06928 -0.08 L -0.06928 -0.1 L -0.05196 -0.11 L -0.03464 -0.1 Z M 0 -0.08 L -0.01732 -0.07 L -0.03464 -0.08 L -0.03464 -0.1 L -0.01732 -0.11 L 0 -0.1 Z M 0.03464 -0.08 L 0.01732 -0.07 L 0 -0.08 L 0 -0.1 L 0.01732 -0.11 L 0.03464 -0.1 Z M 0.06928 -0.08 L 0.05196 -0.07 L 0.03464 -0.08 L 0.03464 -0.1 L 0.05196 -0.11 L 0.06928 -0.1 Z M 0.10392 -0.08 L 0.0866 -0.07 L 0.06928 -0.08 L 0.06928 -0.1 L 0.0866 -0.11 L 0.10392 -0.1 Z M 0.13856 -0.08 L 0.12124 -0.07 L 0.10392 -0.08 L 0.10392 -0.1 L 0.12124 -0.11 L 0.13856 -0.1 Z M 0.17321 -0.08 L 0.15588 -0.07 L 0.13856 -0.08 L 0.13856 -0.1 L 0.15588 -0.11 L 0.17321 -0.1 Z M 0.20785 -0.08 L 0.19053 -0.07 L 0.17321 -0.08 L 0.17321 -0.1 L 0.19053 -0.11 L 0.20785 -0.1 Z M 0.24249 -0.08 L 0.22517 -0.07 L 0.20785 -0.08 L 0.20785 -0.1 L 0.22517 -0.11 L 0.24249 -0.1 Z M -0.22517 -0.05 L -0.24249 -0.04 L -0.25981 -0.05 L -0.25981 -0.07 L -0.24249 -0.08 L -0.22517 -0.07 Z M -0.19053 -0.05 L -0.20785 -0.04 L -0.22517 -0.05 L -0.22517 -0.07 L -0.20785 -0.08 L -0.19053 -0.07 Z M -0.15588 -0.05 L -0.17321 -0.04 L -0.19053 -0.05 L -0.19053 -0.07 L -0.17321 -0.08 L -0.15588 -0.07 Z M -0.12124 -0.05 L -0.13856 -0.04 L -0.15588 -0.05 L -0.15588 -0.07 L -0.13856 -0.08 L -0.12124 -0.07 Z M -0.0866 -0.05 L -0.10392 -0.04 L -0.12124 -0.05 L -0.12124 -0.07 L -0.10392 -0.08 L -0.0866 -0.07 Z M -0.05196 -0.05 L -0.06928 -0.04 L -0.0866 -0.05 L -0.0866 -0.07 L -0.06928 -0.08 L -0.05196 -0.07 Z M -0.01732 -0.05 L -0.03464 -0.04 L -0.05196 -0.05 L -0.05196 -0.07 L -0.03464 -0.08 L -0.01732 -0.07 Z M 0.01732 -0.05 L 0 -0.04 L -0.01732 -0.05 L -0.01732 -0.07 L 0 -0.08 L 0.01732 -0.07 Z M 0.05196 -0.05 L 0.03464 -0.04 L 0.01732 -0.05 L 0.01732 -0.07 L 0.03464 -0.08 L 0.05196 -0.07 Z M 0.0866 -0.05 L 0.06928 -0.04 L 0.05196 -0.05 L 0.05196 -0.07 L 0.06928 -0.08 L 0.0866 -0.07 Z M 0.12124 -0.05 L 0.10392 -0.04 L 0.0866 -0.05 L 0.0866 -0.07 L 0.10392 -0.08 L 0.12124 -0.07 Z M 0.15588 -0.05 L 0.13856 -0.04 L 0.12124 -0.05 L 0.12124 -0.07 L 0.13856 -0.08 L 0.15588 -0.07 Z M 0.19053 -0.05 L 0.17321 -0.04 L 0.15588 -0.05 L 0.15588 -0.07 L 0.17321 -0.08 L 0.19053 -0.07 Z M 0.22517 -0.05 L 0.20785 -0.04 L 0.19053 -0.05 L 0.19053 -0.07 L 0.20785 -0.08 L 0.22517 -0.07 Z M 0.25981 -0.05 L 0.24249 -0.04 L 0.22517 -0.05 L 0.22517 -0.07 L 0.24249 -0.08 L 0.25981 -0.07 Z M -0.20785 -0.02 L -0.22517 -0.01 L -0.24249 -0.02 L -0.24249 -0.04 L -0.22517 -0.05 L -0.20785 -0.04 Z M -0.17321 -0.02 L -0.19053 -0.01 L -0.20785 -0.02 L -0.20785 -0.04 L -0.19053 -0.05 L -0.17321 -0.04 Z M -0.13856 -0.02 L -0.15588 -0.01 L -0.17321 -0.02 L -0.17321 -0.04 L -0.15588 -0.05 L -0.13856 -0.04 Z M -0.10392 -0.02 L -0.12124 -0.01 L -0.13856 -0.02 L -0.13856 -0.04 L -0.12124 -0.05 L -0.10392 -0.04 Z M -0.06928 -0.02 L -0.0866 -0.01 L -0.10392 -0.02 L -0.10392 -0.04 L -0.0866 -0.05 L -0.06928 -0.04 Z M -0.03464 -0.02 L -0.05196 -0.01 L -0.06928 -0.02 L -0.06928 -0.04 L -0.05196 -0.05 L -0.03464 -0.04 Z M 0.06928 -0.02 L 0.05196 -0.01 L 0.03464 -0.02 L 0.03464 -0.04 L 0.05196 -0.05 L 0.06928 -0.04 Z M 0.10392 -0.02 L 0.0866 -0.01 L 0.06928 -0.02 L 0.06928 -0.04 L 0.0866 -0.05 L 0.10392 -0.04 Z M 0.13856 -0.02 L 0.12124 -0.01 L 0.10392 -0.02 L 0.10392 -0.04 L 0.12124 -0.05 L 0.13856 -0.04 Z M 0.17321 -0.02 L 0.15588 -0.01 L 0.13856 -0.02 L 0.13856 -0.04 L 0.15588 -0.05 L 0.17321 -0.04 Z M 0.20785 -0.02 L 0.19053 -0.01 L 0.17321 -0.02 L 0.17321 -0.04 L 0.19053 -0.05 L 0.20785 -0.04 Z M 0.24249 -0.02 L 0.22517 -0.01 L 0.20785 -0.02 L 0.20785 -0.04 L 0.22517 -0.05 L 0.24249 -0.04 Z M -0.22517 0.01 L -0.24249 0.02 L -0.25981 0.01 L -0.25981 -0.01 L -0.24249 -0.02 L -0.22517 -0.01 Z M -0.19053 0.01 L -0.20785 0.02 L -0.22517 0.01 L -0.22517 -0.01 L -0.20785 -0.02 L -0.19053 -0.01 Z M -0.15588 0.01 L -0.17321 0.02 L -0.19053 0.01 L -0.19053 -0.01 L -0.17321 -0.02 L -0.15588 -0.01 Z M -0.12124 0.01 L -0.13856 0.02 L -0.15588 0.01 L -0.15588 -0.01 L -0.13856 -0.02 L -0.12124 -0.01 Z M -0.0866 0.01 L -0.10392 0.02 L -0.12124 0.01 L -0.12124 -0.01 L -0.10392 -0.02 L -0.0866 -0.01 Z M -0.05196 0.01 L -0.06928 0.02 L -0.0866 0.01 L -0.0866 -0.01 L -0.06928 -0.02 L -0.05196 -0.01 Z M 0.0866 0.01 L 0.06928 0.02 L 0.05196 0.01 L 0.05196 -0.01 L 0.06928 -0.02 L 0.0866 -0.01 Z M 0.12124 0.01 L 0.10392 0.02 L 0.0866 0.01 L 0.0866 -0.01 L 0.10392 -0.02 L 0.12124 -0.01 Z M 0.15588 0.01 L 0.13856 0.02 L 0.12124 0.01 L 0.12124 -0.01 L 0.13856 -0.02 L 0.15588 -0.01 Z M 0.19053 0.01 L 0.17321 0.02 L 0.15588 0.01 L 0.15588 -0.01 L 0.17321 -0.02 L 0.19053 -0.01 Z M 0.22517 0.01 L 0.20785 0.02 L 0.19053 0.01 L 0.19053 -0.01 L 0.20785 -0.02 L 0.22517 -0.01 Z M 0.25981 0.01 L 0.24249 0.02 L 0.22517 0.01 L 0.22517 -0.01 L 0.24249 -0.02 L 0.25981 -0.01 Z M -0.20785 0.04 L -0.22517 0.05 L -0.24249 0.04 L -0.24249 0.02 L -0.22517 0.01 L -0.20785 0.02 Z M -0.17321 0.04 L -0.19053 0.05 L -0.20785 0.04 L -0.20785 0.02 L -0.19053 0.01 L -0.17321 0.02 Z M -0.13856 0.04 L -0.15588 0.05 L -0.17321 0.04 L -0.17321 0.02 L -0.15588 0.01 L -0.13856 0.02 Z M -0.10392 0.04 L -0.12124 0.05 L -0.13856 0.04 L -0.13856 0.02 L -0.12124 0.01 L -0.10392 0.02 Z M -0.06928 0.04 L -0.0866 0.05 L -0.10392 0.04 L -0.10392 0.02 L -0.0866 0.01 L -0.06928 0.02 Z M -0.03464 0.04 L -0.05196 0.05 L -0.06928 0.04 L -0.06928 0.02 L -0.05196 0.01 L -0.03464 0.02 Z M 0.06928 0.04 L 0.05196 0.05 L 0.03464 0.04 L 0.03464 0.02 L 0.05196 0.01 L 0.06928 0.02 Z M 0.10392 0.04 L 0.0866 0.05 L 0.06928 0.04 L 0.06928 0.02 L 0.0866 0.01 L 0.10392 0.02 Z M 0.13856 0.04 L 0.12124 0.05 L 0.10392 0.04 L 0.10392 0.02 L 0.12124 0.01 L 0.13856 0.02 Z M 0.17321 0.04 L 0.15588 0.05 L 0.13856 0.04 L 0.13856 0.02 L 0.15588 0.01 L 0.17321 0.02 Z M 0.20785 0.04 L 0.19053 0.05 L 0.17321 0.04 L 0.17321 0.02 L 0.19053 0.01 L 0.20785 0.02 Z M 0.24249 0.04 L 0.22517 0.05 L 0.20785 0.04 L 0.20785 0.02 L 0.22517 0.01 L 0.24249 0.02 Z M -0.22517 0.07 L -0.24249 0.08 L -0.25981 0.07 L -0.25981 0.05 L -0.24249 0.04 L -0.22517 0.05 Z M -0.19053 0.07 L -0.20785 0.08 L -0.22517 0.07 L -0.22517 0.05 L -0.20785 0.04 L -0.19053 0.05 Z M -0.15588 0.07 L -0.17321 0.08 L -0.19053 0.07 L -0.19053 0.05 L -0.17321 0.04 L -0.15588 0.05 Z M -0.12124 0.07 L -0.13856 0.08 L -0.15588 0.07 L -0.15588 0.05 L -0.13856 0.04 L -0.12124 0.05 Z M -0.0866 0.07 L -0.10392 0.08 L -0.12124 0.07 L -0.12124 0.05 L -0.10392 0.04 L -0.0866 0.05 Z M -0.05196 0.07 L -0.06928 0.08 L -0.0866 0.07 L -0.0866 0.05 L -0.06928 0.04 L -0.05196 0.05 Z M -0.01732 0.07 L -0.03464 0.08 L -0.05196 0.07 L -0.05196 0.05 L -0.03464 0.04 L -0.01732 0.05 Z M 0.01732 0.07 L 0 0.08 L -0.01732 0.07 L -0.01732 0.05 L 0 0.04 L 0.01732 0.05 Z M 0.05196 0.07 L 0.03464 0.08 L 0.01732 0.07 L 0.01732 0.05 L 0.03464 0.04 L 0.05196 0.05 Z M 0.0866 0.07 L 0.06928 0.08 L 0.05196 0.07 L 0.05196 0.05 L 0.06928 0.04 L 0.0866 0.05 Z M 0.12124 0.07 L 0.10392 0.08 L 0.0866 0.07 L 0.0866 0.05 L 0.10392 0.04 L 0.12124 0.05 Z M 0.15588 0.07 L 0.13856 0.08 L 0.12124 0.07 L 0.12124 0.05 L 0.13856 0.04 L 0.15588 0.05 Z M 0.19053 0.07 L 0.17321 0.08 L 0.15588 0.07 L 0.15588 0.05 L 0.17321 0.04 L 0.19053 0.05 Z M 0.22517 0.07 L 0.20785 0.08 L 0.19053 0.07 L 0.19053 0.05 L 0.20785 0.04 L 0.22517 0.05 Z M 0.25981 0.07 L 0.24249 0.08 L 0.22517 0.07 L 0.22517 0.05 L 0.24249 0.04 L 0.25981 0.05 Z M -0.20785 0.1 L -0.22517 0.11 L -0.24249 0.1 L -0.24249 0.08 L -0.22517 0.07 L -0.20785 0.08 Z M -0.17321 0.1 L -0.19053 0.11 L -0.20785 0.1 L -0.20785 0.08 L -0.19053 0.07 L -0.17321 0.08 Z M -0.13856 0.1 L -0.15588 0.11 L -0.17321 0.1 L -0.17321 0.08 L -0.15588 0.07 L -0.13856 0.08 Z M -0.10392 0.1 L -0.12124 0.11 L -0.13856 0.1 L -0.13856 0.08 L -0.12124 0.07 L -0.10392 0.08 Z M -0.06928 0.1 L -0.0866 0.11 L -0.10392 0.1 L -0.10392 0.08 L -0.0866 0.07 L -0.06928 0.08 Z M -0.03464 0.1 L -0.05196 0.11 L -0.06928 0.1 L -0.06928 0.08 L -0.05196 0.07 L -0.03464 0.08 Z M 0 0.1 L -0.01732 0.11 L -0.03464 0.1 L -0.03464 0.08 L -0.01732 0.07 L 0 0.08 Z M 0.03464 0.1 L 0.01732 0.11 L 0 0.1 L 0 0.08 L 0.01732 0.07 L 0.03464 0.08 Z M 0.06928 0.1 L 0.05196 0.11 L 0.03464 0.1 L 0.03464 0.08 L 0.05196 0.07 L 0.06928 0.08 Z M 0.10392 0.1 L 0.0866 0.11 L 0.06928 0.1 L 0.06928 0.08 L 0.0866 0.07 L 0.10392 0.08 Z M 0.13856 0.1 L 0.12124 0.11 L 0.10392 0.1 L 0.10392 0.08 L 0.12124 0.07 L 0.13856 0.08 Z M 0.17321 0.1 L 0.15588 0.11 L 0.13856 0.1 L 0.13856 0.08 L 0.15588 0.07 L 0.17321 0.08 Z M 0.20785 0.1 L 0.19053 0.11 L 0.17321 0.1 L 0.17321 0.08 L 0.19053 0.07 L 0.20785 0.08 Z M 0.24249 0.1 L 0.22517 0.11 L 0.20785 0.1 L 0.20785 0.08 L 0.22517 0.07 L 0.24249 0.08 Z M -0.19053 0.13 L -0.20785 0.14 L -0.22517 0.13 L -0.22517 0.11 L -0.20785 0.1 L -0.19053 0.11 Z M -0.15588 0.13 L -0.17321 0.14 L -0.19053 0.13 L -0.19053 0.11 L -0.17321 0.1 L -0.15588 0.11 Z M -0.12124 0.13 L -0.13856 0.14 L -0.15588 0.13 L -0.15588 0.11 L -0.13856 0.1 L -0.12124 0.11 Z M -0.0866 0.13 L -0.10392 0.14 L -0.12124 0.13 L -0.12124 0.11 L -0.10392 0.1 L -0.0866 0.11 Z M -0.05196 0.13 L -0.06928 0.14 L -0.0866 0.13 L -0.0866 0.11 L -0.06928 0.1 L -0.05196 0.11 Z M -0.01732 0.13 L -0.03464 0.14 L -0.05196 0.13 L -0.05196 0.11 L -0.03464 0.1 L -0.01732 0.11 Z M 0.01732 0.13 L 0 0.14 L -0.01732 0.13 L -0.01732 0.11 L 0 0.1 L 0.01732 0.11 Z M 0.05196 0.13 L 0.03464 0.14 L 0.01732 0.13 L 0.01732 0.11 L 0.03464 0.1 L 0.05196 0.11 Z M 0.0866 0.13 L 0.06928 0.14 L 0.05196 0.13 L 0.05196 0.11 L 0.06928 0.1 L 0.0866 0.11 Z M 0.12124 0.13 L 0.10392 0.14 L 0.0866 0.13 L 0.0866 0.11 L 0.10392 0.1 L 0.12124 0.11 Z M 0.15588 0.13 L 0.13856 0.14 L 0.12124 0.13 L 0.12124 0.11 L 0.13856 0.1 L 0.15588 0.11 Z M 0.19053 0.13 L 0.17321 0.14 L 0.15588 0.13 L 0.15588 0.11 L 0.17321 0.1 L 0.19053 0.11 Z M 0.22517 0.13 L 0.20785 0.14 L 0.19053 0.13 L 0.19053 0.11 L 0.20785 0.1 L 0.22517 0.11 Z M -0.17321 0.16 L -0.19053 0.17 L -0.20785 0.16 L -0.20785 0.14 L -0.19053 0.13 L -0.17321 0.14 Z M -0.13856 0.16 L -0.15588 0.17 L -0.17321 0.16 L -0.17321 0.14 L -0.15588 0.13 L -0.13856 0.14 Z M -0.10392 0.16 L -0.12124 0.17 L -0.13856 0.16 L -0.13856 0.14 L -0.12124 0.13 L -0.10392 0.14 Z M -0.06928 0.16 L -0.0866 0.17 L -0.10392 0.16 L -0.10392 0.14 L -0.0866 0.13 L -0.06928 0.14 Z M -0.03464 0.16 L -0.05196 0.17 L -0.06928 0.16 L -0.06928 0.14 L -0.05196 0.13 L -0.03464 0.14 Z M 0 0.16 L -0.01732 0.17 L -0.03464 0.16 L -0.03464 0.14 L -0.01732 0.13 L 0 0.14 Z M 0.03464 0.16 L 0.01732 0.17 L 0 0.16 L 0 0.14 L 0.01732 0.13 L 0.03464 0.14 Z M 0.06928 0.16 L 0.05196 0.17 L 0.03464 0.16 L 0.03464 0.14 L 0.05196 0.13 L 0.06928 0.14 Z M 0.10392 0.16 L 0.0866 0.17 L 0.06928 0.16 L 0.06928 0.14 L 0.0866 0.13 L 0.10392 0.14 Z M 0.13856 0.16 L 0.12124 0.17 L 0.10392 0.16 L 0.10392 0.14 L 0.12124 0.13 L 0.13856 0.14 Z M 0.17321 0.16 L 0.15588 0.17 L 0.13856 0.16 L 0.13856 0.14 L 0.15588 0.13 L 0.17321 0.14 Z M 0.20785 0.16 L 0.19053 0.17 L 0.17321 0.16 L 0.17321 0.14 L 0.19053 0.13 L 0.20785 0.14 Z M -0.15588 0.19 L -0.17321 0.2 L -0.19053 0.19 L -0.19053 0.17 L -0.17321 0.16 L -0.15588 0.17 Z M -0.12124 0.19 L -0.13856 0.2 L -0.15588 0.19 L -0.15588 0.17 L -0.13856 0.16 L -0.12124 0.17 Z M -0.0866 0.19 L -0.10392 0.2 L -0.12124 0.19 L -0.12124 0.17 L -0.10392 0.16 L -0.0866 0.17 Z M -0.05196 0.19 L -0.06928 0.2 L -0.0866 0.19 L -0.0866 0.17 L -0.06928 0.16 L -0.05196 0.17 Z M -0.01732 0.19 L -0.03464 0.2 L -0.05196 0.19 L -0.05196 0.17 L -0.03464 0.16 L -0.01732 0.17 Z M 0.01732 0.19 L 0 0.2 L -0.01732 0.19 L -0.01732 0.17 L 0 0.16 L 0.01732 0.17 Z M 0.05196 0.19 L 0.03464 0.2 L 0.01732 0.19 L 0.01732 0.17 L 0.03464 0.16 L 0.05196 0.17 Z M 0.0866 0.19 L 0.06928 0.2 L 0.05196 0.19 L 0.05196 0.17 L 0.06928 0.16 L 0.0866 0.17 Z M 0.12124 0.19 L 0.10392 0.2 L 0.0866 0.19 L 0.0866 0.17 L 0.10392 0.16 L 0.12124 0.17 Z M 0.15588 0.19 L 0.13856 0.2 L 0.12124 0.19 L 0.12124 0.17 L 0.13856 0.16 L 0.15588 0.17 Z M 0.19053 0.19 L 0.17321 0.2 L 0.15588 0.19 L 0.15588 0.17 L 0.17321 0.16 L 0.19053 0.17 Z M -0.10392 0.22 L -0.12124 0.23 L -0.13856 0.22 L -0.13856 0.2 L -0.12124 0.19 L -0.10392 0.2 Z M -0.06928 0.22 L -0.0866 0.23 L -0.10392 0.22 L -0.10392 0.2 L -0.0866 0.19 L -0.06928 0.2 Z M -0.03464 0.22 L -0.05196 0.23 L -0.06928 0.22 L -0.06928 0.2 L -0.05196 0.19 L -0.03464 0.2 Z M 0 0.22 L -0.01732 0.23 L -0.03464 0.22 L -0.03464 0.2 L -0.01732 0.19 L 0 0.2 Z M 0.03464 0.22 L 0.01732 0.23 L 0 0.22 L 0 0.2 L 0.01732 0.19 L 0.03464 0.2 Z M 0.06928 0.22 L 0.05196 0.23 L 0.03464 0.22 L 0.03464 0.2 L 0.05196 0.19 L 0.06928 0.2 Z M 0.10392 0.22 L 0.0866 0.23 L 0.06928 0.22 L 0.06928 0.2 L 0.0866 0.19 L 0.10392 0.2 Z M 0.13856 0.22 L 0.12124 0.23 L 0.10392 0.22 L 0.10392 0.2 L 0.12124 0.19 L 0.13856 0.2 Z M -0.05196 0.25 L -0.06928 0.26 L -0.0866 0.25 L -0.0866 0.23 L -0.06928 0.22 L -0.05196 0.23 Z M -0.01732 0.25 L -0.03464 0.26 L -0.05196 0.25 L -0.05196 0.23 L -0.03464 0.22 L -0.01732 0.23 Z M 0.01732 0.25 L 0 0.26 L -0.01732 0.25 L -0.01732 0.23 L 0 0.22 L 0.01732 0.23 Z M 0.05196 0.25 L 0.03464 0.26 L 0.01732 0.25 L 0.01732 0.23 L 0.03464 0.22 L 0.05196 0.23 Z M 0.0866 0.25 L 0.06928 0.26 L 0.05196 0.25 L 0.05196 0.23 L 0.06928 0.22 L 0.0866 0.23 Z",
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-1",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.045,
+                  0
+                ],
+                [
+                  0.285,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-2",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.03182,
+                  0.03182
+                ],
+                [
+                  0.20153,
+                  0.20153
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-3",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.045
+                ],
+                [
+                  0,
+                  0.285
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-4",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03182,
+                  0.03182
+                ],
+                [
+                  -0.20153,
+                  0.20153
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-5",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0
+                ],
+                [
+                  -0.285,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-6",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03182,
+                  -0.03182
+                ],
+                [
+                  -0.20153,
+                  -0.20153
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-7",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.045
+                ],
+                [
+                  0,
+                  -0.285
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-8",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.03182,
+                  -0.03182
+                ],
+                [
+                  0.20153,
+                  -0.20153
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "regen-sector",
+              "bone": "seal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 L 0.2118 -0.1907 L 0.23057 -0.16752 L 0.24682 -0.1425 L 0.26036 -0.11592 L 0.27105 -0.08807 L 0.27877 -0.05925 L 0.28344 -0.02979 L 0.285 0 L 0.28344 0.02979 L 0.27877 0.05925 L 0.27105 0.08807 L 0.26036 0.11592 L 0.24682 0.1425 L 0.23057 0.16752 L 0.2118 0.1907 Z",
+              "region": "regen",
+              "material": "silica-gel"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.045,
+              "ry": 0.045,
+              "region": "hub",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0
+                ],
+                [
+                  0.12,
+                  0
+                ],
+                [
+                  0.1,
+                  0.03
+                ],
+                [
+                  -0.1,
+                  0.03
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.11,
+              "y": 0,
+              "w": 0.22,
+              "h": 0.03,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "casing",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.11,
+                "z1": 0.11
+              }
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.285,
+              "ry": 0.285,
+              "region": "disc",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            },
+            {
+              "id": "regen-sector",
+              "bone": "seal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 L 0.2118 -0.1907 L 0.23057 -0.16752 L 0.24682 -0.1425 L 0.26036 -0.11592 L 0.27105 -0.08807 L 0.27877 -0.05925 L 0.28344 -0.02979 L 0.285 0 L 0.28344 0.02979 L 0.27877 0.05925 L 0.27105 0.08807 L 0.26036 0.11592 L 0.24682 0.1425 L 0.23057 0.16752 L 0.2118 0.1907 Z",
+              "region": "regen",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.09,
+              "w": 0.24,
+              "h": 0.18,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "casing",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.11,
+                "z1": 0.11
+              }
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.285,
+              "ry": 0.285,
+              "region": "disc",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.62 m desiccant wheel seen face-on, 12 mm across on paper: a casing ring around a honeycomb disc with eight spokes and a hub, a hot regeneration sector on the right and a stand below. Front and top views: the casing ring and the wheel rim are extruded from their elevation circles across the 0.22 m depth, the hot regeneration sector shows on the near rim, the stand carries the casing. The wheel turns about the lateral axis, so its rim is edge-on and the rotation is not visible from the front or from above; the rotor stays drawn on its bone.",
+            "de": "Ein 0,62 m großes Sorptionsrad in der Frontansicht, auf Papier 12 mm im Durchmesser: ein Gehäusering um eine Wabenscheibe mit acht Speichen und einer Nabe, ein heißer Regenerationssektor rechts und ein Fuß unten. Vorder- und Draufsicht: Gehäusering und Radkranz sind aus ihren Aufrisskreisen über die Tiefe von 0,22 m extrudiert, der heiße Regenerationssektor zeigt sich am vorderen Kranz, der Fuß trägt das Gehäuse. Das Rad dreht sich um die Querachse, sein Kranz steht daher von vorn und von oben hochkant und die Drehung ist nicht sichtbar; der Rotor bleibt an seinem Knochen gezeichnet."
+          },
+          "retained": {
+            "en": "Casing ring, disc, a honeycomb of 0.02 m cells, eight spokes, the regeneration sector, the hub and the stand.",
+            "de": "Gehäusering, Scheibe, eine Wabe aus Zellen von 0,02 m, acht Speichen, der Regenerationssektor, die Nabe und der Fuß."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The drive belt, the purge sector and the seals.",
+            "de": "Der Antriebsriemen, der Spülsektor und die Dichtungen."
+          },
+          "thinElements": {
+            "en": "The honeycomb has 0.02 m cells instead of the real 0.003 m flutes, so that the cells stay 0.4 mm apart on paper.",
+            "de": "Die Wabe hat Zellen von 0,02 m statt der realen Wellen von 0,003 m, damit die Zellen auf Papier 0,4 mm Abstand behalten."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Casing, disc, regeneration sector and hub are four regions: the sector glows hot while the rest of the disc warms moderately; honeycomb and spokes turn with the rotor bone.",
+            "de": "Gehäuse, Scheibe, Regenerationssektor und Nabe sind vier Regionen: der Sektor glüht heiß, während sich die Scheibe mäßig erwärmt; Wabe und Speichen drehen sich mit dem Rotorknochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.275,
+              "ry": 0.275,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-1",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0
+                ],
+                [
+                  0.275,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-2",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.05
+                ],
+                [
+                  0,
+                  0.275
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-3",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0
+                ],
+                [
+                  -0.275,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "spoke-4",
+              "bone": "rotor",
+              "role": "detail",
+              "z": 3.45,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.05
+                ],
+                [
+                  0,
+                  -0.275
+                ]
+              ],
+              "closed": false,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "regen-sector",
+              "bone": "seal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 L 0.19445 -0.19445 L 0.21372 -0.17306 L 0.23063 -0.14978 L 0.24503 -0.12485 L 0.25673 -0.09855 L 0.26563 -0.07118 L 0.27161 -0.04302 L 0.27462 -0.01439 L 0.27462 0.01439 L 0.27161 0.04302 L 0.26563 0.07118 L 0.25673 0.09855 L 0.24503 0.12485 L 0.23063 0.14978 L 0.21372 0.17306 L 0.19445 0.19445 Z",
+              "region": "regen",
+              "material": "silica-gel"
+            },
+            {
+              "id": "hub",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.055,
+              "ry": 0.055,
+              "region": "hub",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.14,
+                  0
+                ],
+                [
+                  0.14,
+                  0
+                ],
+                [
+                  0.11,
+                  0.035
+                ],
+                [
+                  -0.11,
+                  0.035
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.11,
+              "y": 0,
+              "w": 0.22,
+              "h": 0.04,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "casing",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.11,
+                "z1": 0.11
+              }
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.275,
+              "ry": 0.275,
+              "region": "disc",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            },
+            {
+              "id": "regen-sector",
+              "bone": "seal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 L 0.19445 -0.19445 L 0.21372 -0.17306 L 0.23063 -0.14978 L 0.24503 -0.12485 L 0.25673 -0.09855 L 0.26563 -0.07118 L 0.27161 -0.04302 L 0.27462 -0.01439 L 0.27462 0.01439 L 0.27161 0.04302 L 0.26563 0.07118 L 0.25673 0.09855 L 0.24503 0.12485 L 0.23063 0.14978 L 0.21372 0.17306 L 0.19445 0.19445 Z",
+              "region": "regen",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.14,
+              "y": -0.09,
+              "w": 0.28,
+              "h": 0.18,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "region": "casing",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.11,
+                "z1": 0.11
+              }
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.275,
+              "ry": 0.275,
+              "region": "disc",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 6 mm wheel: casing ring, disc with four spokes, a hot sector and a stand. Front and top views: as at 1:50: casing, rim, regeneration sector and stand.",
+            "de": "Ein 6 mm großes Rad: Gehäusering, Scheibe mit vier Speichen, ein heißer Sektor und ein Fuß. Vorder- und Draufsicht: wie bei 1:50: Gehäuse, Kranz, Regenerationssektor und Fuß."
+          },
+          "retained": {
+            "en": "Casing, disc, four spokes (they show the rotation), sector, hub and stand.",
+            "de": "Gehäuse, Scheibe, vier Speichen (sie zeigen die Drehung), Sektor, Nabe und Fuß."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The honeycomb and the drive belt.",
+            "de": "Die Wabe und der Antriebsriemen."
+          },
+          "thinElements": {
+            "en": "Spokes carry 0.13 mm lines; the hub is 110 mm across.",
+            "de": "Die Speichen sind 0,13-mm-Linien; die Nabe ist 110 mm groß."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Same four regions as at 1:50.",
+            "de": "Dieselben vier Regionen wie bei 1:50."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "regions": [
+                "casing",
+                "hub"
+              ],
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.26,
+              "ry": 0.26,
+              "region": "disc",
+              "material": "silica-gel"
+            },
+            {
+              "id": "regen-sector",
+              "bone": "seal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 L 0.18385 -0.18385 L 0.20206 -0.16362 L 0.21805 -0.14161 L 0.23166 -0.11804 L 0.24273 -0.09318 L 0.25114 -0.06729 L 0.2568 -0.04067 L 0.25964 -0.01361 L 0.25964 0.01361 L 0.2568 0.04067 L 0.25114 0.06729 L 0.24273 0.09318 L 0.23166 0.11804 L 0.21805 0.14161 L 0.20206 0.16362 L 0.18385 0.18385 Z",
+              "region": "regen",
+              "material": "silica-gel"
+            },
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0
+                ],
+                [
+                  0.15,
+                  0
+                ],
+                [
+                  0.12,
+                  0.04
+                ],
+                [
+                  -0.12,
+                  0.04
+                ]
+              ],
+              "closed": true,
+              "region": "casing",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.11,
+              "y": 0,
+              "w": 0.22,
+              "h": 0.04,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "regions": [
+                "casing",
+                "hub"
+              ],
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.11,
+                "z1": 0.11
+              }
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.26,
+              "ry": 0.26,
+              "region": "disc",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            },
+            {
+              "id": "regen-sector",
+              "bone": "seal",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0 0 L 0.18385 -0.18385 L 0.20206 -0.16362 L 0.21805 -0.14161 L 0.23166 -0.11804 L 0.24273 -0.09318 L 0.25114 -0.06729 L 0.2568 -0.04067 L 0.25964 -0.01361 L 0.25964 0.01361 L 0.2568 0.04067 L 0.25114 0.06729 L 0.24273 0.09318 L 0.23166 0.11804 L 0.21805 0.14161 L 0.20206 0.16362 L 0.18385 0.18385 Z",
+              "region": "regen",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "stand",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.09,
+              "w": 0.3,
+              "h": 0.18,
+              "region": "casing",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "casing",
+              "bone": "casing",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.31,
+              "rx": 0.31,
+              "ry": 0.31,
+              "regions": [
+                "casing",
+                "hub"
+              ],
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.11,
+                "z1": 0.11
+              }
+            },
+            {
+              "id": "disc",
+              "bone": "rotor",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.26,
+              "ry": 0.26,
+              "region": "disc",
+              "material": "silica-gel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.09,
+                "z1": 0.09
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 3 mm wheel of four shapes: casing circle, disc, hot sector and stand. Front and top views: casing, rim, sector and stand as four masses.",
+            "de": "Ein 3 mm großes Rad aus vier Formen: Gehäusekreis, Scheibe, heißer Sektor und Fuß. Vorder- und Draufsicht: Gehäuse, Kranz, Sektor und Fuß als vier Massen."
+          },
+          "retained": {
+            "en": "Casing circle, disc, sector and stand.",
+            "de": "Gehäusekreis, Scheibe, Sektor und Fuß."
+          },
+          "merged": {
+            "en": "The hub is part of the casing circle (regions casing and hub).",
+            "de": "Die Nabe gehört zum Gehäusekreis (Regionen Gehäuse und Nabe)."
+          },
+          "omitted": {
+            "en": "Honeycomb, spokes and hub; at this scale the rotation cannot be seen.",
+            "de": "Wabe, Speichen und Nabe; bei diesem Maßstab ist die Drehung nicht zu sehen."
+          },
+          "thinElements": {
+            "en": "The casing ring is a 50 mm band, the stand 40 mm tall.",
+            "de": "Der Gehäusering ist ein 50-mm-Band, der Fuß 40 mm hoch."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail none mm, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail keiner mm, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "The casing circle lists casing and hub as merged regions.",
+            "de": "Der Gehäusekreis führt Gehäuse und Nabe als zusammengeführte Regionen."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the asset is only 1.2 mm wide on paper and its smallest part, the 0.02 m honeycomb cells and the 50 mm casing band, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 1.2 mm breit auf Papier und sein kleinstes Teil, die Wabenzellen von 0,02 m und das 50 mm breite Gehäuseband, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 0.02 m honeycomb cells and the 50 mm casing band",
+          "de": "Die Wabenzellen von 0,02 m und das 50 mm breite Gehäuseband"
+        },
+        "limitingSizeM": 0.02,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "The wheel stands still at room temperature.",
+          "de": "Das Rad steht still bei Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "disc": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "regen": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "hub": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "process-air": 1,
+            "regen-air": 1
+          },
+          "operating": {
+            "rotation": 0,
+            "regeneration": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "slow",
+        "title": {
+          "en": "Slow",
+          "de": "Langsam"
+        },
+        "description": {
+          "en": "The wheel turns at 6 revolutions per hour and the heating coil warms the regeneration air to about 45 degC.",
+          "de": "Das Rad dreht mit 6 Umdrehungen je Stunde, und das Heizregister erwärmt die Regenerationsluft auf rund 45 degC."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 30
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "disc": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "regen": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "hub": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "process-air": 1,
+            "regen-air": 1
+          },
+          "operating": {
+            "rotation": 0.5,
+            "regeneration": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "rated",
+        "title": {
+          "en": "Rated",
+          "de": "Nenndrehzahl"
+        },
+        "description": {
+          "en": "The wheel turns at 12 revolutions per hour: the coil heats the regeneration air to 70 degC, the sector runs hot and the process air leaves dry and warmed by the adsorption heat.",
+          "de": "Das Rad dreht mit 12 Umdrehungen je Stunde: das Register erwärmt die Regenerationsluft auf 70 degC, der Sektor läuft heiß, und die Prozessluft verlässt das Rad trocken und durch die Adsorptionswärme erwärmt."
+        },
+        "bones": {
+          "rotor": {
+            "angleDeg": 60
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "disc": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "regen": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "hub": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "process-air": 1,
+            "regen-air": 1
+          },
+          "operating": {
+            "rotation": 1,
+            "regeneration": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "spin",
+        "title": {
+          "en": "Turning",
+          "de": "Drehen"
+        },
+        "description": {
+          "en": "The matrix turns once in 5 minutes (12 revolutions per hour, real time) through the process air and the hot regeneration sector; play it faster to see the motion.",
+          "de": "Die Matrix dreht sich einmal in 5 Minuten (12 Umdrehungen je Stunde, Echtzeit) durch die Prozessluft und den heißen Regenerationssektor; zum Sichtbarmachen schneller abspielen."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "rated",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 300,
+            "pose": "rated",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 360
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "turn",
+            "fromS": 0,
+            "toS": 300,
+            "title": {
+              "en": "Turning",
+              "de": "Drehen"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": []
+      },
+      {
+        "id": "start-and-run",
+        "title": {
+          "en": "Start and run",
+          "de": "Anlaufen und laufen"
+        },
+        "description": {
+          "en": "The drive starts, the heating coil brings the regeneration air to 70 degC within a minute and the matrix faces warm over five minutes.",
+          "de": "Der Antrieb startet, das Heizregister bringt die Regenerationsluft innerhalb einer Minute auf 70 degC, und die Matrixflächen erwärmen sich in fünf Minuten."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "off",
+            "ease": "smooth"
+          },
+          {
+            "t": 10,
+            "pose": "rated",
+            "ease": "linear"
+          },
+          {
+            "t": 300,
+            "pose": "rated",
+            "ease": "linear",
+            "bones": {
+              "rotor": {
+                "angleDeg": 408
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "ramp",
+            "fromS": 5,
+            "toS": 10,
+            "title": {
+              "en": "Starting",
+              "de": "Anlaufen"
+            }
+          },
+          {
+            "id": "run",
+            "fromS": 10,
+            "toS": 300,
+            "title": {
+              "en": "Running",
+              "de": "Läuft"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Drive started",
+              "de": "Antrieb gestartet"
+            },
+            "target": "rotation"
+          },
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Heating coil switched on",
+              "de": "Heizregister eingeschaltet"
+            },
+            "target": "regeneration"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:rotation",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:regeneration",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 65,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "rotation",
+          "title": {
+            "en": "Wheel drive",
+            "de": "Radantrieb"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Slow (6 rev/h)",
+                "de": "Langsam (6 U/h)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Rated (12 rev/h)",
+                "de": "Nenndrehzahl (12 U/h)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "regeneration",
+          "title": {
+            "en": "Regeneration heating coil",
+            "de": "Heizregister der Regeneration"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Coil off (room air)",
+                "de": "Register aus (Raumluft)"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Coil half (about 45 degC)",
+                "de": "Register halb (rund 45 degC)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Coil rated (70 degC)",
+                "de": "Register Nennleistung (70 degC)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Casing ring and stand",
+            "de": "Gehäusering und Fuß"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.3,
+          "characteristicLengthM": 0.62,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "casing-skin",
+              "title": {
+                "en": "Casing ring and stand",
+                "de": "Gehäusering und Fuß"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00003,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "disc",
+          "title": {
+            "en": "Desiccant matrix",
+            "de": "Sorptionsmatrix"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "silica-gel",
+          "areaM2": 0.19,
+          "characteristicLengthM": 0.57,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "disc-skin",
+              "title": {
+                "en": "Desiccant matrix",
+                "de": "Sorptionsmatrix"
+              },
+              "kind": "polymer",
+              "material": "silica-gel",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.1,
+              "heatCapacityJM2K": 5000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 5000,
+          "operating": {
+            "key": "regeneration",
+            "heatW": 18
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "regen",
+          "title": {
+            "en": "Regeneration sector",
+            "de": "Regenerationssektor"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "silica-gel",
+          "areaM2": 0.064,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "regen-skin",
+              "title": {
+                "en": "Regeneration sector",
+                "de": "Regenerationssektor"
+              },
+              "kind": "polymer",
+              "material": "silica-gel",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.1,
+              "heatCapacityJM2K": 5000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 5000,
+          "operating": {
+            "key": "regeneration",
+            "heatW": 28
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "hub",
+          "title": {
+            "en": "Drive hub",
+            "de": "Antriebsnabe"
+          },
+          "kind": "engine",
+          "model": "operating",
+          "material": "galvanised-steel",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.09,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "hub-skin",
+              "title": {
+                "en": "Drive hub",
+                "de": "Antriebsnabe"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.00008,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "operating": {
+            "key": "rotation",
+            "heatW": 1.5
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "process-air",
+          "kind": "vent",
+          "title": {
+            "en": "Dry process air leaving the disc",
+            "de": "Trockene Prozessluft am Rad"
+          },
+          "anchor": "process-collar",
+          "directionDeg": -10,
+          "diameterM": 0.4,
+          "operatingKey": "regeneration",
+          "volumeFlowM3S": 0.4,
+          "temperatureRiseK": 11,
+          "vapourKgPerKg": 0.0044,
+          "source": "authored-estimate",
+          "reference": "ashrae-2020-equipment"
+        },
+        {
+          "id": "regen-air",
+          "kind": "vent",
+          "title": {
+            "en": "Moist regeneration air leaving the sector",
+            "de": "Feuchte Regenerationsluft am Sektor"
+          },
+          "anchor": "regen-collar",
+          "directionDeg": 15,
+          "diameterM": 0.25,
+          "operatingKey": "regeneration",
+          "volumeFlowM3S": 0.14,
+          "temperatureRiseK": 33,
+          "vapourKgPerKg": 0.0178,
+          "source": "authored-estimate",
+          "reference": "ashrae-2020-equipment"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Both air streams leave as vent emitters scaled linearly by the heating-coil level: the process air dry and 11 K warmer through the adsorption heat, the regeneration air 33 K above the room and moist after the coil heated it to 70 degC; the coil itself is another asset, and a half-loaded coil is a linear approximation.",
+          "de": "Beide Luftströme verlassen das Rad als Auslass-Emitter, linear mit der Stufe des Heizregisters skaliert: die Prozessluft trocken und durch die Adsorptionswärme 11 K wärmer, die Regenerationsluft nach dem Heizregister auf 70 degC 33 K über dem Raum und feucht; das Heizregister ist ein eigenes Asset, und ein halb belastetes Register ist eine lineare Näherung."
+        },
+        {
+          "en": "The region heats are the surface losses of the matrix faces at the temperatures the air sets (about 32 degC process face, about 60 degC regeneration face), not the heat of the air streams.",
+          "de": "Die Regionswärmen sind die Oberflächenverluste der Matrixflächen bei den von der Luft vorgegebenen Temperaturen (rund 32 degC Prozessseite, rund 60 degC Regenerationsseite), nicht die Wärme der Luftströme."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 22 kg wheel stands on its 0.24 m by 0.2 m stand: a unilateral contact carries the weight.",
+          "de": "Das 22 kg schwere Rad steht auf seinem 0,24 m mal 0,2 m großen Fuß: ein einseitiger Kontakt trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "rated",
+      "defaultClip": "spin",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

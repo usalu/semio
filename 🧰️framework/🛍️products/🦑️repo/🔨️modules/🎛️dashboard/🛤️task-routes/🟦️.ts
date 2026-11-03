@@ -46,6 +46,11 @@ export class TestScript extends BundleScript {
       const {rest}=resolveTestLevel(segments.slice(1),"quick");
       await this.native({packages:["semio-framework-repo-dashboard-daemon","semio-framework-repo-dashboard-terminal-laws"],extraArgs:["--lib","-E","test(process_deadline)"]},rest);return;
     }
+    if (segments[0] === "known") {
+      const { rest } = resolveTestLevel(segments.slice(1), "quick");
+      await this.native({ packages: ["semio-framework-repo-dashboard-inventory"], extraArgs: ["--lib", "the_job_publishes_the_known_commands_first"] }, rest);
+      return;
+    }
     if (segments[0] === "unit") {
       const { rest } = resolveTestLevel(segments.slice(1), "quick");
       await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest); return;

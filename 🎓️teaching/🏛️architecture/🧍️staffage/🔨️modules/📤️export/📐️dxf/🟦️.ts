@@ -23,8 +23,8 @@ const escapeText = (text: string): string => [...text.replace(/\r?\n/gu, " ")].m
 const FORBIDDEN_NAME = /[<>/\\":;?*|=`\n\r]/u;
 //#endregion 🔖️Values
 
-/** 📐️ Writes `scene` (metres) as a DXF R2000 document. */
-export function writeDxf(scene: ModelScene): string {
+/** 📐️ Writes `scene` (metres) as a DXF R2000 document; `note` (ASCII, one line) is stored as `$PROJECTNAME`, so a drawing says which asset, viewpoint, representation and instant it is. */
+export function writeDxf(scene: ModelScene, note = ""): string {
   if (scene.units !== "m") throw new Error(`ModelScene units must be "m", got ${JSON.stringify(scene.units)}`);
   const names = new Set<string>();
   for (const layer of scene.layers) {
@@ -64,6 +64,7 @@ export function writeDxf(scene: ModelScene): string {
   variable("$ACADVER", [1, "AC1015"]);
   variable("$ACADMAINTVER", [70, 6]);
   variable("$DWGCODEPAGE", [3, "ANSI_1252"]);
+  variable("$PROJECTNAME", [1, escapeText(note)]);
   variable("$INSBASE", [10, "0.0"], [20, "0.0"], [30, "0.0"]);
   variable("$EXTMIN", [10, empty ? "1e20" : real(x0)], [20, empty ? "1e20" : real(y0)], [30, empty ? "1e20" : "0.0"]);
   variable("$EXTMAX", [10, empty ? "-1e20" : real(x1)], [20, empty ? "-1e20" : real(y1)], [30, empty ? "-1e20" : "0.0"]);

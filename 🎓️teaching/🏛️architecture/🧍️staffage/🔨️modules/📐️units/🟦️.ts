@@ -100,3 +100,26 @@ export function quantityParts(value: number, unit: QuantityUnit, language: Langu
 export function formatQuantity(value: number, unit: QuantityUnit, language: Language, significant = 3): string {
   return quantityParts(value, unit, language, significant).text;
 }
+
+const HELVETICA = "278 278 355 556 556 889 667 191 333 333 389 584 278 333 278 278 556 556 556 556 556 556 556 556 556 556 278 278 584 584 584 556 1015 667 667 722 722 667 611 778 722 278 500 667 556 833 722 778 667 778 722 667 611 722 667 944 667 667 611 278 278 278 469 556 333 556 556 500 556 556 278 556 556 222 222 500 222 833 556 556 556 556 333 500 278 556 500 722 500 500 500 334 260 334 584".split(" ").map(Number);
+const HELVETICA_BOLD = "278 333 474 556 556 889 722 238 333 333 389 584 278 333 278 278 556 556 556 556 556 556 556 556 556 556 333 333 584 584 584 611 975 722 722 722 722 667 611 778 722 278 556 722 611 833 722 778 667 778 722 667 611 722 667 944 667 667 611 333 278 333 584 556 333 556 611 556 611 556 333 611 611 278 278 556 278 889 611 611 611 611 389 556 333 611 556 778 556 556 500 389 280 389 584".split(" ").map(Number);
+const SYMBOL_ADVANCE: Readonly<Record<string, readonly [number, number]>> = { "ß": [611, 611], "·": [278, 278], "–": [556, 556], "—": [1000, 1000], "×": [584, 584], "°": [400, 400], "µ": [556, 611], "²": [333, 333], "³": [333, 333], " ": [278, 278], "…": [1000, 1000], "±": [584, 584], "÷": [584, 584], "„": [333, 500], "“": [333, 500], "”": [333, 500], "’": [222, 278] };
+const UNKNOWN_ADVANCE = 1000;
+
+/** 🔡️ The width in millimetres of a text set in the font of the drawings (Helvetica, with Arial as its metric twin, regular or bold) at a height: the standard Adobe Helvetica advance widths, accents take their base letter, symbols outside the font count as one em. Used to reserve room for text and to wrap captions.
+ * @see https://adobe-type-tools.github.io/font-info/ — Adobe core 14 font metrics */
+export function textWidthMm(text: string, sizeMm: number, bold = false): number {
+  let units = 0;
+  for (const char of text) {
+    const symbol = SYMBOL_ADVANCE[char];
+    const code = char.charCodeAt(0);
+    if (symbol !== undefined) units += symbol[bold ? 1 : 0];
+    else if (code >= 32 && code <= 126) units += (bold ? HELVETICA_BOLD : HELVETICA)[code - 32]!;
+    else {
+      const base = char.normalize("NFD")[0]!;
+      const baseCode = base.charCodeAt(0);
+      units += baseCode >= 32 && baseCode <= 126 && base !== char ? (bold ? HELVETICA_BOLD : HELVETICA)[baseCode - 32]! : UNKNOWN_ADVANCE;
+    }
+  }
+  return (units * sizeMm) / 1000;
+}

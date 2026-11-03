@@ -12,7 +12,7 @@ class SlabPartitionCacheContract(unittest.TestCase):
     def test_same_geometry_reuses_partition_without_stale_mutations(self):
         api = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
         api = importlib.reload(api)
-        api._source.cache_clear()
+        api.source_text.cache_clear()
         case = json.loads(Path(__file__).with_suffix(".json").read_text(encoding="utf-8"))
         model = api.load_model()
         slab = api._find(model, case["slab"])

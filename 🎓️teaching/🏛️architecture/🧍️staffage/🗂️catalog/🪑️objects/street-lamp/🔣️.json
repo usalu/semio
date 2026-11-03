@@ -245,7 +245,7 @@
         "id": "lamp-plume",
         "bone": "head",
         "x": 0.12,
-        "y": -0.1,
+        "y": -0.08,
         "kind": "emitter",
         "title": {
           "en": "Lamp plume source",
@@ -280,7 +280,7 @@
               "tone": 0.65,
               "kind": "rect",
               "x": -0.15,
-              "y": 0.0,
+              "y": 0,
               "w": 0.3,
               "h": 0.12,
               "region": "plinth-concrete",
@@ -296,11 +296,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.07
                 ],
                 [
-                  0.0,
+                  0,
                   -0.07
                 ],
                 [
@@ -326,12 +326,12 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
-                  0.0
+                  0,
+                  0
                 ],
                 [
                   0.72,
-                  0.0
+                  0
                 ]
               ],
               "closed": false,
@@ -346,7 +346,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.06,
               "w": 0.33,
               "h": 0.12,
@@ -356,24 +356,169 @@
               ],
               "material": "aluminium-anodised"
             }
+          ],
+          "front": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.12
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.12
+                ],
+                [
+                  0.07,
+                  0.12
+                ],
+                [
+                  0.05,
+                  6
+                ],
+                [
+                  -0.05,
+                  6
+                ]
+              ],
+              "closed": true,
+              "followTip": true
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "lamp-housing",
+                "lamp-lens"
+              ],
+              "material": "aluminium-anodised",
+              "kind": "rect",
+              "x": -0.12,
+              "y": 5.74,
+              "w": 0.24,
+              "h": 0.12
+            }
+          ],
+          "plan": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0,
+              "y1": 0,
+              "r0": 0.07,
+              "r1": 0.05,
+              "followTip": true
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.72,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "lamp-housing",
+                "lamp-lens"
+              ],
+              "material": "aluminium-anodised",
+              "kind": "rect",
+              "x": 0.72,
+              "y": -0.12,
+              "w": 0.33,
+              "h": 0.24,
+              "r": 0.04
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Composed lamp sign 2.4 x 12 mm: a plinth, a slender tapered column (0.28 to 0.2 mm), a short arm stroke and one solid luminaire block at its end.",
-            "de": "Zusammengesetztes Leuchtenzeichen 2,4 x 12 mm: ein Sockel, eine schlanke verjüngte Säule (0,28 auf 0,2 mm), ein kurzer Armstrich und ein Leuchtenblock an seinem Ende."
+            "en": "Composed lamp sign 2.4 x 12 mm: a plinth, a slender tapered column (0.28 to 0.2 mm), a short arm stroke and one solid luminaire block at its end. Front view: the 0.28 mm pole tapering from 0.14 m to 0.10 m over the full height, a plinth block and the lamp head seen end-on as one small block at the top. Plan view: plinth square, the pole as a stretching capsule (it leans with the pole), the arm as a line and the head as one rounded block; the arm and head follow the sway of the pole.",
+            "de": "Zusammengesetztes Leuchtenzeichen 2,4 x 12 mm: ein Sockel, eine schlanke verjüngte Säule (0,28 auf 0,2 mm), ein kurzer Armstrich und ein Leuchtenblock an seinem Ende. Vorderansicht: der 0,14 mm breite Mast, der sich von 0,14 m auf 0,10 m über die ganze Höhe verjüngt, ein Sockelblock und der Leuchtenkopf stirnseitig als ein kleiner Block oben. Draufsicht: das Sockelquadrat, der Mast als sich dehnende Kapsel (er neigt sich mit dem Mast), der Arm als Linie und der Kopf als ein abgerundeter Block; Arm und Kopf folgen dem Wiegen des Mastes."
           },
           "retained": {
-            "en": "Height, plinth width, taper of the column, the cantilever of 1.05 m, the luminaire as a block.",
-            "de": "Höhe, Sockelbreite, Verjüngung der Säule, die Auskragung von 1,05 m, die Leuchte als Block."
+            "en": "Height, plinth width, taper of the column, the cantilever of 1.05 m, the luminaire as a block. Front and plan view: plinth, pole, arm and head.",
+            "de": "Höhe, Sockelbreite, Verjüngung der Säule, die Auskragung von 1,05 m, die Leuchte als Block. Vorder- und Draufsicht: Sockel, Mast, Arm und Kopf."
           },
           "merged": {
             "en": "Housing, lens, spigot and fins become one block (0.66 x 0.24 mm) listing lamp-housing and lamp-lens; base plate, cover, collar and cap merge into the column; clamp, brace and arm form one stroke.",
             "de": "Gehäuse, Abdeckung, Zapfen und Rippen werden ein Block (0,66 x 0,24 mm) mit lamp-housing und lamp-lens; Fußplatte, Abdeckung, Manschette und Kappe gehen in der Säule auf; Schelle, Strebe und Arm bilden einen Strich."
           },
           "omitted": {
-            "en": "Brace (0.024 m), hatch, seams, nuts, fins - all below 0.1 m.",
-            "de": "Strebe (0,024 m), Klappe, Nähte, Muttern, Rippen - alle unter 0,1 m."
+            "en": "Brace (0.024 m), hatch, seams, nuts, fins - all below 0.1 m. Front and plan view: the arm is hidden end-on in the front view; base cover, collar and brace are not drawn.",
+            "de": "Strebe (0,024 m), Klappe, Nähte, Muttern, Rippen - alle unter 0,1 m. Vorder- und Draufsicht: der Arm verschwindet in der Vorderansicht stirnseitig; Fußhaube, Manschette und Strebe sind nicht gezeichnet."
           },
           "thinElements": {
             "en": "The column (0.17 m at the foot, 0.08 m at the top) is a closed tapered polygon 0.14 to 0.10 m wide (0.28-0.2 mm): the foot is narrowed by 0.03 m and the top widened by 0.02 m, within the 0.09 m tolerance of the pen; the 0.07 m arm is a single 0.18 mm stroke.",
@@ -419,7 +564,7 @@
               "tone": 0.65,
               "kind": "rect",
               "x": -0.15,
-              "y": 0.0,
+              "y": 0,
               "w": 0.3,
               "h": 0.12,
               "region": "plinth-concrete",
@@ -447,12 +592,12 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
-                  0.0
+                  0,
+                  0
                 ],
                 [
                   0.82,
-                  0.0
+                  0
                 ]
               ],
               "closed": false,
@@ -515,24 +660,236 @@
               "region": "lamp-lens",
               "material": "polycarbonate"
             }
+          ],
+          "front": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0,
+              "w": 0.3,
+              "h": 0.12
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.09,
+                  0.12
+                ],
+                [
+                  0.09,
+                  0.12
+                ],
+                [
+                  0.045,
+                  6
+                ],
+                [
+                  -0.045,
+                  6
+                ]
+              ],
+              "closed": true,
+              "followTip": true
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 5.8,
+              "rx": 0.035,
+              "ry": 0.035
+            },
+            {
+              "id": "arm-brace",
+              "bone": "arm",
+              "role": "detail",
+              "z": 1.9,
+              "filled": false,
+              "tone": 0.45,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  5.34
+                ],
+                [
+                  0,
+                  5.788
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-housing",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "path",
+              "d": "M -0.12 5.8 C -0.12 5.88 0.12 5.88 0.12 5.8 L 0.1 5.75 L -0.1 5.75 Z"
+            },
+            {
+              "id": "lens",
+              "bone": "head",
+              "role": "glazing",
+              "z": 5,
+              "filled": false,
+              "tone": 0.85,
+              "region": "lamp-lens",
+              "material": "polycarbonate",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  5.742
+                ],
+                [
+                  0.1,
+                  5.742
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 0,
+              "y1": 0,
+              "r0": 0.09,
+              "r1": 0.045,
+              "followTip": true
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.82,
+                  0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-housing",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "path",
+              "d": "M 0.72 -0.1 C 0.72 -0.13 1.05 -0.13 1.05 -0.1 L 1.05 0.1 C 1.05 0.13 0.72 0.13 0.72 0.1 Z"
+            },
+            {
+              "id": "lens",
+              "bone": "head",
+              "role": "glazing",
+              "z": 5,
+              "filled": false,
+              "tone": 0.85,
+              "region": "lamp-lens",
+              "material": "polycarbonate",
+              "kind": "poly",
+              "points": [
+                [
+                  0.76,
+                  0
+                ],
+                [
+                  1.01,
+                  0
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 6 x 30 mm: a plinth block, a single tapered column (0.9 mm to 0.45 mm), an arm stroke with a brace hairline, a wedge-shaped housing with a lens stroke under it.",
-            "de": "Seitenansicht 6 x 30 mm: ein Sockelblock, eine einzelne verjüngte Säule (0,9 mm auf 0,45 mm), ein Armstrich mit Strebenhaarlinie, ein keilförmiges Gehäuse mit einem Abdeckungsstrich darunter."
+            "en": "Side elevation 6 x 30 mm: a plinth block, a single tapered column (0.9 mm to 0.45 mm), an arm stroke with a brace hairline, a wedge-shaped housing with a lens stroke under it. Front view: the tapering pole with plinth, the arm seen end-on as a dot, its brace as a vertical line and the head with its lens line as a rounded block. Plan view: the plinth, the pole capsule that stretches as the pole sways, the arm line and the head outline with the lens line.",
+            "de": "Seitenansicht 6 x 30 mm: ein Sockelblock, eine einzelne verjüngte Säule (0,9 mm auf 0,45 mm), ein Armstrich mit Strebenhaarlinie, ein keilförmiges Gehäuse mit einem Abdeckungsstrich darunter. Vorderansicht: der verjüngte Mast mit Sockel, der Arm stirnseitig als Punkt, seine Strebe als senkrechte Linie und der Kopf mit der Linse als abgerundeter Block. Draufsicht: der Sockel, die Mastkapsel, die sich beim Wiegen des Mastes dehnt, die Armlinie und die Kopfkontur mit der Linsenlinie."
           },
           "retained": {
-            "en": "Plinth, taper of the column, the arm and its brace, housing wedge and lens line; overall height 6.0 m and width 1.2 m.",
-            "de": "Sockel, Verjüngung der Säule, der Arm und seine Strebe, Gehäusekeil und Abdeckungslinie; Gesamthöhe 6,0 m und Breite 1,2 m."
+            "en": "Plinth, taper of the column, the arm and its brace, housing wedge and lens line; overall height 6.0 m and width 1.2 m. Front view: brace, lens line. Plan view: lens line.",
+            "de": "Sockel, Verjüngung der Säule, der Arm und seine Strebe, Gehäusekeil und Abdeckungslinie; Gesamthöhe 6,0 m und Breite 1,2 m. Vorderansicht: Strebe, Linsenlinie. Draufsicht: Linsenlinie."
           },
           "merged": {
             "en": "Base plate, cover, collar and cap merge into the column outline; arm clamp and joint merge into the arm stroke; spigot, rim and driver bulge merge into the housing wedge.",
             "de": "Fußplatte, Abdeckung, Manschette und Kappe gehen in der Säulenkontur auf; Armschelle und Gelenk gehen im Armstrich auf; Zapfen, Rand und Treiberwölbung gehen im Gehäusekeil auf."
           },
           "omitted": {
-            "en": "Hatch, seams, highlight, nuts, fins, latch, reflector, the plinth joint.",
-            "de": "Klappe, Nähte, Lichtkante, Muttern, Rippen, Verschluss, Reflektor, die Sockelfuge."
+            "en": "Hatch, seams, highlight, nuts, fins, latch, reflector, the plinth joint. Front and plan view: no base cover, collar, fins or clamp.",
+            "de": "Klappe, Nähte, Lichtkante, Muttern, Rippen, Verschluss, Reflektor, die Sockelfuge. Vorder- und Draufsicht: keine Fußhaube, Manschette, Kühlrippen oder Klemme."
           },
           "thinElements": {
             "en": "The 0.07 m arm is a single 0.25 mm stroke (50 mm real weight); the 0.024 m brace a 0.13 mm stroke; the 0.034 m lens a 0.13 mm glazing stroke; the column top (0.08 m = 0.4 mm) is widened to 0.09 m (0.45 mm).",
@@ -694,28 +1051,285 @@
               "kind": "path",
               "d": "M 0.03 -0.05 C 0.1 -0.088 0.24 -0.088 0.3 -0.05 L 0.3 -0.046 C 0.24 -0.076 0.1 -0.076 0.03 -0.046 Z",
               "region": "lamp-lens",
-              "material": "polycarbonate"
-            ,
+              "material": "polycarbonate",
               "penMm": 0.138
-             }
+            }
+          ],
+          "front": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.0,
+              "w": 0.3,
+              "h": 0.12
+            },
+            {
+              "id": "base-cover",
+              "bone": "foundation",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.33,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "path",
+              "d": "M -0.12 0.12 C -0.11 0.2 -0.085 0.24 -0.082 0.3 L 0.082 0.3 C 0.085 0.24 0.11 0.2 0.12 0.12 Z"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.085,
+                  0.12
+                ],
+                [
+                  0.085,
+                  0.12
+                ],
+                [
+                  0.04,
+                  6.0
+                ],
+                [
+                  -0.04,
+                  6.0
+                ]
+              ],
+              "closed": true,
+              "followTip": true
+            },
+            {
+              "id": "pole-collar",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "rect",
+              "x": -0.055,
+              "y": 5.72,
+              "w": 0.11,
+              "h": 0.08
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 5.8,
+              "rx": 0.034,
+              "ry": 0.034
+            },
+            {
+              "id": "arm-brace",
+              "bone": "arm",
+              "role": "detail",
+              "z": 1.9,
+              "filled": false,
+              "tone": 0.45,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  5.34
+                ],
+                [
+                  0.0,
+                  5.788
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-housing",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "path",
+              "d": "M -0.12 5.79 C -0.12 5.89 0.12 5.89 0.12 5.79 L 0.1 5.75 C 0.05 5.7379999999999995 -0.05 5.7379999999999995 -0.1 5.75 Z"
+            },
+            {
+              "id": "lens",
+              "bone": "head",
+              "role": "glazing",
+              "z": 5,
+              "filled": true,
+              "tone": 0.85,
+              "region": "lamp-lens",
+              "material": "polycarbonate",
+              "penMm": 0.138,
+              "kind": "path",
+              "d": "M -0.1 5.75 C -0.05 5.712 0.05 5.712 0.1 5.75 L 0.1 5.754 C 0.05 5.724 -0.05 5.724 -0.1 5.754 Z"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3
+            },
+            {
+              "id": "base-cover",
+              "bone": "foundation",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.33,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.12,
+              "ry": 0.12
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "kind": "capsule",
+              "x0": 0.0,
+              "y0": 0.0,
+              "x1": 0.0,
+              "y1": 0.0,
+              "r0": 0.085,
+              "r1": 0.04,
+              "followTip": true
+            },
+            {
+              "id": "pole-collar",
+              "bone": "arm",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.055,
+              "ry": 0.055
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "capsule",
+              "x0": 0.0,
+              "y0": 0.0,
+              "x1": 0.95,
+              "y1": 0.0,
+              "r0": 0.034,
+              "r1": 0.01,
+              "followTip": true
+            },
+            {
+              "id": "head-housing",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "path",
+              "d": "M 0.72 -0.07 C 0.75 -0.13 0.97 -0.13 1.02 -0.08 C 1.06 -0.04 1.06 0.04 1.02 0.08 C 0.97 0.13 0.75 0.13 0.72 0.07 Z"
+            },
+            {
+              "id": "head-rim",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "poly",
+              "points": [
+                [
+                  0.76,
+                  -0.09
+                ],
+                [
+                  0.76,
+                  0.09
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 12 x 60 mm: plinth with flared base cover, one tapered column (1.7 mm to 0.8 mm), a slim arm with a diagonal brace stroke, a luminaire housing with a glazed lens crescent.",
-            "de": "Seitenansicht 12 x 60 mm: Sockel mit ausgestellter Fußabdeckung, eine verjüngte Säule (1,7 mm auf 0,8 mm), ein schlanker Arm mit diagonalem Strebenstrich, ein Leuchtengehäuse mit verglaster Abdeckungssichel."
+            "en": "Side elevation 12 x 60 mm: plinth with flared base cover, one tapered column (1.7 mm to 0.8 mm), a slim arm with a diagonal brace stroke, a luminaire housing with a glazed lens crescent. Front view: plinth, base cover, tapering pole with collar, the arm end-on with its vertical brace line, and the head as a domed block with the lens strip below. Plan view: plinth square, round base cover, the pole capsule (0.17 m to 0.08 m, stretching with the sway), collar ring on the arm, the tapering arm capsule and the head with its rim line.",
+            "de": "Seitenansicht 12 x 60 mm: Sockel mit ausgestellter Fußabdeckung, eine verjüngte Säule (1,7 mm auf 0,8 mm), ein schlanker Arm mit diagonalem Strebenstrich, ein Leuchtengehäuse mit verglaster Abdeckungssichel. Vorderansicht: Sockel, Fußhaube, verjüngter Mast mit Manschette, der Arm stirnseitig mit senkrechter Strebenlinie und der Kopf als gewölbter Block mit dem Linsenstreifen darunter. Draufsicht: das Sockelquadrat, die runde Fußhaube, die Mastkapsel (0,17 m bis 0,08 m, dehnt sich mit dem Wiegen), der Manschettenring am Arm, die verjüngte Armkapsel und der Kopf mit Randlinie."
           },
           "retained": {
-            "en": "Plinth, base cover, column with its taper, collar below the arm, arm, brace, housing, lens.",
-            "de": "Sockel, Fußabdeckung, Säule mit Verjüngung, Manschette unter dem Arm, Arm, Strebe, Gehäuse, Abdeckung."
+            "en": "Plinth, base cover, column with its taper, collar below the arm, arm, brace, housing, lens. Front view: collar, brace line. Plan view: collar ring, rim line.",
+            "de": "Sockel, Fußabdeckung, Säule mit Verjüngung, Manschette unter dem Arm, Arm, Strebe, Gehäuse, Abdeckung. Vorderansicht: Manschette, Strebenlinie. Draufsicht: Manschettenring, Randlinie."
           },
           "merged": {
             "en": "Plinth joint, base plate and nuts merge into the plinth top (0.2 mm); cap and column are one path; spigot, driver bulge and rim merge into the housing outline.",
             "de": "Sockelfuge, Fußplatte und Muttern gehen in der Sockeloberkante auf (0,2 mm); Kappe und Säule sind ein Pfad; Zapfen, Treiberwölbung und Rand gehen in der Gehäusekontur auf."
           },
           "omitted": {
-            "en": "Hatch, seams, highlight, plate nuts, clamp, arm joint, fins, rim, reflector line, spigot.",
-            "de": "Klappe, Nähte, Lichtkante, Plattenmuttern, Schelle, Armgelenk, Rippen, Rand, Reflektorlinie, Zapfen."
+            "en": "Hatch, seams, highlight, plate nuts, clamp, arm joint, fins, rim, reflector line, spigot. Front and plan view: base plate, nuts, fins, seams and highlight are not drawn.",
+            "de": "Klappe, Nähte, Lichtkante, Plattenmuttern, Schelle, Armgelenk, Rippen, Rand, Reflektorlinie, Zapfen. Vorder- und Draufsicht: Fußplatte, Muttern, Kühlrippen, Nähte und Glanzlinie sind nicht gezeichnet."
           },
           "thinElements": {
             "en": "The 0.024 m brace is a single 0.18 mm stroke; the 0.034 m lens is a 0.35 mm glazed crescent; the 0.07 m arm a 0.7 mm solid; fins (0.028 m spacing = 0.28 mm) are dropped.",
@@ -1291,24 +1905,788 @@
               "region": "lamp-lens",
               "material": "polycarbonate"
             }
+          ],
+          "front": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.0,
+              "w": 0.3,
+              "h": 0.1
+            },
+            {
+              "id": "plinth-joint",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 1.1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0.05
+                ],
+                [
+                  0.15,
+                  0.05
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "base-plate",
+              "bone": "foundation",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.1,
+              "w": 0.3,
+              "h": 0.02,
+              "r": 0.002
+            },
+            {
+              "id": "base-nut-0",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": -0.132,
+              "y": 0.12,
+              "w": 0.024,
+              "h": 0.014
+            },
+            {
+              "id": "base-nut-1",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": 0.108,
+              "y": 0.12,
+              "w": 0.024,
+              "h": 0.014
+            },
+            {
+              "id": "base-cover",
+              "bone": "foundation",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.33,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.35,
+              "kind": "path",
+              "d": "M -0.12 0.13 C -0.11 0.20 -0.085 0.24 -0.082 0.30 L 0.082 0.30 C 0.085 0.24 0.11 0.20 0.12 0.13 Z"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.085,
+                  0.12
+                ],
+                [
+                  0.085,
+                  0.12
+                ],
+                [
+                  0.04,
+                  6.0
+                ],
+                [
+                  -0.04,
+                  6.0
+                ]
+              ],
+              "closed": true,
+              "followTip": true
+            },
+            {
+              "id": "pole-highlight",
+              "bone": "pole",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.055,
+                  0.4
+                ],
+                [
+                  0.035,
+                  5.6
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pole-seam-0",
+              "bone": "pole",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.065,
+                  2.22
+                ],
+                [
+                  0.065,
+                  2.22
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pole-seam-1",
+              "bone": "pole",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.06,
+                  4.02
+                ],
+                [
+                  0.06,
+                  4.02
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pole-collar",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "rect",
+              "x": -0.055,
+              "y": 5.72,
+              "w": 0.11,
+              "h": 0.08,
+              "r": 0.01
+            },
+            {
+              "id": "pole-cap",
+              "bone": "pole",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "path",
+              "d": "M -0.042 5.98 C -0.03 6.02 0.03 6.02 0.042 5.98 Z"
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "penMm": 0.35,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 5.8,
+              "rx": 0.034,
+              "ry": 0.034
+            },
+            {
+              "id": "arm-clamp",
+              "bone": "arm",
+              "role": "detail",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "rect",
+              "x": -0.05,
+              "y": 5.75,
+              "w": 0.1,
+              "h": 0.1,
+              "r": 0.008
+            },
+            {
+              "id": "arm-brace",
+              "bone": "arm",
+              "role": "body",
+              "z": 1.9,
+              "filled": true,
+              "tone": 0.45,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "penMm": 0.35,
+              "kind": "capsule",
+              "x0": 0.0,
+              "y0": 5.34,
+              "x1": 0.0,
+              "y1": 5.788,
+              "r0": 0.012,
+              "r1": 0.012
+            },
+            {
+              "id": "head-housing",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.41,
+              "kind": "path",
+              "d": "M -0.12 5.79 C -0.12 5.89 0.12 5.89 0.12 5.79 L 0.1 5.75 C 0.05 5.7379999999999995 -0.05 5.7379999999999995 -0.1 5.75 Z"
+            },
+            {
+              "id": "head-spigot",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "rect",
+              "x": -0.035,
+              "y": 5.78,
+              "w": 0.07,
+              "h": 0.05,
+              "r": 0.006
+            },
+            {
+              "id": "head-fin-0",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  5.84
+                ],
+                [
+                  0.08,
+                  5.84
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-fin-1",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  5.856
+                ],
+                [
+                  0.045,
+                  5.856
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "lens",
+              "bone": "head",
+              "role": "glazing",
+              "z": 5,
+              "filled": true,
+              "tone": 0.85,
+              "region": "lamp-lens",
+              "material": "polycarbonate",
+              "kind": "path",
+              "d": "M -0.1 5.75 C -0.05 5.712 0.05 5.712 0.1 5.75 L 0.1 5.754 C 0.05 5.724 -0.05 5.724 -0.1 5.754 Z"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plinth",
+              "bone": "foundation",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "plinth-concrete",
+              "material": "concrete",
+              "penMm": 0.35,
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3
+            },
+            {
+              "id": "base-plate",
+              "bone": "foundation",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "rect",
+              "x": -0.15,
+              "y": -0.15,
+              "w": 0.3,
+              "h": 0.3,
+              "r": 0.004
+            },
+            {
+              "id": "base-nut-0",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "ellipse",
+              "cx": -0.12,
+              "cy": -0.12,
+              "rx": 0.013,
+              "ry": 0.013
+            },
+            {
+              "id": "base-nut-1",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "ellipse",
+              "cx": 0.12,
+              "cy": -0.12,
+              "rx": 0.013,
+              "ry": 0.013
+            },
+            {
+              "id": "base-nut-2",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "ellipse",
+              "cx": -0.12,
+              "cy": 0.12,
+              "rx": 0.013,
+              "ry": 0.013
+            },
+            {
+              "id": "base-nut-3",
+              "bone": "foundation",
+              "role": "detail",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "penMm": 0.13,
+              "kind": "ellipse",
+              "cx": 0.12,
+              "cy": 0.12,
+              "rx": 0.013,
+              "ry": 0.013
+            },
+            {
+              "id": "base-cover",
+              "bone": "foundation",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.33,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "penMm": 0.35,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.12,
+              "ry": 0.12
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "pole-galv"
+              ],
+              "material": "galv-steel",
+              "penMm": 0.35,
+              "kind": "capsule",
+              "x0": 0.0,
+              "y0": 0.0,
+              "x1": 0.0,
+              "y1": 0.0,
+              "r0": 0.085,
+              "r1": 0.04,
+              "followTip": true
+            },
+            {
+              "id": "pole-collar",
+              "bone": "arm",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "pole-galv",
+              "material": "galv-steel",
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.055,
+              "ry": 0.055
+            },
+            {
+              "id": "arm",
+              "bone": "arm",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "penMm": 0.35,
+              "kind": "capsule",
+              "x0": 0.0,
+              "y0": 0.0,
+              "x1": 0.95,
+              "y1": 0.0,
+              "r0": 0.034,
+              "r1": 0.01,
+              "followTip": true
+            },
+            {
+              "id": "arm-clamp",
+              "bone": "arm",
+              "role": "detail",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "arm-alu",
+              "material": "aluminium-anodised",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.05,
+              "w": 0.1,
+              "h": 0.1,
+              "r": 0.008
+            },
+            {
+              "id": "head-housing",
+              "bone": "head",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.41,
+              "kind": "path",
+              "d": "M 0.72 -0.07 C 0.75 -0.13 0.97 -0.13 1.02 -0.08 C 1.06 -0.04 1.06 0.04 1.02 0.08 C 0.97 0.13 0.75 0.13 0.72 0.07 Z"
+            },
+            {
+              "id": "head-spigot",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "rect",
+              "x": 0.68,
+              "y": -0.035,
+              "w": 0.07,
+              "h": 0.07,
+              "r": 0.006
+            },
+            {
+              "id": "head-driver",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "path",
+              "d": "M 0.75 0.055 C 0.76 0.095 0.83 0.098 0.85 0.07"
+            },
+            {
+              "id": "head-fin-0",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.87,
+                  -0.075
+                ],
+                [
+                  0.87,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-fin-1",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.898,
+                  -0.075
+                ],
+                [
+                  0.898,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-fin-2",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.926,
+                  -0.075
+                ],
+                [
+                  0.926,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-fin-3",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.954,
+                  -0.075
+                ],
+                [
+                  0.954,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-fin-4",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.982,
+                  -0.075
+                ],
+                [
+                  0.982,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-fin-5",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  1.01,
+                  -0.075
+                ],
+                [
+                  1.01,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-rim",
+              "bone": "head",
+              "role": "detail",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "lamp-housing",
+              "material": "aluminium-anodised",
+              "kind": "poly",
+              "points": [
+                [
+                  0.76,
+                  -0.09
+                ],
+                [
+                  0.76,
+                  0.09
+                ]
+              ],
+              "closed": false
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation 24 x 120 mm: concrete plinth, base plate with flared cover, a 5.88 m tapered column (3.4 mm at the foot, 1.6 mm at the top) with inspection hatch, collar and cap, a braced aluminium arm and a finned luminaire housing with a glazed lens.",
-            "de": "Seitenansicht 24 x 120 mm: Betonsockel, Fußplatte mit ausgestellter Abdeckung, eine 5,88 m hohe verjüngte Säule (3,4 mm am Fuß, 1,6 mm oben) mit Revisionsklappe, Manschette und Kappe, ein verstrebter Aluminiumarm und ein gerippt geformtes Leuchtengehäuse mit Glasabdeckung."
+            "en": "Side elevation 24 x 120 mm: concrete plinth, base plate with flared cover, a 5.88 m tapered column (3.4 mm at the foot, 1.6 mm at the top) with inspection hatch, collar and cap, a braced aluminium arm and a finned luminaire housing with a glazed lens. Front view: plinth with joint, base plate with nuts, base cover, tapering pole with highlight, two seams, collar and cap, the arm end-on with clamp and a capsule brace, and the head with spigot, two fin lines and the lens strip. Plan view: stippled plinth, base plate with four nuts, base cover, the pole capsule that stretches as the pole sways, collar ring, tapering arm with clamp, the head with spigot, driver outline, six cooling fins and rim line; arm and head follow the sway.",
+            "de": "Seitenansicht 24 x 120 mm: Betonsockel, Fußplatte mit ausgestellter Abdeckung, eine 5,88 m hohe verjüngte Säule (3,4 mm am Fuß, 1,6 mm oben) mit Revisionsklappe, Manschette und Kappe, ein verstrebter Aluminiumarm und ein gerippt geformtes Leuchtengehäuse mit Glasabdeckung. Vorderansicht: Sockel mit Fuge, Fußplatte mit Muttern, Fußhaube, verjüngter Mast mit Glanzlinie, zwei Nähten, Manschette und Kappe, der Arm stirnseitig mit Klemme und kapselförmiger Strebe und der Kopf mit Zapfen, zwei Rippenlinien und dem Linsenstreifen. Draufsicht: der gepunktete Sockel, die Fußplatte mit vier Muttern, die Fußhaube, die Mastkapsel, die sich beim Wiegen dehnt, der Manschettenring, der verjüngte Arm mit Klemme, der Kopf mit Zapfen, Treiberumriss, sechs Kühlrippen und Randlinie; Arm und Kopf folgen dem Wiegen."
           },
           "retained": {
-            "en": "Plinth with joint, base plate with nuts, base cover, column with collar, cap, hatch, seams and highlight, arm with brace, joint, clamp and seam, luminaire housing with spigot, driver bulge, six fin marks, rim, and lens with reflector line.",
-            "de": "Sockel mit Fuge, Fußplatte mit Muttern, Fußabdeckung, Säule mit Manschette, Kappe, Klappe, Nähten und Lichtkante, Arm mit Strebe, Gelenk, Schelle und Naht, Leuchtengehäuse mit Zapfen, Treiberwölbung, sechs Rippenmarken, Rand und Abdeckung mit Reflektorlinie."
+            "en": "Plinth with joint, base plate with nuts, base cover, column with collar, cap, hatch, seams and highlight, arm with brace, joint, clamp and seam, luminaire housing with spigot, driver bulge, six fin marks, rim, and lens with reflector line. Front view: nuts, seams, highlight, cap, fin lines. Plan view: nuts, driver, six fins.",
+            "de": "Sockel mit Fuge, Fußplatte mit Muttern, Fußabdeckung, Säule mit Manschette, Kappe, Klappe, Nähten und Lichtkante, Arm mit Strebe, Gelenk, Schelle und Naht, Leuchtengehäuse mit Zapfen, Treiberwölbung, sechs Rippenmarken, Rand und Abdeckung mit Reflektorlinie. Vorderansicht: Muttern, Nähte, Glanzlinie, Kappe, Rippenlinien. Draufsicht: Muttern, Treiber, sechs Kühlrippen."
           },
           "merged": {
             "en": "Nothing merged; the inspection hatch and the column seams stay as lines on the column.",
             "de": "Nichts verschmolzen; die Revisionsklappe und die Säulennähte bleiben als Linien auf der Säule."
           },
           "omitted": {
-            "en": "Hatch lock (0.28 mm dot) and housing latch (0.24 mm dot), below the minimum feature; the cable and the foundation bolts below the plinth.",
-            "de": "Klappenschloss (0,28-mm-Punkt) und Gehäuseverschluss (0,24-mm-Punkt), unter dem Mindestmaß; das Kabel und die Fundamentanker unter dem Sockel."
+            "en": "Hatch lock (0.28 mm dot) and housing latch (0.24 mm dot), below the minimum feature; the cable and the foundation bolts below the plinth. Front view: only two of the six cooling fins are shown, the others hide behind the housing dome.",
+            "de": "Klappenschloss (0,28-mm-Punkt) und Gehäuseverschluss (0,24-mm-Punkt), unter dem Mindestmaß; das Kabel und die Fundamentanker unter dem Sockel. Vorderansicht: nur zwei der sechs Kühlrippen sind gezeigt, die anderen verschwinden hinter der Gehäusekuppel."
           },
           "thinElements": {
             "en": "Seams, highlight, plinth joint and fin marks are single 0.13 mm strokes; the 0.024 m brace is a 0.48 mm capsule; the 0.034 m lens is a 0.7 mm glazed crescent; nuts are 0.5 x 0.3 mm rectangles with a 0.13 mm outline.",
@@ -2105,9 +3483,6 @@
     "presentation": {
       "defaultPose": "dusk-off",
       "defaultClip": "ignition-at-dusk",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 100
     },
     "exports": [

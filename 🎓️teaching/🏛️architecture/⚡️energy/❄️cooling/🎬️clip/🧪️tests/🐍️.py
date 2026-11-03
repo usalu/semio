@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import numpy as np
@@ -76,7 +77,8 @@ class CoolingAnimationTest(unittest.TestCase):
             elif isinstance(node, ast.For) and isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Attribute) and node.iter.func.attr == "items" and isinstance(node.iter.func.value, ast.Name) and node.iter.func.value.id == "faces":
                 nodes.append(copy.deepcopy(node))
         scope = dict(vars(module))
-        exec(compile(ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(module.__file__), "exec"), scope)
+        with mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": "de"}):
+            exec(compile(ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(module.__file__), "exec"), scope)
         case = CASES["solar"]
         building = module.house_section(np.array(case["origin"]), scale=case["scale"])["group"]
         return module, building, scope

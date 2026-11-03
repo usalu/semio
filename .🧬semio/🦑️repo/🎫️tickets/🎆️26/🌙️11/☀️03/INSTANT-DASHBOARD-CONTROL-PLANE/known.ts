@@ -1,0 +1,20 @@
+import { pathToFileURL } from "node:url";
+const load = (file: string) => import(pathToFileURL(file).href);
+const root = "C:\\git\\semio";
+const routing = await load("C:\\git\\semio\\🧰️framework\\🔨️modules\\🏃️process\\📦️packages\\🟦️typescript\\🧭️routing\\🟦️.ts");
+const budget = await load("C:\\git\\semio\\🧰️framework\\🔨️modules\\🏃️process\\📦️packages\\🟦️typescript\\⏱️budget\\🟦️.ts");
+const caller = await load("C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\📥️caller\\🟦️.ts");
+const invocationMod = await load("C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\🧭️invocation\\🟦️.ts");
+const providers = await load("C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏃️process\\🔌️providers\\🟦️.ts");
+const admission = await load("C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏃️process\\🦀️cargo\\🎟️admission\\🟦️.ts");
+const args = ["run", "@semio-tech/repo-dashboard-rs:run", "--output=stream", "--"] as const;
+const environment = { ...process.env, SEMIO_BUILD_MODE: process.env.SEMIO_BUILD_MODE ?? "prototype" };
+providers.issueRepositoryScriptProvidersV1(environment);
+const selected = invocationMod.parseBuildInvocationV1(args, environment);
+const capabilities = caller.createNativeBuildCallerCapabilitiesV1(root, selected.args, selected.tool, environment);
+const policy = routing.readScriptPolicy(Object.freeze({ version: 1, owner: "repository:build", maximumElapsedMilliseconds: budget.buildBudgetMs(environment) }));
+const envelope = routing.createScriptProcessEnvelope(policy, capabilities, Date.now());
+await routing.withScriptProcessEnvelope(envelope, async (invocation: never) => {
+  const phase = routing.createIssuedResourceControlV1(invocation, "dashboard:known-commands", 0);
+  await admission.runRepositoryCargoCommandV1(invocation, phase, "C:\\git\\semio", ["test", "--manifest-path", "C:\\\\git\\\\semio\\\\🧰️framework\\\\🛍️products\\\\🦑️repo\\\\🔨️modules\\\\🎛️dashboard\\\\📚️inventory\\\\📦️packages\\\\🦀️rust\\Cargo.toml", "--lib", "the_job_publishes_the_known_commands_first", "--", "--test-threads", "1"], "C:\\\\git\\\\semio\\\\🧰️framework\\\\🛍️products\\\\🦑️repo\\\\🔨️modules\\\\🎛️dashboard\\\\📚️inventory\\\\📦️packages\\\\🦀️rust", environment, 1800000);
+});

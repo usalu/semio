@@ -335,7 +335,7 @@
         "id": "foot-head",
         "bone": "frame",
         "x": 0.03,
-        "y": 0.0,
+        "y": 0,
         "kind": "contact",
         "title": {
           "en": "Head-end post feet",
@@ -351,7 +351,7 @@
         "id": "foot-mid",
         "bone": "frame",
         "x": 1.06,
-        "y": 0.0,
+        "y": 0,
         "kind": "contact",
         "title": {
           "en": "Centre support leg",
@@ -364,20 +364,38 @@
         "frictionCoefficient": 0.5
       },
       {
-        "id": "foot-foot",
+        "id": "foot-foot-l",
         "bone": "frame",
         "x": 2.09,
-        "y": 0.0,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Foot-end post feet",
-          "de": "Füße der Fußpfosten"
+          "en": "Foot post, left",
+          "de": "Fußpfosten links"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.06,
-        "footprintWidthM": 0.9,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5,
+        "z": 0.42
+      },
+      {
+        "id": "foot-foot-r",
+        "bone": "frame",
+        "x": 2.09,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Foot post, right",
+          "de": "Fußpfosten rechts"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.06,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5,
+        "z": -0.42
       }
     ],
     "representations": {
@@ -385,7 +403,7 @@
         "status": "authored",
         "denominator": 500,
         "validRange": {
-          "minDenominator": 351,
+          "minDenominator": 350,
           "maxDenominator": 1000
         },
         "pens": {
@@ -487,13 +505,212 @@
                 "mattress",
                 "slats"
               ]
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 1.0,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            }
+          ],
+          "front": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.0,
+              "w": 0.9,
+              "h": 0.95
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.0,
+              "w": 0.9,
+              "h": 0.55
+            }
+          ],
+          "plan": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.1,
+              "h": 0.9
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 2.02,
+              "y": -0.45,
+              "w": 0.1,
+              "h": 0.9
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Bed sign 4.2 x 1.9 mm: head and foot blocks, a rail and three mattress parts, the head part movable.",
-            "de": "Bettzeichen 4,2 x 1,9 mm: Kopf- und Fußblock, ein Holm und drei Matratzenteile, das Kopfteil beweglich."
+            "en": "Bed sign 4.2 x 1.9 mm: head and foot blocks, a rail and three mattress parts, the head part movable. Front and plan: headboard and footboard as panels and the three mattress sections as extruded elevation profiles, so the head section tilts up above the footboard in the front view and shortens in the plan. The centre support leg under the middle rail is drawn in the side view.",
+            "de": "Bettzeichen 4,2 x 1,9 mm: Kopf- und Fußblock, ein Holm und drei Matratzenteile, das Kopfteil beweglich. Vorderansicht und Draufsicht: Kopf- und Fußteil als Flächen und die drei Matratzenabschnitte als gezogene Seitenansichtsprofile, so kippt der Kopfabschnitt in der Vorderansicht über das Fußteil und verkürzt sich im Grundriss. Das mittlere Stützbein unter dem mittleren Längsholm ist in der Seitenansicht gezeichnet."
           },
           "retained": {
             "en": "Headboard 0.95 m and footboard 0.55 m, side rail, mattress top at 0.485 m.",
@@ -529,7 +746,7 @@
         "status": "authored",
         "denominator": 200,
         "validRange": {
-          "minDenominator": 151,
+          "minDenominator": 150,
           "maxDenominator": 350
         },
         "pens": {
@@ -647,12 +864,272 @@
               ],
               "material": "quilted-cover"
             }
+          ],
+          "front": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.0,
+              "w": 0.9,
+              "h": 0.95,
+              "r": 0.02
+            },
+            {
+              "id": "foot-post-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.39,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.55
+            },
+            {
+              "id": "foot-post-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.55
+            },
+            {
+              "id": "foot-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.47,
+              "w": 0.9,
+              "h": 0.08
+            },
+            {
+              "id": "rail-end",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.14,
+              "w": 0.9,
+              "h": 0.16
+            }
+          ],
+          "plan": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.06,
+              "h": 0.9
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 2.06,
+              "y": -0.45,
+              "w": 0.06,
+              "h": 0.9
+            },
+            {
+              "id": "rail-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.41,
+              "w": 2.04,
+              "h": 0.04
+            },
+            {
+              "id": "rail-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.04,
+              "y": -0.45,
+              "w": 2.04,
+              "h": 0.04
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Bed 10.6 x 4.8 mm: posts, rail, centre leg and three rounded mattress parts.",
-            "de": "Bett 10,6 x 4,8 mm: Pfosten, Holm, Mittelfuß und drei gerundete Matratzenteile."
+            "en": "Bed 10.6 x 4.8 mm: posts, rail, centre leg and three rounded mattress parts. Front and plan: headboard, the open footboard of two posts and a top rail, the side rails and the three mattress sections as extruded elevation profiles that tilt and sink with their bones.",
+            "de": "Bett 10,6 x 4,8 mm: Pfosten, Holm, Mittelfuß und drei gerundete Matratzenteile. Vorderansicht und Draufsicht: Kopfteil, das offene Fußteil aus zwei Pfosten und einem oberen Riegel, die Seitenholme und die drei Matratzenabschnitte als gezogene Seitenansichtsprofile, die mit ihren Knochen kippen und einsinken."
           },
           "retained": {
             "en": "Posts at real width 0.06 m, the centre leg, the rounded mattress parts (head part follows the raised section).",
@@ -688,7 +1165,7 @@
         "status": "authored",
         "denominator": 100,
         "validRange": {
-          "minDenominator": 76,
+          "minDenominator": 75,
           "maxDenominator": 150
         },
         "pens": {
@@ -905,12 +1382,342 @@
               "closed": false,
               "region": "mattress"
             }
+          ],
+          "front": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "slats-head",
+              "bone": "slat-head",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "slats",
+              "material": "birch-slat",
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.022,
+              "w": 0.72,
+              "h": 0.022,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.43,
+                "z1": 0.43
+              }
+            },
+            {
+              "id": "slats-mid",
+              "bone": "slat-mid",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "slats",
+              "material": "birch-slat",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.6,
+              "h": 0.022,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.43,
+                "z1": 0.43
+              }
+            },
+            {
+              "id": "slats-foot",
+              "bone": "slat-foot",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "slats",
+              "material": "birch-slat",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.68,
+              "h": 0.022,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.43,
+                "z1": 0.43
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "path",
+              "d": "M -0.45 0 L -0.45 0.93 Q -0.45 0.95 -0.43 0.95 L 0.43 0.95 Q 0.45 0.95 0.45 0.93 L 0.45 0 Z"
+            },
+            {
+              "id": "foot-post-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.39,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.55,
+              "r": 0.02
+            },
+            {
+              "id": "foot-post-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.55,
+              "r": 0.02
+            },
+            {
+              "id": "foot-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.47,
+              "w": 0.9,
+              "h": 0.08,
+              "r": 0.02
+            },
+            {
+              "id": "rail-end",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.14,
+              "w": 0.9,
+              "h": 0.16
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.16
+            }
+          ],
+          "plan": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.06,
+              "h": 0.9,
+              "r": 0.02
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 2.06,
+              "y": -0.45,
+              "w": 0.06,
+              "h": 0.9,
+              "r": 0.02
+            },
+            {
+              "id": "rail-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.41,
+              "w": 2.04,
+              "h": 0.04
+            },
+            {
+              "id": "rail-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": 0.04,
+              "y": -0.45,
+              "w": 2.04,
+              "h": 0.04
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Bed 21 x 9.5 mm: rounded posts, rail, centre leg, three slat strips, three mattress parts with piping.",
-            "de": "Bett 21 x 9,5 mm: gerundete Pfosten, Holm, Mittelfuß, drei Lattenstreifen, drei Matratzenteile mit Paspel."
+            "en": "Bed 21 x 9.5 mm: rounded posts, rail, centre leg, three slat strips, three mattress parts with piping. Front and plan: the rounded headboard, the open footboard, the side rails and middle leg, the slat sections (front only) and the three mattress sections as extruded elevation profiles; the head section and its slats tilt with their bone.",
+            "de": "Bett 21 x 9,5 mm: gerundete Pfosten, Holm, Mittelfuß, drei Lattenstreifen, drei Matratzenteile mit Paspel. Vorderansicht und Draufsicht: das gerundete Kopfteil, das offene Fußteil, die Seitenholme und der Mittelfuß, die Lattenabschnitte (nur Vorderansicht) und die drei Matratzenabschnitte als gezogene Seitenansichtsprofile; der Kopfabschnitt und seine Latten kippen mit ihrem Knochen."
           },
           "retained": {
             "en": "The slat sections as strips (they show when a section is raised), mattress piping.",
@@ -1190,12 +1997,344 @@
               "closed": false,
               "region": "mattress"
             }
+          ],
+          "front": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.16 Q -0.725 0.2 -0.685 0.2 L -0.02 0.2 Q 0.02 0.2 0.02 0.16 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.58 0.2 Q 0.62 0.2 0.62 0.16 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.645 0.2 Q 0.685 0.2 0.685 0.16 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "slats-head",
+              "bone": "slat-head",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "slats",
+              "material": "birch-slat",
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.022,
+              "w": 0.72,
+              "h": 0.022,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.43,
+                "z1": 0.43
+              }
+            },
+            {
+              "id": "slats-mid",
+              "bone": "slat-mid",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "slats",
+              "material": "birch-slat",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.6,
+              "h": 0.022,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.43,
+                "z1": 0.43
+              }
+            },
+            {
+              "id": "slats-foot",
+              "bone": "slat-foot",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "slats",
+              "material": "birch-slat",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.68,
+              "h": 0.022,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.43,
+                "z1": 0.43
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "path",
+              "d": "M -0.45 0 L -0.45 0.93 Q -0.45 0.95 -0.43 0.95 L 0.43 0.95 Q 0.45 0.95 0.45 0.93 L 0.45 0 Z"
+            },
+            {
+              "id": "foot-post-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "path",
+              "d": "M 0.45 0 L 0.45 0.53 Q 0.45 0.55 0.43 0.55 L 0.39 0.55 L 0.39 0 Z"
+            },
+            {
+              "id": "foot-post-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "path",
+              "d": "M -0.45 0 L -0.45 0.53 Q -0.45 0.55 -0.43 0.55 L -0.39 0.55 L -0.39 0 Z"
+            },
+            {
+              "id": "foot-rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.47,
+              "w": 0.9,
+              "h": 0.08,
+              "r": 0.02
+            },
+            {
+              "id": "rail-end",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.14,
+              "w": 0.9,
+              "h": 0.16
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.16
+            }
+          ],
+          "plan": [
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.16 Q -0.725 0.2 -0.685 0.2 L -0.02 0.2 Q 0.02 0.2 0.02 0.16 L 0.02 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.58 0.2 Q 0.62 0.2 0.62 0.16 L 0.62 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover",
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.645 0.2 Q 0.685 0.2 0.685 0.16 L 0.685 -0.01 Z",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.41,
+                "z1": 0.41
+              }
+            },
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.06,
+              "h": 0.9,
+              "r": 0.02
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v",
+              "kind": "rect",
+              "x": 2.06,
+              "y": -0.45,
+              "w": 0.06,
+              "h": 0.9,
+              "r": 0.02
+            },
+            {
+              "id": "rail-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.41,
+              "w": 2.04,
+              "h": 0.04
+            },
+            {
+              "id": "rail-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h",
+              "kind": "rect",
+              "x": 0.04,
+              "y": -0.45,
+              "w": 2.04,
+              "h": 0.04
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Bed 42 x 19 mm with grain on rail and posts, slat strips and mattress with top piping.",
-            "de": "Bett 42 x 19 mm mit Maserung an Holm und Pfosten, Lattenstreifen und Matratze mit Paspel oben."
+            "en": "Bed 42 x 19 mm with grain on rail and posts, slat strips and mattress with top piping. Front and plan: the rounded headboard, the open footboard of two rounded posts and a top rail, the side rails and middle leg, the slat sections (front only) and the three quilted mattress sections as extruded elevation profiles at full detail; the head section tilts, and the mattress sections sink, with their bones.",
+            "de": "Bett 42 x 19 mm mit Maserung an Holm und Pfosten, Lattenstreifen und Matratze mit Paspel oben. Vorderansicht und Draufsicht: das gerundete Kopfteil, das offene Fußteil aus zwei gerundeten Pfosten und einem oberen Riegel, die Seitenholme und der Mittelfuß, die Lattenabschnitte (nur Vorderansicht) und die drei Matratzenabschnitte als gezogene Seitenansichtsprofile in voller Detaillierung; der Kopfabschnitt kippt und die Matratzenabschnitte sinken mit ihren Knochen."
           },
           "retained": {
             "en": "As 1:100 plus grain hatching.",
@@ -1230,14 +2369,14 @@
     },
     "symbols": [
       {
-        "id": "bed-plan",
+        "id": "single-bed-symbol",
         "title": {
-          "en": "Single bed plan symbol",
-          "de": "Einzelbett-Grundrisssymbol"
+          "en": "Bed symbol, true extent",
+          "de": "Bettsymbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "Conventional plan sign of a single bed 0.90 x 2.00 m: mattress outline, head board at the left, pillow rectangle and the turned-down cover edge.",
-          "de": "Übliches Grundrisszeichen eines Einzelbetts 0,90 x 2,00 m: Matratzenkontur, Kopfbrett links, Kissenrechteck und umgeschlagene Deckenkante."
+          "en": "The single bed flat in all three views: head board 0.95 m, foot board 0.55 m, side rails, slatted base, 0.21 m mattress; pillow and cover edge are conventional marks.",
+          "de": "Das Einzelbett flach in allen drei Ansichten: Kopfteil 0,95 m, Fußteil 0,55 m, Seitenholme, Lattenrost, 0,21-m-Matratze; Kissen und Deckenkante sind Zeichen in wahrer Größe."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -1255,66 +2394,87 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
-          "plan": [
+          "elevation": [
             {
-              "id": "plan-frame",
+              "id": "head",
               "bone": "ground",
               "role": "body",
-              "z": 1,
+              "z": 2,
               "filled": true,
-              "tone": 0.9,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  2.12,
-                  0
-                ],
-                [
-                  2.12,
-                  0.9
-                ],
-                [
-                  0,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.95
             },
             {
-              "id": "plan-mattress",
+              "id": "foot",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 2.06,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.55
+            },
+            {
+              "id": "rail",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.06,
+              "y": 0.14,
+              "w": 2,
+              "h": 0.16
+            },
+            {
+              "id": "leg-mid",
+              "bone": "ground",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.03,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.16
+            },
+            {
+              "id": "slats",
               "bone": "ground",
               "role": "detail",
-              "z": 2,
+              "z": 2.4,
               "filled": false,
               "tone": 0.5,
-              "kind": "poly",
-              "points": [
-                [
-                  0.08,
-                  0.04
-                ],
-                [
-                  2.03,
-                  0.04
-                ],
-                [
-                  2.03,
-                  0.86
-                ],
-                [
-                  0.08,
-                  0.86
-                ]
-              ],
-              "closed": true
+              "kind": "rect",
+              "x": 0.06,
+              "y": 0.263,
+              "w": 2,
+              "h": 0.022
             },
             {
-              "id": "plan-pillow",
+              "id": "mattress",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.055,
+              "y": 0.275,
+              "w": 2.01,
+              "h": 0.21
+            },
+            {
+              "id": "cover-edge",
               "bone": "ground",
               "role": "detail",
               "z": 3,
@@ -1323,23 +2483,151 @@
               "kind": "poly",
               "points": [
                 [
-                  0.12,
-                  0.12
+                  0.7,
+                  0.485
                 ],
                 [
-                  0.52,
-                  0.12
-                ],
-                [
-                  0.52,
-                  0.78
-                ],
-                [
-                  0.12,
-                  0.78
+                  0.7,
+                  0.275
                 ]
               ],
-              "closed": true
+              "closed": false
+            },
+            {
+              "id": "pillow",
+              "bone": "ground",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.12,
+              "y": 0.485,
+              "w": 0.4,
+              "h": 0.07,
+              "r": 0.03
+            }
+          ],
+          "front": [
+            {
+              "id": "head",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0,
+              "w": 0.9,
+              "h": 0.95
+            },
+            {
+              "id": "foot-post-r",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.55
+            },
+            {
+              "id": "foot-post-l",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.39,
+              "y": 0,
+              "w": 0.06,
+              "h": 0.55
+            },
+            {
+              "id": "foot-rail",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.47,
+              "w": 0.9,
+              "h": 0.08
+            },
+            {
+              "id": "rail-end",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.14,
+              "w": 0.9,
+              "h": 0.16
+            },
+            {
+              "id": "mattress",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.41,
+              "y": 0.275,
+              "w": 0.82,
+              "h": 0.21
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-frame",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.45,
+              "w": 2.12,
+              "h": 0.9
+            },
+            {
+              "id": "plan-mattress",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.055,
+              "y": -0.41,
+              "w": 2.01,
+              "h": 0.82
+            },
+            {
+              "id": "plan-pillow",
+              "bone": "ground",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.12,
+              "y": -0.33,
+              "w": 0.4,
+              "h": 0.66,
+              "r": 0.03
             },
             {
               "id": "plan-turn",
@@ -1352,11 +2640,11 @@
               "points": [
                 [
                   0.7,
-                  0.04
+                  -0.41
                 ],
                 [
                   0.7,
-                  0.86
+                  0.41
                 ]
               ],
               "closed": false
@@ -1364,8 +2652,8 @@
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size: x along the bed 0 to 2.12 m (head at 0), y across 0 to 0.90 m. Pillow and cover edge are conventional marks with their real size.",
-          "de": "Modellmeter in Originalgröße: x entlang des Betts 0 bis 2,12 m (Kopf bei 0), y quer 0 bis 0,90 m. Kissen und Deckenkante sind übliche Zeichen in Realgröße."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. x along the bed with the head at 0; pillow 0.40 x 0.66 m and the turned-down cover edge at x 0.70 m are conventional marks at real size.",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. x entlang des Betts, Kopf bei 0; Kissen 0,40 x 0,66 m und die umgeschlagene Deckenkante bei x 0,70 m sind Zeichen in wahrer Größe."
         }
       }
     ],
@@ -1385,21 +2673,22 @@
         "contacts": [
           "foot-head",
           "foot-mid",
-          "foot-foot"
+          "foot-foot-l",
+          "foot-foot-r"
         ],
         "thermal": {
           "regions": {
             "mattress": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "slats": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             },
             "bed-frame": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1425,21 +2714,22 @@
         "contacts": [
           "foot-head",
           "foot-mid",
-          "foot-foot"
+          "foot-foot-l",
+          "foot-foot-r"
         ],
         "thermal": {
           "regions": {
             "mattress": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "slats": {
               "exposedFraction": 0.3,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             },
             "bed-frame": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1471,25 +2761,26 @@
         "contacts": [
           "foot-head",
           "foot-mid",
-          "foot-foot"
+          "foot-foot-l",
+          "foot-foot-r"
         ],
         "thermal": {
           "regions": {
             "mattress": {
               "exposedFraction": 0.65,
-              "sunlitFraction": 0.0,
+              "sunlitFraction": 0,
               "contact": {
                 "fraction": 0.35,
                 "tempC": 30
               }
             },
             "slats": {
-              "exposedFraction": 0.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 0,
+              "sunlitFraction": 0
             },
             "bed-frame": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1509,7 +2800,7 @@
               "wxNPerM": 0,
               "wyNPerM": -408.6
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1526,9 +2817,9 @@
               "fromM": 0,
               "toM": 0.6,
               "wxNPerM": 0,
-              "wyNPerM": -429.0
+              "wyNPerM": -429
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1547,7 +2838,7 @@
               "wxNPerM": 0,
               "wyNPerM": -270.4
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1582,13 +2873,14 @@
         "contacts": [
           "foot-head",
           "foot-mid",
-          "foot-foot"
+          "foot-foot-l",
+          "foot-foot-r"
         ],
         "thermal": {
           "regions": {
             "mattress": {
               "exposedFraction": 0.7,
-              "sunlitFraction": 0.0,
+              "sunlitFraction": 0,
               "contact": {
                 "fraction": 0.3,
                 "tempC": 30
@@ -1596,11 +2888,11 @@
             },
             "slats": {
               "exposedFraction": 0.3,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             },
             "bed-frame": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1620,7 +2912,7 @@
               "wxNPerM": 0,
               "wyNPerM": -561.8
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1639,7 +2931,7 @@
               "wxNPerM": 0,
               "wyNPerM": -367.8
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1658,7 +2950,7 @@
               "wxNPerM": 0,
               "wyNPerM": -162.2
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1685,21 +2977,22 @@
         "contacts": [
           "foot-head",
           "foot-mid",
-          "foot-foot"
+          "foot-foot-l",
+          "foot-foot-r"
         ],
         "thermal": {
           "regions": {
             "mattress": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "slats": {
               "exposedFraction": 0.1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             },
             "bed-frame": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1718,7 +3011,7 @@
           "en": "The head section rises to 50 degrees in 6 s, the mattress follows the slats.",
           "de": "Das Kopfteil hebt sich in 6 s auf 50 Grad, die Matratze folgt dem Lattenrost."
         },
-        "durationS": 6.0,
+        "durationS": 6,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1729,12 +3022,12 @@
             "ease": "smooth"
           },
           {
-            "t": 3.0,
+            "t": 3,
             "pose": "half-raised-key",
             "ease": "smooth"
           },
           {
-            "t": 6.0,
+            "t": 6,
             "pose": "head-raised",
             "ease": "smooth"
           }
@@ -1743,24 +3036,29 @@
           {
             "anchor": "foot-head",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
           },
           {
             "anchor": "foot-mid",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
           },
           {
-            "anchor": "foot-foot",
+            "anchor": "foot-foot-l",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
+          },
+          {
+            "anchor": "foot-foot-r",
+            "fromS": 0,
+            "toS": 6
           }
         ],
         "phases": [
           {
             "id": "raise",
             "fromS": 0,
-            "toS": 6.0,
+            "toS": 6,
             "title": {
               "en": "Raising",
               "de": "Hochstellen"
@@ -1769,7 +3067,7 @@
         ],
         "events": [
           {
-            "t": 6.0,
+            "t": 6,
             "kind": "motion",
             "title": {
               "en": "Sections reach their stops",
@@ -1789,7 +3087,7 @@
           "en": "An adult lies down on the flat bed; the mattress sinks and the contact surface warms.",
           "de": "Eine erwachsene Person legt sich auf das flache Bett; die Matratze sinkt ein und die Kontaktfläche erwärmt sich."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1800,12 +3098,12 @@
             "ease": "smooth"
           },
           {
-            "t": 2.0,
+            "t": 2,
             "pose": "asleep",
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "asleep",
             "ease": "smooth"
           }
@@ -1814,24 +3112,29 @@
           {
             "anchor": "foot-head",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
             "anchor": "foot-mid",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "foot-foot",
+            "anchor": "foot-foot-l",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "foot-foot-r",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
           {
             "id": "lie",
             "fromS": 0,
-            "toS": 2.0,
+            "toS": 2,
             "title": {
               "en": "Lie down",
               "de": "Hinlegen"
@@ -1867,15 +3170,15 @@
                 "v": 0
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0
               },
               {
-                "t": 2.0,
+                "t": 2,
                 "v": 1
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 1
               }
             ]
@@ -1889,15 +3192,15 @@
                 "v": 0
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0
               },
               {
-                "t": 2.0,
+                "t": 2,
                 "v": 1
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 1
               }
             ]
@@ -1911,15 +3214,15 @@
                 "v": 0
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0
               },
               {
-                "t": 2.0,
+                "t": 2,
                 "v": 1
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 1
               }
             ]
@@ -1936,7 +3239,7 @@
           "en": "The sleeper sits up: the head section is raised while the load shifts to the head part.",
           "de": "Die schlafende Person richtet sich auf: das Kopfteil wird hochgestellt, während die Last auf den Kopfteil wandert."
         },
-        "durationS": 6.0,
+        "durationS": 6,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1947,12 +3250,12 @@
             "ease": "smooth"
           },
           {
-            "t": 3.0,
+            "t": 3,
             "pose": "half-raised-key",
             "ease": "smooth"
           },
           {
-            "t": 6.0,
+            "t": 6,
             "pose": "reading-in-bed",
             "ease": "smooth"
           }
@@ -1961,24 +3264,29 @@
           {
             "anchor": "foot-head",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
           },
           {
             "anchor": "foot-mid",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
           },
           {
-            "anchor": "foot-foot",
+            "anchor": "foot-foot-l",
             "fromS": 0,
-            "toS": 6.0
+            "toS": 6
+          },
+          {
+            "anchor": "foot-foot-r",
+            "fromS": 0,
+            "toS": 6
           }
         ],
         "phases": [
           {
             "id": "sit",
             "fromS": 0,
-            "toS": 6.0,
+            "toS": 6,
             "title": {
               "en": "Sitting up",
               "de": "Aufsetzen"
@@ -1987,7 +3295,7 @@
         ],
         "events": [
           {
-            "t": 0.0,
+            "t": 0,
             "kind": "load-on",
             "title": {
               "en": "Occupant on the bed",
@@ -2157,12 +3465,13 @@
       "supports": [
         "foot-head",
         "foot-mid",
-        "foot-foot"
+        "foot-foot-l",
+        "foot-foot-r"
       ],
       "assumptions": [
         {
-          "en": "The frame is a rigid body on three foot contacts (head posts, centre leg, foot posts); the slatted base is three sections, the head section on a revolute hinge at x = 0.78 m (0 to 65 degrees); the foot section is fixed because a raised foot section would pass within a few centimetres of the footboard; each mattress part rides on its section and sinks along the section normal.",
-          "de": "Der Rahmen ist ein starrer Körper auf drei Fußkontakten (Kopfpfosten, Mittelfuß, Fußpfosten); der Lattenrost besteht aus drei Teilen, das Kopfteil an einem Drehgelenk bei x = 0,78 m (0 bis 65 Grad); das Fußteil ist fest, weil ein hochgestelltes Fußteil nur wenige Zentimeter am Fußbrett vorbeiliefe; jedes Matratzenteil sitzt auf seinem Teil und sinkt entlang der Teilnormalen ein."
+          "en": "The frame is a rigid body on four foot contacts (the head board panel, the centre leg and the left and right foot post at z = +-0.42 m); the slatted base is three sections, the head section on a revolute hinge at x = 0.78 m (0 to 65 degrees); the foot section is fixed because a raised foot section would pass within a few centimetres of the footboard; each mattress part rides on its section and sinks along the section normal.",
+          "de": "Der Rahmen ist ein starrer Körper auf vier Fußkontakten (Kopfbrett, Mittelfuß sowie linker und rechter Fußpfosten bei z = +-0,42 m); der Lattenrost besteht aus drei Teilen, das Kopfteil an einem Drehgelenk bei x = 0,78 m (0 bis 65 Grad); das Fußteil ist fest, weil ein hochgestelltes Fußteil nur wenige Zentimeter am Fußbrett vorbeiliefe; jedes Matratzenteil sitzt auf seinem Teil und sinkt entlang der Teilnormalen ein."
         },
         {
           "en": "Mattress sink: hips 28 mm, shoulders 20 mm, heels 12 mm (authored-estimate for firm cold foam 0.18 m, ISO 3386-1 order of 6 kPa at 40 percent strain); the occupant load of 75 kg is split 40/35/25 percent lying and 55/30/15 percent sitting up.",
@@ -2178,10 +3487,7 @@
     "presentation": {
       "defaultPose": "flat",
       "defaultClip": "raise-head-section",
-      "defaultScale": 50,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 50
     },
     "exports": [
       "svg",

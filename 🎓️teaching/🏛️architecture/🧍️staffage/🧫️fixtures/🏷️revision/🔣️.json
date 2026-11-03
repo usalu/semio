@@ -1,0 +1,15 @@
+{
+  "description": "SHA-256 vectors (FIPS 180-4) and revision rules shared by every implementation of the content revision: TypeScript, the browser and the Python loader.",
+  "sha256": [
+    { "text": "", "hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" },
+    { "text": "abc", "hex": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" },
+    { "text": "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "hex": "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1" }
+  ],
+  "revision": [
+    { "text": "{\"a\": 1}\r\n", "same": "{\"a\": 1}\n" },
+    { "text": "Büro, neutral\r\n", "same": "Büro, neutral\n" }
+  ],
+  "canonical": [
+    { "value": { "b": 1, "a": [2, { "d": "ü", "c": null }] }, "text": "{\"a\":[2,{\"c\":null,\"d\":\"ü\"}],\"b\":1}" }
+  ]
+}

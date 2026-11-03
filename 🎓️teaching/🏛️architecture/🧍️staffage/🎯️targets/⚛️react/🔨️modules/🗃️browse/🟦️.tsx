@@ -13,6 +13,7 @@ import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { ArchiveCard, Button, CheckField, Notice, NumberField, PageFrame, ProgressNotice, SelectField, StarIcon, Tag, TextField, cn } from "../🪟️chrome/🟦️.tsx";
 import { Level, rowMajorCells, tracks, useBreakpoint, useSize, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { CatalogProblem, RowPreview } from "../🖼️previews/🟦️.tsx";
+import { PreviewViewpointSelector, usePreviewViewpoint } from "../🔭️viewpoints/🪝️preference/🟦️.tsx";
 import { navigate, recallParams, rememberParams, useAddress, type Route } from "../🗺️routing/🟦️.ts";
 import { ANALYTICS, NO_FILTERS, SORT_KEYS, activeFilterCount, filterAndSort, filtersFromParams, filtersToParams, needsAssets, rowCompletion, rowHeightM, rowMassKg, type Analytic, type Filters, type Row, type SortKey } from "../🔎️search/🟦️.ts";
 import { useAssetLoading } from "../📚️catalog/🟦️.ts";
@@ -55,6 +56,7 @@ export function AssetCard(props: { readonly row: Row; readonly card?: { readonly
   const id = useId();
   const title = row.entry.title[language];
   const open = card?.open ?? (() => navigate(assetRoute(row)));
+  const [viewpoint] = usePreviewViewpoint();
   const unavailable = row.status === "invalid" || row.status === "missing" || row.status === "failed";
   return (
     <ArchiveCard
@@ -75,7 +77,7 @@ export function AssetCard(props: { readonly row: Row; readonly card?: { readonly
       className={cn("h-full", className)}
     >
       <div className={cn("min-h-0 flex-1", previewClassName)}>
-        <RowPreview row={row} solid compact />
+        <RowPreview row={row} viewpoint={viewpoint} solid compact />
       </div>
     </ArchiveCard>
   );
@@ -101,6 +103,7 @@ export function FilterToolbar(props: { readonly filters: Filters; readonly onCha
       <div className="flex flex-wrap items-end gap-double">
         <TextField type="search" className="min-w-48 flex-1" label={t("filters.search")} placeholder={t("filters.searchPlaceholder")} value={filters.q} onChange={(q) => patch({ q })} />
         <SelectField label={t("filters.sort")} value={filters.sort} onChange={(sort: SortKey) => patch({ sort })} options={SORT_KEYS.map((key) => ({ value: key, label: t(`sort.${key}`) }))} className="w-40" />
+        <PreviewViewpointSelector />
         <Button aria-pressed={filters.descending} onClick={() => patch({ descending: !filters.descending })} icon={filters.descending ? "arrow-down" : "arrow-up"}>
           {t(filters.descending ? "sort.descending" : "sort.ascending")}
         </Button>

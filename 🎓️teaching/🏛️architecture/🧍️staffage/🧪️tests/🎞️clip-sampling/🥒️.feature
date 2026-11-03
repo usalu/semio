@@ -22,3 +22,8 @@ Feature: Clips are sampled deterministically at any time
     Given a transition from stand to carry-bag over 1 s
     When it is sampled before 0 and after 1 s
     Then it shows the first and the last pose
+
+  Scenario: A rising load never reverses
+    Given a smooth load track with the keys 0, 0, 1, 1 at 0, 1, 2, 3 s
+    When the clip is sampled every 0.1 s
+    Then the load scale is never below 0 although the spline undershoots

@@ -48,14 +48,20 @@ def global_id(tag: str) -> str:
     return compress_guid(uuid.uuid5(uuid.NAMESPACE_URL, SEED + tag).int)
 
 
+def source_path() -> Path:
+    """📍 Locate the language-independent Villa Savoye model source file."""
+    return Path(__file__).with_name("🔣️.json")
+
+
 @lru_cache(maxsize=1)
-def _source() -> str:
-    return Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8")
+def source_text() -> str:
+    """📄 Read the model source text once per process."""
+    return source_path().read_text(encoding="utf-8")
 
 
 def load_model() -> dict:
     """📦 Load a fresh, language-independent Villa Savoye teaching model."""
-    return json.loads(_source())
+    return json.loads(source_text())
 
 
 def _m(model):
@@ -128,7 +134,7 @@ def _wall_thickness(model: dict, wall: dict) -> float:
 
 
 def _top(model: dict, spec) -> float:
-    """📍 Resolve unstationed slab soffits to the lowest occupied regional underside."""
+    """📌 Resolve unstationed slab soffits to the lowest occupied regional underside."""
     if isinstance(spec, (int, float)):
         return spec
     if spec == "overall":
@@ -190,7 +196,7 @@ def _union_area(polygons: list) -> float:
 
 
 def _convex_hull(points: list) -> list:
-    """🔺 Preserve every positive convex turn with adaptive exact binary64 orientation."""
+    """🗻 Preserve every positive convex turn with adaptive exact binary64 orientation."""
     from fractions import Fraction
 
     points = sorted(set(tuple(map(float, p)) for p in points))
@@ -203,7 +209,7 @@ def _convex_hull(points: list) -> list:
         if math.isfinite(det) and max(abs(left),abs(right))>=2.2250738585072014e-308 and abs(det)>3.3306690738754716e-16*(abs(left)+abs(right)):return det
         return (Fraction(a[0])-Fraction(c[0]))*(Fraction(b[1])-Fraction(c[1]))-(Fraction(a[1])-Fraction(c[1]))*(Fraction(b[0])-Fraction(c[0]))
     def half(items):
-        """📐 Keep the minimal convex boundary while retaining arbitrarily small positive turns."""
+        """🌓 Keep the minimal convex boundary while retaining arbitrarily small positive turns."""
         result = []
         for p in items:
             while len(result) > 1 and orientation(result[-2],result[-1],p)<=0:
@@ -326,7 +332,7 @@ def part_intervals(part: dict, value: float, axis: int = 1) -> list:
 
 
 def part_sections(part: dict, value: float, axis: int = 1) -> list:
-    """🕳️ Return all connected occupied polygons in a physical vertical cut."""
+    """🧶 Return all connected occupied polygons in a physical vertical cut."""
     if "section" in part or "top_outline" in part or "mesh" in part:
         ring = part_section(part,value,axis)
         return [ring] if ring else []
@@ -368,12 +374,12 @@ def part_footprint(part: dict) -> list:
 
 
 def part_elevation(part: dict, axis: int = 1) -> list:
-    """🏛️ Convex loft silhouette with horizontal coordinate orthogonal to axis."""
+    """🪞 Convex loft silhouette with horizontal coordinate orthogonal to axis."""
     return _convex_hull([[p[1-axis],p[2]] for p in part_vertices(part)])
 
 
 def part_section(part: dict, value: float, axis: int = 1) -> list:
-    """✂️ True convex loft intersection in horizontal-height coordinates."""
+    """🩻 True convex loft intersection in horizontal-height coordinates."""
     if "mesh" in part:
         return _polyhedron_cut(part,value,axis)
     if part.get("holes"):
@@ -393,7 +399,7 @@ def part_section(part: dict, value: float, axis: int = 1) -> list:
 
 
 def _occupied_volume(parts: list) -> float:
-    """🧮 Integrate occupied slice unions, including linearly tapered convex solids."""
+    """🫙 Integrate occupied slice unions, including linearly tapered convex solids."""
     if any("csg"in p for p in parts):return _analytic_solids_backend().measure_union([_analytic_input(p)for p in parts])["volume"]
     levels = sorted({p[k] for p in parts for k in ("z0", "z1")} | {v[1] for p in parts if "section" in p for v in p["section"]["profile"]})
     total = 0.
@@ -419,7 +425,7 @@ def _occupied_volume(parts: list) -> float:
 
 
 def _partition_volume(parts: list) -> float:
-    """📦 Integrate true native cells of an explicitly disjoint material partition."""
+    """🪣 Integrate true native cells of an explicitly disjoint material partition."""
     volumes = []
     for part in parts:
         if "csg"in part:volumes.append(part_volume(part))
@@ -438,7 +444,7 @@ def _length(path: list) -> float:
 
 
 def _prism_residuals(outline: list, cutters: list, exact: bool = False) -> list:
-    """📐 Replay ordered material cuts from source operands when computed ring topology is invalid."""
+    """🔪 Replay ordered material cuts from source operands when computed ring topology is invalid."""
     from fractions import Fraction
     analysis = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧮️analysis.🐍️")
     def coordinates(ring):
@@ -471,7 +477,7 @@ def _prism_residuals(outline: list, cutters: list, exact: bool = False) -> list:
 
 
 def _subtract_prisms(parts: list, cutters: list) -> list:
-    """🪚 Partition material prisms around other explicitly owned solids."""
+    """🪠 Partition material prisms around other explicitly owned solids."""
     def bounds(ring):
         return min(p[0] for p in ring),min(p[1] for p in ring),max(p[0] for p in ring),max(p[1] for p in ring)
     if any("section" in p for p in [*parts,*cutters]):
@@ -544,7 +550,7 @@ def _revision(model: dict, obj: dict) -> int:
 
 
 def element(key: str, model: dict | None = None) -> dict:
-    """🧱 Return one object by GlobalId or tag with merged type psets and a resolved material."""
+    """🔎 Return one object by GlobalId or tag with merged type psets and a resolved material."""
     m = _m(model)
     obj = deepcopy(_find(m, key))
     kind = _find(m, obj["type"]) if obj.get("type") else None
@@ -564,13 +570,13 @@ def element(key: str, model: dict | None = None) -> dict:
 
 
 def _curtain_paths(model: dict, curtain: dict) -> list:
-    """🪟 Resolve source reference paths and independently authored physical member stations."""
+    """🛣️ Resolve source reference paths and independently authored physical member stations."""
     provider=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🪟️curtain.🐍️")
     return provider.resolve_paths(SimpleNamespace(**globals()),model,curtain)
 
 
 def _opening_domain(model: dict, opening: dict) -> dict:
-    """🧭 Resolve a native linear host without fabricating a wall for curtain apertures."""
+    """🚩 Resolve a native linear host without fabricating a wall for curtain apertures."""
     geometry=opening["geometry"]
     if sum(k in geometry for k in ("wall","slab","curtain_wall"))!=1:
         raise ValueError("An aperture has exactly one native host domain")
@@ -598,7 +604,7 @@ def _opening_domain(model: dict, opening: dict) -> dict:
 
 
 def opening_geometry(key: str, model: dict | None = None) -> dict:
-    """🕳️ Resolve one finite native wall, slab or curtain aperture into the shared physical domain."""
+    """🚪 Resolve one finite native wall, slab or curtain aperture into the shared physical domain."""
     m=_m(model)
     opening=_find(m,key)
     if opening["class"]!="IfcOpeningElement":
@@ -668,7 +674,7 @@ def _path_bands(path: list, thickness: float, stations: list = ()) -> list:
         end = offset+length
         cuts = [offset,*sorted(set(s for s in stations if offset+1e-9<s<end-1e-9)),end]
         def section(side,station):
-            """📍 Interpolate an existing material edge while preserving original endpoint precision."""
+            """🪡 Interpolate an existing material edge while preserving original endpoint precision."""
             if station==offset:
                 return list(side[index])
             if station==end:
@@ -703,7 +709,7 @@ def _wall_path(model: dict, wall: dict) -> list:
 
 
 def path_wall_geometry(model: dict, wall: dict) -> dict:
-    """🧱 Resolve a continuous curved wall, hosted station apertures and a sloping crest into occupied solids."""
+    """🌉 Resolve a continuous curved wall, hosted station apertures and a sloping crest into occupied solids."""
     path = _wall_path(model,wall)
     length,base,body_top = _length(path),_z(model,wall["geometry"]["base_level"]),_top(model,wall["geometry"]["top_level"])
     thickness = _wall_thickness(model,wall)
@@ -798,7 +804,7 @@ def path_wall_geometry(model: dict, wall: dict) -> dict:
 
 
 def _wall_uses_path(wall: dict) -> bool:
-    """🧭 Distinguish native path geometry independently of an IFC wall classification."""
+    """🛰️ Distinguish native path geometry independently of an IFC wall classification."""
     path = wall["geometry"]["path"]
     return len(path)!=2 or any(not isinstance(point,list) for point in path)
 
@@ -809,12 +815,12 @@ def _wall_has_junction(model: dict, wall: dict) -> bool:
 
 
 def _wall_junction_backend():
-    """🔗 Resolve explicit wall layer continuity behind the first-party geometry interface."""
+    """🔌 Resolve explicit wall layer continuity behind the first-party geometry interface."""
     return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🏗️facade.🔗️junctions")
 
 
 def _wall_geometry(model: dict, wall: dict, resolve_junctions=True, junctions=None, progress=None, cancel=None) -> dict:
-    """⚖️ Preserve full wall reference stock while assigning declared common material once."""
+    """🧂 Preserve full wall reference stock while assigning declared common material once."""
     if cancel and cancel():raise InterruptedError("Wall construction cancelled")
     backend = _wall_junction_backend()
     api = SimpleNamespace(**globals())
@@ -834,8 +840,8 @@ def _wall_geometry(model: dict, wall: dict, resolve_junctions=True, junctions=No
         layer['volume'] = sum(part_volume(part) for part in result['parts']+result.get('cavity_parts',[]) if part.get('layer')==layer['id'] and part.get('region')==layer.get('region'))
     if 'surface_finishes' in result:
         materials = [_find(model,region['material']) for region in wall['geometry'].get('layer_regions',())] or [_material(model,wall)]
-        surface = _surface_finishes().wall_regions(wall,result,[{'layers':material.get('layers',[])} for material in materials],lambda tag:_find(model,tag),_wall_station)
-        result['surface_finishes'] = _surface_finishes().summaries(surface,result['parts'],part_vertices,part_faces)
+        surface = surface_finishes().wall_regions(wall,result,[{'layers':material.get('layers',[])} for material in materials],lambda tag:_find(model,tag),_wall_station)
+        result['surface_finishes'] = surface_finishes().summaries(surface,result['parts'],part_vertices,part_faces)
     return result
 
 
@@ -871,13 +877,13 @@ _WALL_INTERFACES = {}
 
 
 def _geometry_source_key(model: dict) -> bytes:
-    """🔐 Bind private geometry caches to complete source content without retaining duplicated source strings."""
+    """🗝️ Bind private geometry caches to complete source content without retaining duplicated source strings."""
     return hashlib.sha256(json.dumps(model,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False,default=_native_cache_scalar).encode()).digest()
 
 
 def _wall_cutters(model: dict) -> list:
-    """🏗️ Resolve explicitly owned concrete and filling solids for material interfaces."""
-    key = (_geometry_source_key(model),_geometry_producers())
+    """🔨 Resolve explicitly owned concrete and filling solids for material interfaces."""
+    key = (_geometry_source_key(model),geometry_producers())
     if key not in _WALL_CUTTERS:
         parts = []
         for obj in model["elements"]:
@@ -910,7 +916,7 @@ def _wall_cutters(model: dict) -> list:
 
 
 def _wall_owned_parts(model: dict, parts: list, excluded_owners: list | tuple = (), native_interfaces: list | tuple = ()) -> tuple:
-    """🧩 Keep brick and plaster outside other members' occupied material."""
+    """🏠 Keep brick and plaster outside other members' occupied material."""
     if not parts:
         return [],0.,0.
     boxes = [_material_bounds(part) for part in parts]
@@ -921,7 +927,7 @@ def _wall_owned_parts(model: dict, parts: list, excluded_owners: list | tuple = 
         other = cutter.get("_bounds") or _material_bounds(cutter)
         if all(a[0]<b[1] and b[0]<a[1] for a,b in zip(box,other)):cutters.append(cutter)
     extra = [c for c in native_interfaces if all(a[0]<b[1] and b[0]<a[1] for a,b in zip(box,_material_bounds(c)))]
-    backend = _surface_finishes()
+    backend = surface_finishes()
     key = (hashlib.sha256(json.dumps([parts,cutters,extra],sort_keys=True,separators=(",",":"),default=_native_cache_scalar).encode()).hexdigest(),_subtract_prisms,_subtract_native_material,_subtract_convex_material,_native_material_cells,_material_bounds,_polyhedron_part,part_vertices,part_faces,part_outline_at,_polyhedron_volume,backend.clip_stock,backend.publish_stock,backend.stock_separated,_native_public_value)
     if key not in _WALL_OWNERSHIP:
         native = [c for c in cutters if any(key in c for key in ("mesh","section","top_outline"))]
@@ -947,7 +953,7 @@ def _wall_owned_parts(model: dict, parts: list, excluded_owners: list | tuple = 
 
 
 def _ramp_stringer_reference_stock(model: dict, obj: dict) -> dict:
-    """📐 Preserve the attested stringer depth below the actual source-affine structural upper datum."""
+    """🛠️ Preserve the attested stringer depth below the actual source-affine structural upper datum."""
     g = obj['geometry']['interface_construction']
     if g['kind']!='ramp_stringer':raise ValueError('A stringer interface requires its native ramp construction')
     q = _source_fraction
@@ -962,7 +968,7 @@ def _ramp_stringer_reference_stock(model: dict, obj: dict) -> dict:
 
 
 def _guard_reference_stocks(model: dict, obj: dict) -> list:
-    """🛝️ Construct original guard bands from source-affine flight controls before material ownership cuts."""
+    """🥅 Construct original guard bands from source-affine flight controls before material ownership cuts."""
     g = obj['geometry']['interface_construction']
     if g['kind']!='ramp_guard_bands':raise ValueError('A guard interface requires native ramp band construction')
     q = _source_fraction
@@ -1005,7 +1011,7 @@ def _guard_reference_stocks(model: dict, obj: dict) -> list:
 
 
 def _interface_owner_parts(model: dict, key: str, reference: bool = False) -> list:
-    """🔗 Resolve exclusive native interface material without aggregating aliases or querying the whole building."""
+    """🪅 Resolve exclusive native interface material without aggregating aliases or querying the whole building."""
     owner = _find(model,key)
     if reference:
         if owner['geometry'].get('kind')=='ramp_finish':return _ramp_finish_reference_parts(model,owner)
@@ -1036,7 +1042,7 @@ def _interface_owner_parts(model: dict, key: str, reference: bool = False) -> li
 
 
 def _material_bounds(part: dict) -> tuple:
-    """📦 Bound actual native vertices without replacing occupied material by its envelope."""
+    """🔲 Bound actual native vertices without replacing occupied material by its envelope."""
     if "csg"in part or(part.get("profile")and"mesh"not in part):return _analytic_bounds(part)
     vertices = part_vertices(part) if any(key in part for key in ("mesh","section","top_outline")) else [[*p,z] for z in (part["z0"],part["z1"]) for p in part["outline"]]
     return tuple((min(p[k] for p in vertices),max(p[k] for p in vertices)) for k in range(3))
@@ -1044,7 +1050,7 @@ def _material_bounds(part: dict) -> tuple:
 
 @lru_cache(maxsize=256)
 def _native_profile_regions(outline: tuple, holes: tuple = ()) -> tuple:
-    """🔺 Cache immutable exact planar material regions without building any three-dimensional render or model cells."""
+    """🥞 Cache immutable exact planar material regions without building any three-dimensional render or model cells."""
     from fractions import Fraction
     def side(a,b,c):
         return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
@@ -1084,7 +1090,7 @@ def _native_profile_regions(outline: tuple, holes: tuple = ()) -> tuple:
 
 
 def _native_material_cells(part: dict) -> list:
-    """🧊 Resolve real convex material cells with exact profile predicates and no coordinate snapping."""
+    """🧈 Resolve real convex material cells with exact profile predicates and no coordinate snapping."""
     if "csg"in part:raise ValueError("Analytic material retains semantic authority; display cells are not physical source geometry")
     metadata = {k:deepcopy(v) for k,v in part.items() if k not in ("outline","top_outline","holes","z0","z1","mesh","section")}
     if any(key in part for key in ("mesh","section","top_outline")):
@@ -1098,14 +1104,14 @@ def _native_material_cells(part: dict) -> list:
 
 
 def _native_cache_scalar(value):
-    """🔐 Encode exact private coordinate scalars losslessly without casting before geometry operations."""
+    """🔩 Encode exact private coordinate scalars losslessly without casting before geometry operations."""
     from fractions import Fraction
     if isinstance(value,Fraction):return {"$rational":[str(value.numerator),str(value.denominator)]}
     raise TypeError(f"Unsupported native cache scalar: {type(value).__name__}")
 
 
 def _native_public_value(value):
-    """📤 Publish isolated Float64 JSON values only after every operation on the private coordinates."""
+    """📨 Publish isolated Float64 JSON values only after every operation on the private coordinates."""
     from fractions import Fraction
     if isinstance(value,Fraction):return float(value)
     if isinstance(value,dict):return {key:_native_public_value(item) for key,item in value.items()}
@@ -1115,14 +1121,14 @@ def _native_public_value(value):
 
 
 def _subtract_native_material(parts: list, cutters: list) -> tuple:
-    """🧩 Keep exclusive material outside exact native stock planes, preserving layer and face identity."""
+    """🧹 Keep exclusive material outside exact native stock planes, preserving layer and face identity."""
     if any("csg"in p for p in [*parts,*cutters]):
         result=[cell for part in parts for cell in _reference_material_parts(part,cutters)]
         removed=max(0.,_occupied_volume(parts)-_occupied_volume(result))
         return _native_public_value(result),removed
     if not parts or not cutters:
         return _native_public_value(parts),0.
-    backend = _surface_finishes()
+    backend = surface_finishes()
     key = (hashlib.sha256(json.dumps([parts,cutters],sort_keys=True,separators=(",",":"),default=_native_cache_scalar).encode()).hexdigest(),_subtract_convex_material,_native_material_cells,_material_bounds,_polyhedron_part,part_vertices,part_faces,part_outline_at,_polyhedron_volume,backend.clip_stock,backend.publish_stock,backend.stock_separated,_native_public_value)
     if key not in _WALL_INTERFACES:
         indexed = [(_material_bounds(c),c) for c in cutters]
@@ -1167,12 +1173,12 @@ def _declared_interfaces(model: dict, obj: dict, reference: bool = False, struct
 
 
 def _declared_structural_interfaces(model: dict, obj: dict, reference: bool = False) -> list:
-    """🏗️ Restrict structural receiving interfaces to declared independent structural products."""
+    """🗼 Restrict structural receiving interfaces to declared independent structural products."""
     return _declared_interfaces(model,obj,reference,True)
 
 
 def _declared_material_interfaces(model: dict, obj: dict, reference: bool = False) -> list:
-    """🧱 Clip receiving finish material against explicitly declared independent physical material."""
+    """🪝 Clip receiving finish material against explicitly declared independent physical material."""
     return _declared_interfaces(model,obj,reference,False)
 
 
@@ -1182,12 +1188,12 @@ def _wall_interface_cutters(model: dict, wall: dict) -> list:
 
 
 def _wall_interface_parts(model: dict, wall: dict, parts: list) -> tuple:
-    """🧱 Reserve additional source-authoritative native material in an inferred wall."""
+    """📎 Reserve additional source-authoritative native material in an inferred wall."""
     return _subtract_native_material(parts,_wall_interface_cutters(model,wall))
 
 
 def _wall_station(spec: dict, geometry: dict) -> float:
-    """📍 Resolve material-band stations from the wall envelope or an actual host aperture."""
+    """🚏 Resolve material-band stations from the wall envelope or an actual host aperture."""
     datum = spec["datum"]
     if datum in ("base","top"):
         value = geometry[datum]
@@ -1199,13 +1205,13 @@ def _wall_station(spec: dict, geometry: dict) -> float:
     return value+spec["offset"]["value"]
 
 
-def _surface_finishes():
+def surface_finishes():
     """🎨 Resolve first-party material-face identities behind the native model interface."""
     return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🎨️finishes.🐍️")
 
 
 def _wall_parts(model: dict, wall: dict, geometry: dict) -> tuple:
-    """🧱 Partition opening-linked material bands against apertures and physical member ownership."""
+    """🎀 Partition opening-linked material bands against apertures and physical member ownership."""
     g = geometry
     number = _source_fraction if wall["geometry"].get("interface_owners") else lambda value:value
     dx,dy = [(number(g["end"][i])-number(g["start"][i]))/number(g["length"]) for i in (0,1)]
@@ -1233,7 +1239,7 @@ def _wall_parts(model: dict, wall: dict, geometry: dict) -> tuple:
     if not math.isclose(max(sum(l["thickness"]["value"] for l in b["layers"]) for b in bands),g["thickness"],abs_tol=1e-9):
         raise ValueError("Wall envelope thickness must equal its largest material region")
     openings = g["openings"]
-    surface = _surface_finishes().wall_regions(wall,g,bands,lambda tag:_find(model,tag),_wall_station)
+    surface = surface_finishes().wall_regions(wall,g,bands,lambda tag:_find(model,tag),_wall_station)
     xs = sorted({0.,g["length"],*(max(0.,min(g["length"],o[k])) for o in openings for k in ("start","end")),*(region[k] for region in surface for k in ("start","end"))})
     resolved,parts,voids = [],[],[]
     for band in bands:
@@ -1249,10 +1255,10 @@ def _wall_parts(model: dict, wall: dict, geometry: dict) -> tuple:
             for a,b,z0,z1 in cells:
                 ring = [[number(g["start"][0])+dx*number(s)-dy*t,number(g["start"][1])+dy*number(s)+dx*t] for s,t in ((a,lo),(b,lo),(b,hi),(a,hi))]
                 part = {"outline":ring,"z0":number(z0),"z1":number(z1),"layer":layer["id"],"region":band["tag"],"material":layer["material"],"start":a,"end":b,"offsets":[float(lo),float(hi)]}
-                finish = _surface_finishes().cell_region(surface,layer,a,b,z0,z1) if surface else None
+                finish = surface_finishes().cell_region(surface,layer,a,b,z0,z1) if surface else None
                 if finish:
                     part["material"] = finish["material"]
-                    part["surface_finish"] = _surface_finishes().face_identity(finish,g,[lo,hi])
+                    part["surface_finish"] = surface_finishes().face_identity(finish,g,[lo,hi])
                 (voids if layer.get("is_void") else parts).append(part)
             offset = inner
     interfaces = _wall_interface_cutters(model,wall)
@@ -1269,12 +1275,12 @@ def _wall_parts(model: dict, wall: dict, geometry: dict) -> tuple:
     for layer in resolved:
         layer["volume"] = volumes.get((layer["region"],layer["id"]),0.)
     if surface:
-        g["surface_finishes"] = _surface_finishes().summaries(surface,owned,part_vertices,part_faces)
+        g["surface_finishes"] = surface_finishes().summaries(surface,owned,part_vertices,part_faces)
     return resolved,owned,displaced,volume
 
 
 def _panel_layout_parts(model: dict, spec: dict, origin: list, direction: list, bounds: tuple, offset: float) -> tuple:
-    """🪟 Partition mixed infills, shared metal members and layered hollow leaves without duplicate material."""
+    """🧇 Partition mixed infills, shared metal members and layered hollow leaves without duplicate material."""
     x0,x1,z0,z1=bounds
     width,depth=spec['panel_layout']['member_width']['value'],spec['frame_depth']['value']
     cells,bands=[],[]
@@ -1314,7 +1320,7 @@ def _panel_layout_parts(model: dict, spec: dict, origin: list, direction: list, 
     parts,moving=[],[]
     dx,dy=direction
     def emit(left,right,bottom,top,n0,n1,material,role,operation,cell):
-        """🧩 Place one disjoint rectangular occupied material part in the native host plane."""
+        """🪄 Place one disjoint rectangular occupied material part in the native host plane."""
         outline=[[origin[0]+dx*u-dy*n,origin[1]+dy*u+dx*n] for u,n in ((left,n0),(right,n0),(right,n1),(left,n1))]
         parts.append({'outline':outline,'z0':bottom,'z1':top,'material':material,'role':role,'operation':operation,'panel_tag':cell[4]['tag'],'panel_index':cell[5]})
     for left,right,bottom,top,cell,members in tiles:
@@ -1349,7 +1355,7 @@ def _panel_layout_parts(model: dict, spec: dict, origin: list, direction: list, 
 
 @lru_cache(maxsize=2)
 def _filling_structure_snapshot(source: str, producers: tuple) -> tuple:
-    """🏗️ Own complete-source structural cutters without recursing through wall or filling geometry."""
+    """🪒 Own complete-source structural cutters without recursing through wall or filling geometry."""
     model=json.loads(source);parts=[]
     for obj in model['elements']:
         if obj['class']=='IfcColumn':resolved=column_geometry(model,obj)['parts']
@@ -1359,9 +1365,9 @@ def _filling_structure_snapshot(source: str, producers: tuple) -> tuple:
     return tuple(parts)
 
 def _filling_structures(model: dict, filling: dict | None = None) -> tuple:
-    """🗃️ Resolve complete-source structure and explicit local authority inherited by hosted filling stock."""
+    """🏚️ Resolve complete-source structure and explicit local authority inherited by hosted filling stock."""
     source=json.dumps(model,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False)
-    base=_filling_structure_snapshot(source,_geometry_producers())
+    base=_filling_structure_snapshot(source,geometry_producers())
     if filling is None:return base
     contexts=[filling]
     if filling["geometry"].get("opening"):
@@ -1374,7 +1380,7 @@ def _filling_structures(model: dict, filling: dict | None = None) -> tuple:
     return base+tuple(extra)
 
 def _filling_receiving_interval(structures: tuple, origin: list, direction: tuple, offset: float, depth: float, length: float, width: float, z0: float, z1: float) -> tuple:
-    """📐 Keep complete perimeter jamb stock inside the actual receiving end-post faces of its gross aperture."""
+    """📶 Keep complete perimeter jamb stock inside the actual receiving end-post faces of its gross aperture."""
     lower,upper,receivers=0.,length,[]
     if width<=0:return lower,upper,receivers
     dx,dy=direction;band=[[0.,offset-depth/2],[length,offset-depth/2],[length,offset+depth/2],[0.,offset+depth/2]]
@@ -1392,14 +1398,14 @@ def _filling_receiving_interval(structures: tuple, origin: list, direction: tupl
 
 
 def _filling_owned_parts(model: dict, parts: list, structures: tuple | None = None) -> list:
-    """🪟 Retain filling stock outside actual independently owned and explicitly declared structural material."""
+    """🪤 Retain filling stock outside actual independently owned and explicitly declared structural material."""
     if not parts:return []
     def bounds(part):
-        """📦 Use bounds only for exact rejection; clipping always uses original occupied material."""
+        """🚫 Use bounds only for exact rejection; clipping always uses original occupied material."""
         vertices=part_vertices(part)
         return [(min(p[k] for p in vertices),max(p[k] for p in vertices)) for k in range(3)]
     def intersects(a,b):
-        """📏 Keep every strictly positive bounding interval without an invented interface epsilon."""
+        """🚥 Keep every strictly positive bounding interval without an invented interface epsilon."""
         return all(a[k][0]<b[k][1] and b[k][0]<a[k][1] for k in range(3))
     structures=_filling_structures(model) if structures is None else structures
     stock_bounds=[bounds(part) for part in parts]
@@ -1420,7 +1426,7 @@ def _filling_owned_parts(model: dict, parts: list, structures: tuple | None = No
 
 
 def _filling_geometry(model: dict, filling: dict) -> dict:
-    """🪟 Resolve perimeter members and panel solids from one typed rough aperture."""
+    """🎞️ Resolve perimeter members and panel solids from one typed rough aperture."""
     opening = _find(model,filling["geometry"]["opening"])
     domain = _opening_domain(model,opening)
     spec = _find(model,filling["type"])["filling"]
@@ -1558,7 +1564,7 @@ def _filling_geometry(model: dict, filling: dict) -> dict:
                 member["panel_index"] = panel_index
                 member["panel_operation"] = operations[panel_index]
     parts=_filling_owned_parts(model,parts,structures)
-    _surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag))
+    surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag))
     return {"tag":filling["tag"],"guid":filling["guid"],"class":filling["class"],"opening":opening["tag"],"host":domain["host"],"host_class":domain["host_class"],"parts":parts,
             "operation":spec["operation"],"frame_width":w,"frame_depth":d,"panel_thickness":t,"rough_width":length,"source_rough_width":source_length,"receiving_stations":{"start":receiving_start,"end":receiving_end,"receivers":receivers},"rough_height":rough_height,"overall_height":z1-z0,"clear_width":clear_end-clear_start,"clear_height":clear_head_z-clear_sill_z,"clear_start":v["start"]+receiving_start+clear_start,"clear_end":v["start"]+receiving_start+clear_end,"clear_sill_z":clear_sill_z,"clear_head_z":clear_head_z,"storey":filling["storey"],"axis":[[a[0]+dx*s-dy*offset,a[1]+dy*s+dx*offset] for s in (0.,length)]}
 
@@ -1590,15 +1596,15 @@ def _path_band(path: list, thickness: float) -> list:
 
 
 def _curtain_filling_geometry(model: dict, curtain: dict) -> dict:
-    """🪟 Resolve source-authored planar panes and native metal members through one physical provider."""
+    """🪩 Resolve source-authored planar panes and native metal members through one physical provider."""
     provider=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🪟️curtain.🐍️")
     physical=provider.physical_geometry(SimpleNamespace(**globals()),model,curtain)
     physical["parts"]=_filling_owned_parts(model,physical["parts"],_filling_structures(model,curtain))
     return physical
 
 def _subtract_convex_material(part: dict, cutters: list) -> list:
-    """🧩 Partition native convex material at physical joints with original exact plane operands."""
-    backend = _surface_finishes()
+    """🪬 Partition native convex material at physical joints with original exact plane operands."""
+    backend = surface_finishes()
     states = [backend.clip_stock(part,[],exact=True)]
     for cutter in cutters:
         vertices = part_vertices(cutter)
@@ -1639,7 +1645,7 @@ def _source_fraction(value):
 
 
 def _ramp_reference_stock(model: dict, obj: dict) -> dict:
-    """🪜 Retain original affine ramp operands privately until one native publication."""
+    """🫧 Retain original affine ramp operands privately until one native publication."""
     q = _source_fraction
     g = obj["geometry"]
     a,b = [[q(v) for v in p] for p in g["path"]]
@@ -1662,7 +1668,7 @@ def _ramp_reference_stock(model: dict, obj: dict) -> dict:
 
 
 def _ramp_nominal_parts(model: dict, obj: dict) -> list:
-    """🧭 Retain only original uncut ramp product stock, leaving children with their own source references."""
+    """🧗 Retain only original uncut ramp product stock, leaving children with their own source references."""
     if obj["class"]=="IfcRampFlight":return [_ramp_reference_stock(model,obj)]
     q=_source_fraction;g=obj["geometry"];low,high=q(_z(model,g["from_level"])),q(_z(model,g["to_level"]));result=[]
     for landing in g["landings"]:
@@ -1672,10 +1678,10 @@ def _ramp_nominal_parts(model: dict, obj: dict) -> list:
     return result
 
 def _reference_material_parts(part: dict, cutters: list, bounds: list = (), progress=None, cancel=None) -> list:
-    """🧮 Retain exact original structural stock and physical aperture operands before publication."""
+    """🪨 Retain exact original structural stock and physical aperture operands before publication."""
     if any("csg"in p for p in [part,*cutters,*bounds]):
         return _analytic_solids_backend().reference_material_parts(_analytic_input(part),[_analytic_input(p)for p in cutters],[_analytic_input(p)for p in bounds],progress=progress,cancel=cancel)
-    backend = _surface_finishes()
+    backend = surface_finishes()
     def planes(cell):
         vertices = part_vertices(cell)
         for face in part_faces(cell):
@@ -1685,7 +1691,10 @@ def _reference_material_parts(part: dict, cutters: list, bounds: list = (), prog
                 normal = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
                 if any(normal):break
             else:raise ValueError("Original structural stock requires nondegenerate faces")
-            yield {"normal":normal,"offset":sum(n*x for n,x in zip(normal,anchor)),"points":[anchor,vertices[face[i]],vertices[face[i+1]]]}
+            offset = sum(n*x for n,x in zip(normal,anchor))
+            sides = [sum(n*x for n,x in zip(normal,p))-offset for p in vertices]
+            if max(sides)>-min(sides):normal,offset = [-v for v in normal],-offset
+            yield {"normal":normal,"offset":offset,"points":[anchor,vertices[face[i]],vertices[face[i+1]]]}
     stocks = []
     for cell in _native_material_cells(part):
         for boundary in bounds or (None,):
@@ -1725,7 +1734,7 @@ def _reference_material_parts(part: dict, cutters: list, bounds: list = (), prog
 
 
 def _interface_reference_parts(model: dict, key: str) -> list:
-    """🧭 Resolve unpartitioned source-affine structural stock without inherited publication seams."""
+    """🗳️ Resolve unpartitioned source-affine structural stock without inherited publication seams."""
     q = _source_fraction
     obj = _find(model,key)
     g = obj["geometry"]
@@ -1786,7 +1795,7 @@ def _interface_reference_parts(model: dict, key: str) -> list:
 
 
 def _ramp_owned_reference_parts_uncached(model: dict, obj: dict, progress=None, cancel=None) -> list:
-    """🛝️ Retain only original source-affine owned flight and middle-landing material before publication."""
+    """🥾 Retain only original source-affine owned flight and middle-landing material before publication."""
     g = obj['geometry']
     if obj['class']=='IfcRampFlight':
         joints = g.get('flight_joint_owners',())
@@ -1808,12 +1817,12 @@ def _ramp_owned_reference_parts_uncached(model: dict, obj: dict, progress=None, 
 
 
 def _ramp_owned_reference_parts(model: dict, obj: dict, progress=None, cancel=None) -> list:
-    """📦 Isolate exact owned ramp cells inside the complete bounded source/producer geometry memo."""
+    """🛤️ Isolate exact owned ramp cells inside the complete bounded source/producer geometry memo."""
     return _geometry_query('ramp_owned_reference',obj['tag'],model,progress=progress,cancel=cancel)
 
 
 def _ramp_geometry(model: dict, obj: dict) -> dict:
-    """🛝️ Resolve real flight slabs and landing ownership without changing source stations."""
+    """🎢 Resolve real flight slabs and landing ownership without changing source stations."""
     if obj["class"] not in ("IfcRamp","IfcRampFlight"):
         raise ValueError("Ramp geometry requires a native ramp or ramp flight")
     ramp = obj if obj["class"]=="IfcRamp" else _find(model,obj["geometry"]["ramp"])
@@ -1834,7 +1843,7 @@ def _ramp_geometry(model: dict, obj: dict) -> dict:
             raise ValueError("Ramp offsets must be ordered and walking span must equal clear width")
         stock = _ramp_reference_stock(model,source)
         references[flight["tag"]] = stock
-        slab = _surface_finishes().publish_stock(_surface_finishes().clip_stock(stock,[],exact=True))
+        slab = surface_finishes().publish_stock(surface_finishes().clip_stock(stock,[],exact=True))
         children.append(slab)
         flights.append({**flight,"parts":[deepcopy(slab)]})
     raw = {flight["tag"]:flight["parts"][0] for flight in flights}
@@ -1937,7 +1946,7 @@ def _surface_bounds_overlap(a: tuple, b: tuple) -> bool:
 
 @lru_cache(maxsize=256)
 def _surface_support_edges(ring: tuple, orientation) -> tuple:
-    """🧭 Cache exact supporting half-planes without assuming a source ring is convex."""
+    """🪶 Cache exact supporting half-planes without assuming a source ring is convex."""
     result=[]
     for a,b in zip(ring,ring[1:]+ring[:1]):
         if a==b:
@@ -1951,7 +1960,7 @@ def _surface_support_edges(ring: tuple, orientation) -> tuple:
 
 
 def _surface_separated(left: list, right: list) -> bool:
-    """🪚 Preserve original material when an exact support plane proves no positive planar intersection."""
+    """🛑 Preserve original material when an exact support plane proves no positive planar intersection."""
     orientation=_analysis._orientation
     return any(all(side*orientation(a,b,p)<=0 for p in other)
                for ring,other in ((left,right),(right,left))
@@ -1968,9 +1977,9 @@ def _surface_difference(pieces: list, voids: list) -> list:
 
 
 def _slab_surface(outline: list, bounds: list, voids: list, exact: bool = False) -> list:
-    """📐 Preserve original binary64 slab boundaries through exact rational profile operations."""
+    """🪧 Preserve original binary64 slab boundaries through exact rational profile operations."""
     def profiles(ring):
-        """🔺 Reuse exact domain-neutral material decomposition rather than rounded polygon ears."""
+        """🪆 Reuse exact domain-neutral material decomposition rather than rounded polygon ears."""
         return _native_profile_regions(tuple(tuple(p)for p in ring))
     pieces=[_analysis._clip(left,right,digits=None)for left in profiles(outline)for right in profiles(bounds)]
     for void in voids:
@@ -2022,7 +2031,7 @@ def _slab_opening_geometry(model: dict, opening: dict) -> dict:
 
 
 def _slab_finish_parts(slab, exact: bool = False):
-    """🧱 Resolve a level roof finish over different structural slab depths."""
+    """🛖 Resolve a level roof finish over different structural slab depths."""
     paving = next((layer for layer in slab.get("layers", ()) if layer["id"] == "paving"), None)
     if paving is None:
         return []
@@ -2039,9 +2048,9 @@ _SLAB_GEOMETRIES = {}
 
 
 def _slab_geometry_entry(model: dict, slab: dict, exact: bool = False, progress=None, cancel=None) -> dict:
-    """🗃️ Reuse a private occupied slab entry without exposing mutable memo data."""
+    """♻️ Reuse a private occupied slab entry without exposing mutable memo data."""
     if cancel and cancel():raise InterruptedError("Native slab construction cancelled")
-    key = (slab["tag"],exact,_geometry_producers(),_geometry_source_key(model))
+    key = (slab["tag"],exact,geometry_producers(),_geometry_source_key(model))
     if key not in _SLAB_GEOMETRIES:
         _SLAB_GEOMETRIES[key] = _slab_geometry_uncached(model, slab, exact=True,progress=progress,cancel=cancel) if exact else _native_public_value(_slab_geometry_entry(model,slab,exact=True,progress=progress,cancel=cancel))
         if len(_SLAB_GEOMETRIES) > 24:
@@ -2050,7 +2059,7 @@ def _slab_geometry_entry(model: dict, slab: dict, exact: bool = False, progress=
 
 
 def _slab_geometry(model: dict, slab: dict) -> dict:
-    """🧊 Return an isolated complete slab geometry to each caller."""
+    """🧺 Return an isolated complete slab geometry to each caller."""
     return deepcopy(_slab_geometry_entry(model,slab))
 
 
@@ -2132,7 +2141,7 @@ def _slab_geometry_uncached(model: dict, slab: dict, exact: bool = False, progre
     return out if exact else _native_public_value(out)
 
 def _native_parts_exact_volume(parts: list):
-    """🧮 Integrate original closed native cells with exact local tetrahedron determinants."""
+    """🎲 Integrate original closed native cells with exact local tetrahedron determinants."""
     from fractions import Fraction
     result=Fraction(0)
     for part in parts:
@@ -2147,14 +2156,14 @@ def _native_parts_exact_volume(parts: list):
 
 
 def _native_parts_have_volume(parts: list) -> bool:
-    """📏 Detect any strictly positive native cell without a geometric tolerance."""
+    """🔬 Detect any strictly positive native cell without a geometric tolerance."""
     return any(_native_parts_exact_volume([part])for part in parts)
 
 
 def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, cancel=None, exact: bool = False) -> tuple:
-    """🧱 Assign actual three-dimensional finish reserves to disjoint explicitly declared physical owners."""
+    """🎟️ Assign actual three-dimensional finish reserves to disjoint explicitly declared physical owners."""
     if not parts:raise ValueError("A finish reserve requires occupied finish material")
-    backend=_surface_finishes();host=[]
+    backend=surface_finishes();host=[]
     for part in parts:
         material=part.get("material")
         if material is None:
@@ -2186,14 +2195,14 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
             records[key]=(part,tuple((min(p[k]for p in vertices),max(p[k]for p in vertices))for k in range(3)),vertices,planes)
         return records[key]
     def box(part):
-        """📦 Retain original numeric bounds as a conservative operation-local broad phase."""
+        """🧰 Retain original numeric bounds as a conservative operation-local broad phase."""
         key=id(part)
         if key not in boxes:
             if len(boxes)>=16384:boxes.pop(next(iter(boxes)))
             boxes[key]=(part,_material_bounds(part))
         return boxes[key][1]
     def candidates(tag,target):
-        """🗂️ Query exact native intervals without replacing any occupied geometry."""
+        """📑 Query exact native intervals without replacing any occupied geometry."""
         from bisect import bisect_left
         if tag not in indices:
             rows=sorted(((box(part)[0][0],index,part)for index,part in enumerate(owners[tag][1])),key=lambda row:(row[0],row[1]))
@@ -2201,19 +2210,19 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
         lows,rows=indices[tag];target_box=box(target)
         return (part for _,_,part in rows[:bisect_left(lows,target_box[0][1])]if all(x[0]<y[1]and y[0]<x[1]for x,y in zip(box(part),target_box)))
     def overlap(a,b):
-        """📦 Reject only exact disjoint native bounding intervals."""
+        """🔀 Reject only exact disjoint native bounding intervals."""
         return all(x[0]<y[1]and y[0]<x[1]for x,y in zip(box(a),box(b)))
     def contains(outer,inner):
-        """📐 Prove complete native-cell containment without any geometric tolerance."""
+        """🥡 Prove complete native-cell containment without any geometric tolerance."""
         return all(sum(n[k]*p[k]for k in range(3))<=offset for n,offset in record(outer)[3]for p in record(inner)[2])
     def intersect(left,right):
-        """🧊 Intersect original convex native cells before publishing any clipped coordinate."""
+        """🎯 Intersect original convex native cells before publishing any clipped coordinate."""
         if not overlap(left,right):return []
         if contains(right,left):return [deepcopy(left)]
         if contains(left,right):return [{**{k:deepcopy(v)for k,v in left.items()if k not in ("outline","holes","top_outline","section","mesh","z0","z1")},"mesh":deepcopy(right["mesh"])}]
         return _reference_material_parts(left,[],[right],progress=progress,cancel=cancel)
     def resolve(tag):
-        """🔗 Expand only authored covering displacement owners without aggregating borrowed references."""
+        """🎚️ Expand only authored covering displacement owners without aggregating borrowed references."""
         if tag==slab["tag"]:raise ValueError("A finish reserve requires independent physical owners")
         if tag in owners:return
         if cancel and cancel():raise InterruptedError("Native finish reservations cancelled")
@@ -2347,7 +2356,7 @@ def service_geometry(key: str, model: dict | None = None) -> dict:
 
 
 def _column_partition(model: dict, obj: dict, parts: list, owners: list, require_contact: bool = True, exact: bool = False) -> tuple:
-    """🏗️ Assign exact native occupied common material and retain actual column bore air."""
+    """🏯 Assign exact native occupied common material and retain actual column bore air."""
     if len(set(owners))!=len(owners) or obj["tag"] in owners:raise ValueError("Column reservations require distinct independent owners")
     cutters,shared,voids = [],[],[]
     material = _material(model,obj)["tag"]
@@ -2384,20 +2393,20 @@ def _analytic_solids_backend():
 
 
 def _analytic_operand(part: dict) -> dict:
-    """🧱 Retain original analytic profiles and native topology without display conversion."""
+    """📈 Retain original analytic profiles and native topology without display conversion."""
     affine="csg"not in part and any(k in part for k in ("section","top_outline"))
     return _analytic_solids_backend().operand(part,part_vertices(part)if affine else None,part_faces(part)if affine else None)
 
 
 def _analytic_input(part: dict) -> dict:
-    """📦 Normalize an affine physical operand without publishing any generated coordinate."""
+    """🧪 Normalize an affine physical operand without publishing any generated coordinate."""
     if "csg"not in part and any(k in part for k in ("section","top_outline")):
         return {**_analytic_solids_backend()._metadata(part),"csg":_analytic_operand(part)}
     return part
 
 
 def _analytic_bounds(part: dict) -> tuple:
-    """📦 Convert exact analytic extrema outward only when native Float64 cannot represent them."""
+    """🔭 Convert exact analytic extrema outward only when native Float64 cannot represent them."""
     from fractions import Fraction
     result=[]
     for low,high in _analytic_solids_backend().bounds(_analytic_input(part)):
@@ -2409,38 +2418,38 @@ def _analytic_bounds(part: dict) -> tuple:
 
 
 def part_volume(part: dict) -> float:
-    """⚖️ Measure actual semantic or native material from its declared geometry authority."""
+    """🥤 Measure actual semantic or native material from its declared geometry authority."""
     if "csg"in part:return _analytic_solids_backend().measure(part)["volume"]
     if part.get("profile")and"mesh"not in part:return _profile_moments(part["profile"])["area"]*(part["z1"]-part["z0"])
     return _polyhedron_volume(part)
 
 
 def _structural_joint_backend():
-    """🔗 Resolve declared same-material structural ownership behind the native geometry interface."""
+    """🦴 Resolve declared same-material structural ownership behind the native geometry interface."""
     return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🏗️structure.🔗️joints.🐍️")
 
 
 def _flooring_layer_backend():
-    """🧱 Resolve editable exclusive flooring layers behind the native geometry interface."""
+    """🥪 Resolve editable exclusive flooring layers behind the native geometry interface."""
     return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🎨️finishes.🧱️layers.🐍️")
 
 
 def _ramp_finish_backend():
-    """🛝️ Resolve original ramp surface construction behind the native model interface."""
+    """🛹 Resolve original ramp surface construction behind the native model interface."""
     return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🎨️finishes.🛝️ramps")
 
 
 def _ramp_finish_reference_parts(model: dict, obj: dict) -> list:
-    """🤝 Share original exact physical floor operands with receiving material construction."""
+    """🫂 Share original exact physical floor operands with receiving material construction."""
     return _geometry_query("ramp_finish_reference",obj["tag"],model)
 
 
 def _solid_stock_parts(model: dict, obj: dict, raw_parts: list, exact: bool = False) -> list:
-    """📦 Normalize source stocks while retaining original native datums and exact bound-layer coordinates."""
+    """🪵 Normalize source stocks while retaining original native datums and exact bound-layer coordinates."""
     from fractions import Fraction
     base=_z(model,obj["geometry"]["base_level"]);parts=[]
     def height(value,rounded=False):
-        """📍 Retain private local coordinates while preserving resolved source Float64 datums."""
+        """🔖 Retain private local coordinates while preserving resolved source Float64 datums."""
         if exact and isinstance(value,Fraction):return Fraction(base)+value
         return _round(base+value)if rounded else base+value
     for raw in raw_parts:
@@ -2462,7 +2471,7 @@ def _solid_stock_parts(model: dict, obj: dict, raw_parts: list, exact: bool = Fa
 
 
 def _solid_geometry(model: dict, obj: dict, resolve_embedded: bool = True, progress=None, cancel=None, exact: bool = False) -> dict:
-    """🧱 Resolve exclusive material and optionally its native embedded reference parts."""
+    """🥣 Resolve exclusive material and optionally its native embedded reference parts."""
     g = obj["geometry"]
     if g.get("kind")=="ramp_finish":return _ramp_finish_backend().geometry(SimpleNamespace(**globals()),model,obj)
     if "section_sweep" in g:
@@ -2470,7 +2479,7 @@ def _solid_geometry(model: dict, obj: dict, resolve_embedded: bool = True, progr
         return {"tag":obj["tag"],"guid":obj["guid"],"class":obj["class"],"storey":obj["storey"],"kind":g["kind"],"name":deepcopy(obj["name"]),"domains":deepcopy(obj["metadata"]["domains"]),"parts":facade.owned_parts(SimpleNamespace(**globals()),model,obj),"shared_parts":[]}
     raw_parts=_flooring_layer_backend().parts(SimpleNamespace(**globals()),model,obj,progress=progress,cancel=cancel,exact=True)if "layer_binding"in g else g["parts"]
     parts=_solid_stock_parts(model,obj,raw_parts,exact="layer_binding"in g)
-    _surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag),obj.get("material"))
+    surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag),obj.get("material"))
     for part in parts:
         if "top_outline" in part:
             part_vertices(part)
@@ -2479,7 +2488,7 @@ def _solid_geometry(model: dict, obj: dict, resolve_embedded: bool = True, progr
         if len(set(refs))!=len(refs) or obj["tag"] in refs or any(_find(model,key)["class"] not in ("IfcColumn","IfcBeam","IfcFooting","IfcBuildingElementProxy") for key in refs):
             raise ValueError("A footing joint requires distinct independent native structural owners")
         parts,_ = _subtract_native_material(_interface_reference_parts(model,obj["tag"]),[part for key in refs for part in _interface_reference_parts(model,key)])
-        _surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag),obj.get("material"))
+        surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag),obj.get("material"))
     slabs = [_slab_geometry_entry(model,_find(model,tag)) for tag in (g.get("embedded_slabs",()) if resolve_embedded else ())]
     shared = []
     for slab in slabs:
@@ -2491,7 +2500,7 @@ def _solid_geometry(model: dict, obj: dict, resolve_embedded: bool = True, progr
     full = deepcopy(parts)
     if "layer_binding"in g:
         full=_solid_stock_parts(model,obj,g["parts"])
-        _surface_finishes().apply_material_appearance(full,lambda tag:_find(model,tag),obj.get("material"))
+        surface_finishes().apply_material_appearance(full,lambda tag:_find(model,tag),obj.get("material"))
     if obj["class"]=="IfcCovering" and g.get("interface_owners"):
         blockers=_declared_material_interfaces(model,obj)
         if exact:parts=[cell for part in parts for cell in _reference_material_parts(part,blockers)]
@@ -2520,7 +2529,7 @@ def _solid_geometry(model: dict, obj: dict, resolve_embedded: bool = True, progr
 
 
 def reference_parts(key: str, model: dict | None = None) -> list:
-    """🧭 Expose isolated original full structural product stock independently of owned and assembly material."""
+    """🧾 Expose isolated original full structural product stock independently of owned and assembly material."""
     source=_m(model);obj=_find(source,key);cls=obj["class"]
     if "interface_construction"in obj["geometry"]:
         parts=[_ramp_stringer_reference_stock(source,obj)]if obj["geometry"]["interface_construction"]["kind"]=="ramp_stringer"else _guard_reference_stocks(source,obj)
@@ -2574,7 +2583,7 @@ def _stair_geometry(model: dict, obj: dict, progress=None, cancel=None, exact: b
 
 
 def _profile_moments(profile: dict) -> dict:
-    """📐 Subtract native void area and parallel-axis moments before rotating the section."""
+    """🎡 Subtract native void area and parallel-axis moments before rotating the section."""
     shape = profile["shape"]
     if shape == "circle":
         d = profile["diameter"]["value"]
@@ -2713,7 +2722,7 @@ def filling_geometry(key: str, model: dict | None = None) -> dict:
 
 
 def is_architectural_covering(obj: dict) -> bool:
-    """🎨 Classify owned architectural finishes without reclassifying shared-domain MEP casings."""
+    """🖌️ Classify owned architectural finishes without reclassifying shared-domain MEP casings."""
     domains=obj.get("metadata",{}).get("domains",[])
     return obj.get("class")=="IfcCovering" and "architecture" in domains and "services" not in domains and "system" not in obj
 
@@ -2762,12 +2771,12 @@ _GEOMETRY_REVISIONS = _RevisionCounter()
 
 @lru_cache(maxsize=2)
 def _geometry_models_cached(source: str, producers: tuple) -> dict:
-    """🧊 Own two canonical model snapshots and their complete producer revision."""
+    """📸 Own two canonical model snapshots and their complete producer revision."""
     return {"model": json.loads(source), "values": {}, "lock": _GeometryLock(), "revision": next(_GEOMETRY_REVISIONS)}
 
 
-def _geometry_producers() -> tuple:
-    """🧬 Bind native geometry memoization to every construction and numeric producer."""
+def geometry_producers() -> tuple:
+    """🧫 Bind native geometry memoization to every construction and numeric producer."""
     return (
         _polyhedron_volume,
         _analytic_solids_backend,
@@ -2814,7 +2823,7 @@ def _geometry_producers() -> tuple:
         _source_fraction,
         importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧊️profiles.🐍️").circle_envelope,
         _subtract_convex_material,
-        _surface_finishes().clip_stock,
+        surface_finishes().clip_stock,
         *_flooring_layer_backend().producers(),
         _flooring_layer_backend,
         *_structural_joint_backend().producers(),
@@ -2827,8 +2836,8 @@ def _geometry_producers() -> tuple:
         _native_parts_exact_volume,
         _native_profile_regions,
         _geometry_source_key,
-        _surface_finishes().publish_stock,
-        _surface_finishes().stock_separated,
+        surface_finishes().publish_stock,
+        surface_finishes().stock_separated,
         _slab_geometry_entry,
         _slab_geometry_uncached,
         _slab_surface,
@@ -2861,17 +2870,17 @@ def _geometry_producers() -> tuple:
         _wall_cutters,
         _native_cache_scalar,
         _native_public_value,
-        _surface_finishes().wall_regions,
-        _surface_finishes().cell_region,
-        _surface_finishes().face_identity,
-        _surface_finishes().summaries,
-        _surface_finishes().face_matches,
-        _surface_finishes().apply_material_appearance,
+        surface_finishes().wall_regions,
+        surface_finishes().cell_region,
+        surface_finishes().face_identity,
+        surface_finishes().summaries,
+        surface_finishes().face_matches,
+        surface_finishes().apply_material_appearance,
         _surface_support_edges,
         _surface_separated,
         _surface_difference,
         _analysis._orientation,
-        _geometry_producers,
+        geometry_producers,
         _geometry_memo,
         _geometry_query,
         geometry_revision,
@@ -2881,7 +2890,7 @@ def _geometry_producers() -> tuple:
 def _geometry_memo(model: dict | None) -> dict:
     """🔒 Resolve a private immutable-input snapshot for one producer revision."""
     source = json.dumps(_m(model), sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
-    return _geometry_models_cached(source, _geometry_producers())
+    return _geometry_models_cached(source, geometry_producers())
 
 
 def geometry_revision(model: dict | None = None) -> int:
@@ -2890,7 +2899,7 @@ def geometry_revision(model: dict | None = None) -> int:
 
 
 def _geometry_query(kind: str, key: str | None, model: dict | None, progress=None, cancel=None) -> dict:
-    """📦 Publish only completed native values and return isolated copies to each caller."""
+    """🔍 Publish only completed native values and return isolated copies to each caller."""
     if cancel and cancel():raise InterruptedError('Native geometry query cancelled')
     m = _m(model)
     key = None if kind == "building" else _find(m, key)["tag"]
@@ -2940,7 +2949,7 @@ def wall_geometry(key: str, model: dict | None = None, progress=None, cancel=Non
 
 
 def building_geometry(model: dict | None = None) -> dict:
-    """🗺️ Give drawings isolated shared metric geometry in CMN plan axes and an explicit north vector."""
+    """🌐 Give drawings isolated shared metric geometry in CMN plan axes and an explicit north vector."""
     return _geometry_query("building", None, model)
 
 
@@ -3097,7 +3106,7 @@ def _vehicle_obstacles(model: dict, poses: list, car: dict) -> list:
     return sorted(minima.values(),key=lambda item:item['clearance'])
 
 def _car_path_compute(model: dict, samples: int) -> dict:
-    """🚘 Check an assumed arrival from the site side to a stop before the curved vestibule."""
+    """🛬 Check an assumed arrival from the site side to a stop before the curved vestibule."""
     m = model
     car = _car(m)
     curtain = _find(m,"CW-1")
@@ -3132,7 +3141,7 @@ def _car_path_compute(model: dict, samples: int) -> dict:
     poses = [pose(total * i / (samples - 1)) for i in range(samples)]
     dense = [pose(total * i / 1200) for i in range(1201)]
     grid = m["grid"]
-    gx, gy = grid["x"], grid["y"]
+    gy = grid["y"]
     crossings = []
     for j, row in enumerate(grid["labels_y"]):
         for index, (a, b) in enumerate(zip(dense, dense[1:])):
@@ -3172,7 +3181,7 @@ def _car_path_compute(model: dict, samples: int) -> dict:
 
 @lru_cache(maxsize=12)
 def _car_path_cached(source: str, samples: int) -> dict:
-    """🚘 Retain a bounded route result for one exact JSON model state and sampling request."""
+    """🗄️ Retain a bounded route result for one exact JSON model state and sampling request."""
     return _car_path_compute(json.loads(source), samples)
 
 
@@ -3180,7 +3189,7 @@ def car_path(model: dict | None = None, samples: int = 120) -> dict:
     """🚘 Derive an isolated route result, reusing work only while all source content matches."""
     if isinstance(samples, bool) or not isinstance(samples, int) or samples < 2:
         raise ValueError("At least two path samples are required")
-    source = _source() if model is None else json.dumps(model, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    source = source_text() if model is None else json.dumps(model, sort_keys=True, separators=(",", ":"), allow_nan=False)
     return deepcopy(_car_path_cached(source, samples))
 
 
@@ -3213,7 +3222,7 @@ def clearance(model: dict | None = None, spacing: float | None = None) -> dict:
 
 
 def clearance_limits(model: dict | None = None, *, spacing: float | None = None, diameter: float | None = None, car_width: float | None = None) -> dict:
-    """🚧 Compare the physical gap, or an explicit circular-profile scenario, with the required car margin."""
+    """🛞 Compare the physical gap, or an explicit circular-profile scenario, with the required car margin."""
     m = _m(model)
     car = _car(m)
     gap = _entry_dimensions(m,car_path(m))
@@ -3228,7 +3237,7 @@ def clearance_limits(model: dict | None = None, *, spacing: float | None = None,
 
 
 def path_pinches(model: dict | None = None, count: int = 2) -> list:
-    """📍 The closest approaches of the assumed car to a piloti along its path, tightest first: tag, clearance, progress and pose."""
+    """🧲 The closest approaches of the assumed car to a piloti along its path, tightest first: tag, clearance, progress and pose."""
     m = _m(model)
     car = _car(m)
     poses = car_path(m, samples=1201)["poses"]
@@ -3255,7 +3264,7 @@ def class_chain(ifc_class: str, model: dict | None = None) -> list:
 
 
 def type_occurrences(type_id: str, model: dict | None = None) -> list:
-    """🔢 List the tags of every occurrence defined by one type."""
+    """🏷️ List the tags of every occurrence defined by one type."""
     m = _m(model)
     kind = _find(m, type_id)
     if kind["tag"] not in {t["tag"] for t in m["types"]}:
@@ -3282,7 +3291,7 @@ def _slab_areas(model: dict, slab: dict) -> dict:
                          "top": r["top"], "volume": _round(r["area"] * r["thickness"])} for r in g["regions"]]}
 
 def _parts_disjoint(parts: list, progress=None, cancelled=None) -> bool:
-    """📦 Prove native polyhedral component separation by actual world bounds and exact projected support planes."""
+    """🧷 Prove native polyhedral component separation by actual world bounds and exact projected support planes."""
     if cancelled and cancelled():
         raise InterruptedError("Material partition proof cancelled")
     if any(part.get("profile") or "radius" in part for part in parts):
@@ -3336,7 +3345,7 @@ def _material_quantities(model: dict, obj: dict, parts: list, partition: bool = 
 
 
 def _ramp_quantity_partitions(model: dict, obj: dict, geometry: dict) -> dict:
-    """🛡️ Prove original component separation or complete directed stock subtraction before summing cells."""
+    """➕ Prove original component separation or complete directed stock subtraction before summing cells."""
     if obj["class"]=="IfcRampFlight":return {"owned":True,"children":True,"full":True}
     from fractions import Fraction
     q = _source_fraction
@@ -3372,7 +3381,7 @@ def _ramp_quantity_partitions(model: dict, obj: dict, geometry: dict) -> dict:
 
 
 def _quantities_uncached(m: dict, obj: dict) -> dict:
-    """⚖️ Derive exact physical quantities once for one complete canonical source snapshot."""
+    """📋 Derive exact physical quantities once for one complete canonical source snapshot."""
     key = obj["tag"]
     cls = obj["class"]
     if cls == "IfcColumn":
@@ -3388,7 +3397,7 @@ def _quantities_uncached(m: dict, obj: dict) -> dict:
             normal,origin=g['end_plane']['normal'],g['end_plane']['point']
             last=parts[-1]
             def lateral(rings):
-                """🧵 Integrate vertical boundary trapezoids beneath the actual upper plane."""
+                """🪁 Integrate vertical boundary trapezoids beneath the actual upper plane."""
                 total=0.
                 for ring in rings:
                     for a,b in zip(ring,ring[1:]+ring[:1]):
@@ -3529,7 +3538,7 @@ def _quantities_uncached(m: dict, obj: dict) -> dict:
     raise ValueError(f"No derived quantities for {key}")
 
 def quantities(key: str, model: dict | None = None) -> dict:
-    """🧮 Give each caller isolated exact quantities of an element, type total or space."""
+    """🪙 Give each caller isolated exact quantities of an element, type total or space."""
     return _geometry_query("quantity",key,model)
 
 
@@ -3645,7 +3654,7 @@ def relations_of(key: str, model: dict | None = None) -> list:
 
 
 def partial_model(model_id: str, model: dict | None = None) -> dict:
-    """🧩 Select one discipline model: same schema, different authors, shared GlobalIds."""
+    """👥 Select one discipline model: same schema, different authors, shared GlobalIds."""
     m = _m(model)
     spec = next((x for x in m["models"] if x["id"] == model_id), None)
     if spec is None:
@@ -3668,7 +3677,7 @@ def _footprint(model: dict, wall: dict) -> list:
 
 
 def solid_geometry(key: str, model: dict | None = None, progress=None, cancel=None) -> dict:
-    """🧊 Resolve one authored multipart element through the shared physical part interface."""
+    """🧁 Resolve one authored multipart element through the shared physical part interface."""
     return _geometry_query("solid", key, model,progress=progress,cancel=cancel)
 
 
@@ -3706,7 +3715,7 @@ def part_faces(part: dict) -> list:
 
 
 def part_solid(part: dict) -> dict:
-    """🧱 Preserve exact occupied solid geometry for every native physical domain."""
+    """🗿 Preserve exact occupied solid geometry for every native physical domain."""
     if "section" in part or "mesh" in part:
         return {"kind":"polyhedron","vertices":part_vertices(part),"faces":part_faces(part)}
     if "top_outline" in part:
@@ -3715,7 +3724,7 @@ def part_solid(part: dict) -> dict:
 
 
 def part_body(part: dict) -> dict:
-    """🏗️ Produce a native swept body with an explicit profile placement and world sweep direction."""
+    """🪃 Produce a native swept body with an explicit profile placement and world sweep direction."""
     if "mesh" in part:
         return {"kind":"faceted_brep","vertices":part_vertices(part),"faces":part_faces(part)}
     if "section" in part:
@@ -3729,7 +3738,7 @@ def part_body(part: dict) -> dict:
 
 
 def _physical_representations(parts: list, axis_points: list, cut_z: float, cut_value: float, cut_axis: int = 1) -> dict:
-    """👁️ Project the same occupied prism or loft parts into all physical representations."""
+    """🖼️ Project the same occupied prism or loft parts into all physical representations."""
     plans = [{"kind":"polygon","role":p.get("role","outline"),"points":part_footprint(p),"holes":deepcopy(p.get("holes",[])),**{k:p[k] for k in ("material","owner","tag") if k in p}} for p in parts]
     sections = [{"kind":"polygon","role":p.get("role","outline"),"points":ring,**{k:p[k] for k in ("material","owner","tag") if k in p}} for p in parts for ring in part_sections(p,cut_value,cut_axis)]
     elevations = [{"kind":"polygon","role":p.get("role","outline"),"points":part_elevation(p),**{k:p[k] for k in ("material","owner","tag") if k in p}} for p in parts]
@@ -4020,7 +4029,7 @@ def service_topology(model: dict | None = None) -> dict:
     return domain.validated(source["service_topology"],{e["tag"] for e in source["elements"]})
 
 def service_reachable(start: str, model: dict | None = None) -> list:
-    """🧭 Query attested logical service reachability without implying an authored concealed pipe run."""
+    """📡 Query attested logical service reachability without implying an authored concealed pipe run."""
     domain=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🔧️services.🐍️")
     return domain.reachable(service_topology(model),start)
 

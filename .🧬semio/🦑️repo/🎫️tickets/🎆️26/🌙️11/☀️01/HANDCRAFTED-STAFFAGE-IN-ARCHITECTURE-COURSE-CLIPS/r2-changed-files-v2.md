@@ -1,0 +1,338 @@
+# 🧾️ Round 2 Changed Files v2
+
+Read-only refresh by agent cf2 of `r2-changed-files.md`. Sources: every `*-report.md` and `migration-*` in this ticket, matched against `git -c core.quotepath=false status --porcelain --untracked-files=all` under `🎓️teaching/🏛️architecture`. A path counts as named only if a report names it exactly or with a unique trailing path. Ambiguous short names and directory mentions stay in Uncertain.
+
+Counts: created 42, modified 101, deleted 2, uncertain 166 (created 55, modified 101, deleted 10). Total changed source paths 311.
+
+Scope check: `🎓️teaching/pyproject.toml` and `🎓️teaching/uv.lock` do not exist and have no changes. The pandas pin (`pandas==2.3.3`, from `3.1.0`) lives in `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/pyproject.toml` (line 27, test extras) and its lock `uv.lock` (pandas 2.3.3 package entry). The pyproject is modified and named by path (listed under Modified). Its `uv.lock` is modified too, but dl/dp/or name it only as a bare filename, so it sits in Uncertain.
+
+## Created (42)
+
+Untracked, named exactly in a report.
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️icons/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🔣️.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️staffage_only.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️staffage_only.json`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧭️cutter-winding.json`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/🧪️tests/🧍️occupants/🐍️.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/🧪️tests/🧍️occupants/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/📏️range/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📏️range-span/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🧬️schema/🔣️.schema.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🧬️schema/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/expansion-valve/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/finned-heat-exchanger/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/solar-thermal-collector/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/standing-adult/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/electric-fan-heater/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/electric-kettle/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-boiler/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/split-ac-indoor-unit/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/vintage-car-1929/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/chalkboard/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️thermal-span/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎭️cast-export/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎭️cast-export/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️plan-dimension/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🚀️export-performance/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🚀️export-performance/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🤐️textless-depiction/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️front-projection/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️plan-projection/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫕️phase-change/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫕️phase-change/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌡️thermal-span/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🎭️cast-cancellation/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🎭️cast-export/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🚀️export-performance/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🧍️plan-projection/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🫕️phase-change/🔣️.json`
+
+## Modified (101)
+
+Tracked, changed, named exactly in a report.
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.cases.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️integration.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️scenes.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️scenes.json`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/pyproject.toml`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/⚖️index/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎨️visuals/🏠️room/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎨️visuals/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎲️sampling/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🏆️pareto/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🧪️experiments/🐍️.py`
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📋️plan/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/📐️geometry.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🎨️finishes/🧱️layers/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🏗️facade/🔗️junctions.py`
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py`
+- `🎓️teaching/🏛️architecture/🏢️nakagin/🎨️visuals/🐍️.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🐍️.py`
+- `🎓️teaching/🏛️architecture/📊️excel/🎬️clip/📋️program/🐍️.py`
+- `🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py`
+- `🎓️teaching/🏛️architecture/🧍️staffage/README.md`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english/🎛️viewer.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german/🎛️viewer.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🏠️overview/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗺️routing/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🥒️.feature`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🟦️.tsx`
+- `🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🌡️thermal/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🌡️thermal/🧱️balance/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎞️animation/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🌡️thermal-view/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🏷️annotations/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/💨️transport-view/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🖍️palette/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🔥️sources/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🧮️parcels/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎬️cli/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖼️svg/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🔗️contracts/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/📐️measure/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🩺️check/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/running-child/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/seated-reader/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/walking-commuter/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/wheelchair-user/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-bus/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-car/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/tilt-window/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️catalog-physics/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️clip-sampling/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️frame-timing/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-field/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📕️pdf-reopen/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🗜️zip-reopen/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🧰️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/✅️asset-validation/🔣️.json`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌡️thermal/🟦️.ts`
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🔣️.json`
+
+## Deleted (2)
+
+Removed from the working tree, named exactly in a report.
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🐍️.py`
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️silhouettes.py`
+
+## Uncertain attribution (166)
+
+Changed under `🎓️teaching/🏛️architecture` but not named by an exact path in a report. Some are covered by a directory or category mention (for example the vegetation or animal catalog entries). Others are in areas like `🏗️bim`, `🏢️nakagin`, `🎯️optimization`, `🦗️grasshopper` or `📊️excel`, which may belong to other work. Decide per entry before the ticket close.
+
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🏃️sprint/🖼️.svg` (D): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🔣️.json` (D): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/😴️sleep/🖼️.svg` (D): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🚶️walk/🖼️.svg` (D): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🔣️.cases.json` (D): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧬️schema/🔣️.schema.json` (D): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py` (M): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🧪️tests/🔣️.cases.json` (??): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py` (M): under directory named in r2-rv-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py` (M): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json` (M): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️icons/🧬️schema/🔣️.schema.json` (??): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🔣️.json` (??): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py` (M): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️icons.py` (??): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json` (M): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️icons.json` (??): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️labels.json` (??): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️silhouettes.json` (D): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧬️schema/🔣️.schema.json` (M): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/README.md` (D): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/🔣️.json` (D): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/🧬️schema/🔣️.schema.json` (D): under directory named in asset-a11-report.md, bridge-py-report.md, cleanup-c1-report.md, migration-g1-report.md, migration-g2-report.md, migration-m9-report.md, polish-f2-report.md, r2-cv2-report.md, r2-g4-report.md, r2-rd1-report.md, r2-tp-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/👥️audience/🧪️tests/🐍️.py` (M): under directory named in r2-fx-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧪️tests/🐍️.py` (M): under directory named in r2-fx-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧪️tests/🔣️.cases.json` (M): under directory named in r2-fx-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟨️render.mjs` (M): under directory named in r2-fx-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧰️tools.mjs` (M): under directory named in r2-fx-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/uv.lock` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py` (M): under directory named in r2-rd1-report.md, r2-rd2-report.md, r2-sl-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py` (M): under directory named in r2-tt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🧪️tests/🐍️.py` (??): under directory named in r2-pt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🧪️tests/🔣️.cases.json` (??): under directory named in r2-pt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧊️axon/🧩️primitives.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧪️ortho-remodel/test_frustums.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/🧪️snapshot/🐍️.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/🧪️surfaces.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🎨️finishes/🛝️ramps.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🎨️finishes/🧪️tests/🐍️.py` (M): short name `🧪️tests/🐍️.py` is ambiguous across 10 files
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔌️exchange/🐍️.py` (M): short name `🔌️exchange/🐍️.py` is ambiguous across 2 files
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧭️cutter-winding.py` (??): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧱️interfaces.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪈️tubes.py` (M): other area 🏗️bim; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/💾️order-cache/🔣️.json` (??): other area 🏢️nakagin; not named by path in any report
+- `🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/💾️order-cache/🐍️.py` (??): other area 🏢️nakagin; not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english/📖️detail.ts` (M): not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german/📖️detail.ts` (M): not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📏️range-span/🥒️.feature` (??): not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🌡️thermal/⏳️transient/🟦️.ts` (M): not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🖨️representation/🪞️copies/🟦️.ts` (M): not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌤️environments/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/apple-tree/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/bamboo-clump/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/date-palm/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/english-oak/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/hornbeam-hedge/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/ivy-on-trellis/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/japanese-maple/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/lombardy-poplar/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/london-plane-pollarded/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/miscanthus-grass/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/multi-stem-birch/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/scots-pine/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/small-leaved-lime/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation/weeping-willow/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/evaporative-humidifier/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/oil-pumpjack/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/plate-heat-exchanger/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/scroll-compressor/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/sorption-wheel/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/dairy-cow/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/goat/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/hedgehog/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/herring-gull/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/horse/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/labrador-dog/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/pig/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/red-fox/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/red-squirrel/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/roe-deer/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🐕️animals/sheep/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/child-on-kick-scooter/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/courier-with-hand-truck/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/cyclist/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/elderly-with-cane/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/jogger/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/kneeling-gardener/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/leaning-person/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/parent-carrying-toddler/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/parent-with-stroller/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-cooking/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-on-crutches/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-with-rollator/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-with-umbrella/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/person-with-white-cane/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/pregnant-person/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/runner-with-blade-prosthesis/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/seated-guitarist/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/seated-office-worker/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/skateboarder/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/sleeping-person/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/standing-phone-user/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/tour-guide/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/worker-carrying-box/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/ceiling-diffuser/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/circulation-pump/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/decentralised-hrv-fan/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/desktop-monitor/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/duct-fan/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/electricity-meter/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-hob/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/gas-meter/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/hot-water-cylinder/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/kitchen-extractor-hood/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/laptop/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/mvhr-unit/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/pendant-lamp/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/room-thermostat/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/server-rack/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/shower-head/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/thermostatic-radiator-valve/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/toaster/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/vacuum-cleaner/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md, r2-ha1-report.md, r2-ha2-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/city-bicycle/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/delivery-van/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/electric-kick-scooter/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/motor-scooter/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🚜️vehicles/tram/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/bar-stool/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/office-swivel-chair/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/operating-table/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/glass-balustrade/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/panel-radiator/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/spiral-stair/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🧱️components/stair-flight/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/cooking-pot/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/shopping-trolley/🔣️.json` (M): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/storage-crate-stack/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/tealight/🔣️.json` (??): under directory named in r2-bc-report.md, r2-bt-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/⏳️thermal-transient/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/☁️condensation/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌀️parcel-jet/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️blackbody-exchange/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌡️thermal-span/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌤️reference-environment/🟦️.ts` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌤️reference-environment/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🍃️leaf-transpiration/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🍃️penman-monteith/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎚️config/🟦️.ts` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎞️clip-sampling/🥒️.feature` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💧️vapour-pressure/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-assets/🟦️.ts` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-view/🟦️.ts` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️dimension-leader/🟦️.ts` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️dimension-leader/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/📐️plan-dimension/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🚀️export-performance/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🤐️textless-depiction/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️front-projection/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️plan-projection/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧬️schema-twin/🟦️.ts` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫀️two-node-gagge/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫁️respiration/🐍️.py` (M): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫕️phase-change/🥒️.feature` (??): under directory named in r2-or-report.md; no exact path
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🧍️front-projection/🔣️.json` (??): not named by path in any report
+- `🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🟦️.ts` (M): short name `🧬️schema/🟦️.ts` is ambiguous across 2 files

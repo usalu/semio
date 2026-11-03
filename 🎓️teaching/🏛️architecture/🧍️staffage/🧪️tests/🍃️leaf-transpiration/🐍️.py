@@ -3,7 +3,7 @@ Jarvis-type stomatal control, Penman–Monteith series conductance) with CoolPro
 the closed-form Penman–Monteith solution of the linearised balance (Monteith & Unsworth: isothermal net radiation, radiative conductance added to the heat conductance); it does not apply where dew forms (`null`),
 because condensation bypasses the stomata.
 
-Run `uv run --with scipy --with CoolProp python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import math

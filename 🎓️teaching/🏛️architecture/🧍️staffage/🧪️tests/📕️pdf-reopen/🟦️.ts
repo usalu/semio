@@ -3,12 +3,13 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { helveticaWidth, PT_PER_MM, winAnsiBytes, writePdf } from "../../🔨️modules/📤️export/📕️pdf/🟦️.ts";
-import { drawingScene, parsePpm, pixel, python, STAFFAGE_ROOT, tool, toolBytes, withScratch } from "../🧰️support/🧰️.ts";
+import { drawingScene, requireTool, parsePpm, pixel, python, STAFFAGE_ROOT, tool, toolBytes, withScratch } from "../🧰️support/🧰️.ts";
+requireTool("qpdf");
 
 const second = (): ReturnType<typeof drawingScene> => ({ ...drawingScene(), widthMm: 100, heightMm: 30 });
 
 describe("📕️ writePdf", () => {
-  it("passes qpdf --check and reports both pages with MediaBox = size in points", async () => {
+  it("passes qpdf --check (skipped without qpdf) and reports both pages with MediaBox = size in points", async () => {
     await withScratch((directory) => {
       const file = join(directory, "staffage.pdf");
       writeFileSync(file, writePdf([drawingScene(), second()]));
@@ -18,6 +19,8 @@ describe("📕️ writePdf", () => {
       expect(info).toMatch(/Pages:\s+2/u);
       expect(info).toMatch(/Title:\s+Walking commuter \/ Gehender Pendler/u);
       expect(info).toMatch(/Subject:\s+Staffage walking-commuter, scale 1:100 \(10 mm\/m\), t = 1\.25 s/u);
+      expect(info).toMatch(/Subject:[^\n]*representation Line drawing, dark \/ Strichzeichnung, dunkel, viewpoint [^,\n]+ \/ Seitenansicht, Physical drawing, to scale \/ Physikalische Zeichnung, ma/u);
+      expect(info).not.toMatch(/Subject:[^\n]*dark-line/u);
       for (const [page, widthMm, heightMm] of [[1, 80, 50], [2, 100, 30]] as const) {
         const box = new RegExp(`Page\\s+${page} MediaBox:\\s+([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)`, "u").exec(info);
         expect(box, `page ${page} MediaBox`).not.toBeNull();

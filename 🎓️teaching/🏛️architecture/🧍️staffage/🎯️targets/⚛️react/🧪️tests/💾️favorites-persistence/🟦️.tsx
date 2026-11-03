@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { VIEWS } from "@teaching/staffage";
 import { ArchiveStore, INITIAL_STATE, STORAGE_KEY, STORAGE_VERSION, memoryStorage, reduce, sanitize } from "../../🔨️modules/💾️persistence/🟦️.ts";
 
-const placement = { id: "p1", asset: "park-bench", xM: 30, pick: null, offsetS: 0, mirrored: false };
+const placement = { id: "p1", asset: "park-bench", xM: 30, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false };
 
 describe("favorites", () => {
   it("survive a reload through the same storage", () => {
@@ -72,12 +72,13 @@ describe("reading storage", () => {
     storage.setItem(STORAGE_KEY, "{not json");
     expect(new ArchiveStore(storage, VIEWS).getSnapshot()).toEqual(INITIAL_STATE);
     const state = sanitize({ version: STORAGE_VERSION, state: { preferences: { language: "fr", theme: "neon" }, favorites: ["ok-slug", "Bad Slug", 3, "ok-slug"], collections: [{ id: 1 }], playground: { scale: -4, view: "x", placements: [{ id: "q", asset: "a-b", xM: "far" }, "nope"] } } }, VIEWS);
-    expect(state.preferences).toEqual({ theme: "system", motion: "system", textSize: "normal", playful: true });
+    expect(state.preferences).toEqual({ theme: "system", motion: "system", textSize: "normal", playful: true, previewViewpoint: "elevation" });
+    expect(state.playground.viewpoint).toBe("elevation");
     expect(state.favorites).toEqual(["ok-slug"]);
     expect(state.collections).toEqual([]);
     expect(state.playground.scale).toBe(1);
     expect(state.playground.view).toBe("dark-line");
-    expect(state.playground.placements).toEqual([{ id: "q", asset: "a-b", xM: 0, pick: null, offsetS: 0, mirrored: false }]);
+    expect(state.playground.placements).toEqual([{ id: "q", asset: "a-b", xM: 0, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false }]);
   });
 
   it("reports volatile persistence when storage refuses writes and keeps working", () => {

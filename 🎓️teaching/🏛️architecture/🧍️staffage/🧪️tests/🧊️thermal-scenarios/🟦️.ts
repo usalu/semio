@@ -5,6 +5,7 @@ import fixture from "../../🧫️fixtures/🫀️two-node-gagge/🔣️.json" w
 import environments from "../../🗂️catalog/🌤️environments/🔣️.json" with { type: "json" };
 import type { Asset, Environment, ThermalRegion } from "../../🧬️schema/🟦️.ts";
 import { catalogAsset, thermalState } from "../../🧫️fixtures/🌡️thermal/🟦️.ts";
+import { loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { solveThermal } from "../../🔨️modules/🌡️thermal/🟦️.ts";
 import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
@@ -162,5 +163,20 @@ describe("🧊️ thermal scenarios: passengers", () => {
     expect(both.body!.coreTempC).toBeCloseTo(alone.body!.coreTempC, 9);
     expect(both.regions["toddler-body"]!.skinTempC).not.toBeNull();
     expect(both.totals.latentW).toBeGreaterThan(alone.totals.latentW);
+  });
+});
+
+describe("🧊️ thermal scenarios: water-bearing surfaces", () => {
+  it("keeps every surface temperature finite at every operating level of every hydronic and coupled asset", async () => {
+    const { assets } = await loadCatalogFromFiles();
+    const bearing = assets.filter((asset) => asset.thermal.regions.some((r) => r.model === "hydronic" || r.model === "coupled"));
+    expect(bearing.length).toBeGreaterThan(0);
+    for (const asset of bearing)
+      for (const pose of asset.poses)
+        for (const level of [0, 0.25, 0.5, 1]) {
+          const operating = Object.fromEntries(asset.thermal.operating.map((key) => [key.id, level]));
+          const field = solve(asset, pose.id, preset("office-neutral"), { operating });
+          for (const [region, f] of Object.entries(field.regions)) expect(Number.isFinite(f.surfaceTempC), `${asset.id} ${pose.id} level ${level} ${region}`).toBe(true);
+        }
   });
 });

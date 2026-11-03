@@ -1,0 +1,223 @@
+{
+  "description": "Language-agnostic vectors of the depth ordering. Authored paint order is the truth at rest; a pair of shapes of different bones is painted the other way round only when its physical depth reverses against the rest pose by more than 2 mm (nearer is higher in the plan, further forward in the front, smaller lateral z in the elevation). The shapes ride the sample figure: `riser` is a 0.45 m by 0.05 m profile on the left thigh (it hangs down at rest and has the world angle -68 degrees in the stride, hand-computed: its top is 0 m at rest and 0.05 cos 68 = 0.018730 m in the stride, its foremost point 0.05 m at rest and 0.45 cos 68 + 0.05 sin 68 = 0.214932 m), `level` a fixed profile (world angle 90 degrees) on the pelvis (top 0.01 m, foremost point 0.1 m). The riser is authored first, so it is painted first at rest where the level is nearer, and after the level when it rises past it.",
+  "asset": "sample-figure",
+  "scale": 100,
+  "paperMmPerM": 10,
+  "toleranceM": 0.002,
+  "shapes": {
+    "elevation": [
+      {
+        "id": "ground-line",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "ground",
+        "z": 0,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.5,
+        "y": -0.01,
+        "w": 1,
+        "h": 0.01
+      },
+      {
+        "id": "riser",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05
+      },
+      {
+        "id": "level",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.01,
+        "h": 0.1
+      }
+    ],
+    "front": [
+      {
+        "id": "ground-line",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "ground",
+        "z": 0,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.5,
+        "y": -0.01,
+        "w": 1,
+        "h": 0.01
+      },
+      {
+        "id": "riser",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.05,
+          "z1": 0.05
+        }
+      },
+      {
+        "id": "level",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.1,
+        "w": 0.01,
+        "h": 0.01,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.05,
+          "z1": 0.05
+        }
+      }
+    ],
+    "plan": [
+      {
+        "id": "ground-line",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "ground",
+        "z": 0,
+        "filled": true,
+        "tone": 0.5,
+        "x": -0.5,
+        "y": -0.01,
+        "w": 1,
+        "h": 0.01
+      },
+      {
+        "id": "riser",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.05,
+          "z1": 0.05
+        }
+      },
+      {
+        "id": "level",
+        "kind": "rect",
+        "bone": "pelvis",
+        "role": "body",
+        "z": 2,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": -0.05,
+        "w": 0.01,
+        "h": 0.1,
+        "solid": {
+          "kind": "extruded",
+          "z0": -0.05,
+          "z1": 0.05
+        }
+      }
+    ]
+  },
+  "spread": {
+    "pose": "spread-left-thigh",
+    "abductionDeg": -30,
+    "bone": "thigh-l",
+    "expectedTipZ": -0.225
+  },
+  "cases": [
+    {
+      "name": "at rest the authored order stands in every view",
+      "pose": "stand",
+      "order": {
+        "elevation": [
+          "ground-line",
+          "riser",
+          "level"
+        ],
+        "front": [
+          "ground-line",
+          "riser",
+          "level"
+        ],
+        "plan": [
+          "ground-line",
+          "riser",
+          "level"
+        ]
+      }
+    },
+    {
+      "name": "in the stride the rising thigh paints over the level part in the front and in the plan, the elevation keeps its order",
+      "pose": "stride-left-forward",
+      "order": {
+        "elevation": [
+          "ground-line",
+          "riser",
+          "level"
+        ],
+        "front": [
+          "ground-line",
+          "level",
+          "riser"
+        ],
+        "plan": [
+          "ground-line",
+          "level",
+          "riser"
+        ]
+      }
+    },
+    {
+      "name": "a thigh spread to the right of the asset comes towards the viewer of the elevation and paints over the level part",
+      "pose": "spread-left-thigh",
+      "order": {
+        "elevation": [
+          "ground-line",
+          "level",
+          "riser"
+        ]
+      }
+    }
+  ],
+  "worldAngleDeg": {
+    "thigh-l": {
+      "stand": -90,
+      "stride-left-forward": -68
+    },
+    "pelvis": {
+      "stand": 90,
+      "stride-left-forward": 90
+    }
+  }
+}

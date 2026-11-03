@@ -26,7 +26,7 @@ export const CORE_DE: Record<keyof typeof CORE_EN, string> = {
   "level.neighbour.left": "Nach links zu {page}",
   "level.neighbour.right": "Nach rechts zu {page}",
   "hero.title": "Architektonische Staffage, maßstäblich gezeichnet",
-  "hero.lede": "Menschen, Bäume, Tiere, Möbel, Fahrzeuge und Bauteile mit echten Maßen, Gelenkmodellen, Posen und Clips. Jede Figur trägt ein thermisches und ein statisches Modell und zeichnet sich in sieben synchronen Ansichten. Die Figuren unten stehen im selben wahren Größenverhältnis auf einer Standlinie.",
+  "hero.lede": "Menschen, Bäume, Tiere, Möbel, Fahrzeuge und Bauteile mit echten Maßen, Gelenkmodellen, Posen und Clips. Jede Figur trägt ein thermisches und ein statisches Modell und zeichnet sich in sieben synchronen Darstellungen. Die Figuren unten stehen im selben wahren Größenverhältnis auf einer Standlinie.",
   "hero.browse": "Das ganze Archiv durchsuchen",
   "hero.count": "{authored} erstellt · {planned} geplant",
   "hero.friezeLabel": "Lebendiger Fries: Figuren im wahren Größenverhältnis auf einer Standlinie",

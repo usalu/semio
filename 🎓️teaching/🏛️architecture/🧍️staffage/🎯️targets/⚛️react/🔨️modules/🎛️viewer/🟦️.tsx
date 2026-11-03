@@ -1,4 +1,4 @@
-/** 🎛️ The viewer: one asset on a pannable stage with every control synchronized to one state — scale, view, pose or clip, time, background, zoom, analytic options and environment — plus inspector and legends.
+/** 🖥️ The viewer: one asset on a pannable stage with every control synchronized to one state — scale, view, pose or clip, time, background, zoom, analytic options and environment — plus inspector and legends.
  *
  * The whole state is a {@link ViewerState}: the page keeps it in the address, so a link reproduces the view, the instant and the analytic settings. Time is the state of one {@link StaffageClock}; the address follows it only while it is
  * paused or scrubbed, never per frame. Scale (paper) and zoom (screen) are separate controls. Analytic views follow the site theme unless the reader overrides it.
@@ -7,8 +7,8 @@
  * @see ../🗺️routing/🟦️.ts — `ViewerState` and its parameters
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement } from "react";
-import { FORCE_QUANTITIES, SCALE_PRESETS, THERMAL_QUANTITIES, VIEWS, formatNumber, mmPerMetre } from "@teaching/staffage";
-import type { Asset, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ItemValue, StructuralResult, ThermalField, View } from "@teaching/staffage";
+import { FORCE_QUANTITIES, SCALE_PRESETS, THERMAL_QUANTITIES, VIEWS, formatNumber, mmPerMetre, sectionOf, viewpointCaption } from "@teaching/staffage";
+import type { Asset, AuthoredRepresentation, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ItemValue, StructuralResult, ThermalField, View, Viewpoint } from "@teaching/staffage";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 import { Button, CheckField, Notice, NumberField, Segmented, SelectField, SliderField, Tag, cn } from "../🪟️chrome/🟦️.tsx";
@@ -19,6 +19,10 @@ import type { Selection } from "../💾️persistence/🟦️.ts";
 import type { ViewerState } from "../🗺️routing/🟦️.ts";
 import { VIEW_NAMES } from "../🗣️labels/🟦️.ts";
 import { namedPoses } from "../🔎️search/🟦️.ts";
+import { VIEWPOINT_PHRASES, resolveViewpoints, sheetOf, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
+import { ViewpointSelector } from "../🔭️viewpoints/🎚️selector/🟦️.tsx";
+import { ThreeViewSheet } from "../🔭️viewpoints/🪟️sheet/🟦️.tsx";
+import { RangeControl } from "./📏️range/🟦️.tsx";
 import { Stage } from "./🗺️stage/🟦️.tsx";
 import { Inspector, Legends, type Inspected } from "./🧾️reading/🟦️.tsx";
 
@@ -30,6 +34,7 @@ export type ViewerProps = { readonly asset: Asset; readonly viewer: ViewerState;
 
 const ANALYTIC_VIEWS: readonly View[] = ["thermal", "forces", "moments"];
 const DARK_VIEWS: readonly View[] = ["dark-line", "dark-solid"];
+const SHEET_SAMPLES = 8;
 const selectionKey = (selection: Selection | null): string => (selection === null ? "default" : selection.kind === "pose" ? `pose:${selection.pose}` : `clip:${selection.clip}`);
 const keyToSelection = (key: string): Selection | null => (key === "default" ? null : key.startsWith("pose:") ? { kind: "pose", pose: key.slice(5) } : { kind: "clip", clip: key.slice(5) });
 
@@ -76,13 +81,17 @@ export function Viewer(props: ViewerProps): ReactElement {
   const frames = useMemo(() => {
     try {
       const state = evaluateState(asset, query);
-      const baseScene = sceneOf(state, depictionOptions({ view: "dark-line", scale: { denominator: viewer.scale }, language, theme, transparent: true }));
-      const activeScene = viewer.view === "dark-line" ? baseScene : sceneOf(state, depictionOptions({ view: viewer.view, scale: { denominator: viewer.scale }, language, theme, transparent: true }));
+      const baseScene = sceneOf(state, depictionOptions({ view: "dark-line", viewpoint: viewer.viewpoint, scale: { denominator: viewer.scale }, language, theme, transparent: true }));
+      const activeScene = viewer.view === "dark-line" ? baseScene : sceneOf(state, depictionOptions({ view: viewer.view, viewpoint: viewer.viewpoint, scale: { denominator: viewer.scale }, language, theme, transparent: true }));
       return { base: frameOf([baseScene]), byView: { [viewer.view]: frameOf([baseScene, activeScene]) } as Record<View, SceneFrame> };
     } catch {
       return undefined;
     }
-  }, [asset, query, viewer.scale, viewer.view, language, theme]);
+  }, [asset, query, viewer.scale, viewer.view, viewer.viewpoint, language, theme]);
+  const resolutions = useMemo(() => resolveViewpoints(asset, viewer.scale, language), [asset, viewer.scale, language]);
+  const all = viewer.layout === "all";
+  const sheetQueries = useMemo(() => (query.kind === "clip" ? Array.from({ length: SHEET_SAMPLES }, (_, index): EvaluationQuery => ({ kind: "clip", clip: query.clip, timeS: (clip.durationS * index) / SHEET_SAMPLES })) : [query]), [query, clip.durationS]);
+  const sheet = useMemo(() => (all ? sheetOf(asset, sheetQueries, { view: viewer.view, denominator: viewer.scale, language, theme }) : undefined), [all, asset, sheetQueries, viewer.view, viewer.scale, language, theme]);
   const reasoned = viewer.environment;
   const base = asset.thermal.environment;
   const environment: Environment = useMemo(() => ({ ...base, ...reasoned }), [base, JSON.stringify(reasoned)]);
@@ -98,7 +107,7 @@ export function Viewer(props: ViewerProps): ReactElement {
     timer.current = null;
     const current = latest.current;
     if (current === null) return;
-    setScene((previous) => (previous !== null && previous.metadata.view === current.scene.metadata.view && JSON.stringify(previous.legends) === JSON.stringify(current.scene.legends) ? previous : current.scene));
+    setScene((previous) => (previous !== null && previous.metadata.view === current.scene.metadata.view && previous.metadata.viewpoint === current.scene.metadata.viewpoint && JSON.stringify(previous.legends) === JSON.stringify(current.scene.legends) ? previous : current.scene));
     props.onFrame?.(current);
   };
   useEffect(
@@ -123,13 +132,23 @@ export function Viewer(props: ViewerProps): ReactElement {
       environment,
       clock,
     };
-    if (scene === null || scene.metadata.view !== frame.scene.metadata.view) setScene(frame.scene);
+    if (scene === null || scene.metadata.view !== frame.scene.metadata.view || scene.metadata.viewpoint !== frame.scene.metadata.viewpoint) setScene(frame.scene);
     if (timer.current === null) timer.current = setTimeout(emit, 400);
   };
   const zoomText = viewer.zoom === "fit" ? t("viewer.zoomFit") : `${Math.round(viewer.zoom * 100)} %`;
   const printSize = viewer.zoom === 1;
   const reference100 = asset.dimensions.heightM * mmPerMetre({ denominator: viewer.scale });
   const customScale = !(SCALE_PRESETS as readonly number[]).includes(viewer.scale);
+  const authored = useMemo(() => {
+    const candidates = Object.values(asset.representations).filter((rep): rep is AuthoredRepresentation => rep.status === "authored");
+    return candidates.find((rep) => rep.denominator === viewer.scale) ?? candidates.find((rep) => rep.validRange.minDenominator <= viewer.scale && viewer.scale <= rep.validRange.maxDenominator);
+  }, [asset, viewer.scale]);
+  const viewpointName = (viewpoint: Viewpoint): string => {
+    const section = sectionOf(authored, viewpoint);
+    return section === undefined ? t(`viewer.viewpoint.${viewpoint}`) : viewpointCaption(viewpoint, section, language);
+  };
+  const sectionNames = (["front", "plan"] as const).flatMap((viewpoint) => (sectionOf(authored, viewpoint) === undefined ? [] : [[viewpoint, viewpointName(viewpoint)] as const]));
+  const unavailable = !all ? resolutions[viewer.viewpoint] : undefined;
   const poseOptions = [{ value: "default", label: t("viewer.selection.default", { title: clip.title[language] }) }, ...asset.clips.map((candidate) => ({ value: `clip:${candidate.id}`, label: `${t("viewer.selection.clip")}: ${candidate.title[language]}` })), ...namedPoses(asset).map((pose) => ({ value: `pose:${pose.id}`, label: `${t("viewer.selection.pose")}: ${pose.title[language]}` }))];
   const patch = (next: Partial<ViewerState>, replace = true): void => onChange(next, replace);
   const setEnv = (key: keyof Environment, value: number): void => patch({ environment: { ...viewer.environment, [key]: value } });
@@ -139,6 +158,7 @@ export function Viewer(props: ViewerProps): ReactElement {
         <div className="flex flex-wrap items-center gap-single text-xs">
           <Tag>{`1:${formatNumber(viewer.scale, Number.isInteger(viewer.scale) ? 0 : 1, language)}`}</Tag>
           <Tag>{VIEW_NAMES[viewer.view][language]}</Tag>
+          <Tag>{all ? VIEWPOINT_PHRASES.all[language] : viewpointName(viewer.viewpoint)}</Tag>
           <span className="text-muted-foreground">{t("viewer.onPaper", { height: formatNumber(reference100, 1, language), mm: "mm", metres: formatNumber(asset.dimensions.heightM, 2, language) })}</span>
           <span className="ml-auto flex flex-wrap items-center gap-single">
             <Button icon="minus" aria-label={t("viewer.zoomOut")} title={t("viewer.zoomOut")} onClick={() => patch({ zoom: Math.max(0.05, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) / 1.25).toFixed(3))) })} />
@@ -149,11 +169,18 @@ export function Viewer(props: ViewerProps): ReactElement {
             <Button icon="crosshair" aria-label={t("viewer.centre")} title={t("viewer.centre")} onClick={() => patch({ pan: { xMm: 0, yMm: 0 } })} />
           </span>
         </div>
+        {unavailable !== undefined && !unavailable.available ? (
+          <Notice kind="unavailable" title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewer.viewpoint][language] })}>
+            <p className="m-0">{unavailable.message[language]}</p>
+            <p className="m-0 text-muted-foreground">{viewpointWord("viewpoints.nothingInstead", language)}</p>
+          </Notice>
+        ) : (
         <Stage
           asset={asset}
           query={query}
           clock={clock}
           view={viewer.view}
+          viewpoint={viewer.viewpoint}
           scale={viewer.scale}
           language={language}
           theme={theme}
@@ -176,7 +203,32 @@ export function Viewer(props: ViewerProps): ReactElement {
           environment={overridden ? environment : undefined}
           onEvaluated={onEvaluated}
           onInspect={(value: ItemValue | null, item) => setInspected(value === null ? null : { value, item })}
+          {...(sheet === undefined
+            ? {}
+            : {
+                sheet: {
+                  widthMm: sheet.layout.widthMm,
+                  heightMm: sheet.layout.heightMm,
+                  render: (zoom: number) => (
+                    <ThreeViewSheet
+                      asset={asset}
+                      query={query}
+                      clock={clock}
+                      view={viewer.view}
+                      scale={{ denominator: viewer.scale }}
+                      language={language}
+                      sheet={sheet}
+                      zoom={zoom}
+                      focus={viewer.viewpoint}
+                      onFocus={(viewpoint) => patch({ viewpoint })}
+                      onEvaluated={onEvaluated}
+                      figure={{ theme, transparent: explicit, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, ...(overridden ? { environment } : {}), onInspect: (value: ItemValue | null, item: { bone?: string; region?: string } | null) => setInspected(value === null ? null : { value, item }) }}
+                    />
+                  ),
+                },
+              })}
         />
+        )}
         {mismatch ? <Notice kind="info" compact title={t("viewer.contrast")} /> : null}
         {isPose ? (
           <Notice kind="info" compact title={t("viewer.poseStatic", { title: (asset.poses.find((pose) => pose.id === (viewer.selection as { pose: string }).pose)?.title ?? { en: "", de: "" })[language] })} />
@@ -188,6 +240,7 @@ export function Viewer(props: ViewerProps): ReactElement {
       </div>
       <form aria-label={t("viewer.controls")} onSubmit={(event) => event.preventDefault()} className="flex min-w-0 flex-col gap-double border border-border bg-panel p-double">
         <Segmented label={t("viewer.view")} value={viewer.view} onChange={(view) => patch({ view })} options={VIEWS.map((view) => ({ value: view, label: VIEW_NAMES[view][language], title: VIEW_NAMES[view][language] }))} />
+        <ViewpointSelector value={all ? "all" : viewer.viewpoint} focus={viewer.viewpoint} language={language} resolutions={resolutions} names={Object.fromEntries(sectionNames)} onChange={(choice) => patch(choice === "all" ? { layout: "all" } : { viewpoint: choice, layout: "single" })} />
         <div className="flex flex-col gap-single">
           <Segmented label={t("viewer.scale")} value={customScale ? -1 : viewer.scale} onChange={(scale) => scale > 0 && patch({ scale })} options={[...SCALE_PRESETS.map((scale) => ({ value: scale as number, label: `1:${scale}` })), { value: -1, label: t("viewer.scaleCustom"), title: t("viewer.scaleCustomHelp") }]} />
           <NumberField label={t("viewer.scaleDenominator")} unit={t("viewer.scaleUnit")} min={1} max={100000} value={viewer.scale} onChange={(scale) => scale !== null && scale >= 1 && patch({ scale })} />
@@ -200,13 +253,7 @@ export function Viewer(props: ViewerProps): ReactElement {
           {!analytic ? <p className="m-0 text-[0.65rem] text-muted-foreground">{t("viewer.analyticsOnly")}</p> : null}
           <SelectField label={t("viewer.thermalQuantity")} value={viewer.thermalQuantity} disabled={viewer.view !== "thermal"} onChange={(thermalQuantity) => patch({ thermalQuantity })} options={THERMAL_QUANTITIES.map((quantity) => ({ value: quantity, label: t(`viewer.thermal.${quantity}`) }))} />
           <SelectField label={t("viewer.forceQuantity")} value={viewer.forceQuantity} disabled={viewer.view !== "forces"} onChange={(forceQuantity) => patch({ forceQuantity })} options={FORCE_QUANTITIES.map((quantity) => ({ value: quantity, label: t(`viewer.force.${quantity}`) }))} />
-          <Segmented label={t("viewer.range")} value={viewer.range.mode} onChange={(mode) => patch({ range: mode === "auto" ? { mode: "auto" } : { mode: "fixed", min: scene?.legends[0]?.min ?? 0, max: scene?.legends[0]?.max ?? 1 } })} options={[{ value: "auto", label: t("viewer.range.auto") }, { value: "fixed", label: t("viewer.range.fixed") }]} />
-          {viewer.range.mode === "fixed" ? (
-            <div className="flex gap-double">
-              <NumberField label={t("viewer.range.min")} value={viewer.range.min} onChange={(min) => min !== null && viewer.range.mode === "fixed" && min < viewer.range.max && patch({ range: { mode: "fixed", min, max: viewer.range.max } })} />
-              <NumberField label={t("viewer.range.max")} value={viewer.range.max} onChange={(max) => max !== null && viewer.range.mode === "fixed" && max > viewer.range.min && patch({ range: { mode: "fixed", min: viewer.range.min, max } })} />
-            </div>
-          ) : null}
+          <RangeControl range={viewer.range} {...(scene?.legends[0] === undefined ? {} : { legend: scene.legends[0] })} onChange={(range) => patch({ range })} />
           <CheckField label={t("viewer.patterns")} checked={viewer.patterns} onChange={(patterns) => patch({ patterns })} />
           <fieldset className="m-0 flex flex-wrap gap-x-double border-0 p-0">
             <legend className="mb-single p-0 text-[0.65rem] text-muted-foreground">{t("viewer.diagrams")}</legend>

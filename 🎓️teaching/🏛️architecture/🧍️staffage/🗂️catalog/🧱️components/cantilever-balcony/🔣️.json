@@ -85,7 +85,7 @@
     "dimensions": {
       "heightM": 1.3,
       "widthM": 1.8,
-      "depthM": 1.0,
+      "depthM": 1,
       "massKg": 756.36
     },
     "materials": [
@@ -221,7 +221,7 @@
           },
           "section": {
             "areaM2": 0.000736,
-            "secondMomentM4": 2.61525e-07,
+            "secondMomentM4": 2.61525e-7,
             "extremeFibreM": 0.025,
             "material": "steel",
             "title": {
@@ -287,588 +287,6 @@
       }
     ],
     "representations": {
-      "500": {
-        "status": "authored",
-        "denominator": 500,
-        "validRange": {
-          "minDenominator": 350,
-          "maxDenominator": 1000
-        },
-        "pens": {
-          "body": 0.13,
-          "detail": null,
-          "texture": null,
-          "glazing": null,
-          "ground": 0.18
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "balcony-solid",
-              "bone": "slab",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.25,
-              "regions": [
-                "wall-face",
-                "thermal-break",
-                "slab-top",
-                "slab-soffit",
-                "slab-edge"
-              ],
-              "kind": "poly",
-              "points": [
-                [
-                  -0.3,
-                  -0.1
-                ],
-                [
-                  1.5,
-                  -0.1
-                ],
-                [
-                  1.5,
-                  0.1
-                ],
-                [
-                  0.0,
-                  0.1
-                ],
-                [
-                  0.0,
-                  1.2
-                ],
-                [
-                  -0.3,
-                  1.2
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "railing-line",
-              "bone": "railing",
-              "role": "body",
-              "z": 2,
-              "filled": false,
-              "tone": 0.45,
-              "region": "railing-steel",
-              "penMm": 0.13,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  1.1,
-                  0.0
-                ]
-              ],
-              "closed": false
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "One closed poché L merges wall stub, thermal break and slab (0.30 m wall plus 1.50 m slab, 1.30 m high); the railing is a single pen line.",
-            "de": "Eine geschlossene Poché-L-Kontur fasst Wandscheibe, Dämmelement und Platte zusammen (0,30 m Wand plus 1,50 m Platte, 1,30 m hoch); das Geländer ist eine einzige Linie."
-          },
-          "retained": {
-            "en": "Overall extents 1.80 x 1.30 m, wall thickness 0.30 m (0.6 mm), slab depth 0.20 m (0.4 mm), railing height 1.10 m.",
-            "de": "Gesamtmaße 1,80 x 1,30 m, Wanddicke 0,30 m (0,6 mm), Plattenstärke 0,20 m (0,4 mm), Geländerhöhe 1,10 m."
-          },
-          "merged": {
-            "en": "Concrete core, mineral wool, render, thermal break and slab are one solid; slab top, soffit and edge cannot be separated at 0.4 mm.",
-            "de": "Betonkern, Mineralwolle, Putz, Dämmelement und Platte sind ein Körper; Plattenoberseite, -unterseite und -kante lassen sich bei 0,4 mm nicht trennen."
-          },
-          "omitted": {
-            "en": "Reinforcement, drip groove, base plate, bolts, handrail tube, mid-rail and every layer line.",
-            "de": "Bewehrung, Tropfkante, Fußplatte, Schrauben, Handlaufrohr, Zwischenstab und alle Schichtlinien."
-          },
-          "thinElements": {
-            "en": "The 50 mm post is a 0.13 mm pen line (65 mm real, inside the outline tolerance); the 60 mm handrail tube is merged into the end of that line.",
-            "de": "Der 50-mm-Pfosten ist eine Linie von 0,13 mm (65 mm real, innerhalb der Konturtoleranz); das 60-mm-Handlaufrohr geht im Linienende auf."
-          },
-          "hatching": {
-            "en": "No hatch: the solid poché is the convention for cut elements at 1:500; any hatch spacing would be below the printable minimum.",
-            "de": "Keine Schraffur: Vollton-Poché ist bei 1:500 die Konvention für geschnittene Bauteile; jeder Schraffurabstand läge unter dem druckbaren Minimum."
-          },
-          "styles": {
-            "en": "Dark filled L reads as cut concrete; the thin line reads as steel.",
-            "de": "Die dunkle Fläche liest sich als geschnittener Beton; die dünne Linie als Stahl."
-          },
-          "overlays": {
-            "en": "Thermal and structural overlays colour the merged solid with the area-weighted values of wall face, thermal break, slab top, soffit and edge (labelled merged); the line carries the railing steel.",
-            "de": "Thermik- und Statik-Überlagerungen färben den Körper mit den flächengewichteten Werten von Wandfläche, Dämmelement, Plattenoberseite, -unterseite und -kante (als zusammengefasst gekennzeichnet); die Linie trägt den Geländerstahl."
-          }
-        }
-      },
-      "200": {
-        "status": "authored",
-        "denominator": 200,
-        "validRange": {
-          "minDenominator": 150,
-          "maxDenominator": 350
-        },
-        "pens": {
-          "body": 0.18,
-          "detail": 0.1,
-          "texture": null,
-          "glazing": 0.1,
-          "ground": 0.25
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "wall",
-              "bone": "slab",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.6,
-              "region": "wall-face",
-              "material": "concrete",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.3,
-                  -0.1
-                ],
-                [
-                  -0.12,
-                  -0.1
-                ],
-                [
-                  -0.12,
-                  0.1
-                ],
-                [
-                  0.0,
-                  0.1
-                ],
-                [
-                  0.0,
-                  1.2
-                ],
-                [
-                  -0.3,
-                  1.2
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "wall-core-edge",
-              "bone": "slab",
-              "role": "detail",
-              "z": 1.5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.12,
-                  0.1
-                ],
-                [
-                  -0.12,
-                  1.2
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "thermal-break-block",
-              "bone": "slab",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "thermal-break",
-              "material": "break-module",
-              "kind": "rect",
-              "x": -0.12,
-              "y": -0.1,
-              "w": 0.12,
-              "h": 0.2
-            },
-            {
-              "id": "slab",
-              "bone": "slab",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.72,
-              "regions": [
-                "slab-top",
-                "slab-soffit",
-                "slab-edge"
-              ],
-              "material": "concrete",
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.1,
-              "w": 1.5,
-              "h": 0.2
-            },
-            {
-              "id": "railing-post",
-              "bone": "railing",
-              "role": "body",
-              "z": 5,
-              "filled": false,
-              "tone": 0.45,
-              "region": "railing-steel",
-              "material": "steel",
-              "penMm": 0.25,
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  1.1,
-                  0.0
-                ]
-              ],
-              "closed": false
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "Wall, break element and slab are three separate masses in one assembly; the L shape stays readable, the railing is a post line with the handrail on top.",
-            "de": "Wand, Dämmelement und Platte sind drei getrennte Massen in einer Baugruppe; die L-Form bleibt lesbar, das Geländer ist eine Pfostenlinie mit Handlauf."
-          },
-          "retained": {
-            "en": "Wall (0.30 m, 1.5 mm), break module (0.6 x 1.0 mm), slab (7.5 x 1.0 mm), post line and the concrete/insulation edge inside the wall.",
-            "de": "Wand (0,30 m, 1,5 mm), Dämmelement (0,6 x 1,0 mm), Platte (7,5 x 1,0 mm), Pfostenlinie und die Kante Beton/Dämmung in der Wand."
-          },
-          "merged": {
-            "en": "Mineral wool and render are merged into the wall mass; slab top, soffit and edge are one slab shape.",
-            "de": "Mineralwolle und Putz sind in der Wandmasse zusammengefasst; Plattenoberseite, -unterseite und -kante bilden eine Plattenform."
-          },
-          "omitted": {
-            "en": "Reinforcement, drip groove, base plate, bolts, mid-rail and the 20 mm render line.",
-            "de": "Bewehrung, Tropfkante, Fußplatte, Schrauben, Zwischenstab und die 20-mm-Putzlinie."
-          },
-          "thinElements": {
-            "en": "The 50 mm post is a line of 0.25 mm pen (50 mm real, exact); the handrail tube (60 mm, 0.3 mm) is merged into the post top.",
-            "de": "Der 50-mm-Pfosten ist eine Linie mit 0,25 mm Feder (50 mm real, exakt); das Handlaufrohr (60 mm, 0,3 mm) ist im Pfostenkopf zusammengefasst."
-          },
-          "hatching": {
-            "en": "No hatch: tones separate concrete, break module and steel; the hatch spacing would be below the printable minimum.",
-            "de": "Keine Schraffur: Tonwerte trennen Beton, Dämmelement und Stahl; der Schraffurabstand läge unter dem druckbaren Minimum."
-          },
-          "styles": {
-            "en": "Mid-grey concrete, dark break module (the thermal bridge), thin steel line.",
-            "de": "Mittelgrauer Beton, dunkles Dämmelement (die Wärmebrücke), dünne Stahllinie."
-          },
-          "overlays": {
-            "en": "Overlays colour wall, break module, slab (merged top, soffit, edge) and railing separately, so the thermal bridge at the wall joint is visible as its own cell.",
-            "de": "Überlagerungen färben Wand, Dämmelement, Platte (Ober-/Unterseite, Kante zusammengefasst) und Geländer getrennt; die Wärmebrücke am Wandanschluss ist als eigene Zelle sichtbar."
-          }
-        }
-      },
-      "100": {
-        "status": "authored",
-        "denominator": 100,
-        "validRange": {
-          "minDenominator": 75,
-          "maxDenominator": 150
-        },
-        "pens": {
-          "body": 0.25,
-          "detail": 0.13,
-          "texture": 0.1,
-          "glazing": 0.1,
-          "ground": 0.35
-        },
-        "hatches": [
-          {
-            "id": "concrete",
-            "title": {
-              "en": "Reinforced concrete",
-              "de": "Stahlbeton"
-            },
-            "pattern": "stipple",
-            "angleDeg": 0,
-            "spacingMm": 0.8,
-            "penMm": 0.1
-          },
-          {
-            "id": "break",
-            "title": {
-              "en": "Thermal-break module",
-              "de": "Dämmelement"
-            },
-            "pattern": "lines",
-            "angleDeg": 45,
-            "spacingMm": 0.5,
-            "penMm": 0.1
-          }
-        ],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "wall-core",
-              "bone": "slab",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.6,
-              "region": "wall-face",
-              "material": "concrete",
-              "hatch": "concrete",
-              "kind": "rect",
-              "x": -0.3,
-              "y": -0.1,
-              "w": 0.18,
-              "h": 1.3
-            },
-            {
-              "id": "wall-insulation-render",
-              "bone": "slab",
-              "role": "body",
-              "z": 1,
-              "filled": true,
-              "tone": 0.9,
-              "region": "wall-face",
-              "material": "mineral-wool",
-              "kind": "rect",
-              "x": -0.12,
-              "y": 0.1,
-              "w": 0.12,
-              "h": 1.1
-            },
-            {
-              "id": "wall-insulation-zigzag",
-              "bone": "slab",
-              "role": "texture",
-              "z": 1.2,
-              "filled": false,
-              "tone": 0.3,
-              "region": "wall-face",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.11,
-                  0.1
-                ],
-                [
-                  -0.01,
-                  0.15
-                ],
-                [
-                  -0.11,
-                  0.2
-                ],
-                [
-                  -0.01,
-                  0.25
-                ],
-                [
-                  -0.11,
-                  0.3
-                ],
-                [
-                  -0.01,
-                  0.35
-                ],
-                [
-                  -0.11,
-                  0.4
-                ],
-                [
-                  -0.01,
-                  0.45
-                ],
-                [
-                  -0.11,
-                  0.5
-                ],
-                [
-                  -0.01,
-                  0.55
-                ],
-                [
-                  -0.11,
-                  0.6
-                ],
-                [
-                  -0.01,
-                  0.65
-                ],
-                [
-                  -0.11,
-                  0.7
-                ],
-                [
-                  -0.01,
-                  0.75
-                ],
-                [
-                  -0.11,
-                  0.8
-                ],
-                [
-                  -0.01,
-                  0.85
-                ],
-                [
-                  -0.11,
-                  0.9
-                ],
-                [
-                  -0.01,
-                  0.95
-                ],
-                [
-                  -0.11,
-                  1.0
-                ],
-                [
-                  -0.01,
-                  1.05
-                ],
-                [
-                  -0.11,
-                  1.1
-                ],
-                [
-                  -0.01,
-                  1.15
-                ],
-                [
-                  -0.11,
-                  1.2
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "thermal-break-block",
-              "bone": "slab",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.3,
-              "region": "thermal-break",
-              "material": "break-module",
-              "hatch": "break",
-              "kind": "rect",
-              "x": -0.12,
-              "y": -0.1,
-              "w": 0.12,
-              "h": 0.2
-            },
-            {
-              "id": "slab",
-              "bone": "slab",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.72,
-              "regions": [
-                "slab-top",
-                "slab-soffit",
-                "slab-edge"
-              ],
-              "material": "concrete",
-              "hatch": "concrete",
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.1,
-              "w": 1.5,
-              "h": 0.2
-            },
-            {
-              "id": "railing-post",
-              "bone": "railing",
-              "role": "body",
-              "z": 5,
-              "filled": true,
-              "tone": 0.45,
-              "region": "railing-steel",
-              "material": "steel",
-              "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.025
-                ],
-                [
-                  0.0,
-                  -0.025
-                ],
-                [
-                  1.04,
-                  -0.025
-                ],
-                [
-                  1.04,
-                  0.025
-                ]
-              ],
-              "closed": true
-            },
-            {
-              "id": "railing-handrail",
-              "bone": "railing",
-              "role": "body",
-              "z": 5.1,
-              "filled": true,
-              "tone": 0.35,
-              "region": "railing-steel",
-              "material": "steel",
-              "kind": "ellipse",
-              "cx": 1.07,
-              "cy": 0.0,
-              "rx": 0.03,
-              "ry": 0.03
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "Wall layers and the cantilever slab are drawn as separate cut masses with material hatch; post and handrail are slim steel solids.",
-            "de": "Wandschichten und Kragplatte sind als getrennte Schnittmassen mit Materialschraffur gezeichnet; Pfosten und Handlauf sind schlanke Stahlkörper."
-          },
-          "retained": {
-            "en": "Concrete core (1.8 mm), insulation (1.2 mm) with zigzag line, thermal-break block (1.2 x 2 mm), slab 15 x 2 mm, post, handrail circle.",
-            "de": "Betonkern (1,8 mm), Dämmung (1,2 mm) mit Zickzacklinie, Dämmelement (1,2 x 2 mm), Platte 15 x 2 mm, Pfosten, Handlaufkreis."
-          },
-          "merged": {
-            "en": "The 20 mm render is merged into the insulation shape; slab top, soffit and edge are one slab shape.",
-            "de": "Der 20-mm-Putz ist in der Dämmungsform zusammengefasst; Plattenoberseite, -unterseite und -kante bilden eine Plattenform."
-          },
-          "omitted": {
-            "en": "Reinforcement bars, drip groove, base plate (12 mm, 0.12 mm), bolts and the mid-rail.",
-            "de": "Bewehrungsstäbe, Tropfkante, Fußplatte (12 mm, 0,12 mm), Schrauben und der Zwischenstab."
-          },
-          "thinElements": {
-            "en": "The 50 mm post is a 0.5 mm filled bar (exact); the handrail tube is a 0.6 mm circle (exact).",
-            "de": "Der 50-mm-Pfosten ist ein gefüllter Balken von 0,5 mm (exakt); das Handlaufrohr ein Kreis von 0,6 mm (exakt)."
-          },
-          "hatching": {
-            "en": "Concrete is stippled (0.8 mm), the break module hatched at 45 degrees (0.5 mm), mineral wool carries the DIN ISO 128-50 zigzag line; steel stays solid.",
-            "de": "Beton ist punktiert (0,8 mm), das Dämmelement 45° schraffiert (0,5 mm), Mineralwolle trägt die Zickzacklinie nach DIN ISO 128-50; Stahl bleibt voll."
-          },
-          "styles": {
-            "en": "Outlines 0.25 mm, zigzag and hatch 0.1 mm; light insulation, mid-grey concrete, dark steel.",
-            "de": "Konturen 0,25 mm, Zickzack und Schraffur 0,1 mm; helle Dämmung, mittelgrauer Beton, dunkler Stahl."
-          },
-          "overlays": {
-            "en": "Wall layers, break module, slab and railing are separate overlay cells; the slab shows merged top, soffit and edge values.",
-            "de": "Wandschichten, Dämmelement, Platte und Geländer sind getrennte Überlagerungszellen; die Platte zeigt zusammengefasste Werte für Ober-/Unterseite und Kante."
-          }
-        }
-      },
       "50": {
         "status": "authored",
         "denominator": 50,
@@ -892,7 +310,7 @@
             },
             "pattern": "stipple",
             "angleDeg": 0,
-            "spacingMm": 1.0,
+            "spacingMm": 1,
             "penMm": 0.1
           },
           {
@@ -1159,7 +577,7 @@
               "material": "concrete",
               "hatch": "concrete",
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.1,
               "w": 1.5,
               "h": 0.2
@@ -1220,11 +638,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   -0.065
                 ],
                 [
-                  1.0,
+                  1,
                   -0.065
                 ]
               ],
@@ -1246,7 +664,7 @@
                   0.065
                 ],
                 [
-                  0.0,
+                  0,
                   0.065
                 ]
               ],
@@ -1268,7 +686,7 @@
                   -0.065
                 ],
                 [
-                  0.0,
+                  0,
                   -0.065
                 ]
               ],
@@ -1308,11 +726,11 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
+                  0,
                   0.05
                 ],
                 [
-                  0.0,
+                  0,
                   -0.05
                 ],
                 [
@@ -1427,7 +845,7 @@
               "material": "steel",
               "kind": "ellipse",
               "cx": 1.07,
-              "cy": 0.0,
+              "cy": 0,
               "rx": 0.03,
               "ry": 0.03
             },
@@ -1442,16 +860,718 @@
               "material": "steel",
               "kind": "ellipse",
               "cx": 0.55,
-              "cy": 0.0,
+              "cy": 0,
               "rx": 0.02,
               "ry": 0.02
+            }
+          ],
+          "front": [
+            {
+              "id": "wall",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1.3
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-edge"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 0.2
+            },
+            {
+              "id": "slab-arris",
+              "bone": "slab",
+              "role": "texture",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "slab-edge",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.5,
+                  0.19
+                ],
+                [
+                  0.5,
+                  0.19
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "railing-base-plate-l",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": -0.49,
+              "y": 0.2,
+              "w": 0.1,
+              "h": 0.012
+            },
+            {
+              "id": "railing-base-plate-r",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 0.39,
+              "y": 0.2,
+              "w": 0.1,
+              "h": 0.012
+            },
+            {
+              "id": "railing-bolt-l0",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.485,
+              "y": 0.212,
+              "w": 0.02,
+              "h": 0.012
+            },
+            {
+              "id": "railing-bolt-l1",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.415,
+              "y": 0.212,
+              "w": 0.02,
+              "h": 0.012
+            },
+            {
+              "id": "railing-bolt-r0",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.395,
+              "y": 0.212,
+              "w": 0.02,
+              "h": 0.012
+            },
+            {
+              "id": "railing-bolt-r1",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.465,
+              "y": 0.212,
+              "w": 0.02,
+              "h": 0.012
+            },
+            {
+              "id": "railing-post-l",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.465,
+              "y": 0.212,
+              "w": 0.05,
+              "h": 1.028
+            },
+            {
+              "id": "railing-post-r",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.415,
+              "y": 0.212,
+              "w": 0.05,
+              "h": 1.028
+            },
+            {
+              "id": "railing-handrail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 1.24,
+              "w": 1,
+              "h": 0.06
+            },
+            {
+              "id": "railing-mid-rail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.44,
+              "y": 0.73,
+              "w": 0.88,
+              "h": 0.04
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall-core",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "hatch": "concrete",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.5,
+              "w": 0.18,
+              "h": 1
+            },
+            {
+              "id": "wall-rebar-i0",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": -0.4,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-i1",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": -0.2,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-i2",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-i3",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": 0.2,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-i4",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.27,
+              "cy": 0.4,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-o0",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.15,
+              "cy": -0.4,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-o1",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.15,
+              "cy": -0.2,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-o2",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.15,
+              "cy": 0,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-o3",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.15,
+              "cy": 0.2,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-rebar-o4",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "wall-face",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": -0.15,
+              "cy": 0.4,
+              "rx": 0.006,
+              "ry": 0.006
+            },
+            {
+              "id": "wall-insulation",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-face",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.5,
+              "w": 0.1,
+              "h": 1
+            },
+            {
+              "id": "wall-insulation-zigzag",
+              "bone": "slab",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-face",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.5
+                ],
+                [
+                  -0.03,
+                  -0.45833
+                ],
+                [
+                  -0.11,
+                  -0.41667
+                ],
+                [
+                  -0.03,
+                  -0.375
+                ],
+                [
+                  -0.11,
+                  -0.33333
+                ],
+                [
+                  -0.03,
+                  -0.29167
+                ],
+                [
+                  -0.11,
+                  -0.25
+                ],
+                [
+                  -0.03,
+                  -0.20833
+                ],
+                [
+                  -0.11,
+                  -0.16667
+                ],
+                [
+                  -0.03,
+                  -0.125
+                ],
+                [
+                  -0.11,
+                  -0.08333
+                ],
+                [
+                  -0.03,
+                  -0.04167
+                ],
+                [
+                  -0.11,
+                  0
+                ],
+                [
+                  -0.03,
+                  0.04167
+                ],
+                [
+                  -0.11,
+                  0.08333
+                ],
+                [
+                  -0.03,
+                  0.125
+                ],
+                [
+                  -0.11,
+                  0.16667
+                ],
+                [
+                  -0.03,
+                  0.20833
+                ],
+                [
+                  -0.11,
+                  0.25
+                ],
+                [
+                  -0.03,
+                  0.29167
+                ],
+                [
+                  -0.11,
+                  0.33333
+                ],
+                [
+                  -0.03,
+                  0.375
+                ],
+                [
+                  -0.11,
+                  0.41667
+                ],
+                [
+                  -0.03,
+                  0.45833
+                ],
+                [
+                  -0.11,
+                  0.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wall-render",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.02,
+              "y": -0.5,
+              "w": 0.02,
+              "h": 1
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-top"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 1.5,
+              "h": 1
+            },
+            {
+              "id": "railing-base-plate-l",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 1.4,
+              "y": 0.39,
+              "w": 0.1,
+              "h": 0.1
+            },
+            {
+              "id": "railing-base-plate-r",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": 1.4,
+              "y": -0.49,
+              "w": 0.1,
+              "h": 0.1
+            },
+            {
+              "id": "railing-bolt-l00",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.415,
+              "cy": 0.405,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-l01",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.415,
+              "cy": 0.475,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-l10",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.485,
+              "cy": 0.405,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-l11",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.485,
+              "cy": 0.475,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-r00",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.415,
+              "cy": -0.475,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-r01",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.415,
+              "cy": -0.405,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-r10",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.485,
+              "cy": -0.475,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-bolt-r11",
+              "bone": "railing",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.485,
+              "cy": -0.405,
+              "rx": 0.01,
+              "ry": 0.01
+            },
+            {
+              "id": "railing-handrail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.42,
+              "y": -0.5,
+              "w": 0.06,
+              "h": 1
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Every layer of the wall, the break module, the cantilever slab with its reinforcement and the railing post with base plate, bolts, handrail and mid-rail are drawn as separate parts.",
-            "de": "Jede Wandschicht, das Dämmelement, die Kragplatte mit Bewehrung und der Geländerpfosten mit Fußplatte, Schrauben, Handlauf und Zwischenstab sind als eigene Teile gezeichnet."
+            "en": "Every layer of the wall, the break module, the cantilever slab with its reinforcement and the railing post with base plate, bolts, handrail and mid-rail are drawn as separate parts. Front view: render face, slab edge with its arris line, two posts on base plates with four bolt heads, handrail and mid-rail seen from the free edge. Plan view: the wall top cut through concrete core with ten vertical bars, insulation with zigzag line and render, the slab top, the railing tube across the strip and the two base plates with eight bolts.",
+            "de": "Jede Wandschicht, das Dämmelement, die Kragplatte mit Bewehrung und der Geländerpfosten mit Fußplatte, Schrauben, Handlauf und Zwischenstab sind als eigene Teile gezeichnet. Vorderansicht: Putzfläche, Plattenkante mit Kantenlinie, zwei Pfosten auf Fußplatten mit vier Schraubenköpfen, Handlauf und Zwischenstab von der freien Kante gesehen. Draufsicht: der Wandkopf geschnitten durch Betonkern mit zehn senkrechten Stäben, Dämmung mit Zickzacklinie und Putz, die Plattenoberseite, das Geländerrohr über den Streifen und die beiden Fußplatten mit acht Schrauben."
           },
           "retained": {
             "en": "Concrete core with two vertical bars, 100 mm mineral wool, 20 mm render, break module with two tension bars, slab with top and bottom reinforcement and hook, drip groove, plate, bolts, post, handrail, mid-rail.",
@@ -1462,8 +1582,8 @@
             "de": "Plattenoberseite, -unterseite und -kante teilen sich eine Plattenform (getrennte Regionen sind über Stab- und Tropfkantendetails gebunden)."
           },
           "omitted": {
-            "en": "Rebar spacing, fillets, anchor details of the break module and the post section (hollow) which is smaller than the pen.",
-            "de": "Bewehrungsabstände, Hohlkehlen, Ankerdetails des Dämmelements und der Hohlprofilquerschnitt des Pfostens, der kleiner als die Feder ist."
+            "en": "Rebar spacing, fillets, anchor details of the break module and the post section (hollow) which is smaller than the pen. The thermal break, the slab reinforcement and the drip groove lie behind the slab edge, below the wall top or under the soffit and are not visible in either view; the post section under the handrail.",
+            "de": "Bewehrungsabstände, Hohlkehlen, Ankerdetails des Dämmelements und der Hohlprofilquerschnitt des Pfostens, der kleiner als die Feder ist. Das Dämmelement, die Plattenbewehrung und die Tropfkante liegen hinter der Plattenkante, unter dem Wandkopf oder unter der Unterseite und sind in keiner Ansicht sichtbar; der Pfostenquerschnitt unter dem Handlauf."
           },
           "thinElements": {
             "en": "Bars are drawn as pen lines of 0.25 mm (12 mm real, exact); the 12 mm base plate is 0.24 mm and drawn at true size; the 4 mm post wall is not resolved.",
@@ -1480,6 +1600,1098 @@
           "overlays": {
             "en": "Every layer is its own overlay cell; bar details are bound to the surface they lie in, so the thermal bridge zone, slab surfaces and wall layers read separately.",
             "de": "Jede Schicht ist eine eigene Überlagerungszelle; Stabdetails sind an die Fläche gebunden, in der sie liegen, so sind Wärmebrückenzone, Plattenflächen und Wandschichten getrennt lesbar."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "concrete",
+            "title": {
+              "en": "Reinforced concrete",
+              "de": "Stahlbeton"
+            },
+            "pattern": "stipple",
+            "angleDeg": 0,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          },
+          {
+            "id": "break",
+            "title": {
+              "en": "Thermal-break module",
+              "de": "Dämmelement"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "wall-core",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "hatch": "concrete",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.1,
+              "w": 0.18,
+              "h": 1.3
+            },
+            {
+              "id": "wall-insulation-render",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-face",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0.1,
+              "w": 0.12,
+              "h": 1.1
+            },
+            {
+              "id": "wall-insulation-zigzag",
+              "bone": "slab",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-face",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.1
+                ],
+                [
+                  -0.01,
+                  0.15
+                ],
+                [
+                  -0.11,
+                  0.2
+                ],
+                [
+                  -0.01,
+                  0.25
+                ],
+                [
+                  -0.11,
+                  0.3
+                ],
+                [
+                  -0.01,
+                  0.35
+                ],
+                [
+                  -0.11,
+                  0.4
+                ],
+                [
+                  -0.01,
+                  0.45
+                ],
+                [
+                  -0.11,
+                  0.5
+                ],
+                [
+                  -0.01,
+                  0.55
+                ],
+                [
+                  -0.11,
+                  0.6
+                ],
+                [
+                  -0.01,
+                  0.65
+                ],
+                [
+                  -0.11,
+                  0.7
+                ],
+                [
+                  -0.01,
+                  0.75
+                ],
+                [
+                  -0.11,
+                  0.8
+                ],
+                [
+                  -0.01,
+                  0.85
+                ],
+                [
+                  -0.11,
+                  0.9
+                ],
+                [
+                  -0.01,
+                  0.95
+                ],
+                [
+                  -0.11,
+                  1
+                ],
+                [
+                  -0.01,
+                  1.05
+                ],
+                [
+                  -0.11,
+                  1.1
+                ],
+                [
+                  -0.01,
+                  1.15
+                ],
+                [
+                  -0.11,
+                  1.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "thermal-break-block",
+              "bone": "slab",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "thermal-break",
+              "material": "break-module",
+              "hatch": "break",
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.1,
+              "w": 0.12,
+              "h": 0.2
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-top",
+                "slab-soffit",
+                "slab-edge"
+              ],
+              "material": "concrete",
+              "hatch": "concrete",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.1,
+              "w": 1.5,
+              "h": 0.2
+            },
+            {
+              "id": "railing-post",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.025
+                ],
+                [
+                  0,
+                  -0.025
+                ],
+                [
+                  1.04,
+                  -0.025
+                ],
+                [
+                  1.04,
+                  0.025
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "railing-handrail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.07,
+              "cy": 0,
+              "rx": 0.03,
+              "ry": 0.03
+            }
+          ],
+          "front": [
+            {
+              "id": "wall",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1.3
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-edge"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 0.2
+            },
+            {
+              "id": "railing-post-l",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.465,
+              "y": 0.2,
+              "w": 0.05,
+              "h": 1.04
+            },
+            {
+              "id": "railing-post-r",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.415,
+              "y": 0.2,
+              "w": 0.05,
+              "h": 1.04
+            },
+            {
+              "id": "railing-handrail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 1.24,
+              "w": 1,
+              "h": 0.06
+            },
+            {
+              "id": "railing-mid-rail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.44,
+              "y": 0.73,
+              "w": 0.88,
+              "h": 0.04
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall-core",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "hatch": "concrete",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.5,
+              "w": 0.18,
+              "h": 1
+            },
+            {
+              "id": "wall-insulation-render",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-face",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.5,
+              "w": 0.12,
+              "h": 1
+            },
+            {
+              "id": "wall-insulation-zigzag",
+              "bone": "slab",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-face",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  -0.5
+                ],
+                [
+                  -0.01,
+                  -0.45
+                ],
+                [
+                  -0.11,
+                  -0.4
+                ],
+                [
+                  -0.01,
+                  -0.35
+                ],
+                [
+                  -0.11,
+                  -0.3
+                ],
+                [
+                  -0.01,
+                  -0.25
+                ],
+                [
+                  -0.11,
+                  -0.2
+                ],
+                [
+                  -0.01,
+                  -0.15
+                ],
+                [
+                  -0.11,
+                  -0.1
+                ],
+                [
+                  -0.01,
+                  -0.05
+                ],
+                [
+                  -0.11,
+                  0
+                ],
+                [
+                  -0.01,
+                  0.05
+                ],
+                [
+                  -0.11,
+                  0.1
+                ],
+                [
+                  -0.01,
+                  0.15
+                ],
+                [
+                  -0.11,
+                  0.2
+                ],
+                [
+                  -0.01,
+                  0.25
+                ],
+                [
+                  -0.11,
+                  0.3
+                ],
+                [
+                  -0.01,
+                  0.35
+                ],
+                [
+                  -0.11,
+                  0.4
+                ],
+                [
+                  -0.01,
+                  0.45
+                ],
+                [
+                  -0.11,
+                  0.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-top"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 1.5,
+              "h": 1
+            },
+            {
+              "id": "railing-handrail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 1.42,
+              "y": -0.5,
+              "w": 0.06,
+              "h": 1
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Wall layers and the cantilever slab are drawn as separate cut masses with material hatch; post and handrail are slim steel solids. Front view: render face, slab edge, two post bars, handrail and mid-rail as in the section. Plan view: the wall top cut in its layers (stippled concrete, insulation with zigzag line), the slab top and the handrail tube as a strip.",
+            "de": "Wandschichten und Kragplatte sind als getrennte Schnittmassen mit Materialschraffur gezeichnet; Pfosten und Handlauf sind schlanke Stahlkörper. Vorderansicht: Putzfläche, Plattenkante, zwei Pfostenbalken, Handlauf und Zwischenstab wie im Schnitt. Draufsicht: der Wandkopf in seinen Schichten geschnitten (punktierter Beton, Dämmung mit Zickzacklinie), die Plattenoberseite und das Handlaufrohr als Streifen."
+          },
+          "retained": {
+            "en": "Concrete core (1.8 mm), insulation (1.2 mm) with zigzag line, thermal-break block (1.2 x 2 mm), slab 15 x 2 mm, post, handrail circle.",
+            "de": "Betonkern (1,8 mm), Dämmung (1,2 mm) mit Zickzacklinie, Dämmelement (1,2 x 2 mm), Platte 15 x 2 mm, Pfosten, Handlaufkreis."
+          },
+          "merged": {
+            "en": "The 20 mm render is merged into the insulation shape; slab top, soffit and edge are one slab shape.",
+            "de": "Der 20-mm-Putz ist in der Dämmungsform zusammengefasst; Plattenoberseite, -unterseite und -kante bilden eine Plattenform."
+          },
+          "omitted": {
+            "en": "Reinforcement bars, drip groove, base plate (12 mm, 0.12 mm), bolts and the mid-rail. The base plates (12 mm, 0.12 mm) and bolts; the thermal break is hidden behind the slab edge and below the wall top. No hatch on the uncut slab edge and slab top.",
+            "de": "Bewehrungsstäbe, Tropfkante, Fußplatte (12 mm, 0,12 mm), Schrauben und der Zwischenstab. Die Fußplatten (12 mm, 0,12 mm) und Schrauben; das Dämmelement liegt verdeckt hinter der Plattenkante und unter dem Wandkopf. Keine Schraffur auf der ungeschnittenen Plattenkante und -oberseite."
+          },
+          "thinElements": {
+            "en": "The 50 mm post is a 0.5 mm filled bar (exact); the handrail tube is a 0.6 mm circle (exact).",
+            "de": "Der 50-mm-Pfosten ist ein gefüllter Balken von 0,5 mm (exakt); das Handlaufrohr ein Kreis von 0,6 mm (exakt)."
+          },
+          "hatching": {
+            "en": "Concrete is stippled (0.8 mm), the break module hatched at 45 degrees (0.5 mm), mineral wool carries the DIN ISO 128-50 zigzag line; steel stays solid.",
+            "de": "Beton ist punktiert (0,8 mm), das Dämmelement 45° schraffiert (0,5 mm), Mineralwolle trägt die Zickzacklinie nach DIN ISO 128-50; Stahl bleibt voll."
+          },
+          "styles": {
+            "en": "Outlines 0.25 mm, zigzag and hatch 0.1 mm; light insulation, mid-grey concrete, dark steel.",
+            "de": "Konturen 0,25 mm, Zickzack und Schraffur 0,1 mm; helle Dämmung, mittelgrauer Beton, dunkler Stahl."
+          },
+          "overlays": {
+            "en": "Wall layers, break module, slab and railing are separate overlay cells; the slab shows merged top, soffit and edge values.",
+            "de": "Wandschichten, Dämmelement, Platte und Geländer sind getrennte Überlagerungszellen; die Platte zeigt zusammengefasste Werte für Ober-/Unterseite und Kante."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "wall",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  -0.1
+                ],
+                [
+                  -0.12,
+                  -0.1
+                ],
+                [
+                  -0.12,
+                  0.1
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  0,
+                  1.2
+                ],
+                [
+                  -0.3,
+                  1.2
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wall-core-edge",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.1
+                ],
+                [
+                  -0.12,
+                  1.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "thermal-break-block",
+              "bone": "slab",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "thermal-break",
+              "material": "break-module",
+              "kind": "rect",
+              "x": -0.12,
+              "y": -0.1,
+              "w": 0.12,
+              "h": 0.2
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-top",
+                "slab-soffit",
+                "slab-edge"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.1,
+              "w": 1.5,
+              "h": 0.2
+            },
+            {
+              "id": "railing-post",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1.1,
+                  0
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "wall",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "render",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1.3
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-edge"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 0.2
+            },
+            {
+              "id": "railing-post-l",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.44,
+                  0.2
+                ],
+                [
+                  -0.44,
+                  1.24
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "railing-post-r",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0.44,
+                  0.2
+                ],
+                [
+                  0.44,
+                  1.24
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "railing-handrail",
+              "bone": "railing",
+              "role": "body",
+              "z": 5.1,
+              "filled": true,
+              "tone": 0.35,
+              "region": "railing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 1.24,
+              "w": 1,
+              "h": 0.06
+            }
+          ],
+          "plan": [
+            {
+              "id": "wall",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "wall-face",
+              "material": "concrete",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.5,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "wall-core-edge",
+              "bone": "slab",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  -0.5
+                ],
+                [
+                  -0.12,
+                  0.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slab",
+              "bone": "slab",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.72,
+              "regions": [
+                "slab-top"
+              ],
+              "material": "concrete",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 1.5,
+              "h": 1
+            },
+            {
+              "id": "railing-post",
+              "bone": "railing",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "material": "steel",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  1.45,
+                  -0.5
+                ],
+                [
+                  1.45,
+                  0.5
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Wall, break element and slab are three separate masses in one assembly; the L shape stays readable, the railing is a post line with the handrail on top. Front view: wall face, slab edge (5 x 1 mm) and the railing seen from the free edge as two post lines and a handrail strip. Plan view: wall top with its concrete and insulation edge, slab top (7.5 x 5 mm) and the railing as one line.",
+            "de": "Wand, Dämmelement und Platte sind drei getrennte Massen in einer Baugruppe; die L-Form bleibt lesbar, das Geländer ist eine Pfostenlinie mit Handlauf. Vorderansicht: Wandfläche, Plattenkante (5 x 1 mm) und das Geländer von der freien Kante gesehen als zwei Pfostenlinien und ein Handlaufstreifen. Draufsicht: Wandkopf mit seiner Kante Beton/Dämmung, Plattenoberseite (7,5 x 5 mm) und das Geländer als eine Linie."
+          },
+          "retained": {
+            "en": "Wall (0.30 m, 1.5 mm), break module (0.6 x 1.0 mm), slab (7.5 x 1.0 mm), post line and the concrete/insulation edge inside the wall.",
+            "de": "Wand (0,30 m, 1,5 mm), Dämmelement (0,6 x 1,0 mm), Platte (7,5 x 1,0 mm), Pfostenlinie und die Kante Beton/Dämmung in der Wand."
+          },
+          "merged": {
+            "en": "Mineral wool and render are merged into the wall mass; slab top, soffit and edge are one slab shape.",
+            "de": "Mineralwolle und Putz sind in der Wandmasse zusammengefasst; Plattenoberseite, -unterseite und -kante bilden eine Plattenform."
+          },
+          "omitted": {
+            "en": "Reinforcement, drip groove, base plate, bolts, mid-rail and the 20 mm render line. The thermal break module is hidden behind the slab edge and under the wall top; mid-rail and plates are not drawn.",
+            "de": "Bewehrung, Tropfkante, Fußplatte, Schrauben, Zwischenstab und die 20-mm-Putzlinie. Das Dämmelement liegt verdeckt hinter der Plattenkante und unter dem Wandkopf; Zwischenstab und Platten werden nicht gezeichnet."
+          },
+          "thinElements": {
+            "en": "The 50 mm post is a line of 0.25 mm pen (50 mm real, exact); the handrail tube (60 mm, 0.3 mm) is merged into the post top.",
+            "de": "Der 50-mm-Pfosten ist eine Linie mit 0,25 mm Feder (50 mm real, exakt); das Handlaufrohr (60 mm, 0,3 mm) ist im Pfostenkopf zusammengefasst."
+          },
+          "hatching": {
+            "en": "No hatch: tones separate concrete, break module and steel; the hatch spacing would be below the printable minimum.",
+            "de": "Keine Schraffur: Tonwerte trennen Beton, Dämmelement und Stahl; der Schraffurabstand läge unter dem druckbaren Minimum."
+          },
+          "styles": {
+            "en": "Mid-grey concrete, dark break module (the thermal bridge), thin steel line.",
+            "de": "Mittelgrauer Beton, dunkles Dämmelement (die Wärmebrücke), dünne Stahllinie."
+          },
+          "overlays": {
+            "en": "Overlays colour wall, break module, slab (merged top, soffit, edge) and railing separately, so the thermal bridge at the wall joint is visible as its own cell.",
+            "de": "Überlagerungen färben Wand, Dämmelement, Platte (Ober-/Unterseite, Kante zusammengefasst) und Geländer getrennt; die Wärmebrücke am Wandanschluss ist als eigene Zelle sichtbar."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "balcony-solid",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "regions": [
+                "wall-face",
+                "thermal-break",
+                "slab-top",
+                "slab-soffit",
+                "slab-edge"
+              ],
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  -0.1
+                ],
+                [
+                  1.5,
+                  -0.1
+                ],
+                [
+                  1.5,
+                  0.1
+                ],
+                [
+                  0,
+                  0.1
+                ],
+                [
+                  0,
+                  1.2
+                ],
+                [
+                  -0.3,
+                  1.2
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "railing-line",
+              "bone": "railing",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1.1,
+                  0
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "balcony-solid",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "regions": [
+                "wall-face",
+                "slab-edge"
+              ],
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1.3
+            },
+            {
+              "id": "railing-line",
+              "bone": "railing",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.5,
+                  1.27
+                ],
+                [
+                  0.5,
+                  1.27
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "balcony-solid",
+              "bone": "slab",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.25,
+              "regions": [
+                "wall-face",
+                "slab-top"
+              ],
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.5,
+              "w": 1.8,
+              "h": 1
+            },
+            {
+              "id": "railing-line",
+              "bone": "railing",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.45,
+              "region": "railing-steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  1.45,
+                  -0.5
+                ],
+                [
+                  1.45,
+                  0.5
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One closed poché L merges wall stub, thermal break and slab (0.30 m wall plus 1.50 m slab, 1.30 m high); the railing is a single pen line. Front view (from the free edge towards the wall, strip of 1.0 m): one filled block of wall and slab edge (2 x 2.6 mm) with the handrail as a single pen line. Plan view (from above): one filled block of wall top and slab (3.6 x 2 mm) with the railing as a line across the strip.",
+            "de": "Eine geschlossene Poché-L-Kontur fasst Wandscheibe, Dämmelement und Platte zusammen (0,30 m Wand plus 1,50 m Platte, 1,30 m hoch); das Geländer ist eine einzige Linie. Vorderansicht (von der freien Kante zur Wand, Streifen von 1,0 m): ein gefüllter Block aus Wand und Plattenkante (2 x 2,6 mm) mit dem Handlauf als einzelner Federlinie. Draufsicht (von oben): ein gefüllter Block aus Wandkopf und Platte (3,6 x 2 mm) mit dem Geländer als Linie über den Streifen."
+          },
+          "retained": {
+            "en": "Overall extents 1.80 x 1.30 m, wall thickness 0.30 m (0.6 mm), slab depth 0.20 m (0.4 mm), railing height 1.10 m.",
+            "de": "Gesamtmaße 1,80 x 1,30 m, Wanddicke 0,30 m (0,6 mm), Plattenstärke 0,20 m (0,4 mm), Geländerhöhe 1,10 m."
+          },
+          "merged": {
+            "en": "Concrete core, mineral wool, render, thermal break and slab are one solid; slab top, soffit and edge cannot be separated at 0.4 mm.",
+            "de": "Betonkern, Mineralwolle, Putz, Dämmelement und Platte sind ein Körper; Plattenoberseite, -unterseite und -kante lassen sich bei 0,4 mm nicht trennen."
+          },
+          "omitted": {
+            "en": "Reinforcement, drip groove, base plate, bolts, handrail tube, mid-rail and every layer line. The thermal break lies behind the slab edge and below the wall top and is not visible in either view; posts, mid-rail, plates and bolts are merged into the handrail line.",
+            "de": "Bewehrung, Tropfkante, Fußplatte, Schrauben, Handlaufrohr, Zwischenstab und alle Schichtlinien. Das Dämmelement liegt hinter der Plattenkante und unter dem Wandkopf und ist in keiner Ansicht sichtbar; Pfosten, Zwischenstab, Platten und Schrauben gehen in der Handlauflinie auf."
+          },
+          "thinElements": {
+            "en": "The 50 mm post is a 0.13 mm pen line (65 mm real, inside the outline tolerance); the 60 mm handrail tube is merged into the end of that line.",
+            "de": "Der 50-mm-Pfosten ist eine Linie von 0,13 mm (65 mm real, innerhalb der Konturtoleranz); das 60-mm-Handlaufrohr geht im Linienende auf."
+          },
+          "hatching": {
+            "en": "No hatch: the solid poché is the convention for cut elements at 1:500; any hatch spacing would be below the printable minimum.",
+            "de": "Keine Schraffur: Vollton-Poché ist bei 1:500 die Konvention für geschnittene Bauteile; jeder Schraffurabstand läge unter dem druckbaren Minimum."
+          },
+          "styles": {
+            "en": "Dark filled L reads as cut concrete; the thin line reads as steel.",
+            "de": "Die dunkle Fläche liest sich als geschnittener Beton; die dünne Linie als Stahl."
+          },
+          "overlays": {
+            "en": "Thermal and structural overlays colour the merged solid with the area-weighted values of wall face, thermal break, slab top, soffit and edge (labelled merged); the line carries the railing steel.",
+            "de": "Thermik- und Statik-Überlagerungen färben den Körper mit den flächengewichteten Werten von Wandfläche, Dämmelement, Plattenoberseite, -unterseite und -kante (als zusammengefasst gekennzeichnet); die Linie trägt den Geländerstahl."
           }
         }
       }
@@ -1503,11 +2715,11 @@
           "regions": {
             "slab-top": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "slab-soffit": {
               "exposedFraction": 1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             },
             "slab-edge": {
               "exposedFraction": 1,
@@ -1523,7 +2735,7 @@
             },
             "thermal-break": {
               "exposedFraction": 1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1547,11 +2759,11 @@
           "regions": {
             "slab-top": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "slab-soffit": {
               "exposedFraction": 1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             },
             "slab-edge": {
               "exposedFraction": 1,
@@ -1567,7 +2779,7 @@
             },
             "thermal-break": {
               "exposedFraction": 1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1615,11 +2827,11 @@
           "regions": {
             "slab-top": {
               "exposedFraction": 1,
-              "sunlitFraction": 1.0
+              "sunlitFraction": 1
             },
             "slab-soffit": {
               "exposedFraction": 1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             },
             "slab-edge": {
               "exposedFraction": 1,
@@ -1635,7 +2847,7 @@
             },
             "thermal-break": {
               "exposedFraction": 1,
-              "sunlitFraction": 0.0
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1863,7 +3075,7 @@
             "keys": [
               {
                 "t": 0,
-                "v": 1.0
+                "v": 1
               },
               {
                 "t": 4,
@@ -1871,7 +3083,7 @@
               },
               {
                 "t": 8,
-                "v": 1.0
+                "v": 1
               }
             ]
           },
@@ -2181,9 +3393,6 @@
     "presentation": {
       "defaultPose": "distributed-live-load",
       "defaultClip": "loading-ramp",
-      "viewpoints": [
-        "elevation"
-      ],
       "defaultScale": 50
     },
     "exports": [

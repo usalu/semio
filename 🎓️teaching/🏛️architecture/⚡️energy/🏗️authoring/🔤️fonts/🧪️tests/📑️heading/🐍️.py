@@ -84,7 +84,7 @@ class StandaloneHeading(unittest.TestCase):
             exec(code, vars(module), {"self": scene})
             texts = [part.original_text for item in scene.mobjects for part in item.get_family() if isinstance(part, Text)]
             self.assertNotIn(getattr(module, case["forbidden"]), texts)
-            self.assertIn(case["instruction"], texts)
+            self.assertIn(case["instruction"][importlib.import_module(PACKAGE + ".🎨️visuals.🐍️").language()], texts)
             scene.camera.capture_mobjects(scene.mobjects)
             self.assertGreater(np.ptp(scene.camera.pixel_array[..., :3]), 0)
             from PIL import Image

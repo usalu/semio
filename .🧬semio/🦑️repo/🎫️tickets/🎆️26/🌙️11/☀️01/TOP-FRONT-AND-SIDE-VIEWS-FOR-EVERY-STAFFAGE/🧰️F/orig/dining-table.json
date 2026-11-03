@@ -1,0 +1,2181 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "dining-table",
+    "category": "furniture",
+    "title": {
+      "en": "Dining table with extension leaf",
+      "de": "Esstisch mit Einlegeplatte"
+    },
+    "summary": {
+      "en": "A 1.60 m solid oak dining table whose halves slide apart on slide rails so that a 0.60 m leaf lifts in (2.20 m); closed, extended, set and test-load poses.",
+      "de": "Ein 1,60 m langer Esstisch aus massiver Eiche, dessen Hälften auf Auszugsschienen auseinandergleiten, sodass eine 0,60 m lange Einlegeplatte einrastet (2,20 m); Posen geschlossen, ausgezogen, gedeckt und Prüflast."
+    },
+    "tags": [
+      "table",
+      "dining",
+      "timber",
+      "oak",
+      "extension",
+      "interior"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-F)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values (conductivity, specific heat capacity, density of timber, wood-based boards, steel, aluminium, flexible polyurethane foam, rubber)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: General actions - densities, self-weight, imposed loads for buildings (Table 6.2 category A floors 1.5-2.0 kN/m2, category C tables 3.0 kN/m2, Table 6.7/6.8 storage, Annex A densities of stored materials)."
+        },
+        {
+          "id": "en-1730",
+          "citation": "EN 1730:2012 Furniture - Tables - Test methods for the determination of stability, strength and durability (vertical and horizontal static loads on the table top)."
+        },
+        {
+          "id": "en-12521",
+          "citation": "EN 12521:2015 Furniture - Strength, durability and safety - Requirements for domestic tables."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1 (E = 210 GPa, density 7850 kg/m3)."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment - Analytical determination and interpretation of thermal comfort (outer clothing surface temperatures of seated persons around 28-32 degC in comfort conditions; 30 degC used for the contact surface)."
+        },
+        {
+          "id": "wood-handbook-2021",
+          "citation": "Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service (density and elastic modulus of oak, beech and pine; air-dry rounded values)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface radiative properties, convection correlations, thermal penetration depth)."
+        },
+        {
+          "id": "semio-nwf",
+          "citation": "Semio staffage content NW-F: dimensions and masses are authored from typical market products (see provenance notes); parameters tagged authored-estimate are not taken from a datasheet."
+        }
+      ],
+      "notes": {
+        "en": "Long-side elevation 1.60 x 0.75 m closed, 2.20 m extended; depth 0.90 m. Masses from nominal volumes x 700 kg/m3. Leaf and halves are prismatic bones; leaf stored under the top (hidden behind the aprons) and rising 30 mm.",
+        "de": "Längsansicht 1,60 x 0,75 m geschlossen, 2,20 m ausgezogen; Tiefe 0,90 m. Massen aus Nennvolumen x 700 kg/m3. Einlegeplatte und Hälften sind Schiebe-Knochen; die Einlegeplatte liegt verstaut unter der Platte (hinter den Zargen) und hebt sich um 30 mm."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.75,
+      "widthM": 1.6,
+      "depthM": 0.9,
+      "massKg": 60.5
+    },
+    "materials": [
+      {
+        "id": "oak-timber",
+        "title": {
+          "en": "Solid oak, oiled",
+          "de": "Eiche massiv, geölt"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 700,
+        "conductivityWmK": 0.18,
+        "specificHeatJKgK": 1600,
+        "elasticModulusPa": 11000000000.0,
+        "strengthPa": 40000000.0,
+        "source": "authored-estimate",
+        "reference": "wood-handbook-2021"
+      },
+      {
+        "id": "steel-slides",
+        "title": {
+          "en": "Zinc-plated steel slides",
+          "de": "Verzinkte Stahlschienen"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "strengthPa": 355000000.0,
+        "source": "literature",
+        "reference": "en-1993-1-1"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "ground",
+      "bones": [
+        {
+          "id": "ground",
+          "parent": null,
+          "title": {
+            "en": "Floor reference",
+            "de": "Bodenbezug"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 1.6,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "frame",
+          "parent": "ground",
+          "title": {
+            "en": "Slide rails",
+            "de": "Auszugsschienen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 1.0,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5.0,
+            "comX": 0.8,
+            "comY": 0.69,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "top-left",
+          "parent": "ground",
+          "title": {
+            "en": "Left table half (top, apron, legs)",
+            "de": "Linke Tischhälfte (Platte, Zarge, Beine)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.8,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": -0.3,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 22.1,
+            "comX": 0.4,
+            "comY": 0.38,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "top-right",
+          "parent": "ground",
+          "title": {
+            "en": "Right table half (top, apron, legs)",
+            "de": "Rechte Tischhälfte (Platte, Zarge, Beine)"
+          },
+          "x": 0.8,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.8,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 0.3
+          },
+          "mass": {
+            "kg": 22.1,
+            "comX": 0.4,
+            "comY": 0.38,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "leaf",
+          "parent": "ground",
+          "title": {
+            "en": "Extension leaf",
+            "de": "Einlegeplatte"
+          },
+          "x": 0.5,
+          "y": 0.69,
+          "angleDeg": 0,
+          "lengthM": 0.6,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 0.03
+          },
+          "mass": {
+            "kg": 11.3,
+            "comX": 0.3,
+            "comY": 0.015,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "leg-left",
+        "bone": "top-left",
+        "x": 0.135,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Left leg pair (front and rear coincide)",
+          "de": "Linkes Beinpaar (vorn und hinten fallen zusammen)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.045,
+        "footprintWidthM": 0.8,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "leg-right",
+        "bone": "top-right",
+        "x": 0.665,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Right leg pair (front and rear coincide)",
+          "de": "Rechtes Beinpaar (vorn und hinten fallen zusammen)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.045,
+        "footprintWidthM": 0.8,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "edge-right",
+        "bone": "top-right",
+        "x": 0.75,
+        "y": 0.75,
+        "kind": "load",
+        "title": {
+          "en": "Test point at the right table edge",
+          "de": "Prüfpunkt am rechten Tischrand"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 351,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "slab-left",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.64,
+              "w": 0.8,
+              "h": 0.11,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber"
+            },
+            {
+              "id": "slab-right",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.64,
+              "w": 0.8,
+              "h": 0.11,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber"
+            },
+            {
+              "id": "leaf-bar",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.06,
+              "w": 0.6,
+              "h": 0.105,
+              "regions": [
+                "leaf-top",
+                "slide-rails"
+              ],
+              "material": "oak-timber"
+            },
+            {
+              "id": "leg-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.135,
+                  0.7
+                ],
+                [
+                  0.135,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "legs",
+              "penMm": 0.18
+            },
+            {
+              "id": "leg-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.665,
+                  0.7
+                ],
+                [
+                  0.665,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "legs",
+              "penMm": 0.18
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Table sign 3.2 x 1.5 mm: one slab per half (top and apron merged), a leaf bar between and two leg strokes.",
+            "de": "Tischzeichen 3,2 x 1,5 mm: je Hälfte eine Platte (Platte und Zarge verschmolzen), ein Einlegebalken dazwischen und zwei Beinstriche."
+          },
+          "retained": {
+            "en": "Top level 0.75 m, apron zone, leaf bar, legs.",
+            "de": "Plattenhöhe 0,75 m, Zargenzone, Einlegebalken, Beine."
+          },
+          "merged": {
+            "en": "Top halves with the aprons: one 0.11 m slab each; the leaf with its slide rails is one bar.",
+            "de": "Plattenhälften mit Zargen: je eine 0,11 m dicke Platte; die Einlegeplatte mit ihren Schienen ist ein Balken."
+          },
+          "omitted": {
+            "en": "Tapering of the legs, chamfers, rear legs.",
+            "de": "Verjüngung der Beine, Fasen, hintere Beine."
+          },
+          "thinElements": {
+            "en": "Legs (0.07 m = 0.14 mm) are single strokes of 0.18 mm = 0.09 m real width; the 0.03 m leaf is drawn as part of a 0.09 m bar.",
+            "de": "Beine (0,07 m = 0,14 mm) sind Einzelstriche von 0,18 mm = 0,09 m Realbreite; die 0,03 m dicke Einlegeplatte ist Teil eines 0,09 m hohen Balkens."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Slabs tone 0.7, leaf bar 0.6.",
+            "de": "Platten Ton 0,7, Einlegebalken 0,6."
+          },
+          "overlays": {
+            "en": "Slabs list table-top and apron; the leaf bar lists leaf-top and slide-rails; legs carry their region.",
+            "de": "Platten führen table-top und apron; der Einlegebalken führt leaf-top und slide-rails; Beine tragen ihre Region."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 151,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "slab-left",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.64,
+              "w": 0.8,
+              "h": 0.11,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber"
+            },
+            {
+              "id": "slab-right",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.64,
+              "w": 0.8,
+              "h": 0.11,
+              "regions": [
+                "table-top",
+                "apron"
+              ],
+              "material": "oak-timber"
+            },
+            {
+              "id": "leaf-bar",
+              "bone": "leaf",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.06,
+              "w": 0.6,
+              "h": 0.09,
+              "regions": [
+                "leaf-top",
+                "slide-rails"
+              ],
+              "material": "oak-timber"
+            },
+            {
+              "id": "leg-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1125,
+                  0.0
+                ],
+                [
+                  0.1575,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.64
+                ],
+                [
+                  0.17,
+                  0.72
+                ],
+                [
+                  0.1,
+                  0.72
+                ],
+                [
+                  0.1,
+                  0.64
+                ]
+              ],
+              "closed": true,
+              "region": "legs",
+              "material": "oak-timber"
+            },
+            {
+              "id": "leg-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.6425,
+                  0.0
+                ],
+                [
+                  0.6875,
+                  0.0
+                ],
+                [
+                  0.7,
+                  0.64
+                ],
+                [
+                  0.7,
+                  0.72
+                ],
+                [
+                  0.63,
+                  0.72
+                ],
+                [
+                  0.63,
+                  0.64
+                ]
+              ],
+              "closed": true,
+              "region": "legs",
+              "material": "oak-timber"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Table 8 x 3.8 mm: two slabs, leaf bar and two tapered legs.",
+            "de": "Tisch 8 x 3,8 mm: zwei Platten, Einlegebalken und zwei konische Beine."
+          },
+          "retained": {
+            "en": "Slabs, leaf bar and the tapered legs.",
+            "de": "Platten, Einlegebalken und die konischen Beine."
+          },
+          "merged": {
+            "en": "Top and apron are one slab (0.03 m top = 0.15 mm alone); leaf and rails one bar.",
+            "de": "Platte und Zarge sind eine Platte (0,03 m Platte allein = 0,15 mm); Einlegeplatte und Schienen ein Balken."
+          },
+          "omitted": {
+            "en": "Rear legs, joints, rails as own shapes.",
+            "de": "Hintere Beine, Verbindungen, Schienen als eigene Formen."
+          },
+          "thinElements": {
+            "en": "Leaf bar is 0.09 m thick instead of 0.03 m.",
+            "de": "Der Einlegebalken ist 0,09 m statt 0,03 m dick."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Slabs 0.7, legs 0.6.",
+            "de": "Platten 0,7, Beine 0,6."
+          },
+          "overlays": {
+            "en": "As at 1:500 for slabs and bar; legs bind legs.",
+            "de": "Wie bei 1:500 für Platten und Balken; die Beine binden legs."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 76,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "top-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.72,
+              "w": 0.8,
+              "h": 0.03,
+              "region": "table-top",
+              "material": "oak-timber"
+            },
+            {
+              "id": "top-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.72,
+              "w": 0.8,
+              "h": 0.03,
+              "region": "table-top",
+              "material": "oak-timber"
+            },
+            {
+              "id": "apron-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.1,
+              "y": 0.64,
+              "w": 0.7,
+              "h": 0.08,
+              "region": "apron",
+              "material": "oak-timber"
+            },
+            {
+              "id": "apron-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.64,
+              "w": 0.7,
+              "h": 0.08,
+              "region": "apron",
+              "material": "oak-timber"
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0,
+              "w": 0.6,
+              "h": 0.03,
+              "region": "leaf-top",
+              "material": "oak-timber"
+            },
+            {
+              "id": "rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.66,
+              "w": 1.0,
+              "h": 0.06,
+              "region": "slide-rails",
+              "material": "steel-slides"
+            },
+            {
+              "id": "leg-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1125,
+                  0.0
+                ],
+                [
+                  0.1575,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.64
+                ],
+                [
+                  0.17,
+                  0.72
+                ],
+                [
+                  0.1,
+                  0.72
+                ],
+                [
+                  0.1,
+                  0.64
+                ]
+              ],
+              "closed": true,
+              "region": "legs",
+              "material": "oak-timber"
+            },
+            {
+              "id": "leg-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.6425,
+                  0.0
+                ],
+                [
+                  0.6875,
+                  0.0
+                ],
+                [
+                  0.7,
+                  0.64
+                ],
+                [
+                  0.7,
+                  0.72
+                ],
+                [
+                  0.63,
+                  0.72
+                ],
+                [
+                  0.63,
+                  0.64
+                ]
+              ],
+              "closed": true,
+              "region": "legs",
+              "material": "oak-timber"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Table 16 x 7.5 mm: top halves, aprons, stored leaf, slide rails behind and tapered legs.",
+            "de": "Tisch 16 x 7,5 mm: Plattenhälften, Zargen, verstaute Einlegeplatte, Schienen dahinter und konische Beine."
+          },
+          "retained": {
+            "en": "Top planks (0.3 mm), aprons, leaf and rails as own shapes so the extension reads when it opens.",
+            "de": "Plattenbohlen (0,3 mm), Zargen, Einlegeplatte und Schienen als eigene Formen, damit sich das Ausziehen lesen lässt."
+          },
+          "merged": {
+            "en": "Front and rear legs coincide.",
+            "de": "Vordere und hintere Beine fallen zusammen."
+          },
+          "omitted": {
+            "en": "Grain, chamfers, slide bearings.",
+            "de": "Maserung, Fasen, Gleitlager."
+          },
+          "thinElements": {
+            "en": "All members are filled shapes of at least 0.3 mm.",
+            "de": "Alle Bauteile sind gefüllte Formen von mindestens 0,3 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Top 0.7, apron 0.55, leaf 0.65, rails 0.35.",
+            "de": "Platte 0,7, Zarge 0,55, Einlegeplatte 0,65, Schienen 0,35."
+          },
+          "overlays": {
+            "en": "One shape per region.",
+            "de": "Eine Form je Region."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.5,
+          "detail": 0.25,
+          "texture": 0.13,
+          "glazing": 0.18,
+          "ground": 0.7
+        },
+        "hatches": [
+          {
+            "id": "grain-h",
+            "title": {
+              "en": "Oak grain horizontal",
+              "de": "Eichenmaserung waagerecht"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.6,
+            "penMm": 0.13
+          },
+          {
+            "id": "grain-v",
+            "title": {
+              "en": "Oak grain vertical",
+              "de": "Eichenmaserung senkrecht"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.5,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "top-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.728
+                ],
+                [
+                  0.008,
+                  0.72
+                ],
+                [
+                  0.8,
+                  0.72
+                ],
+                [
+                  0.8,
+                  0.75
+                ],
+                [
+                  0.0,
+                  0.75
+                ]
+              ],
+              "closed": true,
+              "region": "table-top",
+              "material": "oak-timber"
+            },
+            {
+              "id": "top-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.72
+                ],
+                [
+                  0.792,
+                  0.72
+                ],
+                [
+                  0.8,
+                  0.728
+                ],
+                [
+                  0.8,
+                  0.75
+                ],
+                [
+                  0.0,
+                  0.75
+                ]
+              ],
+              "closed": true,
+              "region": "table-top",
+              "material": "oak-timber"
+            },
+            {
+              "id": "apron-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.1,
+              "y": 0.64,
+              "w": 0.7,
+              "h": 0.08,
+              "region": "apron",
+              "material": "oak-timber",
+              "hatch": "grain-h"
+            },
+            {
+              "id": "apron-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.64,
+              "w": 0.7,
+              "h": 0.08,
+              "region": "apron",
+              "material": "oak-timber",
+              "hatch": "grain-h"
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  0.0
+                ],
+                [
+                  0.6,
+                  0.026
+                ],
+                [
+                  0.594,
+                  0.03
+                ],
+                [
+                  0.006,
+                  0.03
+                ],
+                [
+                  0.0,
+                  0.026
+                ]
+              ],
+              "closed": true,
+              "region": "leaf-top",
+              "material": "oak-timber"
+            },
+            {
+              "id": "rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.66,
+              "w": 1.0,
+              "h": 0.06,
+              "region": "slide-rails",
+              "material": "steel-slides"
+            },
+            {
+              "id": "leg-l",
+              "bone": "top-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1125,
+                  0.0
+                ],
+                [
+                  0.1575,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.56
+                ],
+                [
+                  0.17,
+                  0.72
+                ],
+                [
+                  0.1,
+                  0.72
+                ],
+                [
+                  0.1,
+                  0.56
+                ]
+              ],
+              "closed": true,
+              "region": "legs",
+              "material": "oak-timber",
+              "hatch": "grain-v"
+            },
+            {
+              "id": "shoulder-l",
+              "bone": "top-left",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.56
+                ],
+                [
+                  0.17,
+                  0.56
+                ]
+              ],
+              "closed": false,
+              "region": "legs"
+            },
+            {
+              "id": "leg-r",
+              "bone": "top-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.6425,
+                  0.0
+                ],
+                [
+                  0.6875,
+                  0.0
+                ],
+                [
+                  0.7,
+                  0.56
+                ],
+                [
+                  0.7,
+                  0.72
+                ],
+                [
+                  0.63,
+                  0.72
+                ],
+                [
+                  0.63,
+                  0.56
+                ]
+              ],
+              "closed": true,
+              "region": "legs",
+              "material": "oak-timber",
+              "hatch": "grain-v"
+            },
+            {
+              "id": "shoulder-r",
+              "bone": "top-right",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.63,
+                  0.56
+                ],
+                [
+                  0.7,
+                  0.56
+                ]
+              ],
+              "closed": false,
+              "region": "legs"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Table 32 x 15 mm with all members: planks, aprons with grain, leaf, rails, tapered legs with vertical grain.",
+            "de": "Tisch 32 x 15 mm mit allen Bauteilen: Bohlen, Zargen mit Maserung, Einlegeplatte, Schienen, konische Beine mit senkrechter Maserung."
+          },
+          "retained": {
+            "en": "Chamfered underside edges of the top, bevelled leaf edges, stepped legs (square shoulder to 0.56 m, then tapering), joint at mid-span, aprons set back from the ends, leaf and rails as in 1:100 plus grain hatching.",
+            "de": "Stoß in Feldmitte, Zargen von den Enden eingerückt, Einlegeplatte und Schienen wie bei 1:100 mit Maserungsschraffur."
+          },
+          "merged": {
+            "en": "Front and rear legs coincide.",
+            "de": "Vordere und hintere Beine fallen zusammen."
+          },
+          "omitted": {
+            "en": "Corner joints, screws, edge chamfers (below 0.03 m).",
+            "de": "Eckverbindungen, Schrauben, Kantenfasen (unter 0,03 m)."
+          },
+          "thinElements": {
+            "en": "Planks and slides as real thickness.",
+            "de": "Bohlen und Schienen in Realdicke."
+          },
+          "hatching": {
+            "en": "Grain lines 0.6 / 0.5 mm spacing, 0.13 mm pen on aprons and legs.",
+            "de": "Maserungslinien 0,6 / 0,5 mm Abstand, Stift 0,13 mm an Zargen und Beinen."
+          },
+          "styles": {
+            "en": "Same tones as 1:100.",
+            "de": "Töne wie bei 1:100."
+          },
+          "overlays": {
+            "en": "One shape per region; hatched shapes keep their region.",
+            "de": "Eine Form je Region; schraffierte Formen behalten ihre Region."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "table-plan",
+        "title": {
+          "en": "Dining table plan symbol",
+          "de": "Esstisch-Grundrisssymbol"
+        },
+        "description": {
+          "en": "Floor-plan sign of the closed table 1.60 x 0.90 m with the extension direction marked by the leaf outline (dashed in drawing practice, solid 0.13 mm here).",
+          "de": "Grundrisszeichen des geschlossenen Tisches 1,60 x 0,90 m mit der Auszugsrichtung durch die Kontur der Einlegeplatte."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "plan-top",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1.6,
+                  0
+                ],
+                [
+                  1.6,
+                  0.9
+                ],
+                [
+                  0,
+                  0.9
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plan-leaf",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.5,
+                  0.0
+                ],
+                [
+                  0.5,
+                  0.9
+                ],
+                [
+                  1.1,
+                  0.9
+                ],
+                [
+                  1.1,
+                  0.0
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Model metres at real size: x along the table 0 to 1.60 m, y across 0 to 0.90 m; the leaf outline marks the 0.60 m extension.",
+          "de": "Modellmeter in Originalgröße: x entlang 0 bis 1,60 m, y quer 0 bis 0,90 m; die Kontur der Einlegeplatte markiert den 0,60 m langen Auszug."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "closed",
+        "title": {
+          "en": "Closed",
+          "de": "Geschlossen"
+        },
+        "description": {
+          "en": "Table closed at 1.60 m, the leaf stored under the top; a window sun patch lies on the left half.",
+          "de": "Tisch geschlossen mit 1,60 m, die Einlegeplatte unter der Platte verstaut; ein Fensterlichtfleck liegt auf der linken Hälfte."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-top": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "leaf-top": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            },
+            "apron": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "slide-rails": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "extended",
+        "title": {
+          "en": "Extended with leaf",
+          "de": "Ausgezogen mit Einlegeplatte"
+        },
+        "description": {
+          "en": "Halves pulled apart by 0.30 m each, the leaf raised flush: table length 2.20 m.",
+          "de": "Hälften je 0,30 m auseinandergezogen, Einlegeplatte bündig angehoben: Tischlänge 2,20 m."
+        },
+        "bones": {
+          "top-left": {
+            "dx": -0.3
+          },
+          "top-right": {
+            "dx": 0.3
+          },
+          "leaf": {
+            "dy": 0.03
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-top": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.25
+            },
+            "leaf-top": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "apron": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "slide-rails": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "set-for-dinner",
+        "title": {
+          "en": "Set for dinner",
+          "de": "Zum Essen gedeckt"
+        },
+        "description": {
+          "en": "Extended table with six place settings; forearms of the guests rest on the top edge.",
+          "de": "Ausgezogener Tisch mit sechs Gedecken; Unterarme der Gäste liegen am Plattenrand auf."
+        },
+        "bones": {
+          "top-left": {
+            "dx": -0.3
+          },
+          "top-right": {
+            "dx": 0.3
+          },
+          "leaf": {
+            "dy": 0.03
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-top": {
+              "exposedFraction": 0.95,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 30
+              }
+            },
+            "leaf-top": {
+              "exposedFraction": 0.97,
+              "sunlitFraction": 0.3,
+              "contact": {
+                "fraction": 0.03,
+                "tempC": 30
+              }
+            },
+            "apron": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "slide-rails": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "dinner-left",
+            "kind": "live",
+            "title": {
+              "en": "Table setting on the left half (0.5 kN/m2)",
+              "de": "Gedeck auf der linken Hälfte (0,5 kN/m2)"
+            },
+            "distributed": {
+              "bone": "top-left",
+              "fromM": 0,
+              "toM": 0.8,
+              "wxNPerM": 0,
+              "wyNPerM": -450
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          },
+          {
+            "id": "dinner-leaf",
+            "kind": "live",
+            "title": {
+              "en": "Table setting on the leaf (0.5 kN/m2)",
+              "de": "Gedeck auf der Einlegeplatte (0,5 kN/m2)"
+            },
+            "distributed": {
+              "bone": "leaf",
+              "fromM": 0,
+              "toM": 0.6,
+              "wxNPerM": 0,
+              "wyNPerM": -450
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          },
+          {
+            "id": "dinner-right",
+            "kind": "live",
+            "title": {
+              "en": "Table setting on the right half (0.5 kN/m2)",
+              "de": "Gedeck auf der rechten Hälfte (0,5 kN/m2)"
+            },
+            "distributed": {
+              "bone": "top-right",
+              "fromM": 0,
+              "toM": 0.8,
+              "wxNPerM": 0,
+              "wyNPerM": -450
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "edge-test-load",
+        "title": {
+          "en": "Edge test load",
+          "de": "Randprüflast"
+        },
+        "description": {
+          "en": "Closed table with a vertical test load of 750 N at the table edge.",
+          "de": "Geschlossener Tisch mit senkrechter Prüflast von 750 N am Tischrand."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-top": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "leaf-top": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            },
+            "apron": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "slide-rails": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "edge-test",
+            "kind": "imposed",
+            "title": {
+              "en": "Vertical test load at the edge (750 N)",
+              "de": "Senkrechte Prüflast am Rand (750 N)"
+            },
+            "anchor": "edge-right",
+            "fxN": 0.0,
+            "fyN": -750,
+            "source": "authored-estimate",
+            "reference": "en-1730"
+          }
+        ]
+      },
+      {
+        "id": "pulled-apart-key",
+        "title": {
+          "en": "Halves apart, leaf stored (key)",
+          "de": "Hälften auseinander, Platte verstaut (Schlüssel)"
+        },
+        "description": {
+          "en": "Halves pulled apart, leaf still lying on the rails.",
+          "de": "Hälften auseinandergezogen, Einlegeplatte liegt noch auf den Schienen."
+        },
+        "key": true,
+        "bones": {
+          "top-left": {
+            "dx": -0.3
+          },
+          "top-right": {
+            "dx": 0.3
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-top": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.25
+            },
+            "leaf-top": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            },
+            "apron": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "slide-rails": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "extend-table",
+        "title": {
+          "en": "Extend the table",
+          "de": "Tisch ausziehen"
+        },
+        "description": {
+          "en": "The halves are pulled apart on the slide rails, then the leaf is lifted into the gap.",
+          "de": "Die Hälften werden auf den Schienen auseinandergezogen, dann wird die Einlegeplatte in die Lücke gehoben."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.4,
+            "pose": "pulled-apart-key",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.4,
+            "pose": "extended",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "extended",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "pull",
+            "fromS": 0,
+            "toS": 2.4,
+            "title": {
+              "en": "Pull apart",
+              "de": "Auseinanderziehen"
+            }
+          },
+          {
+            "id": "lift",
+            "fromS": 2.4,
+            "toS": 4.0,
+            "title": {
+              "en": "Lift the leaf",
+              "de": "Einlegeplatte anheben"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2.4,
+            "kind": "motion",
+            "title": {
+              "en": "Leaf rises into the gap",
+              "de": "Einlegeplatte hebt sich in die Lücke"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:leaf-top:exposedFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2.4,
+                "v": 0
+              },
+              {
+                "t": 3.4,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "retract-table",
+        "title": {
+          "en": "Close the table",
+          "de": "Tisch schließen"
+        },
+        "description": {
+          "en": "The leaf is lowered, then the halves are pushed together.",
+          "de": "Die Einlegeplatte wird abgesenkt, dann werden die Hälften zusammengeschoben."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "extended",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.0,
+            "pose": "pulled-apart-key",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.4,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "lower",
+            "fromS": 0,
+            "toS": 1.0,
+            "title": {
+              "en": "Lower the leaf",
+              "de": "Einlegeplatte absenken"
+            }
+          },
+          {
+            "id": "push",
+            "fromS": 1.0,
+            "toS": 3.4,
+            "title": {
+              "en": "Push together",
+              "de": "Zusammenschieben"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.0,
+            "kind": "motion",
+            "title": {
+              "en": "Leaf is stored",
+              "de": "Einlegeplatte verstaut"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:leaf-top:exposedFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1.0,
+                "v": 0
+              },
+              {
+                "t": 4.0,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "lay-the-table",
+        "title": {
+          "en": "Lay the table",
+          "de": "Tisch decken"
+        },
+        "description": {
+          "en": "On the extended table the place settings arrive one after another (0.5 kN/m2 in total).",
+          "de": "Auf dem ausgezogenen Tisch kommen die Gedecke nacheinander (insgesamt 0,5 kN/m2)."
+        },
+        "durationS": 6.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "extended",
+            "ease": "linear"
+          },
+          {
+            "t": 6.0,
+            "pose": "set-for-dinner",
+            "ease": "linear"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 6.0
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 6.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "lay",
+            "fromS": 0,
+            "toS": 6.0,
+            "title": {
+              "en": "Laying",
+              "de": "Decken"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.0,
+            "kind": "load-on",
+            "title": {
+              "en": "First place settings",
+              "de": "Erste Gedecke"
+            },
+            "target": "dinner-left"
+          },
+          {
+            "t": 3.0,
+            "kind": "load-on",
+            "title": {
+              "en": "Leaf settings",
+              "de": "Gedecke auf der Einlegeplatte"
+            },
+            "target": "dinner-leaf"
+          },
+          {
+            "t": 5.0,
+            "kind": "load-on",
+            "title": {
+              "en": "Last settings",
+              "de": "Letzte Gedecke"
+            },
+            "target": "dinner-right"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:dinner-left",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.0,
+                "v": 0
+              },
+              {
+                "t": 2.0,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:dinner-leaf",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3.0,
+                "v": 0
+              },
+              {
+                "t": 4.0,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:dinner-right",
+            "ease": "linear",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5.0,
+                "v": 0
+              },
+              {
+                "t": 6.0,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 350,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "table-top",
+          "title": {
+            "en": "Table top halves",
+            "de": "Tischplattenhälften"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "oak-timber",
+          "areaM2": 1.44,
+          "characteristicLengthM": 0.9,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.85,
+          "layers": [
+            {
+              "id": "top-plank",
+              "title": {
+                "en": "Oak plank 30 mm",
+                "de": "Eichenbohle 30 mm"
+              },
+              "kind": "timber",
+              "material": "oak-timber",
+              "thicknessM": 0.03,
+              "resistanceM2KW": 0.166667,
+              "heatCapacityJM2K": 26940,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 26940,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "leaf-top",
+          "title": {
+            "en": "Extension leaf",
+            "de": "Einlegeplatte"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "oak-timber",
+          "areaM2": 0.54,
+          "characteristicLengthM": 0.6,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.85,
+          "layers": [
+            {
+              "id": "leaf-plank",
+              "title": {
+                "en": "Oak plank 30 mm",
+                "de": "Eichenbohle 30 mm"
+              },
+              "kind": "timber",
+              "material": "oak-timber",
+              "thicknessM": 0.03,
+              "resistanceM2KW": 0.166667,
+              "heatCapacityJM2K": 26940,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 26940,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "apron",
+          "title": {
+            "en": "Aprons",
+            "de": "Zargen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "oak-timber",
+          "areaM2": 0.42,
+          "characteristicLengthM": 0.08,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.45,
+          "layers": [
+            {
+              "id": "apron-board",
+              "title": {
+                "en": "Oak board 25 mm",
+                "de": "Eichenbrett 25 mm"
+              },
+              "kind": "timber",
+              "material": "oak-timber",
+              "thicknessM": 0.025,
+              "resistanceM2KW": 0.138889,
+              "heatCapacityJM2K": 26940,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 26940,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "legs",
+          "title": {
+            "en": "Tapered legs",
+            "de": "Konische Beine"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "oak-timber",
+          "areaM2": 0.75,
+          "characteristicLengthM": 0.06,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "leg-solid",
+              "title": {
+                "en": "Oak leg, half thickness 30 mm",
+                "de": "Eichenbein, halbe Dicke 30 mm"
+              },
+              "kind": "timber",
+              "material": "oak-timber",
+              "thicknessM": 0.03,
+              "resistanceM2KW": 0.166667,
+              "heatCapacityJM2K": 26940,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 26940,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "slide-rails",
+          "title": {
+            "en": "Slide rails",
+            "de": "Auszugsschienen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-slides",
+          "areaM2": 0.15,
+          "characteristicLengthM": 0.06,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.2,
+          "layers": [
+            {
+              "id": "rail-steel",
+              "title": {
+                "en": "Steel rail 2 mm",
+                "de": "Stahlschiene 2 mm"
+              },
+              "kind": "metal",
+              "material": "steel-slides",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 4e-05,
+              "heatCapacityJM2K": 7020,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7020,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Solid oak after ISO 10456 (700 kg/m3, 0.18 W/mK, 1600 J/kgK); areal heat capacity rho cp min(t, sqrt(alpha 3600 s)): a 30 mm plank takes part fully (17 kJ/m2K), the 12 mm penetration depth of one hour applies to thicker parts.",
+          "de": "Massive Eiche nach ISO 10456 (700 kg/m3, 0,18 W/mK, 1600 J/kgK); flächenbezogene Wärmekapazität rho cp min(t, sqrt(alpha 3600 s)): eine 30-mm-Bohle nimmt voll teil (17 kJ/m2K), für dickere Teile gilt die Eindringtiefe einer Stunde."
+        },
+        {
+          "en": "The leaf and the slide rails are exposed to air only in extended poses (exposedFraction 0 when closed: the leaf lies under the top, the rails behind the aprons).",
+          "de": "Einlegeplatte und Auszugsschienen liegen nur in ausgezogenen Posen an der Luft (exposedFraction 0 im geschlossenen Zustand: die Einlegeplatte liegt unter der Platte, die Schienen hinter den Zargen)."
+        },
+        {
+          "en": "Guests rest forearms on the table edge: contact surface at 30 degC (ISO 7730 clothing surface), authored fractions 0.05 and 0.03 of the top area.",
+          "de": "Gäste legen Unterarme auf den Tischrand: Kontaktfläche 30 degC (Bekleidungsoberfläche nach ISO 7730), Anteile 0,05 und 0,03 der Plattenfläche."
+        },
+        {
+          "en": "Reference case: 350 W/m2 window sun patch behind glazing, 21 degC, still air; sunlit fractions are scenario data per pose.",
+          "de": "Referenzfall: 350 W/m2 Fensterlichtfleck hinter Verglasung, 21 degC, ruhige Luft; besonnte Anteile sind Szenariodaten je Pose."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "leg-left",
+        "leg-right"
+      ],
+      "assumptions": [
+        {
+          "en": "Each table half is a rigid body with its two leg pairs on the floor; the halves slide on the rails (prismatic joints 0.30 m), the leaf lifts by 0.03 m onto the rails.",
+          "de": "Jede Tischhälfte ist ein starrer Körper mit zwei Beinpaaren am Boden; die Hälften gleiten auf den Schienen (Schiebegelenke 0,30 m), die Einlegeplatte hebt sich um 0,03 m auf die Schienen."
+        },
+        {
+          "en": "Dinner load 0.5 kN/m2 on the top (authored-estimate, deliberately above place settings of six persons; EN 1991-1-1 category A floor loads of 1.5-2.0 kN/m2 describe floors, not tables).",
+          "de": "Essenslast 0,5 kN/m2 auf der Platte (Schätzwert, bewusst über den Gedecken von sechs Personen; die Bodenlasten 1,5-2,0 kN/m2 der Kategorie A in EN 1991-1-1 beschreiben Böden, nicht Tische)."
+        },
+        {
+          "en": "The 750 N vertical edge test load follows the order of the static load tests of EN 1730 and EN 12521; the magnitude is an authored-estimate to be verified against the standard text.",
+          "de": "Die senkrechte Rand-Prüflast von 750 N folgt der Größenordnung der statischen Lastprüfungen nach EN 1730 und EN 12521; der Betrag ist ein Schätzwert und am Normtext zu prüfen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "closed",
+      "defaultClip": "extend-table",
+      "defaultScale": 50,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

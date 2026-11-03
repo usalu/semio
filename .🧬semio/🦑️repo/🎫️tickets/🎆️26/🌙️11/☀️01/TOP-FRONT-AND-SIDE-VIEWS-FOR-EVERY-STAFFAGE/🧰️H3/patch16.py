@@ -1,0 +1,6 @@
+s=open("human.py",encoding="utf8").read()
+s=s.replace('cap(o, f"upper-arm-{sd}", arm, R.o(arm)[0], lat, R.t(arm)[0], lat,','cap(o, f"upper-arm-{sd}", arm, R.o(arm)[0], lat, R.t(arm)[0] - P.get("arm_trim", 0.0), lat,')
+s=s.replace('cap(o, f"forearm-{sd}", fa, R.o(fa)[0], lat, R.t(fa)[0], lat,','cap(o, f"forearm-{sd}", fa, R.o(fa)[0], lat, R.t(fa)[0] - P.get("arm_trim", 0.0), lat,')
+open("human.py","w",encoding="utf8").write(s)
+t=open("p_child.py",encoding="utf8").read().replace("head_trim=.04)","head_trim=.04, arm_trim=.05)")
+open("p_child.py","w",encoding="utf8").write(t)

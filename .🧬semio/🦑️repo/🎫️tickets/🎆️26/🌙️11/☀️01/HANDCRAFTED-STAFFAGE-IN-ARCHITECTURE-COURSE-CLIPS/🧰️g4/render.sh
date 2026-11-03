@@ -1,0 +1,13 @@
+#!/bin/bash
+# render.sh <path under ⚡️energy/> <Scene>... : renders scenes one at a time, ql 15 fps, de, speaker
+cd /c/git/semio
+T=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS"
+G="$T/🗑️generated/g4/render"
+export PYTHONPATH=/c/git/semio SEMIO_TEACHING_LANGUAGE=de SEMIO_TEACHING_AUDIENCE=speaker SEMIO_TEACHING_OUTPUT_ROOT="$G/out" PYTHONUTF8=1
+series="$1"; shift
+F="🎓️teaching/🏛️architecture/⚡️energy/$series/🐍️.py"
+mkdir -p "$G"
+for s in "$@"; do
+  .🧬semio/🎓️teaching/⚡️cache/python/Scripts/python.exe -m manim -ql --fps 15 --disable_caching --media_dir "$G/media" "$F" "$s" > "$G/$s.log" 2>&1
+  echo "$series $s exit $?" >> "$G/done.log"
+done

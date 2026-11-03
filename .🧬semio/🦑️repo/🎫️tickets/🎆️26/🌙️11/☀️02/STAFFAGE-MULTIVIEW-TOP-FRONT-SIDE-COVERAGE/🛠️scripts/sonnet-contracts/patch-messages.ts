@@ -1,0 +1,20 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const file = process.argv[2]!;
+let t = readFileSync(file, "utf8");
+const sub = (from: string, to: string): void => {
+  if (!t.includes(from)) throw new Error(`missing: ${from.slice(0, 70)}`);
+  t = t.replace(from, to);
+};
+sub("so the side view follows, or make it thin.", "so the side elevation follows, or make it thin.");
+sub("nur für Vorderansicht- und Grundrissformen vorkommt.", "nur für Vorderansichts- und Draufsichtformen vorkommt.");
+sub("`The ${viewpoint} section \"${section.label.en}\" cuts at", "`The ${viewpoint === \"front\" ? \"front\" : \"plan\"} section \"${section.label.en}\" cuts at");
+sub("`Der Schnitt \"${section.label.de}\" der ${viewpoint === \"front\" ? \"Vorderansicht\" : \"Draufsicht\"} liegt", "`Der ${viewpoint === \"front\" ? \"Schnitt\" : \"Grundriss-Schnitt\"} \"${section.label.de}\" der ${viewpoint === \"front\" ? \"Vorderansicht\" : \"Draufsicht\"} liegt");
+sub("has no geometry for the view(s) ${lacking.join(\", \")}; an alternative must be drawable in elevation, front and plan.", "has no geometry for the viewpoint(s) ${lacking.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].en).join(\", \")}; an alternative must be drawable in side elevation, front elevation and plan (top view).");
+sub("hat keine Geometrie für die Ansicht(en) ${lacking.join(\", \")};", "hat keine Geometrie für die Ansicht(en) ${lacking.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].de).join(\", \")};");
+sub('"The elevation geometry must not be empty.", "Die Ansichtsgeometrie darf nicht leer sein."', '"The side elevation geometry must not be empty.", "Die Seitenansichtsgeometrie darf nicht leer sein."');
+sub('"The front geometry must not be empty."', '"The front elevation geometry must not be empty."');
+sub('"The plan geometry must not be empty.", "Die Grundrissgeometrie darf nicht leer sein."', '"The plan (top view) geometry must not be empty.", "Die Draufsichtgeometrie darf nicht leer sein."');
+sub("of the ${label} ${viewpoint} view differs", "of the ${label} ${VIEWPOINT_NAMES[viewpoint].en} differs");
+sub('const viewNames = { elevation: ["side view", "Seitenansicht"], front: ["front view", "Vorderansicht"], plan: ["top view", "Draufsicht"] } as const;', "const viewNames = { elevation: [VIEWPOINT_NAMES.elevation.en, VIEWPOINT_NAMES.elevation.de], front: [VIEWPOINT_NAMES.front.en, VIEWPOINT_NAMES.front.de], plan: [VIEWPOINT_NAMES.plan.en, VIEWPOINT_NAMES.plan.de] } as const;");
+sub("/** 📏️ The overall paper extent in millimetres from which", "/** 🏷️ The names of the three viewpoints in validator messages (terminology R1). */\nconst VIEWPOINT_NAMES: Readonly<Record<Viewpoint, Text>> = { elevation: { en: \"side elevation\", de: \"Seitenansicht\" }, front: { en: \"front elevation\", de: \"Vorderansicht\" }, plan: { en: \"plan (top view)\", de: \"Draufsicht\" } };\n\n/** 📏️ The overall paper extent in millimetres from which");
+writeFileSync(file, t);

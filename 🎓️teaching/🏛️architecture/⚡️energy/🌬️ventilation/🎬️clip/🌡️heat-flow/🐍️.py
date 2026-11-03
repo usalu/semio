@@ -26,7 +26,6 @@ import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
-import sys as _sys
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -52,7 +51,7 @@ math_label = _manim_module.math_label
 math_row = _manim_module.math_row
 math_readout = _manim_module.math_readout
 math_panel = _manim_module.math_panel
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 smooth_path = _manim_module.smooth_path
 flow_animation = _manim_module.flow_animation
 flow_guides = _manim_module.flow_guides
@@ -66,10 +65,12 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
-radiator = _manim_module.radiator
+staffage = _manim_module.staffage
+staffage_height = _manim_module.staffage_height
 sun_glyph = _manim_module.sun_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
 ripples = _manim_module.ripples
@@ -244,7 +245,7 @@ def _hide(scene, *mobs, run_time: float = 0.7):
 def _season_chip(season: str):
     """🔖 Season marker — Winter belongs to Heizung, Sommer to Kühlung, in the colour of its hand-over chip."""
     winter = season == "winter"
-    return chip("Winter" if winter else "Sommer", HEIZUNG if winter else KUEHLUNG)
+    return chip("Winter" if winter else tr("Summer", "Sommer"), HEIZUNG if winter else KUEHLUNG)
 
 
 def _handover_chip(prefix: str, src: str, color: str):
@@ -288,38 +289,33 @@ class Beat1_Luftwaerme(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Wärmekapazität der Luft")
+        subtitle = section_heading(tr("Heat capacity of air", "Wärmekapazität der Luft"))
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "cube"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        #region cube
         c_center = UP * 0.55
         cube = _cube_faces(c_center, 1.0, P_BLUE, warm=False)
         cube_label = math_label(r"1\,\mathrm{m^{3}}", size=BODY_FONT_SIZE).move_to(cube[0].get_center() + UP * 0.15)
         self.play(FadeIn(cube, shift=UP * 0.3), FadeIn(cube_label), run_time=2.0)
         hold_for(self, N, "cube", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0)
-        #endregion
 
-        #region mass
         caption = swap_caption(self, caption, subtitle_text(N, "mass"))
         xl = -6.45
         mass = ValueTracker(0.0)
-        rho_lbl = math_label(rf"\rho = {de_num(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}}", np.array([xl, 1.75, 0]),
+        rho_lbl = math_label(rf"\rho = {label_number(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}}", np.array([xl, 1.75, 0]),
                              size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
-        m_read = math_readout(lambda: rf"m = \rho \cdot 1\,\mathrm{{m^{{3}}}} = {de_num(mass.get_value(), 2)}\,\mathrm{{kg}}",
+        m_read = math_readout(lambda: rf"m = \rho \cdot 1\,\mathrm{{m^{{3}}}} = {label_number(mass.get_value(), 2)}\,\mathrm{{kg}}",
                               np.array([xl, 1.2, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
         self.play(FadeIn(rho_lbl), run_time=0.5)
         self.add(m_read)
         self.play(mass.animate.set_value(RHO_AIR), Indicate(cube, color=P_CYAN, scale_factor=1.04), run_time=1.4)
         hold_for(self, N, "mass")
-        #endregion
 
-        #region coil and warming
         caption = swap_caption(self, caption, subtitle_text(N, "coil"))
-        coil = radiator([0, -0.84, 0], color=P_RED).stretch_to_fit_width(0.97).stretch_to_fit_height(0.60)
-        coil_label = body_text("Heizelement", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(coil, DOWN, buff=0.1)
+        coil = staffage("ventilation-heat-flow-heater", unit=0.8 / staffage_height("ventilation-heat-flow-heater"), anchor=np.array([0.0, -1.34, 0.0]))
+        coil_label = body_text(tr("Heating element", "Heizelement"), font_size=LABEL_FONT_SIZE, color=P_RED).next_to(coil, DOWN, buff=0.1)
         heat_spots = [np.array([x, coil.get_top()[1] + 0.03, 0]) for x in (-0.36, 0.0, 0.36)]
         rise = [smooth_path([np.array([s * x0, y0, 0]), np.array([s * (x0 - 0.08), 0.15, 0]), np.array([s * x0, y1, 0])])
                 for s in (-1, 1) for x0, y0, y1 in ((0.55, -0.05, 0.62), (0.2, -0.26, 0.45))]
@@ -328,7 +324,7 @@ class Beat1_Luftwaerme(Scene):
             heat = [ripples(heat_spots, r_max=0.42, rings=2, cycles=rt / 1.2, color=P_RED)]
             return heat + ([flow_animation([(rise, P_BLUE, P_ORANGE)], waves=3, cycles=0.45 * rt)] if convect else [])
 
-        cp_lbl = math_label(rf"c_{{p}} = {de_num(CP_AIR)}\,\mathrm{{J/(kg\,K)}}", np.array([xl, 0.55, 0]),
+        cp_lbl = math_label(rf"c_{{p}} = {label_number(CP_AIR)}\,\mathrm{{J/(kg\,K)}}", np.array([xl, 0.55, 0]),
                             size=BODY_FONT_SIZE, color=P_RED, edge="left")
         self.play(Create(coil), FadeIn(coil_label), FadeIn(cp_lbl), run_time=1.5)
         hold_for(self, N, "coil", during=lambda rt: warming(rt, convect=False))
@@ -337,14 +333,14 @@ class Beat1_Luftwaerme(Scene):
         theta = ValueTracker(20.0)
         thermo = thermometer_glyph(np.array([-1.65, -0.22, 0]), height=1.8, color=P_RED, level=0.35)
         thermo["column"].add_updater(lambda m: thermo["level"].set_value(0.35 + 0.45 * (theta.get_value() - 20.0)))
-        th_read = math_readout(lambda: rf"\theta = {de_num(theta.get_value(), 1)}\,°\mathrm{{C}}", np.array([xl, -0.1, 0]),
+        th_read = math_readout(lambda: rf"\theta = {label_number(theta.get_value(), 1)}\,°\mathrm{{C}}", np.array([xl, -0.1, 0]),
                                size=BODY_FONT_SIZE, color=P_ORANGE)
         q_read = math_readout(
-            lambda: rf"Q = {de_num(RHO_AIR, 1)} \cdot {de_num(CP_AIR)} \cdot {de_num(theta.get_value() - 20.0, 1)} = "
-                    rf"{de_num(RHO_AIR * CP_AIR * (theta.get_value() - 20.0))}\,\mathrm{{J}}",
+            lambda: rf"Q = {label_number(RHO_AIR, 1)} \cdot {label_number(CP_AIR)} \cdot {label_number(theta.get_value() - 20.0, 1)} = "
+                    rf"{label_number(RHO_AIR * CP_AIR * (theta.get_value() - 20.0))}\,\mathrm{{J}}",
             np.array([xl, -0.75, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
         wh_read = math_readout(
-            lambda: rf"= {de_num(RHO_AIR * CP_AIR * (theta.get_value() - 20.0) / 3600.0, 3)}\,\mathrm{{Wh}}",
+            lambda: rf"= {label_number(RHO_AIR * CP_AIR * (theta.get_value() - 20.0) / 3600.0, 3)}\,\mathrm{{Wh}}",
             np.array([xl + 0.42, -1.3, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
         self.play(FadeIn(thermo["group"]), FadeIn(thermo["column"]), *warming(0.4, convect=False), run_time=0.4)
         self.add(th_read, q_read, wh_read)
@@ -352,30 +348,26 @@ class Beat1_Luftwaerme(Scene):
         self.play(*[Transform(a, b) for a, b in zip(cube, warm)], theta.animate.set_value(21.0), *warming(3.0),
                   run_time=3.0, rate_func=linear)
         hold_for(self, N, "heat", during=warming)
-        #endregion
 
-        #region c_Luft
         caption = swap_caption(self, caption, subtitle_text(N, "c_luft"))
         xr = 1.55
-        c_name = body_text("Volumenbezogene Wärmekapazität", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        c_name = body_text(tr("Volumetric heat capacity", "Volumenbezogene Wärmekapazität"), font_size=LABEL_FONT_SIZE, color=P_GREEN)
         c_name.move_to([xr + c_name.width / 2, 1.75, 0])
         c_def = math_label(r"c_{\mathrm{Luft}} = \frac{\rho \cdot c_{p}}{3600\,\mathrm{s/h}}", np.array([xr, 1.0, 0]),
                            size=BODY_FONT_SIZE, color=P_GREEN, edge="left")
-        c_j = math_label(rf"= {de_num(RHO_AIR * CP_AIR)}\,\mathrm{{J/(m^{{3}}K)}}", np.array([xr + 0.75, 0.3, 0]),
+        c_j = math_label(rf"= {label_number(RHO_AIR * CP_AIR)}\,\mathrm{{J/(m^{{3}}K)}}", np.array([xr + 0.75, 0.3, 0]),
                          size=BODY_FONT_SIZE, color=P_GREEN, edge="left")
-        c_wh = math_label(rf"\approx {de_num(C_LUFT, 2)}\,\mathrm{{Wh/(m^{{3}}K)}}", np.array([xr + 0.75, -0.3, 0]),
+        c_wh = math_label(rf"\approx {label_number(C_LUFT, 2)}\,\mathrm{{Wh/(m^{{3}}K)}}", np.array([xr + 0.75, -0.3, 0]),
                           size=BODY_FONT_SIZE, color=P_GREEN, edge="left")
-        q_snap = math_label(rf"{de_num(RHO_AIR * CP_AIR)}\,\mathrm{{J}}", size=BODY_FONT_SIZE, color=P_YELLOW)
+        q_snap = math_label(rf"{label_number(RHO_AIR * CP_AIR)}\,\mathrm{{J}}", size=BODY_FONT_SIZE, color=P_YELLOW)
         q_snap.move_to(q_read.get_right() + LEFT * q_snap.width / 2)
-        wh_snap = math_label(rf"{de_num(RHO_AIR * CP_AIR / 3600.0, 3)}\,\mathrm{{Wh}}", size=BODY_FONT_SIZE, color=P_YELLOW)
+        wh_snap = math_label(rf"{label_number(RHO_AIR * CP_AIR / 3600.0, 3)}\,\mathrm{{Wh}}", size=BODY_FONT_SIZE, color=P_YELLOW)
         wh_snap.move_to(wh_read.get_right() + LEFT * wh_snap.width / 2)
         self.play(FadeIn(c_name), FadeIn(c_def), *warming(0.7), run_time=0.7)
         self.play(TransformFromCopy(q_snap, c_j), *warming(0.9), run_time=0.9)
         self.play(TransformFromCopy(wh_snap, c_wh), *warming(0.9), run_time=0.9)
         hold_for(self, N, "c_luft", during=warming)
-        #endregion
 
-        #region two spellings
         caption = swap_caption(self, caption, subtitle_text(N, "spell"))
         _hide(self, cube, cube_label, rho_lbl, m_read, coil, coil_label, cp_lbl, thermo["group"], thermo["column"],
               th_read, q_read, wh_read, c_name, c_def, c_j, c_wh)
@@ -387,7 +379,7 @@ class Beat1_Luftwaerme(Scene):
             ("q", r"q_{v,\mathrm{R}}\,[\mathrm{m^{3}/s}]", AIR), (None, r"\cdot", P_WHITE),
             ("c", r"\rho \cdot c_{p}\,[\mathrm{J/(m^{3}\,K)}]", P_GREEN), (None, r"=\,\mathrm{W/K}", P_WHITE),
         ], font_size=FORMULA_FONT_SIZE - 5)
-        chip_h, chip_k = chip("Heizung", HEIZUNG), chip("Kühlung", KUEHLUNG)
+        chip_h, chip_k = chip(tr("Heating", "Heizung"), HEIZUNG), chip(tr("Cooling", "Kühlung"), KUEHLUNG)
         line_h = VGroup(chip_h, heiz_row).arrange(RIGHT, buff=0.45)
         line_k = VGroup(chip_k, kuehl_row).arrange(RIGHT, buff=0.45)
         both = VGroup(line_h, line_k).arrange(DOWN, aligned_edge=LEFT, buff=0.55).move_to(UP * 1.25)
@@ -398,24 +390,21 @@ class Beat1_Luftwaerme(Scene):
         ring_k = highlight_param(kuehl, "c", color=P_GREEN)
         self.play(Create(ring_h), Create(ring_k), run_time=0.6)
         hold_for(self, N, "spell")
-        #endregion
 
-        #region watts per kelvin
         caption = swap_caption(self, caption, subtitle_text(N, "perk"))
         k = ValueTracker(0.0)
         perk = math_readout(
-            lambda: rf"\dot{{V}} \cdot c_{{\mathrm{{Luft}}}} = {de_num(V_DOT * k.get_value())} \cdot {de_num(C_LUFT, 2)} "
-                    rf"\approx {de_num(V_DOT * C_LUFT * k.get_value())}\,\mathrm{{W/K}}",
+            lambda: rf"\dot{{V}} \cdot c_{{\mathrm{{Luft}}}} = {label_number(V_DOT * k.get_value())} \cdot {label_number(C_LUFT, 2)} "
+                    rf"\approx {label_number(V_DOT * C_LUFT * k.get_value())}\,\mathrm{{W/K}}",
             np.array([0.0, -0.4, 0]), size=FORMULA_FONT_SIZE, color=P_YELLOW, edge="center")
         row, box, items = math_panel([
             ("c", r"c_{\mathrm{Luft}}", P_GREEN), (None, "=", P_WHITE),
             (None, r"\frac{\rho \cdot c_{p}}{3600\,\mathrm{s/h}}", P_WHITE),
-            (None, rf"\approx {de_num(C_LUFT, 2)}\,\mathrm{{Wh/(m^{{3}}\,K)}}", P_GREEN),
+            (None, rf"\approx {label_number(C_LUFT, 2)}\,\mathrm{{Wh/(m^{{3}}\,K)}}", P_GREEN),
         ])
         self.add(perk)
         self.play(_ramp(k, 1.0), FadeOut(VGroup(ring_h, ring_k)), Create(box), FadeIn(row), run_time=1.8)
         hold_for(self, N, "perk")
-        #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -455,7 +444,7 @@ class Beat2_SensibleWaerme(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Sensible Wärme")
+        subtitle = section_heading(tr("Sensible heat", "Sensible Wärme"))
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -471,7 +460,6 @@ class Beat2_SensibleWaerme(Scene):
         def q():
             return v.get_value() * c.get_value() * d() * kq.get_value()
 
-        #region house and winter streams
         house = _house(np.array([-3.85, -0.05, 0.0]), 0.85)
         season = {"now": "winter"}
         chip_w = _season_chip("winter")
@@ -484,9 +472,7 @@ class Beat2_SensibleWaerme(Scene):
             return _air([(house, season["now"])], rt)
 
         hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 0.9, during=air)
-        #endregion
 
-        #region temperatures and delta theta
         caption = swap_caption(self, caption, subtitle_text(N, "delta"))
         tx_i, tx_e, ty = -1.25, -0.3, -0.38
 
@@ -495,24 +481,22 @@ class Beat2_SensibleWaerme(Scene):
             thermo["column"].add_updater(
                 lambda m: thermo["level"].set_value(float(np.clip((tracker.get_value() + 5) / 45, 0.02, 1.0))))
             head = math_label(src, np.array([x, ty + 1.35 + 0.35, 0.0]), size=BODY_FONT_SIZE, color=color)
-            read = math_readout(lambda: rf"{de_num(tracker.get_value())}\,°\mathrm{{C}}", np.array([x, ty - 0.5, 0.0]),
+            read = math_readout(lambda: rf"{label_number(tracker.get_value())}\,°\mathrm{{C}}", np.array([x, ty - 0.5, 0.0]),
                                 size=BODY_FONT_SIZE, color=color, edge="center")
             where = body_text(word, font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to(np.array([x, ty - 0.86, 0.0]))
             return {"static": VGroup(thermo["group"], thermo["column"], head, where), "read": read}
 
-        t_i = tag(tx_i, th_i, r"\theta_{\mathrm{i}}", P_ORANGE, "innen")
+        t_i = tag(tx_i, th_i, r"\theta_{\mathrm{i}}", P_ORANGE, tr("indoor", "innen"))
         t_e = tag(tx_e, th_e, r"\theta_{\mathrm{e}}", P_CYAN, "außen")
-        dt_name = _name(r"\Delta\theta = \theta_{\mathrm{i}} - \theta_{\mathrm{e}}", "Temperaturdifferenz", P_YELLOW)
+        dt_name = _name(r"\Delta\theta = \theta_{\mathrm{i}} - \theta_{\mathrm{e}}", tr("Temperature difference", "Temperaturdifferenz"), P_YELLOW)
         dt_row = _row(dt_name, x0, y_d, 2.9, P_YELLOW, lambda: abs(d()) / 25.0)
-        dt_read = math_readout(lambda: rf"\Delta\theta = {de_num(d() + 0.0)}\,\mathrm{{K}}",
+        dt_read = math_readout(lambda: rf"\Delta\theta = {label_number(d() + 0.0)}\,\mathrm{{K}}",
                                np.array([dt_row["x_end"] + 0.25, y_d, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
         self.play(FadeIn(t_i["static"]), FadeIn(t_e["static"]), FadeIn(dt_row["group"]), run_time=0.7)
         self.add(t_i["read"], t_e["read"], dt_read)
         self.play(_ramp(th_i, THETA_I_W), *air(1.6), run_time=1.6)
         hold_for(self, N, "delta", during=air)
-        #endregion
 
-        #region formula
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
         row, box, items = math_panel([
             ("q", r"\dot{Q}_{\mathrm{V,sens}}", SENS), (None, "=", P_WHITE),
@@ -523,12 +507,10 @@ class Beat2_SensibleWaerme(Scene):
         self.play(TransformFromCopy(dt_name[0], items["dt"]), *air(1.0), run_time=1.0)
         self.play(FadeIn(rest), Create(box), *air(0.6), run_time=0.6)
         hold_for(self, N, "formula", during=air)
-        #endregion
 
-        #region V̇ and c_Luft
         caption = swap_caption(self, caption, subtitle_text(N, "v"))
-        v_row = _row(_name(r"\dot{V} = V \cdot n", "Volumenstrom", AIR), x0, y_v, 2.9, AIR, lambda: v.get_value() / 300.0)
-        v_read = math_readout(lambda: rf"\dot{{V}} = {de_num(v.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        v_row = _row(_name(r"\dot{V} = V \cdot n", tr("Volume flow", "Volumenstrom"), AIR), x0, y_v, 2.9, AIR, lambda: v.get_value() / 300.0)
+        v_read = math_readout(lambda: rf"\dot{{V}} = {label_number(v.get_value())}\,\mathrm{{m^{{3}}/h}}",
                               np.array([v_row["x_end"] + 0.25, y_v, 0]), size=BODY_FONT_SIZE, color=AIR)
         ring = highlight_param(items, "v", color=AIR)
         _show_row(self, v_row, v_read, run_time=0.5)
@@ -537,41 +519,36 @@ class Beat2_SensibleWaerme(Scene):
         self.play(FadeOut(ring), run_time=0.2)
 
         caption = swap_caption(self, caption, subtitle_text(N, "c"))
-        c_row = _row(_name(r"c_{\mathrm{Luft}}", "Wärmekapazität der Luft", P_GREEN), x0, y_c, 2.9, P_GREEN,
+        c_row = _row(_name(r"c_{\mathrm{Luft}}", tr("Heat capacity of air", "Wärmekapazität der Luft"), P_GREEN), x0, y_c, 2.9, P_GREEN,
                      lambda: c.get_value() / 0.5)
-        c_read = math_readout(lambda: rf"c_{{\mathrm{{Luft}}}} = {de_num(c.get_value(), 2)}\,\mathrm{{Wh/(m^{{3}}K)}}",
+        c_read = math_readout(lambda: rf"c_{{\mathrm{{Luft}}}} = {label_number(c.get_value(), 2)}\,\mathrm{{Wh/(m^{{3}}K)}}",
                               np.array([c_row["x_end"] + 0.25, y_c, 0]), size=BODY_FONT_SIZE, color=P_GREEN)
         ring = highlight_param(items, "c", color=P_GREEN)
         _show_row(self, c_row, c_read, run_time=0.5)
         self.play(_ramp(c, C_LUFT), Create(ring), *air(1.2), run_time=1.2)
         hold_for(self, N, "c", during=air)
         self.play(FadeOut(ring), run_time=0.2)
-        #endregion
 
-        #region winter result
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
-        q_name = _name(r"\dot{Q}_{\mathrm{V,sens}}", "Verlust", SENS)
+        q_name = _name(r"\dot{Q}_{\mathrm{V,sens}}", tr("Loss", "Verlust"), SENS)
         q_row = _row(q_name, x0, y_q, 2.9, SENS, lambda: abs(q()) / 1600.0)
-        q_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} \approx {de_num(round(q(), -1))}\,\mathrm{{W}}",
+        q_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} \approx {label_number(round(q(), -1))}\,\mathrm{{W}}",
                               np.array([q_row["x_end"] + 0.25, y_q, 0]), size=BODY_FONT_SIZE, color=SENS)
         ring = highlight_param(items, "q", color=SENS)
         _show_row(self, q_row, q_read, run_time=0.5)
         self.play(_ramp(kq, 1.0), Create(ring), *air(1.8), run_time=1.8)
         hold_for(self, N, "winter", during=air)
         self.play(FadeOut(ring), run_time=0.2)
-        #endregion
 
-        #region summer
         caption = swap_caption(self, caption, subtitle_text(N, "summer"))
         chip_s = _season_chip("summer")
         chip_s.move_to(chip_w.get_center() + LEFT * (chip_w.width - chip_s.width) / 2)
-        gain = body_text("Gewinn", font_size=LABEL_FONT_SIZE, color=SENS).move_to(q_name[1])
+        gain = body_text(tr("Gain", "Gewinn"), font_size=LABEL_FONT_SIZE, color=SENS).move_to(q_name[1])
         gain.align_to(q_name[1], LEFT)
         season["now"] = "summer"
         self.play(ReplacementTransform(chip_w, chip_s), Transform(q_name[1], gain), ReplacementTransform(guides, _guides([(house, "summer")])), _ramp(th_i, THETA_I_S),
                   _ramp(th_e, THETA_E_S), *air(3.2), run_time=3.2)
         hold_for(self, N, "summer", during=air)
-        #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -610,7 +587,7 @@ class Beat3_LatenteLast(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Latente Last durch Feuchte")
+        subtitle = section_heading(tr("Latent load from moisture", "Latente Last durch Feuchte"))
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -620,7 +597,6 @@ class Beat3_LatenteLast(Scene):
         kq, kv = ValueTracker(0.0), ValueTracker(0.0)
         x0, y_w, y_r, y_v, y_q = -1.2, 1.68, 0.80, -0.08, -0.93
 
-        #region house and humid air
         house = _house(np.array([-4.1, -0.05, 0.0]), 0.8)
         sun = sun_glyph(np.array([-6.3, 1.65, 0.0])).scale(0.4)
         chip_s = _season_chip("summer")
@@ -655,17 +631,15 @@ class Beat3_LatenteLast(Scene):
                           math_label(src, size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(DOWN, buff=0.08).move_to(
                 np.array([cx, y_b + col_h + 0.52, 0.0]))
 
-        heads = VGroup(head(cx_o, "Außenluft", rf"{THETA_E_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}"),
-                       head(cx_i, "Raumluft", rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}"))
-        read_o = math_readout(lambda: rf"x = {de_num(x_out.get_value(), 1)}\,\mathrm{{g/kg}}", np.array([cx_o, y_b - 0.3, 0]),
+        heads = VGroup(head(cx_o, tr("Outdoor air", "Außenluft"), tr(rf"{THETA_E_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{RH}}", rf"{THETA_E_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}")),
+                       head(cx_i, tr("Room air", "Raumluft"), tr(rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{RH}}", rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}")))
+        read_o = math_readout(lambda: rf"x = {label_number(x_out.get_value(), 1)}\,\mathrm{{g/kg}}", np.array([cx_o, y_b - 0.3, 0]),
                               size=BODY_FONT_SIZE, color=LATENT, edge="center")
-        read_i = math_readout(lambda: rf"x = {de_num(x_in.get_value(), 1)}\,\mathrm{{g/kg}}", np.array([cx_i, y_b - 0.3, 0]),
+        read_i = math_readout(lambda: rf"x = {label_number(x_in.get_value(), 1)}\,\mathrm{{g/kg}}", np.array([cx_i, y_b - 0.3, 0]),
                               size=BODY_FONT_SIZE, color=LATENT, edge="center")
         self.play(Create(cols), FadeIn(heads), *air(0.8), run_time=0.8)
         hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 0.9 + 0.8, during=air)
-        #endregion
 
-        #region moisture content outdoors and indoors
         caption = swap_caption(self, caption, subtitle_text(N, "dx"))
         self.add(base_o, extra_o, base_i, read_o, read_i)
         self.play(_ramp(x_out, X_OUT), _ramp(x_in, X_IN), *air(2.4), run_time=2.4)
@@ -674,13 +648,11 @@ class Beat3_LatenteLast(Scene):
         guide_i = DashedLine(np.array([cx_i - 0.45, y_lo, 0]), np.array([bx - 0.3, y_lo, 0]), color=P_BLUE, stroke_width=1.6)
         guide_o_full = DashedLine(np.array([cx_o + 0.45, y_lo, 0]), np.array([bx - 0.3, y_lo, 0]), color=P_BLUE, stroke_width=1.6)
         brace = dim_arrow(np.array([bx, y_lo, 0]), np.array([bx, y_hi, 0]), color=P_BLUE)
-        dx_lbl = math_label(rf"\Delta x = {de_num(D_X, 1)}\,\mathrm{{g/kg}}", np.array([bx + 0.3, (y_lo + y_hi) / 2, 0]),
+        dx_lbl = math_label(rf"\Delta x = {label_number(D_X, 1)}\,\mathrm{{g/kg}}", np.array([bx + 0.3, (y_lo + y_hi) / 2, 0]),
                             size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
         self.play(Create(guide_o), Create(guide_o_full), Create(brace), FadeIn(dx_lbl), *air(1.0), run_time=1.0)
         hold_for(self, N, "dx", during=air)
-        #endregion
 
-        #region formula
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
         row, box, items = math_panel([
             ("q", r"\dot{Q}_{\mathrm{V,lat}}", LATENT), (None, "=", P_WHITE),
@@ -692,13 +664,11 @@ class Beat3_LatenteLast(Scene):
         self.play(TransformFromCopy(dx_lbl, items["dx"]), *air(1.0), run_time=1.0)
         self.play(FadeIn(rest), Create(box), *air(0.6), run_time=0.6)
         hold_for(self, N, "formula", during=air)
-        #endregion
 
-        #region water per cubic metre
         caption = swap_caption(self, caption, subtitle_text(N, "water"))
-        w_name = _name(r"\rho \cdot \Delta x", "Wasser je m³", P_BLUE)
+        w_name = _name(r"\rho \cdot \Delta x", tr("Water per m³", "Wasser je m³"), P_BLUE)
         w_row = _row(w_name, x0, y_w, 3.3, P_BLUE, lambda: kw.get_value() * WATER_PER_M3 / 6.0)
-        w_read = math_readout(lambda: rf"\rho \cdot \Delta x = {de_num(WATER_PER_M3 * kw.get_value(), 1)}\,\mathrm{{g/m^{{3}}}}",
+        w_read = math_readout(lambda: rf"\rho \cdot \Delta x = {label_number(WATER_PER_M3 * kw.get_value(), 1)}\,\mathrm{{g/m^{{3}}}}",
                               np.array([w_row["x_end"] + 0.25, y_w, 0]), size=BODY_FONT_SIZE, color=P_BLUE)
         _hide(self, cols, heads, base_o, extra_o, base_i, read_o, read_i, guide_o, guide_i, guide_o_full, brace, dx_lbl)
         ring = highlight_param(items, "dx", color=P_BLUE)
@@ -706,41 +676,35 @@ class Beat3_LatenteLast(Scene):
         self.play(_ramp(kw, 1.0), Create(ring), *air(1.4), run_time=1.4)
         hold_for(self, N, "water", during=air)
         self.play(FadeOut(ring), run_time=0.2)
-        #endregion
 
-        #region latent heat of vaporization
         caption = swap_caption(self, caption, subtitle_text(N, "r"))
-        r_row = _row(_name("r", "Verdampfungswärme", P_ORANGE), x0, y_r, 3.3, P_ORANGE, lambda: kr.get_value() * R_LAT / 3000.0)
-        r_read = math_readout(lambda: rf"r = {de_num(R_LAT * kr.get_value())}\,\mathrm{{kJ/kg}}",
+        r_row = _row(_name("r", tr("Heat of vaporisation", "Verdampfungswärme"), P_ORANGE), x0, y_r, 3.3, P_ORANGE, lambda: kr.get_value() * R_LAT / 3000.0)
+        r_read = math_readout(lambda: rf"r = {label_number(R_LAT * kr.get_value())}\,\mathrm{{kJ/kg}}",
                               np.array([r_row["x_end"] + 0.25, y_r, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
         ring = highlight_param(items, "r", color=P_ORANGE)
         _show_row(self, r_row, r_read, run_time=0.5)
         self.play(_ramp(kr, 1.0), Create(ring), *air(1.4), run_time=1.4)
         hold_for(self, N, "r", during=air)
         self.play(FadeOut(ring), run_time=0.2)
-        #endregion
 
-        #region volume flow
         caption = swap_caption(self, caption, subtitle_text(N, "qv"))
-        v_row = _row(_name(r"q_{v,\mathrm{R}} = \dot{V}/3600", "Volumenstrom", AIR), x0, y_v, 3.3, AIR, lambda: kv.get_value() * Q_V_R / 0.1)
-        v_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {de_num(Q_V_R * kv.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
+        v_row = _row(_name(r"q_{v,\mathrm{R}} = \dot{V}/3600", tr("Volume flow", "Volumenstrom"), AIR), x0, y_v, 3.3, AIR, lambda: kv.get_value() * Q_V_R / 0.1)
+        v_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {label_number(Q_V_R * kv.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
                               np.array([v_row["x_end"] + 0.25, y_v, 0]), size=BODY_FONT_SIZE, color=AIR)
         ring = highlight_param(items, "qv", color=AIR)
         _show_row(self, v_row, v_read, run_time=0.5)
         self.play(_ramp(kv, 1.0), Create(ring), *air(1.2), run_time=1.2)
         hold_for(self, N, "qv", during=air)
         self.play(FadeOut(ring), run_time=0.2)
-        #endregion
 
-        #region result
         caption = swap_caption(self, caption, subtitle_text(N, "result"))
-        q_row = _row(_name(r"\dot{Q}_{\mathrm{V,lat}}", "Latente Last", LATENT), x0, y_q, 3.3, LATENT,
+        q_row = _row(_name(r"\dot{Q}_{\mathrm{V,lat}}", tr("Latent load", "Latente Last"), LATENT), x0, y_q, 3.3, LATENT,
                      lambda: kq.get_value() * Q_LAT / 1000.0)
-        q_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} \approx {de_num(round(Q_LAT * kq.get_value(), -1))}\,\mathrm{{W}}",
+        q_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} \approx {label_number(round(Q_LAT * kq.get_value(), -1))}\,\mathrm{{W}}",
                               np.array([q_row["x_end"] + 0.25, y_q, 0]), size=BODY_FONT_SIZE, color=LATENT)
         tick_x = x0 + 0.04 + (3.3 - 0.08) * W_SUMMER / 1000.0
         tick = Line(np.array([tick_x, y_q - 0.2, 0]), np.array([tick_x, y_q + 0.2, 0]), color=SENS, stroke_width=3)
-        tick_lbl = math_label(rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {de_num(W_SUMMER)}\,\mathrm{{W}}", np.array([tick_x, y_q - 0.34, 0]),
+        tick_lbl = math_label(rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {label_number(W_SUMMER)}\,\mathrm{{W}}", np.array([tick_x, y_q - 0.34, 0]),
                               size=LABEL_FONT_SIZE - 2, color=SENS)
         ring = highlight_param(items, "q", color=LATENT)
         _show_row(self, q_row, q_read, run_time=0.5)
@@ -748,7 +712,6 @@ class Beat3_LatenteLast(Scene):
         self.play(Create(tick), FadeIn(tick_lbl), *air(0.6), run_time=0.6)
         hold_for(self, N, "result", during=air)
         self.play(FadeOut(ring), run_time=0.2)
-        #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -781,7 +744,7 @@ class Beat4_WinterUndSommer(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        subtitle = section_heading("Dieselbe Formel, zwei Jahreszeiten")
+        subtitle = section_heading(tr("The same formula, two seasons", "Dieselbe Formel, zwei Jahreszeiten"))
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -789,7 +752,6 @@ class Beat4_WinterUndSommer(Scene):
 
         unit, y_base, bar_w = 1.9 / 1500.0, -0.95, 1.0
 
-        #region two blocks
         house_w = _house(np.array([-4.9, -0.17, 0.0]), 0.6, 0.95)
         house_s = _house(np.array([2.3, -0.17, 0.0]), 0.6, 0.95)
         chip_w, chip_s = _season_chip("winter"), _season_chip("summer")
@@ -809,7 +771,6 @@ class Beat4_WinterUndSommer(Scene):
 
         self.play(FadeIn(row), Create(box), *air(0.8), run_time=0.8)
         hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 0.8 + 0.8, during=air)
-        #endregion
 
         def bar(x, segments):
             return stacked_bar(segments, base=np.array([x, y_base, 0.0]), width=bar_w, unit=unit)
@@ -822,46 +783,40 @@ class Beat4_WinterUndSommer(Scene):
             label.move_to(np.array([x + label.width / 2, mid[1], 0.0]))
             return label
 
-        #region winter bar
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
         bars_w = bar(-2.9, [("sens", W_WINTER, SENS)])
-        lab_w = side(bars_w, 0, -2.25, rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {de_num(W_WINTER)}\,\mathrm{{W}}",
-                     rf"\Delta\theta = {de_num(THETA_I_W - THETA_E_W)}\,\mathrm{{K}}", SENS)
+        lab_w = side(bars_w, 0, -2.25, rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {label_number(W_WINTER)}\,\mathrm{{W}}",
+                     rf"\Delta\theta = {label_number(THETA_I_W - THETA_E_W)}\,\mathrm{{K}}", SENS)
         self.play(GrowFromEdge(bars_w["bars"][0], DOWN), *air(1.6), run_time=1.6)
-        note_w = VGroup(body_text("latent: nicht Teil", font_size=LABEL_FONT_SIZE - 2, color=LATENT),
-                        body_text("der Heizlast", font_size=LABEL_FONT_SIZE - 2, color=LATENT)).arrange(DOWN, buff=0.05, aligned_edge=LEFT)
+        note_w = VGroup(body_text(tr("latent: not part", "latent: nicht Teil"), font_size=LABEL_FONT_SIZE - 2, color=LATENT),
+                        body_text(tr("of the heating load", "der Heizlast"), font_size=LABEL_FONT_SIZE - 2, color=LATENT)).arrange(DOWN, buff=0.05, aligned_edge=LEFT)
         note_w.set_opacity(0.75).move_to(np.array([-2.25 + note_w.width / 2, -0.62, 0.0]))
         self.play(FadeIn(lab_w), FadeIn(note_w), *air(0.5), run_time=0.5)
         hold_for(self, N, "winter", during=air)
-        #endregion
 
-        #region summer bar
         caption = swap_caption(self, caption, subtitle_text(N, "sens"))
         bars_s = bar(4.2, [("sens", W_SUMMER, SENS), ("lat", W_LATENT, LATENT)])
-        lab_s = side(bars_s, 0, 4.85, rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {de_num(W_SUMMER)}\,\mathrm{{W}}",
-                     rf"\Delta\theta = {de_num(THETA_E_S - THETA_I_S)}\,\mathrm{{K}}\;\text{{(Gewinn)}}", SENS)
+        lab_s = side(bars_s, 0, 4.85, rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {label_number(W_SUMMER)}\,\mathrm{{W}}",
+                     tr(rf"\Delta\theta = {label_number(THETA_E_S - THETA_I_S)}\,\mathrm{{K}}\;\text{{(gain)}}", rf"\Delta\theta = {label_number(THETA_E_S - THETA_I_S)}\,\mathrm{{K}}\;\text{{(Gewinn)}}"), SENS)
         self.play(GrowFromEdge(bars_s["bars"][0], DOWN), *air(1.2), run_time=1.2)
         self.play(FadeIn(lab_s), *air(0.5), run_time=0.5)
         hold_for(self, N, "sens", during=air)
 
         caption = swap_caption(self, caption, subtitle_text(N, "lat"))
-        lab_l = side(bars_s, 1, 4.85, rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} = {de_num(W_LATENT)}\,\mathrm{{W}}",
-                     rf"\Delta x = {de_num(D_X, 1)}\,\mathrm{{g/kg}}", LATENT)
+        lab_l = side(bars_s, 1, 4.85, rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} = {label_number(W_LATENT)}\,\mathrm{{W}}",
+                     rf"\Delta x = {label_number(D_X, 1)}\,\mathrm{{g/kg}}", LATENT)
         self.play(GrowFromEdge(bars_s["bars"][1], DOWN), *air(1.4), run_time=1.4)
         self.play(FadeIn(lab_l), *air(0.5), run_time=0.5)
         hold_for(self, N, "lat", during=air)
-        #endregion
 
-        #region hand-over
         caption = swap_caption(self, caption, subtitle_text(N, "use"))
-        to_h = _handover_chip("→ Heizung:", r"\Phi_{\mathrm{V}}", HEIZUNG)
-        to_k = _handover_chip("→ Kühlung:", r"\dot{Q}_{\mathrm{L}}", KUEHLUNG)
+        to_h = _handover_chip(tr("→ Heating:", "→ Heizung:"), r"\Phi_{\mathrm{V}}", HEIZUNG)
+        to_k = _handover_chip(tr("→ Cooling:", "→ Kühlung:"), r"\dot{Q}_{\mathrm{L}}", KUEHLUNG)
         to_h.move_to(np.array([-4.5, 1.72, 0.0]))
         to_k.move_to(np.array([3.3, 1.72, 0.0]))
         self.play(FadeIn(to_h, shift=DOWN * 0.15), *air(0.8), run_time=0.8)
         self.play(FadeIn(to_k, shift=DOWN * 0.15), *air(0.8), run_time=0.8)
         hold_for(self, N, "use", during=air)
-        #endregion
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)

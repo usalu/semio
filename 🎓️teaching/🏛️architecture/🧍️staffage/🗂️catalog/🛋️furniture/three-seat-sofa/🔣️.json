@@ -398,36 +398,72 @@
     },
     "anchors": [
       {
-        "id": "foot-left",
+        "id": "foot-left-l",
         "bone": "frame",
-        "x": 0.1,
-        "y": 0.0,
+        "x": 0.12,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Left feet (front and rear pair)",
-          "de": "Linke Füße (vorderes und hinteres Paar)"
+          "en": "Left end, left foot",
+          "de": "Linkes Ende, linker Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
-        "footprintLengthM": 0.05,
-        "footprintWidthM": 0.62,
-        "frictionCoefficient": 0.5
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.5,
+        "z": 0.36
       },
       {
-        "id": "foot-right",
+        "id": "foot-left-r",
         "bone": "frame",
-        "x": 1.9,
-        "y": 0.0,
+        "x": 0.12,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Right feet (front and rear pair)",
-          "de": "Rechte Füße (vorderes und hinteres Paar)"
+          "en": "Left end, right foot",
+          "de": "Linkes Ende, rechter Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
-        "footprintLengthM": 0.05,
-        "footprintWidthM": 0.62,
-        "frictionCoefficient": 0.5
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.5,
+        "z": -0.36
+      },
+      {
+        "id": "foot-right-l",
+        "bone": "frame",
+        "x": 1.88,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right end, left foot",
+          "de": "Rechtes Ende, linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.5,
+        "z": 0.36
+      },
+      {
+        "id": "foot-right-r",
+        "bone": "frame",
+        "x": 1.88,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right end, right foot",
+          "de": "Rechtes Ende, rechter Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.07,
+        "footprintWidthM": 0.07,
+        "frictionCoefficient": 0.5,
+        "z": -0.36
       },
       {
         "id": "seat-load-1",
@@ -468,7 +504,7 @@
         "status": "authored",
         "denominator": 500,
         "validRange": {
-          "minDenominator": 351,
+          "minDenominator": 350,
           "maxDenominator": 1000
         },
         "pens": {
@@ -549,12 +585,172 @@
               "region": "feet",
               "material": "beech-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "sofa-body",
+              "bone": "frame",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "regions": [
+                "seat-cushions",
+                "back-cushions",
+                "arm-pads",
+                "base-rail"
+              ],
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.1
+                ],
+                [
+                  -0.45,
+                  0.55
+                ],
+                [
+                  -0.4,
+                  0.62
+                ],
+                [
+                  0.265,
+                  0.62
+                ],
+                [
+                  0.3,
+                  0.82
+                ],
+                [
+                  0.33,
+                  0.85
+                ],
+                [
+                  0.42,
+                  0.85
+                ],
+                [
+                  0.45,
+                  0.8
+                ],
+                [
+                  0.45,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "seat-line",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.43
+                ],
+                [
+                  0.2,
+                  0.43
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.13
+            },
+            {
+              "id": "foot-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "feet",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": 0.3,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.12
+            },
+            {
+              "id": "foot-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "feet",
+              "material": "beech-timber",
+              "kind": "rect",
+              "x": -0.4,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.12
+            }
+          ],
+          "plan": [
+            {
+              "id": "sofa-body",
+              "bone": "frame",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "regions": [
+                "seat-cushions",
+                "back-cushions",
+                "arm-pads",
+                "base-rail"
+              ],
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 2.0,
+              "h": 0.9
+            },
+            {
+              "id": "seat-line",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  -0.42
+                ],
+                [
+                  1.8,
+                  -0.42
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.13
+            }
           ]
+        },
+        "sections": {
+          "front": {
+            "plane": 1,
+            "label": {
+              "en": "A-A",
+              "de": "A-A"
+            }
+          }
         },
         "decisions": {
           "silhouette": {
-            "en": "One composed sofa sign 4.0 x 1.7 mm: arms, back and seat as one outline with a seat line, on two foot blocks.",
-            "de": "Ein zusammengesetztes Sofazeichen 4,0 x 1,7 mm: Armlehnen, Rücken und Sitz als eine Kontur mit Sitzlinie auf zwei Fußblöcken."
+            "en": "One composed sofa sign 4.0 x 1.7 mm: arms, back and seat as one outline with a seat line, on two foot blocks. Front view: a section through the middle seat, the side profile of the arm behind it as one silhouette with the seat and back, and the two feet; the seat line sinks with the middle cushion. Plan: the whole sofa as one plate with a line along the front edge of the seats. The front elevation is Section A-A at x = 1.0 m through the middle seat and back cushion, looking back from the front end: the cut cushions and the skirt are the section, the left arm and the neighbouring cushions lie beyond the cut plane and are hidden by it, so only the arm rises above the seat.",
+            "de": "Ein zusammengesetztes Sofazeichen 4,0 x 1,7 mm: Armlehnen, Rücken und Sitz als eine Kontur mit Sitzlinie auf zwei Fußblöcken. Vorderansicht: ein Schnitt durch den mittleren Sitz, dahinter das Seitenprofil des Arms als eine Silhouette mit Sitz und Rücken, und die zwei Füße; die Sitzlinie sinkt mit dem mittleren Polster ein. Grundriss: das ganze Sofa als eine Fläche mit einer Linie an der Vorderkante der Sitze. Die Vorderansicht ist Schnitt A-A bei x = 1,0 m durch das mittlere Sitz- und Rückenkissen, von vorn zurückgesehen: die geschnittenen Kissen und die Zarge bilden den Schnitt, die linke Armlehne und die benachbarten Kissen liegen hinter der Schnittebene und werden von ihr verdeckt, sodass nur die Armlehne über den Sitz ragt."
           },
           "retained": {
             "en": "Arm tops at 0.62 m, back top at 0.85 m, seat line at 0.43 m and the two feet.",
@@ -570,7 +766,7 @@
           },
           "thinElements": {
             "en": "Turned feet (0.06 m, 0.12 mm) are thickened to 0.14 m blocks: 0.28 mm wide; the overshoot of 0.08 m stays inside the real outline tolerance.",
-            "de": "Gedrechselte Füße (0,06 m, 0,12 mm) sind zu 0,14 m breiten Blöcken verdickt; die Überhöhung bleibt in der Strichbreite von 0,18 mm."
+            "de": "Gedrechselte Füße (0,06 m, 0,12 mm) sind zu 0,14 m breiten Blöcken von 0,28 mm Breite verdickt; die Überhöhung von 0,08 m bleibt innerhalb der realen Umrisstoleranz."
           },
           "hatching": {
             "en": "None.",
@@ -590,7 +786,7 @@
         "status": "authored",
         "denominator": 200,
         "validRange": {
-          "minDenominator": 151,
+          "minDenominator": 150,
           "maxDenominator": 350
         },
         "pens": {
@@ -738,12 +934,312 @@
               "region": "base-rail",
               "material": "upholstery-fabric"
             }
+          ],
+          "front": [
+            {
+              "id": "arm-l",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "arm-pads"
+              ],
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M -0.45 0.1 L -0.45 0.5 Q -0.45 0.62 -0.33 0.62 L 0.33 0.62 Q 0.45 0.62 0.45 0.5 L 0.45 0.1 Z"
+            },
+            {
+              "id": "foot-0",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "arm-pads",
+                "feet"
+              ],
+              "material": "upholstery-fabric",
+              "kind": "poly",
+              "points": [
+                [
+                  0.385,
+                  0.0
+                ],
+                [
+                  0.335,
+                  0.0
+                ],
+                [
+                  0.325,
+                  0.12
+                ],
+                [
+                  0.395,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "foot-1",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "arm-pads",
+                "feet"
+              ],
+              "material": "upholstery-fabric",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.385,
+                  0.0
+                ],
+                [
+                  -0.335,
+                  0.0
+                ],
+                [
+                  -0.325,
+                  0.12
+                ],
+                [
+                  -0.395,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "back-2",
+              "bone": "back-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "poly",
+              "points": [
+                [
+                  0.19,
+                  0.2
+                ],
+                [
+                  0.44,
+                  0.2
+                ],
+                [
+                  0.45,
+                  0.8
+                ],
+                [
+                  0.42,
+                  0.85
+                ],
+                [
+                  0.33,
+                  0.85
+                ],
+                [
+                  0.3,
+                  0.82
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "seat-2",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M -0.42 0.2 L -0.42 0.39 Q -0.42 0.43 -0.38 0.43 L 0.16 0.43 Q 0.2 0.43 0.2 0.39 L 0.2 0.2 Z"
+            },
+            {
+              "id": "skirt",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.45,
+              "region": "base-rail",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": -0.43,
+              "y": 0.1,
+              "w": 0.86,
+              "h": 0.14
+            }
+          ],
+          "plan": [
+            {
+              "id": "arm-l",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "arm-pads"
+              ],
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9,
+              "r": 0.04
+            },
+            {
+              "id": "arm-r",
+              "bone": "arm-right",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "arm-pads"
+              ],
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.8,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9,
+              "r": 0.04
+            },
+            {
+              "id": "back",
+              "bone": "frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.19,
+              "w": 1.62,
+              "h": 0.26,
+              "r": 0.05
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat-1",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.42,
+              "w": 0.5433,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-2",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.7333,
+              "y": -0.42,
+              "w": 0.5334,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-3",
+              "bone": "seat-3",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.2667,
+              "y": -0.42,
+              "w": 0.5433,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "back-seam-0.7333",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.7333,
+                  0.2
+                ],
+                [
+                  0.7333,
+                  0.44
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-seam-1.2667",
+              "bone": "frame",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  1.2667,
+                  0.2
+                ],
+                [
+                  1.2667,
+                  0.44
+                ]
+              ],
+              "closed": false
+            }
           ]
+        },
+        "sections": {
+          "front": {
+            "plane": 1,
+            "label": {
+              "en": "A-A",
+              "de": "A-A"
+            }
+          }
         },
         "decisions": {
           "silhouette": {
-            "en": "Sofa 10 x 4.3 mm in main masses: two arms, one back band, three seat cushions, skirt, two feet.",
-            "de": "Sofa 10 x 4,3 mm in Hauptmassen: zwei Armlehnen, ein Rückenband, drei Sitzkissen, Zarge, zwei Füße."
+            "en": "Sofa 10 x 4.3 mm in main masses: two arms, one back band, three seat cushions, skirt, two feet. Front view: a section through the middle seat with the back cushion behind it, the arm as a rounded silhouette behind the cut, the skirt and the two feet. Plan: the two arms, the three seat cushions and the one back panel with its two seams. The front elevation is Section A-A at x = 1.0 m through the middle seat and back cushion, looking back from the front end: the cut cushions and the skirt are the section, the left arm and the neighbouring cushions lie beyond the cut plane and are hidden by it, so only the arm rises above the seat.",
+            "de": "Sofa 10 x 4,3 mm in Hauptmassen: zwei Armlehnen, ein Rückenband, drei Sitzkissen, Zarge, zwei Füße. Vorderansicht: ein Schnitt durch den mittleren Sitz mit dem Rückenkissen dahinter, der Arm als gerundete Silhouette hinter dem Schnitt, die Zarge und die zwei Füße. Grundriss: die zwei Arme, die drei Sitzkissen und das eine Rückenteil mit seinen zwei Nähten. Die Vorderansicht ist Schnitt A-A bei x = 1,0 m durch das mittlere Sitz- und Rückenkissen, von vorn zurückgesehen: die geschnittenen Kissen und die Zarge bilden den Schnitt, die linke Armlehne und die benachbarten Kissen liegen hinter der Schnittebene und werden von ihr verdeckt, sodass nur die Armlehne über den Sitz ragt."
           },
           "retained": {
             "en": "Rounded arm tops, back band with two seam lines, three seat cushions, skirt rail.",
@@ -779,7 +1275,7 @@
         "status": "authored",
         "denominator": 100,
         "validRange": {
-          "minDenominator": 76,
+          "minDenominator": 75,
           "maxDenominator": 150
         },
         "pens": {
@@ -1068,12 +1564,369 @@
               "region": "feet",
               "material": "beech-timber"
             }
+          ],
+          "front": [
+            {
+              "id": "arm-l",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-pads",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M -0.45 0.1 L -0.45 0.5 Q -0.45 0.62 -0.33 0.62 L 0.33 0.62 Q 0.45 0.62 0.45 0.5 L 0.45 0.1 Z"
+            },
+            {
+              "id": "arm-welt-l",
+              "bone": "arm-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "arm-pads",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.4
+                ],
+                [
+                  0.45,
+                  0.4
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-2",
+              "bone": "back-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M 0.19 0.2 L 0.44 0.2 L 0.45 0.8 Q 0.45 0.85 0.4 0.85 L 0.34 0.85 Q 0.3 0.85 0.3 0.8 Z"
+            },
+            {
+              "id": "seat-2",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M -0.42 0.2 L -0.42 0.39 Q -0.42 0.43 -0.38 0.43 L 0.16 0.43 Q 0.2 0.43 0.2 0.39 L 0.2 0.2 Z"
+            },
+            {
+              "id": "seat-piping-2",
+              "bone": "seat-2",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.39,
+                  0.375
+                ],
+                [
+                  0.17,
+                  0.375
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "skirt",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.45,
+              "region": "base-rail",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": -0.43,
+              "y": 0.1,
+              "w": 0.86,
+              "h": 0.14
+            },
+            {
+              "id": "foot-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "feet",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.385,
+                  0.0
+                ],
+                [
+                  0.335,
+                  0.0
+                ],
+                [
+                  0.325,
+                  0.12
+                ],
+                [
+                  0.395,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "foot-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "feet",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.385,
+                  0.0
+                ],
+                [
+                  -0.335,
+                  0.0
+                ],
+                [
+                  -0.325,
+                  0.12
+                ],
+                [
+                  -0.395,
+                  0.12
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "arm-l",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-pads",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9,
+              "r": 0.04
+            },
+            {
+              "id": "arm-r",
+              "bone": "arm-right",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-pads",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.8,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9,
+              "r": 0.04
+            },
+            {
+              "id": "back-1",
+              "bone": "back-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.19,
+              "w": 0.5433,
+              "h": 0.26,
+              "r": 0.05
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat-1",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.42,
+              "w": 0.5433,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-piping-1",
+              "bone": "seat-1",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.25,
+                  -0.38
+                ],
+                [
+                  0.6733,
+                  -0.38
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-2",
+              "bone": "back-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.7333,
+              "y": 0.19,
+              "w": 0.5334,
+              "h": 0.26,
+              "r": 0.05
+            },
+            {
+              "id": "seat-2",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.7333,
+              "y": -0.42,
+              "w": 0.5334,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-piping-2",
+              "bone": "seat-2",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.7933,
+                  -0.38
+                ],
+                [
+                  1.2067,
+                  -0.38
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-3",
+              "bone": "back-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.2667,
+              "y": 0.19,
+              "w": 0.5433,
+              "h": 0.26,
+              "r": 0.05
+            },
+            {
+              "id": "seat-3",
+              "bone": "seat-3",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.2667,
+              "y": -0.42,
+              "w": 0.5433,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-piping-3",
+              "bone": "seat-3",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  1.3267,
+                  -0.38
+                ],
+                [
+                  1.75,
+                  -0.38
+                ]
+              ],
+              "closed": false
+            }
           ]
+        },
+        "sections": {
+          "front": {
+            "plane": 1,
+            "label": {
+              "en": "A-A",
+              "de": "A-A"
+            }
+          }
         },
         "decisions": {
           "silhouette": {
-            "en": "Sofa 20 x 8.5 mm: arms with welt, three back and three seat cushions with rounded corners and seat piping, skirt, tapered feet.",
-            "de": "Sofa 20 x 8,5 mm: Armlehnen mit Ziernaht, drei Rücken- und drei Sitzkissen mit gerundeten Ecken und Sitzpaspel, Zarge, konische Füße."
+            "en": "Sofa 20 x 8.5 mm: arms with welt, three back and three seat cushions with rounded corners and seat piping, skirt, tapered feet. Front view: a section through the middle seat and back cushion with their piping, the arm with its welt as the backdrop, the skirt and the two feet. Plan: the two arms, the three back cushions and the three seat cushions with a piping line along each front edge. The front elevation is Section A-A at x = 1.0 m through the middle seat and back cushion, looking back from the front end: the cut cushions and the skirt are the section, the left arm and the neighbouring cushions lie beyond the cut plane and are hidden by it, so only the arm rises above the seat.",
+            "de": "Sofa 20 x 8,5 mm: Armlehnen mit Ziernaht, drei Rücken- und drei Sitzkissen mit gerundeten Ecken und Sitzpaspel, Zarge, konische Füße. Vorderansicht: ein Schnitt durch das mittlere Sitz- und Rückenkissen mit ihrem Keder, dahinter der Arm mit seiner Naht, die Zarge und die zwei Füße. Grundriss: die zwei Arme, die drei Rückenkissen und die drei Sitzkissen mit einer Kederlinie an jeder Vorderkante. Die Vorderansicht ist Schnitt A-A bei x = 1,0 m durch das mittlere Sitz- und Rückenkissen, von vorn zurückgesehen: die geschnittenen Kissen und die Zarge bilden den Schnitt, die linke Armlehne und die benachbarten Kissen liegen hinter der Schnittebene und werden von ihr verdeckt, sodass nur die Armlehne über den Sitz ragt."
           },
           "retained": {
             "en": "Cushion division (compresses independently), piping along each seat front, arm welt.",
@@ -1150,7 +2003,7 @@
               "id": "arm-top-piping-l",
               "bone": "arm-left",
               "role": "detail",
-              "z": 6.5,
+              "z": 8.1,
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
@@ -1200,7 +2053,7 @@
               "id": "arm-top-piping-r",
               "bone": "arm-right",
               "role": "detail",
-              "z": 6.5,
+              "z": 8.1,
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
@@ -1609,12 +2462,598 @@
               "closed": false,
               "region": "feet"
             }
+          ],
+          "front": [
+            {
+              "id": "arm-l",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-pads",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M -0.45 0.1 L -0.45 0.5 Q -0.45 0.62 -0.33 0.62 L 0.33 0.62 Q 0.45 0.62 0.45 0.5 L 0.45 0.1 Z"
+            },
+            {
+              "id": "arm-welt-l",
+              "bone": "arm-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "arm-pads",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.45,
+                  0.22
+                ],
+                [
+                  0.45,
+                  0.22
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "arm-top-piping-l",
+              "bone": "arm-left",
+              "role": "detail",
+              "z": 8.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "arm-pads",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.56
+                ],
+                [
+                  0.3,
+                  0.56
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-2",
+              "bone": "back-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M 0.19 0.2 L 0.44 0.2 L 0.45 0.8 Q 0.45 0.85 0.4 0.85 L 0.34 0.85 Q 0.3 0.85 0.3 0.8 Z"
+            },
+            {
+              "id": "back-piping-2",
+              "bone": "back-2",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.31,
+                  0.8
+                ],
+                [
+                  0.44,
+                  0.8
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-2",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "path",
+              "d": "M -0.42 0.2 L -0.42 0.39 Q -0.42 0.43 -0.38 0.43 L 0.16 0.43 Q 0.2 0.43 0.2 0.39 L 0.2 0.2 Z"
+            },
+            {
+              "id": "seat-piping-2",
+              "bone": "seat-2",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.39,
+                  0.375
+                ],
+                [
+                  0.17,
+                  0.375
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "skirt",
+              "bone": "frame",
+              "role": "body",
+              "z": 7,
+              "filled": true,
+              "tone": 0.45,
+              "region": "base-rail",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": -0.43,
+              "y": 0.1,
+              "w": 0.86,
+              "h": 0.14
+            },
+            {
+              "id": "foot-0",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "feet",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.385,
+                  0.0
+                ],
+                [
+                  0.335,
+                  0.0
+                ],
+                [
+                  0.325,
+                  0.12
+                ],
+                [
+                  0.395,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "foot-1",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "feet",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.385,
+                  0.0
+                ],
+                [
+                  -0.335,
+                  0.0
+                ],
+                [
+                  -0.325,
+                  0.12
+                ],
+                [
+                  -0.395,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "foot-ring",
+              "bone": "frame",
+              "role": "detail",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "feet",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.39,
+                  0.065
+                ],
+                [
+                  -0.33,
+                  0.065
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "foot-ring-b",
+              "bone": "frame",
+              "role": "detail",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "feet",
+              "kind": "poly",
+              "points": [
+                [
+                  0.33,
+                  0.065
+                ],
+                [
+                  0.39,
+                  0.065
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "arm-l",
+              "bone": "arm-left",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-pads",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9,
+              "r": 0.04
+            },
+            {
+              "id": "arm-r",
+              "bone": "arm-right",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "arm-pads",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.8,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9,
+              "r": 0.04
+            },
+            {
+              "id": "arm-top-piping-l",
+              "bone": "arm-left",
+              "role": "detail",
+              "z": 8.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "arm-pads",
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  -0.4
+                ],
+                [
+                  0.16,
+                  -0.4
+                ],
+                [
+                  0.16,
+                  0.4
+                ],
+                [
+                  0.04,
+                  0.4
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "arm-top-piping-r",
+              "bone": "arm-right",
+              "role": "detail",
+              "z": 8.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "arm-pads",
+              "kind": "poly",
+              "points": [
+                [
+                  1.84,
+                  -0.4
+                ],
+                [
+                  1.96,
+                  -0.4
+                ],
+                [
+                  1.96,
+                  0.4
+                ],
+                [
+                  1.84,
+                  0.4
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "back-1",
+              "bone": "back-1",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.19,
+              "w": 0.5433,
+              "h": 0.26,
+              "r": 0.055
+            },
+            {
+              "id": "back-piping-1",
+              "bone": "back-1",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.23,
+                  0.33
+                ],
+                [
+                  0.6933,
+                  0.33
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat-1",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.42,
+              "w": 0.5433,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-piping-1",
+              "bone": "seat-1",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.23,
+                  -0.38
+                ],
+                [
+                  0.6933,
+                  -0.38
+                ],
+                [
+                  0.6933,
+                  0.16
+                ],
+                [
+                  0.23,
+                  0.16
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-2",
+              "bone": "back-2",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.7333,
+              "y": 0.19,
+              "w": 0.5334,
+              "h": 0.26,
+              "r": 0.055
+            },
+            {
+              "id": "back-piping-2",
+              "bone": "back-2",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.7733,
+                  0.33
+                ],
+                [
+                  1.2267,
+                  0.33
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-2",
+              "bone": "seat-2",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 0.7333,
+              "y": -0.42,
+              "w": 0.5334,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-piping-2",
+              "bone": "seat-2",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  0.7733,
+                  -0.38
+                ],
+                [
+                  1.2267,
+                  -0.38
+                ],
+                [
+                  1.2267,
+                  0.16
+                ],
+                [
+                  0.7733,
+                  0.16
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "back-3",
+              "bone": "back-3",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "back-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.2667,
+              "y": 0.19,
+              "w": 0.5433,
+              "h": 0.26,
+              "r": 0.055
+            },
+            {
+              "id": "back-piping-3",
+              "bone": "back-3",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "back-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  1.3067,
+                  0.33
+                ],
+                [
+                  1.77,
+                  0.33
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "seat-3",
+              "bone": "seat-3",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.72,
+              "region": "seat-cushions",
+              "material": "upholstery-fabric",
+              "kind": "rect",
+              "x": 1.2667,
+              "y": -0.42,
+              "w": 0.5433,
+              "h": 0.62,
+              "r": 0.04
+            },
+            {
+              "id": "seat-piping-3",
+              "bone": "seat-3",
+              "role": "detail",
+              "z": 5.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "seat-cushions",
+              "kind": "poly",
+              "points": [
+                [
+                  1.3067,
+                  -0.38
+                ],
+                [
+                  1.77,
+                  -0.38
+                ],
+                [
+                  1.77,
+                  0.16
+                ],
+                [
+                  1.3067,
+                  0.16
+                ]
+              ],
+              "closed": false
+            }
           ]
+        },
+        "sections": {
+          "front": {
+            "plane": 1,
+            "label": {
+              "en": "A-A",
+              "de": "A-A"
+            }
+          }
         },
         "decisions": {
           "silhouette": {
-            "en": "Sofa 40 x 17 mm with all cushions, piping, arm welts and top piping and turned feet with ring.",
-            "de": "Sofa 40 x 17 mm mit allen Kissen, Paspeln, Armnähten und Armpaspel, gedrechselten Füßen mit Ring."
+            "en": "Sofa 40 x 17 mm with all cushions, piping, arm welts and top piping and turned feet with ring. Front view: a section through the middle seat and back cushion with their piping, the arm with welt and top piping behind the cut, the skirt and the tapered feet with their rings. Plan: the two arms with top piping, the three back cushions with their piping and the three seat cushions with piping around three sides. The front elevation is Section A-A at x = 1.0 m through the middle seat and back cushion, looking back from the front end: the cut cushions and the skirt are the section, the left arm and the neighbouring cushions lie beyond the cut plane and are hidden by it, so only the arm rises above the seat.",
+            "de": "Sofa 40 x 17 mm mit allen Kissen, Paspeln, Armnähten und Armpaspel, gedrechselten Füßen mit Ring. Vorderansicht: ein Schnitt durch das mittlere Sitz- und Rückenkissen mit ihrem Keder, dahinter der Arm mit Naht und Oberkeder, die Zarge und die verjüngten Füße mit ihren Ringen. Grundriss: die zwei Arme mit Oberkeder, die drei Rückenkissen mit ihrem Keder und die drei Sitzkissen mit Keder an drei Seiten. Die Vorderansicht ist Schnitt A-A bei x = 1,0 m durch das mittlere Sitz- und Rückenkissen, von vorn zurückgesehen: die geschnittenen Kissen und die Zarge bilden den Schnitt, die linke Armlehne und die benachbarten Kissen liegen hinter der Schnittebene und werden von ihr verdeckt, sodass nur die Armlehne über den Sitz ragt."
           },
           "retained": {
             "en": "Front boxing piping around every cushion, arm top piping, foot ring.",
@@ -1649,14 +3088,14 @@
     },
     "symbols": [
       {
-        "id": "sofa-plan",
+        "id": "three-seat-sofa-symbol",
         "title": {
-          "en": "Sofa plan symbol",
-          "de": "Sofa-Grundrisssymbol"
+          "en": "Sofa symbol, true extent",
+          "de": "Sofasymbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "Conventional floor-plan sign of a three-seat sofa with arms, back and three seat cushions, true to the real footprint 2.00 x 0.90 m.",
-          "de": "Übliches Grundrisszeichen eines Dreisitzers mit Armlehnen, Rücken und drei Sitzkissen, maßgetreu im Grundriss 2,00 x 0,90 m."
+          "en": "The three-seat sofa in all three views: 2.00 x 0.90 x 0.85 m with two arms, three seat cushions, three back cushions and a skirt on four feet; the back stands on the left side.",
+          "de": "Das Dreisitzer-Sofa in allen drei Ansichten: 2,00 x 0,90 x 0,85 m mit zwei Armlehnen, drei Sitzkissen, drei Rückenkissen und einer Zarge auf vier Füßen; die Rückenlehne steht auf der linken Seite."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -1674,209 +3113,341 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
-          "plan": [
+          "elevation": [
             {
-              "id": "plan-outline",
+              "id": "arm-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0,
+              "y": 0.1,
+              "w": 0.2,
+              "h": 0.52
+            },
+            {
+              "id": "arm-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.8,
+              "y": 0.1,
+              "w": 0.2,
+              "h": 0.52
+            },
+            {
+              "id": "skirt",
               "bone": "ground",
               "role": "body",
               "z": 1,
               "filled": true,
-              "tone": 0.95,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  2.0,
-                  0
-                ],
-                [
-                  2.0,
-                  0.9
-                ],
-                [
-                  0,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.15,
+              "y": 0.1,
+              "w": 1.7,
+              "h": 0.14
             },
             {
-              "id": "plan-back",
+              "id": "foot-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.085,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.12
+            },
+            {
+              "id": "foot-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.845,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.12
+            },
+            {
+              "id": "seat-1",
               "bone": "ground",
               "role": "body",
               "z": 2,
               "filled": true,
-              "tone": 0.8,
-              "kind": "poly",
-              "points": [
-                [
-                  0.2,
-                  0.7
-                ],
-                [
-                  1.8,
-                  0.7
-                ],
-                [
-                  1.8,
-                  0.9
-                ],
-                [
-                  0.2,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.2,
+              "w": 0.543,
+              "h": 0.23
             },
             {
-              "id": "plan-arm-l",
+              "id": "seat-2",
               "bone": "ground",
               "role": "body",
               "z": 2,
               "filled": true,
-              "tone": 0.8,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.2,
-                  0
-                ],
-                [
-                  0.2,
-                  0.9
-                ],
-                [
-                  0,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.733,
+              "y": 0.2,
+              "w": 0.543,
+              "h": 0.23
             },
             {
-              "id": "plan-arm-r",
+              "id": "seat-3",
               "bone": "ground",
               "role": "body",
               "z": 2,
               "filled": true,
-              "tone": 0.8,
-              "kind": "poly",
-              "points": [
-                [
-                  1.8,
-                  0
-                ],
-                [
-                  2.0,
-                  0
-                ],
-                [
-                  2.0,
-                  0.9
-                ],
-                [
-                  1.8,
-                  0.9
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.267,
+              "y": 0.2,
+              "w": 0.543,
+              "h": 0.23
             },
             {
-              "id": "plan-seat-1",
+              "id": "back-1",
+              "bone": "ground",
+              "role": "body",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.43,
+              "w": 0.543,
+              "h": 0.42
+            },
+            {
+              "id": "back-2",
+              "bone": "ground",
+              "role": "body",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.733,
+              "y": 0.43,
+              "w": 0.543,
+              "h": 0.42
+            },
+            {
+              "id": "back-3",
+              "bone": "ground",
+              "role": "body",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 1.267,
+              "y": 0.43,
+              "w": 0.543,
+              "h": 0.42
+            }
+          ],
+          "front": [
+            {
+              "id": "arm",
               "bone": "ground",
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.95,
-              "kind": "poly",
-              "points": [
-                [
-                  0.19,
-                  0.02
-                ],
-                [
-                  0.7333,
-                  0.02
-                ],
-                [
-                  0.7333,
-                  0.7
-                ],
-                [
-                  0.19,
-                  0.7
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.45,
+              "y": 0.1,
+              "w": 0.9,
+              "h": 0.52
             },
             {
-              "id": "plan-seat-2",
+              "id": "skirt",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.43,
+              "y": 0.1,
+              "w": 0.86,
+              "h": 0.14
+            },
+            {
+              "id": "foot-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.325,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.12
+            },
+            {
+              "id": "foot-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.395,
+              "y": 0,
+              "w": 0.07,
+              "h": 0.12
+            },
+            {
+              "id": "back",
+              "bone": "ground",
+              "role": "body",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.2,
+              "w": 0.26,
+              "h": 0.65
+            },
+            {
+              "id": "seat",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.42,
+              "y": 0.2,
+              "w": 0.62,
+              "h": 0.23
+            }
+          ],
+          "plan": [
+            {
+              "id": "arm-l",
               "bone": "ground",
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.95,
-              "kind": "poly",
-              "points": [
-                [
-                  0.7333,
-                  0.02
-                ],
-                [
-                  1.2667,
-                  0.02
-                ],
-                [
-                  1.2667,
-                  0.7
-                ],
-                [
-                  0.7333,
-                  0.7
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9
             },
             {
-              "id": "plan-seat-3",
+              "id": "arm-r",
               "bone": "ground",
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.95,
-              "kind": "poly",
-              "points": [
-                [
-                  1.2667,
-                  0.02
-                ],
-                [
-                  1.81,
-                  0.02
-                ],
-                [
-                  1.81,
-                  0.7
-                ],
-                [
-                  1.2667,
-                  0.7
-                ]
-              ],
-              "closed": true
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.8,
+              "y": -0.45,
+              "w": 0.2,
+              "h": 0.9
+            },
+            {
+              "id": "seat-1",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.19,
+              "y": -0.42,
+              "w": 0.543,
+              "h": 0.62
+            },
+            {
+              "id": "seat-2",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.733,
+              "y": -0.42,
+              "w": 0.543,
+              "h": 0.62
+            },
+            {
+              "id": "seat-3",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.267,
+              "y": -0.42,
+              "w": 0.543,
+              "h": 0.62
+            },
+            {
+              "id": "back-1",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.19,
+              "w": 0.543,
+              "h": 0.26
+            },
+            {
+              "id": "back-2",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.733,
+              "y": 0.19,
+              "w": 0.543,
+              "h": 0.26
+            },
+            {
+              "id": "back-3",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 1.267,
+              "y": 0.19,
+              "w": 0.543,
+              "h": 0.26
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size: x along the sofa 0 to 2.00 m, y from the front edge (0) to the back (0.90 m). Not for 1:500.",
-          "de": "Modellmeter in Originalgröße: x entlang des Sofas 0 bis 2,00 m, y von der Vorderkante (0) bis zum Rücken (0,90 m). Nicht für 1:500."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. The back is on the left (+z), the seats face right (-z). Not for 1:500.",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Die Lehne steht links (+z), die Sitze blicken nach rechts (-z). Nicht für 1:500."
         }
       }
     ],
@@ -1894,30 +3465,32 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "seat-cushions": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "back-cushions": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.1
             },
             "arm-pads": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1950,8 +3523,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
@@ -1972,16 +3547,16 @@
               }
             },
             "arm-pads": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1995,7 +3570,7 @@
               "de": "Sitzende erwachsene Person 1 (75 kg)"
             },
             "anchor": "seat-load-2",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -735.5,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -2031,8 +3606,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
@@ -2053,16 +3630,16 @@
               }
             },
             "arm-pads": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2076,7 +3653,7 @@
               "de": "Sitzende erwachsene Person 1 (75 kg)"
             },
             "anchor": "seat-load-1",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -735.5,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -2089,7 +3666,7 @@
               "de": "Sitzende erwachsene Person 2 (75 kg)"
             },
             "anchor": "seat-load-3",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -735.5,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -2128,14 +3705,16 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "seat-cushions": {
               "exposedFraction": 0.6,
-              "sunlitFraction": 0.0,
+              "sunlitFraction": 0,
               "contact": {
                 "fraction": 0.4,
                 "tempC": 30
@@ -2158,12 +3737,12 @@
               }
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2183,7 +3762,7 @@
               "wxNPerM": 0,
               "wyNPerM": -459.7
             },
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -2216,30 +3795,32 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
             "seat-cushions": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "back-cushions": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.1
             },
             "arm-pads": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2253,7 +3834,7 @@
               "de": "Statische Sitzprüflast (1600 N)"
             },
             "anchor": "seat-load-2",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -1600,
             "source": "authored-estimate",
             "reference": "en-12520"
@@ -2287,8 +3868,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
@@ -2309,16 +3892,16 @@
               }
             },
             "arm-pads": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2332,8 +3915,8 @@
               "de": "Sitzende erwachsene Person 1 (75 kg)"
             },
             "anchor": "seat-load-2",
-            "fxN": 0.0,
-            "fyN": -955.0,
+            "fxN": 0,
+            "fyN": -955,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
           }
@@ -2366,8 +3949,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-left",
-          "foot-right"
+          "foot-left-l",
+          "foot-left-r",
+          "foot-right-l",
+          "foot-right-r"
         ],
         "thermal": {
           "regions": {
@@ -2380,20 +3965,20 @@
               }
             },
             "back-cushions": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.1
             },
             "arm-pads": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.2
             },
             "base-rail": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "feet": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2440,12 +4025,22 @@
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-left-l",
             "fromS": 0,
             "toS": 2.5
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-left-r",
+            "fromS": 0,
+            "toS": 2.5
+          },
+          {
+            "anchor": "foot-right-l",
+            "fromS": 0,
+            "toS": 2.5
+          },
+          {
+            "anchor": "foot-right-r",
             "fromS": 0,
             "toS": 2.5
           }
@@ -2508,11 +4103,11 @@
               },
               {
                 "t": 1.2,
-                "v": 1.0
+                "v": 1
               },
               {
                 "t": 2.5,
-                "v": 1.0
+                "v": 1
               }
             ]
           }
@@ -2528,7 +4123,7 @@
           "en": "The occupant stands up; the foam recovers slowly from 60 mm sink (viscoelastic recovery shown compressed to 4 s).",
           "de": "Die Person steht auf; der Schaum erholt sich langsam aus 60 mm Einsinken (viskoelastische Erholung auf 4 s gerafft)."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -2544,21 +4139,31 @@
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "unoccupied",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-left-l",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-left-r",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "foot-right-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "foot-right-r",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
@@ -2574,7 +4179,7 @@
           {
             "id": "recover",
             "fromS": 0.7,
-            "toS": 4.0,
+            "toS": 4,
             "title": {
               "en": "Foam recovery",
               "de": "Schaumerholung"
@@ -2623,7 +4228,7 @@
           "en": "One occupant sits, then stretches out: the load spreads from the centre cushion over all three.",
           "de": "Eine Person sitzt und streckt sich dann aus: die Last verteilt sich vom mittleren Kissen auf alle drei."
         },
-        "durationS": 5.0,
+        "durationS": 5,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -2634,7 +4239,7 @@
             "ease": "smooth"
           },
           {
-            "t": 1.0,
+            "t": 1,
             "pose": "one-seated",
             "ease": "smooth"
           },
@@ -2644,26 +4249,36 @@
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "lounging",
             "ease": "smooth"
           },
           {
-            "t": 5.0,
+            "t": 5,
             "pose": "lounging",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-left",
+            "anchor": "foot-left-l",
             "fromS": 0,
-            "toS": 5.0
+            "toS": 5
           },
           {
-            "anchor": "foot-right",
+            "anchor": "foot-left-r",
             "fromS": 0,
-            "toS": 5.0
+            "toS": 5
+          },
+          {
+            "anchor": "foot-right-l",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "foot-right-r",
+            "fromS": 0,
+            "toS": 5
           }
         ],
         "phases": [
@@ -2679,7 +4294,7 @@
           {
             "id": "lie",
             "fromS": 2.5,
-            "toS": 5.0,
+            "toS": 5,
             "title": {
               "en": "Stretch out",
               "de": "Ausstrecken"
@@ -2688,7 +4303,7 @@
         ],
         "events": [
           {
-            "t": 1.0,
+            "t": 1,
             "kind": "load-on",
             "title": {
               "en": "Occupant sits",
@@ -2707,12 +4322,12 @@
                 "v": 0.3
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0.22
               },
               {
-                "t": 4.0,
-                "v": 0.0
+                "t": 4,
+                "v": 0
               }
             ]
           }
@@ -2979,13 +4594,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "foot-left",
-        "foot-right"
+        "foot-left-l",
+        "foot-left-r",
+        "foot-right-l",
+        "foot-right-r"
       ],
       "assumptions": [
         {
-          "en": "The sofa is a rigid frame on two foot contacts (front and rear feet coincide in elevation); each cushion is a rigid slab on a prismatic joint that sinks into the frame, the foam deformation is hidden behind the skirt rail.",
-          "de": "Das Sofa ist ein starrer Rahmen auf zwei Fußkontakten (vordere und hintere Füße fallen in der Ansicht zusammen); jedes Kissen ist eine starre Platte auf einem Schiebegelenk, die in den Rahmen einsinkt, die Schaumverformung verdeckt die Zarge."
+          "en": "The sofa is a rigid frame on four foot contacts (two feet at each end, z = +-0.36 m, x = 0.12 m and 1.88 m); each cushion is a rigid slab on a prismatic joint that sinks into the frame, the foam deformation is hidden behind the skirt rail.",
+          "de": "Das Sofa ist ein starrer Rahmen auf vier Fußkontakten (zwei Füße an jedem Ende, z = +-0,36 m, x = 0,12 m und 1,88 m); jedes Kissen ist eine starre Platte auf einem Schiebegelenk, die in den Rahmen einsinkt, die Schaumverformung verdeckt die Zarge."
         },
         {
           "en": "Sink depth s = 0.4 (sigma/sigma40) t with sigma = 0.8 x 735 N / 0.13 m2 = 4.5 kPa, CLD40 = 6 kPa (ISO 3386-1) and t = 0.20 m gives 60 mm; the 1600 N proof load bottoms out at 90 mm.",
@@ -3001,10 +4618,7 @@
     "presentation": {
       "defaultPose": "unoccupied",
       "defaultClip": "sit-down-and-settle",
-      "defaultScale": 50,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 50
     },
     "exports": [
       "svg",

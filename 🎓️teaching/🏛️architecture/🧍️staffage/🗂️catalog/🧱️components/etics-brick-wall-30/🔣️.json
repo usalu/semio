@@ -1,0 +1,1475 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "etics-brick-wall-30",
+    "category": "components",
+    "title": {
+      "en": "Brick Wall with 30 cm ETICS",
+      "de": "Ziegelwand mit 30 cm WDVS"
+    },
+    "summary": {
+      "en": "A 1960 solid brick wall with 30 cm ETICS in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick, 300 mm mineral wool ETICS and 20 mm mineral render, U = 0.11 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
+      "de": "Eine Vollziegelwand von 1960 mit 30 cm WDVS im Vertikalschnitt, 1 m hoch: 15 mm Innenputz, 365 mm Vollziegel, 300 mm Mineralwolle-WDVS und 20 mm Mineralputz, U = 0,11 W/(m² K) bei Innenraum 20 °C und R_si 0,13, R_se 0,04 m²K/W."
+    },
+    "tags": [
+      "component",
+      "thermal",
+      "wall",
+      "build-up",
+      "brick",
+      "etics",
+      "insulation"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors (W11 build)",
+      "method": "handcrafted",
+      "created": "2026-11-03",
+      "references": [
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow, R_si 0.10 for upward heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: solid brick 0.75 W/mK, lime-cement plaster 0.70 W/mK, mineral wool 0.035 W/mK)."
+        },
+        {
+          "id": "geg-2024",
+          "citation": "GEG 2024 Gebaeudeenergiegesetz, Anlage 7: maximum U-values of renovated components (exterior wall 0.24, roof 0.20, windows 1.3, exterior doors 1.8 W/m2K)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for walls, doors, windows)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        }
+      ],
+      "notes": {
+        "en": "The wall is drawn in section as the heat-conduction lesson shows it: interior at the left, exterior at the right. One thermal region carries the layers from the inside out, so the solver gives the interior and exterior surface temperature of the scenario.",
+        "de": "Die Wand ist im Schnitt gezeichnet, wie ihn die Wärmeleitungs-Lektion zeigt: innen links, außen rechts. Eine thermische Region trägt die Schichten von innen nach außen, damit der Löser die innere und äußere Oberflächentemperatur des Szenarios liefert."
+      }
+    },
+    "dimensions": {
+      "heightM": 1,
+      "widthM": 0.7,
+      "depthM": 1,
+      "massKg": 730
+    },
+    "materials": [
+      {
+        "id": "lime-plaster",
+        "title": {
+          "en": "Lime-cement plaster",
+          "de": "Kalkzementputz"
+        },
+        "emissivity": 0.93,
+        "source": "literature",
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 1400,
+        "conductivityWmK": 0.7,
+        "specificHeatJKgK": 1000,
+        "reference": "en-iso-10456"
+      },
+      {
+        "id": "solid-brick",
+        "title": {
+          "en": "Solid clay brick",
+          "de": "Vollziegel"
+        },
+        "emissivity": 0.9,
+        "source": "literature",
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 1800,
+        "conductivityWmK": 0.75,
+        "specificHeatJKgK": 1000,
+        "reference": "en-iso-10456"
+      },
+      {
+        "id": "mineral-render",
+        "title": {
+          "en": "Mineral render",
+          "de": "Mineralputz"
+        },
+        "emissivity": 0.9,
+        "source": "literature",
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 1700,
+        "conductivityWmK": 0.87,
+        "specificHeatJKgK": 1000,
+        "reference": "en-iso-10456"
+      },
+      {
+        "id": "mineral-wool",
+        "title": {
+          "en": "Mineral wool board",
+          "de": "Mineralwolledämmplatte"
+        },
+        "emissivity": 0.9,
+        "source": "literature",
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 60,
+        "conductivityWmK": 0.035,
+        "specificHeatJKgK": 1030,
+        "reference": "en-iso-10456"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "root",
+      "bones": [
+        {
+          "id": "root",
+          "parent": null,
+          "title": {
+            "en": "Wall strip, rigid",
+            "de": "Wandstreifen, starr"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.7,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 730,
+            "comX": 0.35,
+            "comY": 0.5,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base",
+        "bone": "root",
+        "x": 0.35,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Base bearing, fixed",
+          "de": "Fußauflager, eingespannt"
+        },
+        "support": "fixed"
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "cut-brick",
+            "title": {
+              "en": "Cut solid brick",
+              "de": "Geschnittener Vollziegel"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          },
+          {
+            "id": "mineral-wool",
+            "title": {
+              "en": "Mineral wool",
+              "de": "Mineralwolle"
+            },
+            "pattern": "cross",
+            "angleDeg": 45,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "plaster",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-field",
+              "material": "lime-plaster",
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.015,
+              "h": 1
+            },
+            {
+              "id": "brick",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "hatch": "cut-brick",
+              "kind": "rect",
+              "x": 0.015,
+              "y": 0,
+              "w": 0.365,
+              "h": 1
+            },
+            {
+              "id": "insulation",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "hatch": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": 0,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "render",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "wall-field",
+              "material": "mineral-render",
+              "kind": "rect",
+              "x": 0.68,
+              "y": 0,
+              "w": 0.02,
+              "h": 1
+            },
+            {
+              "id": "joint-1",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.075
+                ],
+                [
+                  0.38,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-2",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.15
+                ],
+                [
+                  0.38,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-3",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.225
+                ],
+                [
+                  0.38,
+                  0.225
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-4",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.3
+                ],
+                [
+                  0.38,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-5",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.375
+                ],
+                [
+                  0.38,
+                  0.375
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-6",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.45
+                ],
+                [
+                  0.38,
+                  0.45
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-7",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.525
+                ],
+                [
+                  0.38,
+                  0.525
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-8",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.6
+                ],
+                [
+                  0.38,
+                  0.6
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-9",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.675
+                ],
+                [
+                  0.38,
+                  0.675
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-10",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.75
+                ],
+                [
+                  0.38,
+                  0.75
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-11",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.825
+                ],
+                [
+                  0.38,
+                  0.825
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-12",
+              "bone": "root",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "poly",
+              "points": [
+                [
+                  0.015,
+                  0.9
+                ],
+                [
+                  0.38,
+                  0.9
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "face",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "wall-field",
+              "material": "mineral-render",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            }
+          ],
+          "plan": [
+            {
+              "id": "plaster-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "region": "wall-field",
+              "material": "lime-plaster",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 0.015,
+              "h": 1
+            },
+            {
+              "id": "brick-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "hatch": "cut-brick",
+              "kind": "rect",
+              "x": 0.015,
+              "y": -0.5,
+              "w": 0.365,
+              "h": 1
+            },
+            {
+              "id": "insulation-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "hatch": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": -0.5,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "render-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "wall-field",
+              "material": "mineral-render",
+              "kind": "rect",
+              "x": 0.68,
+              "y": -0.5,
+              "w": 0.02,
+              "h": 1
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A highly-insulated-30 section 1.0 m high, interior on the left and exterior on the right, layers drawn at their real thickness.",
+            "de": "Ein Schnitt der Wand highly-insulated-30, 1,0 m hoch, Innenraum links und außen rechts, Schichten in ihrer wirklichen Dicke."
+          },
+          "retained": {
+            "en": "Every layer that prints at this scale: the brick leaf, the insulation if any and the facing coat.",
+            "de": "Jede Schicht, die in diesem Maßstab druckbar ist: die Ziegelschale, die Dämmung falls vorhanden und die Außenschicht."
+          },
+          "merged": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "omitted": {
+            "en": "The window reveal, the floor connection and the anchors of the render system.",
+            "de": "Die Fensterlaibung, der Deckenanschluss und die Dübel des Putzsystems."
+          },
+          "thinElements": {
+            "en": "The 15 mm plaster is 0.3 mm at 1:50; the 20 mm render 0.4 mm. Below that they merge.",
+            "de": "Der 15-mm-Innenputz ist bei 1:50 0,3 mm; der 20-mm-Außenputz 0,4 mm. Darunter gehen sie auf."
+          },
+          "hatching": {
+            "en": "Brick at 45 degrees, mineral wool as a cross hatch (DIN ISO 128-50).",
+            "de": "Ziegel unter 45 Grad, Mineralwolle als Kreuzschraffur (DIN ISO 128-50)."
+          },
+          "styles": {
+            "en": "Body pen for the layer outlines, detail pen for the bed joints (1:50 only).",
+            "de": "Körperstift für die Schichtkonturen, Detailstift für die Lagerfugen (nur 1:50)."
+          },
+          "overlays": {
+            "en": "One thermal region wall-field over all layers; the surface temperatures come from the scenario.",
+            "de": "Eine thermische Region wall-field über alle Schichten; die Oberflächentemperaturen kommen aus dem Szenario."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "cut-brick",
+            "title": {
+              "en": "Cut solid brick",
+              "de": "Geschnittener Vollziegel"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          },
+          {
+            "id": "mineral-wool",
+            "title": {
+              "en": "Mineral wool",
+              "de": "Mineralwolle"
+            },
+            "pattern": "cross",
+            "angleDeg": 45,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "brick",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "hatch": "cut-brick",
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.38,
+              "h": 1
+            },
+            {
+              "id": "insulation",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "hatch": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": 0,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "render",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "wall-field",
+              "material": "mineral-render",
+              "kind": "rect",
+              "x": 0.68,
+              "y": 0,
+              "w": 0.02,
+              "h": 1
+            }
+          ],
+          "front": [
+            {
+              "id": "face",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "wall-field",
+              "material": "mineral-render",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            }
+          ],
+          "plan": [
+            {
+              "id": "brick-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "hatch": "cut-brick",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 0.38,
+              "h": 1
+            },
+            {
+              "id": "insulation-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "hatch": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": -0.5,
+              "w": 0.3,
+              "h": 1
+            },
+            {
+              "id": "render-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.85,
+              "region": "wall-field",
+              "material": "mineral-render",
+              "kind": "rect",
+              "x": 0.68,
+              "y": -0.5,
+              "w": 0.02,
+              "h": 1
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A highly-insulated-30 section 1.0 m high, interior on the left and exterior on the right, layers drawn at their real thickness.",
+            "de": "Ein Schnitt der Wand highly-insulated-30, 1,0 m hoch, Innenraum links und außen rechts, Schichten in ihrer wirklichen Dicke."
+          },
+          "retained": {
+            "en": "Every layer that prints at this scale: the brick leaf, the insulation if any and the facing coat.",
+            "de": "Jede Schicht, die in diesem Maßstab druckbar ist: die Ziegelschale, die Dämmung falls vorhanden und die Außenschicht."
+          },
+          "merged": {
+            "en": "Layers thinner than 0.25 mm on paper join the thicker neighbour; the thermal region is one and keeps all layers.",
+            "de": "Schichten dünner als 0,25 mm auf Papier gehen in der dickeren Nachbarschicht auf; die thermische Region bleibt eine und behält alle Schichten."
+          },
+          "omitted": {
+            "en": "The window reveal, the floor connection and the anchors of the render system.",
+            "de": "Die Fensterlaibung, der Deckenanschluss und die Dübel des Putzsystems."
+          },
+          "thinElements": {
+            "en": "The 15 mm plaster is 0.3 mm at 1:50; the 20 mm render 0.4 mm. Below that they merge.",
+            "de": "Der 15-mm-Innenputz ist bei 1:50 0,3 mm; der 20-mm-Außenputz 0,4 mm. Darunter gehen sie auf."
+          },
+          "hatching": {
+            "en": "Brick at 45 degrees, mineral wool as a cross hatch (DIN ISO 128-50).",
+            "de": "Ziegel unter 45 Grad, Mineralwolle als Kreuzschraffur (DIN ISO 128-50)."
+          },
+          "styles": {
+            "en": "Body pen for the layer outlines, detail pen for the bed joints (1:50 only).",
+            "de": "Körperstift für die Schichtkonturen, Detailstift für die Lagerfugen (nur 1:50)."
+          },
+          "overlays": {
+            "en": "One thermal region wall-field over all layers; the surface temperatures come from the scenario.",
+            "de": "Eine thermische Region wall-field über alle Schichten; die Oberflächentemperaturen kommen aus dem Szenario."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "brick",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.38,
+              "h": 1
+            },
+            {
+              "id": "insulation",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": 0,
+              "w": 0.32,
+              "h": 1
+            }
+          ],
+          "front": [
+            {
+              "id": "face",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            }
+          ],
+          "plan": [
+            {
+              "id": "brick-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 0.38,
+              "h": 1
+            },
+            {
+              "id": "insulation-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": -0.5,
+              "w": 0.32,
+              "h": 1
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A highly-insulated-30 section 1.0 m high, interior on the left and exterior on the right, layers drawn at their real thickness.",
+            "de": "Ein Schnitt der Wand highly-insulated-30, 1,0 m hoch, Innenraum links und außen rechts, Schichten in ihrer wirklichen Dicke."
+          },
+          "retained": {
+            "en": "Every layer that prints at this scale: the brick leaf, the insulation if any and the facing coat.",
+            "de": "Jede Schicht, die in diesem Maßstab druckbar ist: die Ziegelschale, die Dämmung falls vorhanden und die Außenschicht."
+          },
+          "merged": {
+            "en": "Layers thinner than 0.25 mm on paper join the thicker neighbour; the thermal region is one and keeps all layers.",
+            "de": "Schichten dünner als 0,25 mm auf Papier gehen in der dickeren Nachbarschicht auf; die thermische Region bleibt eine und behält alle Schichten."
+          },
+          "omitted": {
+            "en": "The window reveal, the floor connection and the anchors of the render system.",
+            "de": "Die Fensterlaibung, der Deckenanschluss und die Dübel des Putzsystems."
+          },
+          "thinElements": {
+            "en": "The 15 mm plaster is 0.3 mm at 1:50; the 20 mm render 0.4 mm. Below that they merge.",
+            "de": "Der 15-mm-Innenputz ist bei 1:50 0,3 mm; der 20-mm-Außenputz 0,4 mm. Darunter gehen sie auf."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Body pen for the layer outlines, detail pen for the bed joints (1:50 only).",
+            "de": "Körperstift für die Schichtkonturen, Detailstift für die Lagerfugen (nur 1:50)."
+          },
+          "overlays": {
+            "en": "One thermal region wall-field over all layers; the surface temperatures come from the scenario.",
+            "de": "Eine thermische Region wall-field über alle Schichten; die Oberflächentemperaturen kommen aus dem Szenario."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "brick",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "rect",
+              "x": 0,
+              "y": 0,
+              "w": 0.38,
+              "h": 1
+            },
+            {
+              "id": "insulation",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": 0,
+              "w": 0.32,
+              "h": 1
+            }
+          ],
+          "front": [
+            {
+              "id": "face",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": -0.5,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            }
+          ],
+          "plan": [
+            {
+              "id": "brick-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "region": "wall-field",
+              "material": "solid-brick",
+              "kind": "rect",
+              "x": 0,
+              "y": -0.5,
+              "w": 0.38,
+              "h": 1
+            },
+            {
+              "id": "insulation-plan",
+              "bone": "root",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "region": "wall-field",
+              "material": "mineral-wool",
+              "kind": "rect",
+              "x": 0.38,
+              "y": -0.5,
+              "w": 0.32,
+              "h": 1
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A highly-insulated-30 section 1.0 m high, interior on the left and exterior on the right, layers drawn at their real thickness.",
+            "de": "Ein Schnitt der Wand highly-insulated-30, 1,0 m hoch, Innenraum links und außen rechts, Schichten in ihrer wirklichen Dicke."
+          },
+          "retained": {
+            "en": "Every layer that prints at this scale: the brick leaf, the insulation if any and the facing coat.",
+            "de": "Jede Schicht, die in diesem Maßstab druckbar ist: die Ziegelschale, die Dämmung falls vorhanden und die Außenschicht."
+          },
+          "merged": {
+            "en": "Layers thinner than 0.25 mm on paper join the thicker neighbour; the thermal region is one and keeps all layers.",
+            "de": "Schichten dünner als 0,25 mm auf Papier gehen in der dickeren Nachbarschicht auf; die thermische Region bleibt eine und behält alle Schichten."
+          },
+          "omitted": {
+            "en": "The window reveal, the floor connection and the anchors of the render system.",
+            "de": "Die Fensterlaibung, der Deckenanschluss und die Dübel des Putzsystems."
+          },
+          "thinElements": {
+            "en": "The 15 mm plaster is 0.3 mm at 1:50; the 20 mm render 0.4 mm. Below that they merge.",
+            "de": "Der 15-mm-Innenputz ist bei 1:50 0,3 mm; der 20-mm-Außenputz 0,4 mm. Darunter gehen sie auf."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Body pen for the layer outlines, detail pen for the bed joints (1:50 only).",
+            "de": "Körperstift für die Schichtkonturen, Detailstift für die Lagerfugen (nur 1:50)."
+          },
+          "overlays": {
+            "en": "One thermal region wall-field over all layers; the surface temperatures come from the scenario.",
+            "de": "Eine thermische Region wall-field über alle Schichten; die Oberflächentemperaturen kommen aus dem Szenario."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "winter-night",
+        "title": {
+          "en": "Winter night",
+          "de": "Winternacht"
+        },
+        "description": {
+          "en": "Exterior face in the dark: no solar gain.",
+          "de": "Außenfläche im Dunkeln: kein Solargewinn."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "base"
+        ],
+        "thermal": {
+          "regions": {
+            "wall-field": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "winter-sun",
+        "title": {
+          "en": "Winter sun",
+          "de": "Wintersonne"
+        },
+        "description": {
+          "en": "Exterior face in full south sun.",
+          "de": "Außenfläche in voller Südsonne."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "base"
+        ],
+        "thermal": {
+          "regions": {
+            "wall-field": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "half-shaded",
+        "title": {
+          "en": "Half shaded",
+          "de": "Halb beschattet"
+        },
+        "description": {
+          "en": "Half of the exterior face in sun.",
+          "de": "Die Hälfte der Außenfläche in der Sonne."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "base"
+        ],
+        "thermal": {
+          "regions": {
+            "wall-field": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "sunrise",
+        "title": {
+          "en": "Sunrise on the face",
+          "de": "Sonnenaufgang auf der Fläche"
+        },
+        "description": {
+          "en": "The shaded face turns into the sunlit face: the surface temperature follows the absorbed solar radiation with the heat capacity of the outer layers.",
+          "de": "Die beschattete Fläche wird zur besonnten: die Oberflächentemperatur folgt der absorbierten Solarstrahlung mit der Wärmekapazität der äußeren Schichten."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "winter-night",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "winter-sun",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "sun",
+            "fromS": 0,
+            "toS": 8,
+            "title": {
+              "en": "Sun reaches the face",
+              "de": "Sonne erreicht die Fläche"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "thermal",
+            "title": {
+              "en": "Face in half sun",
+              "de": "Fläche in halber Sonne"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:wall-field:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 8,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cloud-shadow",
+        "title": {
+          "en": "Cloud shadow",
+          "de": "Wolkenschatten"
+        },
+        "description": {
+          "en": "A cloud shadow crosses the sunlit face: the surface temperature falls and recovers with the heat capacity of the outer layers.",
+          "de": "Ein Wolkenschatten wandert über die besonnte Fläche: die Oberflächentemperatur sinkt und erholt sich mit der Wärmekapazität der äußeren Schichten."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "winter-sun",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "winter-sun",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "shadow",
+            "fromS": 0,
+            "toS": 8,
+            "title": {
+              "en": "Cloud shadow passes",
+              "de": "Wolkenschatten zieht durch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "thermal",
+            "title": {
+              "en": "Deepest shade",
+              "de": "Tiefster Schatten"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:wall-field:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 0,
+        "meanRadiantTempC": 0,
+        "skyTempC": -12,
+        "groundTempC": 2,
+        "relativeHumidity": 0.8,
+        "windMS": 3,
+        "windDirectionDeg": 0,
+        "solarWM2": 300,
+        "diffuseFraction": 0.25,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [],
+      "regions": [
+        {
+          "id": "wall-field",
+          "title": {
+            "en": "Wall field, all layers",
+            "de": "Wandfeld, alle Schichten"
+          },
+          "kind": "wall",
+          "model": "conditioned",
+          "material": "solid-brick",
+          "areaM2": 1,
+          "characteristicLengthM": 1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "plaster",
+              "title": {
+                "en": "Interior lime-cement plaster 15 mm",
+                "de": "Innenputz aus Kalkzement 15 mm"
+              },
+              "kind": "masonry",
+              "material": "lime-plaster",
+              "thicknessM": 0.015,
+              "resistanceM2KW": 0.02143,
+              "heatCapacityJM2K": 21000,
+              "source": "literature",
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "brick",
+              "title": {
+                "en": "Solid brick 365 mm (1.5 bricks)",
+                "de": "Vollziegel 365 mm (1,5 Stein)"
+              },
+              "kind": "masonry",
+              "material": "solid-brick",
+              "thicknessM": 0.365,
+              "resistanceM2KW": 0.48667,
+              "heatCapacityJM2K": 657000,
+              "source": "literature",
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "insulation",
+              "title": {
+                "en": "ETICS mineral wool 300 mm",
+                "de": "WDVS Mineralwolle 300 mm"
+              },
+              "kind": "insulation",
+              "material": "mineral-wool",
+              "thicknessM": 0.3,
+              "resistanceM2KW": 8.57143,
+              "heatCapacityJM2K": 18540,
+              "source": "literature",
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "render",
+              "title": {
+                "en": "Mineral render 20 mm",
+                "de": "Mineralputz 20 mm"
+              },
+              "kind": "masonry",
+              "material": "mineral-render",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.02299,
+              "heatCapacityJM2K": 34000,
+              "source": "literature",
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 730540,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "authored-estimate",
+          "reference": "en-iso-6946"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Winter reference case: air 0 degC, sky -12 degC, wind 3 m/s, 300 W/m2; interior 20 degC with R_si 0.13 m2K/W. U = 0.11 W/(m2 K) over R_si + sum d/lambda + R_se (EN ISO 6946). The viewer may select any preset.",
+          "de": "Winter-Referenzfall: Luft 0 °C, Himmel -12 °C, Wind 3 m/s, 300 W/m2; Innenraum 20 °C mit R_si 0,13 m2K/W. U = 0,11 W/(m² K) aus R_si + Summe d/lambda + R_se (EN ISO 6946). Der Betrachter kann jede Voreinstellung wählen."
+        },
+        {
+          "en": "The wall is homogeneous: mortar joints, anchors and thermal bridges are not modelled.",
+          "de": "Die Wand ist homogen: Mörtelfugen, Dübel und Wärmebrücken sind nicht modelliert."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base"
+      ],
+      "assumptions": [
+        {
+          "en": "The 1 m strip is one rigid body on a fixed base; the self-weight acts at its centre. No imposed load is applied.",
+          "de": "Der 1-m-Streifen ist ein starrer Körper auf eingespanntem Fußpunkt; das Eigengewicht wirkt im Schwerpunkt. Es ist keine Nutzlast angesetzt."
+        },
+        {
+          "en": "Layer densities follow EN ISO 10456; the wall is not a load-bearing check.",
+          "de": "Die Rohdichten folgen EN ISO 10456; die Wand ist kein Tragfähigkeitsnachweis."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "winter-night",
+      "defaultClip": "sunrise",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "description": "Language-agnostic vectors of the plan projection. A plan shape keeps its authored plan coordinates (x ahead, y sideways, both in metres) and follows its bone only by the bone's x travel from the rest pose; a capsule with followTip stretches: its (x0, y0) end follows the origin of the bone and its (x1, y1) end the tip of the bone. The figure is the rig of the sample figure (pelvis up, both thighs hanging down, thigh 0.45 m); the x travel of the thigh tip at a thigh angle of 22 degrees is 0.45 · sin 22° = 0.168573 m (hand-computed), at the rest pose 0. Single 3D path: rigid shapes are carried by the 3D transform of their bone and projected, so a part turns with its bone: the rigid thigh capsule (x = +-0.08 across the bone) is 0.08 cos 22 deg = 0.074175 wide to each side in the stride, the triangle of the shank is carried to 0.168573 + 0.945519 x for x 0.1 to 0.3 (the shank axis at -71 degrees, v = (0.945519, 0.325568)).",
+  "asset": "sample-figure",
+  "scale": 100,
+  "shapes": [
+    {
+      "id": "limb",
+      "kind": "capsule",
+      "bone": "thigh-l",
+      "role": "body",
+      "z": 1,
+      "filled": true,
+      "tone": 0.4,
+      "x0": 0,
+      "y0": 0.09,
+      "x1": 0,
+      "y1": 0.09,
+      "r0": 0.08,
+      "r1": 0.06,
+      "followTip": true
+    },
+    {
+      "id": "rigid",
+      "kind": "capsule",
+      "bone": "thigh-l",
+      "role": "body",
+      "z": 1,
+      "filled": true,
+      "tone": 0.4,
+      "x0": 0,
+      "y0": -0.09,
+      "x1": 0,
+      "y1": -0.09,
+      "r0": 0.08,
+      "r1": 0.06
+    },
+    {
+      "id": "follower",
+      "kind": "poly",
+      "bone": "shank-l",
+      "role": "body",
+      "z": 2,
+      "filled": true,
+      "tone": 0.6,
+      "points": [
+        [
+          0.1,
+          0
+        ],
+        [
+          0.3,
+          0.05
+        ],
+        [
+          0.3,
+          -0.05
+        ]
+      ],
+      "closed": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "the rest pose leaves every shape where it is authored",
+      "pose": "stand",
+      "thighTipTravelM": 0,
+      "extents": {
+        "limb": {
+          "minX": -0.08,
+          "maxX": 0.08
+        },
+        "rigid": {
+          "minX": -0.08,
+          "maxX": 0.08
+        },
+        "follower": {
+          "minX": 0.1,
+          "maxX": 0.3
+        }
+      }
+    },
+    {
+      "name": "a stride stretches the limb capsule; a rigid capsule and a shape of the child bone are carried by the full transform of their bones (the thigh swinging 22 degrees narrows its footprint to 0.08 cos 22 deg, the shank tilting to -71 degrees carries its triangle to 0.168573 + 0.945519 x)",
+      "pose": "stride-left-forward",
+      "thighTipTravelM": 0.168573,
+      "extents": {
+        "limb": {
+          "minX": -0.08,
+          "maxX": 0.228573
+        },
+        "rigid": {
+          "minX": -0.074175,
+          "maxX": 0.074175
+        },
+        "follower": {
+          "minX": 0.263125,
+          "maxX": 0.452229
+        }
+      }
+    }
+  ],
+  "catalog": {
+    "assets": {
+      "standing-adult": "👤️humans",
+      "walking-commuter": "👤️humans",
+      "seated-office-worker": "👤️humans",
+      "city-car": "🚜️vehicles"
+    },
+    "scales": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "armSpanM": {
+      "min": 0.36,
+      "max": 0.58,
+      "assets": [
+        "standing-adult",
+        "walking-commuter",
+        "seated-office-worker"
+      ],
+      "pose": {
+        "standing-adult": "relaxed",
+        "walking-commuter": "standing",
+        "seated-office-worker": "typing"
+      }
+    },
+    "car": {
+      "pose": "parked",
+      "lengthM": {
+        "min": 3.85,
+        "max": 3.95
+      },
+      "widthM": {
+        "min": 1.68,
+        "max": 1.95
+      }
+    },
+    "stride": {
+      "asset": "walking-commuter",
+      "from": "contact-left",
+      "to": "passing-right",
+      "shape": "shoe-heel-l",
+      "minTravelM": 0.2
+    },
+    "lean": {
+      "asset": "seated-office-worker",
+      "from": "typing",
+      "to": "leaning-back",
+      "shape": "shoulders",
+      "minTravelM": 0.04
+    }
+  },
+  "casts": {
+    "manifest": {
+      "version": 1,
+      "casts": {
+        "plan-commuter": {
+          "asset": "walking-commuter",
+          "pose": "contact-left",
+          "view": "dark-line",
+          "viewpoint": "plan",
+          "theme": "dark",
+          "scale": 50
+        },
+        "plan-car": {
+          "asset": "city-car",
+          "pose": "parked",
+          "view": "dark-line",
+          "viewpoint": "plan",
+          "theme": "dark",
+          "scale": 50
+        },
+        "side-car": {
+          "asset": "city-car",
+          "pose": "parked",
+          "view": "dark-line",
+          "viewpoint": "elevation",
+          "theme": "dark",
+          "scale": 50
+        }
+      }
+    },
+    "depthM": {
+      "plan-commuter": {
+        "min": 0.55,
+        "max": 0.8
+      },
+      "plan-car": {
+        "min": 1.68,
+        "max": 2.05
+      },
+      "side-car": {
+        "min": 1.4,
+        "max": 1.6
+      }
+    }
+  }
+}

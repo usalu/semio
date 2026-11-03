@@ -1,0 +1,1883 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "plate-heat-exchanger",
+    "category": "machinery",
+    "title": {
+      "en": "Cross-Flow Plate Heat Exchanger",
+      "de": "Kreuzstrom-Plattenwärmeübertrager"
+    },
+    "summary": {
+      "en": "A 0.5 m by 0.6 m aluminium cross-flow plate heat exchanger of an air handler, cut open to the hatched plate pack, with four duct collars and a bypass damper flap on top.",
+      "de": "Ein 0,5 m mal 0,6 m großer Kreuzstrom-Plattenwärmeübertrager aus Aluminium eines Lüftungsgeräts, aufgeschnitten bis zum schraffierten Plattenpaket, mit vier Kanalstutzen und einer Bypass-Klappe oben."
+    },
+    "tags": [
+      "plate-heat-exchanger",
+      "heat-recovery",
+      "cross-flow",
+      "air-handling",
+      "bypass",
+      "dec",
+      "appliance"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G2)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "en-308-1997",
+          "citation": "DIN EN 308:1997 Heat exchangers - Test procedures for establishing performance of air to air and flue gases heat recovery devices."
+        },
+        {
+          "id": "vdi-3803-2010",
+          "citation": "VDI 3803 Part 1:2010 Air-conditioning - Central air-handling units - Structural and technical principles."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE (2021). Handbook - Fundamentals, SI edition, Atlanta (heat transfer, psychrometrics, refrigeration cycles and air-conditioning components)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A cross-flow plate heat exchanger of the 1000 m3/h class: 200 embossed aluminium plates of 0.3 mm at 2.5 mm pitch between 0.5 m by 0.6 m end plates in a galvanised frame, with a duct collar at each of the four corners (two for supply, two for exhaust) and a bypass damper flap of 0.4 m on a hinge at the top. The mass is 18 kg (frame 5, plates 12, collars 0.4, damper 0.6). The drawing is the section through the pack, so the plates appear as a diagonal hatch. At full exchange the two air streams leave the collars as vent emitters: supply air 3.1 K below the room and exhaust air 17.9 K below it (EN 308 test point, 85 percent); the pack, frame, collars and damper are passive and carry no heat of their own, and the damper reduces the exchange. The origin is the centre of the base on the surface.",
+        "de": "Ein Kreuzstrom-Plattenwärmeübertrager der Klasse 1000 m3/h: 200 geprägte Aluminiumplatten von 0,3 mm im Abstand von 2,5 mm zwischen 0,5 m mal 0,6 m großen Endplatten in einem verzinkten Rahmen, mit je einem Kanalstutzen an den vier Ecken (zwei für Zuluft, zwei für Abluft) und einer 0,4 m langen Bypass-Klappe auf einem Scharnier oben. Die Masse beträgt 18 kg (Rahmen 5, Platten 12, Stutzen 0,4, Klappe 0,6). Die Zeichnung ist der Schnitt durch das Paket, daher erscheinen die Platten als diagonale Schraffur. Bei vollem Austausch verlassen die beiden Luftströme die Stutzen als Lüftungsemitter: Zuluft 3,1 K unter Raumluft und Abluft 17,9 K darunter (EN-308-Prüfpunkt, 85 Prozent); Paket, Rahmen, Stutzen und Klappe sind passiv und haben keine eigene Wärme, die Klappe verringert den Austausch. Der Ursprung ist die Mitte des Fußes auf der Unterlage."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.634,
+      "widthM": 0.62,
+      "depthM": 0.5,
+      "massKg": 18
+    },
+    "materials": [
+      {
+        "id": "galvanised-steel",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 480,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "aluminium-plate",
+        "title": {
+          "en": "Embossed aluminium plates",
+          "de": "Geprägte Aluminiumplatten"
+        },
+        "emissivity": 0.1,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 2700,
+        "conductivityWmK": 237,
+        "specificHeatJKgK": 900,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "frame",
+      "bones": [
+        {
+          "id": "frame",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Casing frame with stand",
+            "de": "Gehäuserahmen mit Fuß"
+          },
+          "lengthM": 0.6,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5,
+            "comX": 0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "plates",
+          "parent": "frame",
+          "x": 0,
+          "y": 0.03,
+          "angleDeg": 0,
+          "title": {
+            "en": "Aluminium plate pack",
+            "de": "Aluminium-Plattenpaket"
+          },
+          "lengthM": 0.54,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 12,
+            "comX": 0,
+            "comY": 0.27,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "ports",
+          "parent": "frame",
+          "x": 0,
+          "y": 0.3,
+          "angleDeg": 0,
+          "title": {
+            "en": "Four duct collars",
+            "de": "Vier Kanalstutzen"
+          },
+          "lengthM": 0.62,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.4,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "damper",
+          "parent": "frame",
+          "x": -0.2,
+          "y": 0.62,
+          "angleDeg": 0,
+          "title": {
+            "en": "Bypass damper flap",
+            "de": "Bypass-Klappe"
+          },
+          "lengthM": 0.4,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 0.6,
+            "comX": 0.2,
+            "comY": 0.007,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "frame",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base on the surface",
+          "de": "Fuß auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.5,
+        "footprintWidthM": 0.5,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "supply-collar",
+        "bone": "ports",
+        "x": 0.28,
+        "y": 0.175,
+        "kind": "emitter",
+        "title": {
+          "en": "Supply air leaving the upper-right collar",
+          "de": "Zuluft am rechten oberen Stutzen"
+        }
+      },
+      {
+        "id": "exhaust-collar",
+        "bone": "ports",
+        "x": -0.28,
+        "y": -0.165,
+        "kind": "emitter",
+        "title": {
+          "en": "Exhaust air leaving the lower-left collar",
+          "de": "Fortluft am linken unteren Stutzen"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "plates",
+            "title": {
+              "en": "Plate pack in section",
+              "de": "Plattenpaket im Schnitt"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "collar-upper-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.1,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.24,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-upper-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.1,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": -0.24,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.54,
+              "region": "plates",
+              "material": "aluminium-plate"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0.4,
+                  -0.02
+                ],
+                [
+                  0.4,
+                  -0.006
+                ],
+                [
+                  0,
+                  -0.006
+                ]
+              ],
+              "closed": true,
+              "region": "damper",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "damper-hinge",
+              "bone": "damper",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.02
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "damper",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.22,
+              "y": 0.03,
+              "w": 0.44,
+              "h": 0.54,
+              "region": "plates",
+              "material": "aluminium-plate",
+              "hatch": "plates"
+            },
+            {
+              "id": "collar-upper",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.4,
+              "w": 0.3,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.06,
+              "w": 0.3,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.02,
+              "region": "damper",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.25,
+              "w": 0.5,
+              "h": 0.5,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.15,
+              "w": 0.06,
+              "h": 0.3,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": -0.15,
+              "w": 0.06,
+              "h": 0.3,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.2,
+              "w": 0.4,
+              "h": 0.4,
+              "region": "plates",
+              "material": "aluminium-plate",
+              "hatch": "plates"
+            },
+            {
+              "id": "damper-hinge",
+              "bone": "damper",
+              "role": "detail",
+              "z": 3.55,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.22,
+              "y": -0.2,
+              "w": 0.02,
+              "h": 0.4,
+              "region": "damper",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.02,
+              "region": "damper",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.5 m by 0.6 m cross-flow plate heat exchanger in section, 12.4 mm by 12.7 mm on paper: a casing frame around a hatched plate pack, a duct collar at each of the four corners and a bypass damper flap on top. Front and top views: the casing shows its open front with the hatched plate edges and both duct collars standing in front of it; the damper flap is a solid extruded across the casing width, so it rises with the flap. From above the casing top carries the two collars, the plate pack under the flap opening and the flap, which shortens as it lifts.",
+            "de": "Ein 0,5 m mal 0,6 m großer Kreuzstrom-Plattenwärmeübertrager im Schnitt, auf Papier 12,4 mm mal 12,7 mm: ein Gehäuserahmen um ein schraffiertes Plattenpaket, je ein Kanalstutzen an den vier Ecken und eine Bypass-Klappe oben. Vorder- und Draufsicht: das Gehäuse zeigt seine offene Stirnseite mit den schraffierten Plattenkanten, davor stehen beide Kanalstutzen; die Klappe ist ein über die Gehäusebreite extrudierter Körper und steigt mit der Klappe. Von oben trägt das Gehäusedach die beiden Stutzen, das Plattenpaket unter der Klappenöffnung und die Klappe, die sich beim Öffnen verkürzt."
+          },
+          "retained": {
+            "en": "Frame, plate pack with its hatch, four collars, damper flap and hinge.",
+            "de": "Rahmen, Plattenpaket mit Schraffur, vier Stutzen, Klappe und Scharnier."
+          },
+          "merged": {
+            "en": "Nothing is merged: the plates are shown by a hatch.",
+            "de": "Nichts ist zusammengeführt: die Platten zeigt eine Schraffur."
+          },
+          "omitted": {
+            "en": "The corrugation of the plates, the drain pan and the inspection door.",
+            "de": "Die Prägung der Platten, die Kondensatwanne und die Revisionstür."
+          },
+          "thinElements": {
+            "en": "The 0.3 mm plates (2.5 mm pitch) are drawn as a 45 degree hatch of 25 mm real pitch; the damper flap is 14 mm thick.",
+            "de": "Die 0,3 mm dicken Platten (2,5 mm Teilung) sind als 45-Grad-Schraffur mit 25 mm realer Teilung gezeichnet; die Klappe ist 14 mm dick."
+          },
+          "hatching": {
+            "en": "A 45 degree hatch of 0.5 mm paper pitch (25 mm real) with a 0.1 mm pen fills the plate pack; nothing else is hatched.",
+            "de": "Eine 45-Grad-Schraffur mit 0,5 mm Papierabstand (25 mm real) und 0,1-mm-Stift füllt das Plattenpaket; sonst ist nichts schraffiert."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail 0.13 mm, Boden 0.35 mm."
+          },
+          "overlays": {
+            "en": "Frame, plates, ports and damper are four passive regions without a heat source of their own; the supply and exhaust streams leave the collars as vent emitters that scale with the exchange level.",
+            "de": "Rahmen, Platten, Stutzen und Klappe sind vier passive Regionen ohne eigene Wärmequelle; Zuluft- und Abluftstrom verlassen die Stutzen als Lüftungsemitter, die mit der Austauschstufe skalieren."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [
+          {
+            "id": "plates",
+            "title": {
+              "en": "Plate pack in section",
+              "de": "Plattenpaket im Schnitt"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "collar-upper-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.1,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.24,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-upper-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.1,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": -0.24,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0,
+              "w": 0.42,
+              "h": 0.54,
+              "region": "plates",
+              "material": "aluminium-plate"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.02,
+              "region": "damper",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.21,
+              "y": 0.03,
+              "w": 0.42,
+              "h": 0.54,
+              "region": "plates",
+              "material": "aluminium-plate",
+              "hatch": "plates"
+            },
+            {
+              "id": "collar-upper",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.4,
+              "w": 0.3,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.06,
+              "w": 0.3,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.02,
+              "region": "damper",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.25,
+              "w": 0.5,
+              "h": 0.5,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.15,
+              "w": 0.06,
+              "h": 0.3,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": -0.15,
+              "w": 0.06,
+              "h": 0.3,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.2,
+              "w": 0.4,
+              "h": 0.4,
+              "region": "plates",
+              "material": "aluminium-plate",
+              "hatch": "plates"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.02,
+              "region": "damper",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 6.2 mm by 6.3 mm exchanger: frame, hatched plate pack, four collars and a damper flap. Front and top views: front and top view keep the casing, the hatched plate edges, the collars and the damper; the flap is an extruded solid that rises in front and shortens in the top view over the plate pack.",
+            "de": "Ein 6,2 mm mal 6,3 mm großer Übertrager: Rahmen, schraffiertes Plattenpaket, vier Stutzen und eine Klappe. Vorder- und Draufsicht: Vorder- und Draufsicht behalten Gehäuse, schraffierte Plattenkanten, Stutzen und Klappe; der Klappenstreifen steigt mit der Klappenspitze, und die Klappe ist ein extrudierter Körper, der vorn steigt und sich in der Draufsicht über dem Plattenpaket verkürzt."
+          },
+          "retained": {
+            "en": "Frame, hatched plate pack, collars and damper.",
+            "de": "Rahmen, schraffiertes Plattenpaket, Stutzen und Klappe."
+          },
+          "merged": {
+            "en": "Nothing is merged.",
+            "de": "Nichts ist zusammengeführt."
+          },
+          "omitted": {
+            "en": "The hinge line and the corrugation.",
+            "de": "Die Scharnierlinie und die Prägung."
+          },
+          "thinElements": {
+            "en": "The hatch pitch is 50 mm real; the damper is 20 mm thick.",
+            "de": "Die Schraffur hat 50 mm reale Teilung; die Klappe ist 20 mm dick."
+          },
+          "hatching": {
+            "en": "A 45 degree hatch of 0.5 mm paper pitch (50 mm real) with a 0.1 mm pen fills the plate pack.",
+            "de": "Eine 45-Grad-Schraffur mit 0,5 mm Papierabstand (50 mm real) und 0,1-mm-Stift füllt das Plattenpaket."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.18 mm, detail none, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.18 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Same four regions as at 1:50.",
+            "de": "Dieselben vier Regionen wie bei 1:50."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "collar-upper-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": 0.1,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.24,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-upper-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": 0.1,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": -0.24,
+              "w": 0.06,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.02,
+              "w": 0.4,
+              "h": 0.5,
+              "region": "plates",
+              "material": "aluminium-plate"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.04,
+              "region": "damper",
+              "material": "galvanised-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.6,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.04,
+              "w": 0.4,
+              "h": 0.5,
+              "region": "plates",
+              "material": "aluminium-plate"
+            },
+            {
+              "id": "collar-upper",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.4,
+              "w": 0.3,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-lower",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.06,
+              "w": 0.3,
+              "h": 0.15,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.04,
+              "region": "damper",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "frame",
+              "bone": "frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -0.25,
+              "y": -0.25,
+              "w": 0.5,
+              "h": 0.5,
+              "region": "frame",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-left",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.31,
+              "y": -0.15,
+              "w": 0.06,
+              "h": 0.3,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "collar-right",
+              "bone": "ports",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": 0.25,
+              "y": -0.15,
+              "w": 0.06,
+              "h": 0.3,
+              "region": "ports",
+              "material": "galvanised-steel"
+            },
+            {
+              "id": "plate-pack",
+              "bone": "plates",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.2,
+              "y": -0.2,
+              "w": 0.4,
+              "h": 0.4,
+              "region": "plates",
+              "material": "aluminium-plate"
+            },
+            {
+              "id": "damper",
+              "bone": "damper",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.02,
+              "w": 0.4,
+              "h": 0.04,
+              "region": "damper",
+              "material": "galvanised-steel",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 3.1 mm by 3.2 mm exchanger of four masses. Front and top views: four masses from the front and from above: casing, plate block, collars and the damper, an extruded 40 mm plate.",
+            "de": "Ein 3,1 mm mal 3,2 mm großer Übertrager aus vier Massen. Vorder- und Draufsicht: vier Massen von vorn und von oben: Gehäuse, Plattenblock, Stutzen und die Klappe, eine extrudierte 40-mm-Platte."
+          },
+          "retained": {
+            "en": "Frame, plate block, collars and damper.",
+            "de": "Rahmen, Plattenblock, Stutzen und Klappe."
+          },
+          "merged": {
+            "en": "The plate pack is one plain block.",
+            "de": "Das Plattenpaket ist ein einfacher Block."
+          },
+          "omitted": {
+            "en": "Hatch, hinge and corrugation.",
+            "de": "Schraffur, Scharnier und Prägung."
+          },
+          "thinElements": {
+            "en": "The damper is 40 mm thick (0.2 mm).",
+            "de": "Die Klappe ist 40 mm dick (0,2 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Darker tones carry hot or heavy parts, lighter tones thin parts; body pen 0.13 mm, detail none, ground 0.25 mm.",
+            "de": "Dunklere Töne tragen heiße oder schwere Teile, hellere Töne dünne Teile; Körperstift 0.13 mm, Detail entfällt, Boden 0.25 mm."
+          },
+          "overlays": {
+            "en": "Same four regions as at 1:50.",
+            "de": "Dieselben vier Regionen wie bei 1:50."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the asset is only 1.2 mm wide on paper and its smallest part, the 0.3 mm plates and the 14 mm damper, is far below every print profile.",
+          "de": "Bei 1:500 ist das Gerät nur 1.2 mm breit auf Papier und sein kleinstes Teil, die 0,3 mm dicken Platten und die 14 mm dicke Klappe, liegt weit unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "The 0.3 mm plates and the 14 mm damper",
+          "de": "Die 0,3 mm dicken Platten und die 14 mm dicke Klappe"
+        },
+        "limitingSizeM": 0.0003,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "Both air streams stand still: the exchanger is at room temperature.",
+          "de": "Beide Luftströme stehen still: der Übertrager hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "frame": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "plates": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "ports": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "damper": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "supply-air": 1,
+            "exhaust-air": 1
+          },
+          "operating": {
+            "exchange": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "partial",
+        "title": {
+          "en": "Partial bypass",
+          "de": "Teil-Bypass"
+        },
+        "description": {
+          "en": "The damper is half open: part of the air bypasses the plates, which take half the heat.",
+          "de": "Die Klappe ist halb offen: ein Teil der Luft umgeht die Platten, die nur die halbe Wärme übertragen."
+        },
+        "bones": {
+          "damper": {
+            "angleDeg": 35
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "frame": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "plates": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "ports": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "damper": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "supply-air": 1,
+            "exhaust-air": 1
+          },
+          "operating": {
+            "exchange": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "full",
+        "title": {
+          "en": "Full exchange",
+          "de": "Voller Austausch"
+        },
+        "description": {
+          "en": "The damper is closed and all air passes the plates: the pack carries the full heat transfer.",
+          "de": "Die Klappe ist geschlossen und alle Luft strömt durch die Platten: das Paket überträgt die volle Wärme."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "frame": {
+              "sunlitFraction": 0,
+              "exposedFraction": 0.9,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 21
+              }
+            },
+            "plates": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "ports": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            },
+            "damper": {
+              "sunlitFraction": 0,
+              "exposedFraction": 1
+            }
+          },
+          "emitters": {
+            "supply-air": 1,
+            "exhaust-air": 1
+          },
+          "operating": {
+            "exchange": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "bypass",
+        "title": {
+          "en": "Bypass damper",
+          "de": "Bypass-Klappe"
+        },
+        "description": {
+          "en": "The damper opens and closes again while the exchange follows.",
+          "de": "Die Klappe öffnet und schließt wieder, während der Austausch folgt."
+        },
+        "durationS": 4,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "full",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "partial",
+            "ease": "smooth",
+            "bones": {
+              "damper": {
+                "angleDeg": 60
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "full",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "close",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Opening",
+              "de": "Öffnen"
+            }
+          },
+          {
+            "id": "open",
+            "fromS": 2,
+            "toS": 4,
+            "title": {
+              "en": "Closing",
+              "de": "Schließen"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": [
+          {
+            "target": "operating:exchange",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 2,
+                "v": 0.5
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "warm-up",
+        "title": {
+          "en": "Warm up",
+          "de": "Anlaufen"
+        },
+        "description": {
+          "en": "When both fans start the plate pack takes its temperature within a few minutes.",
+          "de": "Wenn beide Ventilatoren starten, nimmt das Plattenpaket binnen weniger Minuten seine Temperatur an."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "full",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "full",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "off",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "run",
+            "fromS": 5,
+            "toS": 300,
+            "title": {
+              "en": "Exchanging",
+              "de": "Austausch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Fans start",
+              "de": "Ventilatoren starten"
+            },
+            "target": "exchange"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:exchange",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 0
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "exchange",
+          "title": {
+            "en": "Heat exchange",
+            "de": "Wärmeübertragung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "No flow",
+                "de": "Kein Durchfluss"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Half bypassed",
+                "de": "Halb im Bypass"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full exchange",
+                "de": "Voller Austausch"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "frame",
+          "title": {
+            "en": "Casing frame",
+            "de": "Gehäuserahmen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.6,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "frame-skin",
+              "title": {
+                "en": "Casing frame",
+                "de": "Gehäuserahmen"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00003,
+              "heatCapacityJM2K": 3500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "plates",
+          "title": {
+            "en": "Plate pack",
+            "de": "Plattenpaket"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "aluminium-plate",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.54,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "plates-skin",
+              "title": {
+                "en": "Plate pack",
+                "de": "Plattenpaket"
+              },
+              "kind": "metal",
+              "material": "aluminium-plate",
+              "thicknessM": 0.0003,
+              "resistanceM2KW": 0.000002,
+              "heatCapacityJM2K": 4000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "ports",
+          "title": {
+            "en": "Duct collars",
+            "de": "Kanalstutzen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.15,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "ports-skin",
+              "title": {
+                "en": "Duct collars",
+                "de": "Kanalstutzen"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00003,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 1500,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "damper",
+          "title": {
+            "en": "Bypass damper",
+            "de": "Bypass-Klappe"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galvanised-steel",
+          "areaM2": 0.15,
+          "characteristicLengthM": 0.4,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "damper-skin",
+              "title": {
+                "en": "Bypass damper",
+                "de": "Bypass-Klappe"
+              },
+              "kind": "metal",
+              "material": "galvanised-steel",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00003,
+              "heatCapacityJM2K": 2000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "supply-air",
+          "kind": "vent",
+          "title": {
+            "en": "Supply air leaving the upper-right collar",
+            "de": "Zuluft am rechten oberen Stutzen"
+          },
+          "anchor": "supply-collar",
+          "directionDeg": 0,
+          "diameterM": 0.2,
+          "operatingKey": "exchange",
+          "volumeFlowM3S": 0.278,
+          "temperatureRiseK": -3.1,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "en-308-1997"
+        },
+        {
+          "id": "exhaust-air",
+          "kind": "vent",
+          "title": {
+            "en": "Exhaust air leaving the lower-left collar",
+            "de": "Fortluft am linken unteren Stutzen"
+          },
+          "anchor": "exhaust-collar",
+          "directionDeg": 180,
+          "diameterM": 0.2,
+          "operatingKey": "exchange",
+          "volumeFlowM3S": 0.278,
+          "temperatureRiseK": -17.9,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "en-308-1997"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The air streams are not emitters of this asset; the plate pack temperature is the surface temperature of the casing section against still room air.",
+          "de": "Die Luftströme sind keine Emitter dieses Assets; die Plattenpakettemperatur ist die Oberflächentemperatur des Gehäuseschnitts gegen ruhende Raumluft."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "The 18 kg exchanger stands on its frame: a unilateral contact of 0.5 m by 0.5 m carries the weight.",
+          "de": "Der 18 kg schwere Übertrager steht auf seinem Rahmen: ein einseitiger Kontakt von 0,5 m mal 0,5 m trägt das Gewicht."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "full",
+      "defaultClip": "bypass",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

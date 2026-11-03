@@ -1,0 +1,250 @@
+{
+ "case": "🏗️balcony-lateral",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "structural",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 0
+ },
+ "bones": [
+  {
+   "id": "beam",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 2.0,
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "wall",
+   "bone": "beam",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "support": "fixed"
+  }
+ ],
+ "contacts": [],
+ "supports": [
+  "wall"
+ ],
+ "loads": [
+  {
+   "id": "tip",
+   "bone": "beam",
+   "at": {
+    "x": 2.0,
+    "y": 0,
+    "z": 0
+   },
+   "fxN": 0,
+   "fyN": -1000.0,
+   "fzN": 300.0
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "gravity-only",
+   "loads": [
+    {
+     "id": "tip",
+     "bone": "beam",
+     "at": {
+      "x": 2.0,
+      "y": 0,
+      "z": 0
+     },
+     "fxN": 0,
+     "fyN": -1000.0,
+     "fzN": 0
+    }
+   ]
+  },
+  {
+   "id": "lateral-only",
+   "loads": [
+    {
+     "id": "tip",
+     "bone": "beam",
+     "at": {
+      "x": 2.0,
+      "y": 0,
+      "z": 0
+     },
+     "fxN": 0,
+     "fyN": 0,
+     "fzN": 300.0
+    }
+   ]
+  }
+ ],
+ "oracle": {
+  "tool": "numpy",
+  "version": "2.5.4",
+  "values": {
+   "both": {
+    "reaction": {
+     "fxN": 0.0,
+     "fyN": 1000.0,
+     "fzN": -300.0,
+     "mxNm": -0.0,
+     "myNm": 600.0,
+     "mzNm": 2000.0
+    },
+    "stations": [
+     {
+      "s": 0.0,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": -2000.0,
+      "momentLateralNm": -600.0
+     },
+     {
+      "s": 0.5,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": -1500.0,
+      "momentLateralNm": -450.0
+     },
+     {
+      "s": 1.0,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": -1000.0,
+      "momentLateralNm": -300.0
+     },
+     {
+      "s": 1.5,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": -500.0,
+      "momentLateralNm": -150.0
+     }
+    ],
+    "tipLateralDeflectionM": 0.00019606401490086513
+   },
+   "gravity-only": {
+    "reaction": {
+     "fxN": 0.0,
+     "fyN": 1000.0,
+     "fzN": -0.0,
+     "mxNm": -0.0,
+     "myNm": -0.0,
+     "mzNm": 2000.0
+    },
+    "stations": [
+     {
+      "s": 0.0,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -0.0,
+      "torsionNm": 0.0,
+      "momentNm": -2000.0,
+      "momentLateralNm": 0.0
+     },
+     {
+      "s": 0.5,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -0.0,
+      "torsionNm": 0.0,
+      "momentNm": -1500.0,
+      "momentLateralNm": 0.0
+     },
+     {
+      "s": 1.0,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -0.0,
+      "torsionNm": 0.0,
+      "momentNm": -1000.0,
+      "momentLateralNm": 0.0
+     },
+     {
+      "s": 1.5,
+      "axialN": 0.0,
+      "shearN": 1000.0,
+      "shearZN": -0.0,
+      "torsionNm": 0.0,
+      "momentNm": -500.0,
+      "momentLateralNm": 0.0
+     }
+    ],
+    "tipLateralDeflectionM": 0.0
+   },
+   "lateral-only": {
+    "reaction": {
+     "fxN": 0.0,
+     "fyN": 0.0,
+     "fzN": -300.0,
+     "mxNm": -0.0,
+     "myNm": 600.0,
+     "mzNm": 0.0
+    },
+    "stations": [
+     {
+      "s": 0.0,
+      "axialN": 0.0,
+      "shearN": -0.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": 0.0,
+      "momentLateralNm": -600.0
+     },
+     {
+      "s": 0.5,
+      "axialN": 0.0,
+      "shearN": -0.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": 0.0,
+      "momentLateralNm": -450.0
+     },
+     {
+      "s": 1.0,
+      "axialN": 0.0,
+      "shearN": -0.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": 0.0,
+      "momentLateralNm": -300.0
+     },
+     {
+      "s": 1.5,
+      "axialN": 0.0,
+      "shearN": -0.0,
+      "shearZN": -300.0,
+      "torsionNm": 0.0,
+      "momentNm": 0.0,
+      "momentLateralNm": -150.0
+     }
+    ],
+    "tipLateralDeflectionM": 0.00019606401490086513
+   }
+  }
+ }
+}

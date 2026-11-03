@@ -1,6 +1,6 @@
 """☁️ Independent oracle of the condensation layer: mixes saturated-ish exhaled air with ambient air by dry-air mass fraction using CoolProp humid-air enthalpy and humidity ratio, and finds the supersaturated mixture state (temperature, liquid water) by brentq on CoolProp's saturated humid air plus liquid-water enthalpy.
 
-Run `uv run --with scipy --with CoolProp --with numpy python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import sys

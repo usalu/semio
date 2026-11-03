@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactElement } from "react";
 import type { SceneFrame } from "../🧮️pipeline/🟦️.ts";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, ItemValue, Language, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 import type { StaffageClock } from "../⏱️clock/🧱️core/🟦️.ts";
 import { describeScene, valueText, valuedItems, word } from "../🗣️labels/🟦️.ts";
 import { defaultQuery, figureFrame, inlineSvg, queryAt } from "../🧮️pipeline/🟦️.ts";
@@ -22,7 +22,8 @@ export type StaffageFigureProps = {
   clock?: StaffageClock;
   view: View;
   scale: DrawingScale;
-  viewpoint?: Viewpoint;
+  viewpoint: Viewpoint;
+  representation?: RepresentationSelector;
   theme?: "light" | "dark";
   frame?: SceneFrame;
   language: Language;
@@ -114,7 +115,8 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
     view: props.view,
     scale: props.scale,
     language,
-    ...(props.viewpoint === undefined ? {} : { viewpoint: props.viewpoint }),
+    viewpoint: props.viewpoint,
+    ...(props.representation === undefined ? {} : { representation: props.representation }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.transparent === undefined ? {} : { transparent: props.transparent }),
     ...(props.annotations === undefined ? {} : { annotations: props.annotations }),
@@ -138,6 +140,8 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
   const ids = useMemo(() => new Set(items.map((item) => svgId(item.id))), [items]);
   const [focused, setFocused] = useState(-1);
   const tableId = useRef(`staffage-values-${Math.random().toString(36).slice(2, 9)}`).current;
+  const noteId = `${tableId}-fidelity`;
+  const symbolic = scene.metadata.fidelity === "conventional-symbol";
 
   useEffect(() => {
     onEvaluated?.(frame);
@@ -178,11 +182,13 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
       tabIndex={items.length > 0 ? 0 : undefined}
       lang={language}
       aria-label={label}
-      aria-describedby={items.length > 0 ? tableId : undefined}
+      aria-describedby={[items.length > 0 ? tableId : null, symbolic ? noteId : null].filter((id) => id !== null).join(" ") || undefined}
+      data-fidelity={scene.metadata.fidelity}
       data-staffage-figure=""
       data-fit={fit}
       data-asset={asset.id}
       data-view={props.view}
+      data-viewpoint={props.viewpoint}
       data-time={scene.metadata.timeS}
       data-width-mm={widthMm}
       data-height-mm={heightMm}
@@ -193,6 +199,7 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
       onBlur={() => focused >= 0 && inspect(-1)}
     >
       <div style={{ position: "absolute", inset: 0 }} dangerouslySetInnerHTML={{ __html: markup }} />
+      {symbolic ? <span id={noteId} data-fidelity-note="" style={{ position: "absolute", left: 2, bottom: 2, padding: "0 3px", fontSize: 10, lineHeight: 1.4, background: "rgba(127,127,127,0.25)", color: "inherit" }}>{word("conventionalSymbol", language)}</span> : null}
     </div>
     {showValues ? <StaffageValueTable scene={scene} language={language} id={tableId} /> : null}
     <span role="status" aria-live="polite" style={HIDDEN}>

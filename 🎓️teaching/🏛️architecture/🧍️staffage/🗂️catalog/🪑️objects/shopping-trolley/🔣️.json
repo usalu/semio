@@ -215,34 +215,68 @@
     },
     "anchors": [
       {
-        "id": "wheel-rear",
+        "id": "wheel-rear-left",
         "bone": "chassis",
-        "x": -0.3,
-        "y": 0.0,
+        "x": -0.295,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Rear wheel patch",
-          "de": "Aufstandsfläche hinteres Rad"
+          "en": "Rear left wheel",
+          "de": "Hinteres linkes Rad"
         },
         "support": "contact",
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
-        "frictionCoefficient": 0.7
+        "frictionCoefficient": 0.7,
+        "z": 0.22
       },
       {
-        "id": "wheel-front",
+        "id": "wheel-rear-right",
         "bone": "chassis",
-        "x": 0.33,
-        "y": 0.0,
+        "x": -0.295,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Front castor patch",
-          "de": "Aufstandsfläche vordere Lenkrolle"
+          "en": "Rear right wheel",
+          "de": "Hinteres rechtes Rad"
         },
         "support": "contact",
         "footprintLengthM": 0.03,
         "footprintWidthM": 0.03,
-        "frictionCoefficient": 0.7
+        "frictionCoefficient": 0.7,
+        "z": -0.22
+      },
+      {
+        "id": "wheel-front-left",
+        "bone": "chassis",
+        "x": 0.33,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front left wheel",
+          "de": "Vorderes linkes Rad"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.7,
+        "z": 0.22
+      },
+      {
+        "id": "wheel-front-right",
+        "bone": "chassis",
+        "x": 0.33,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front right wheel",
+          "de": "Vorderes rechtes Rad"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.7,
+        "z": -0.22
       },
       {
         "id": "basket-centre",
@@ -392,11 +426,11 @@
               "points": [
                 [
                   -0.15,
-                  0.11
+                  0.12
                 ],
                 [
                   0.02,
-                  0.11
+                  0.12
                 ],
                 [
                   0.0,
@@ -437,24 +471,321 @@
               "region": "wheels",
               "material": "pu-tyre"
             }
+          ],
+          "front": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "regions": [
+                "basket-wire",
+                "gate-wire"
+              ],
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  0.88
+                ],
+                [
+                  0.285,
+                  0.88
+                ],
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  -0.2,
+                  0.38
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.17
+                ],
+                [
+                  0.2,
+                  0.17
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "struts",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.38
+                ],
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  -0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "front-strut",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  0.215,
+                  0.17
+                ],
+                [
+                  0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.245,
+                  0.88
+                ],
+                [
+                  -0.245,
+                  1.0
+                ],
+                [
+                  0.245,
+                  1.0
+                ],
+                [
+                  0.245,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wheel-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.23,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.15
+            },
+            {
+              "id": "wheel-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.13,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.15
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "penMm": 0.13,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "regions": [
+                "basket-wire",
+                "gate-wire"
+              ],
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.42,
+              "y": -0.285,
+              "w": 0.92,
+              "h": 0.57,
+              "r": 0.02
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.36,
+                  0.245
+                ],
+                [
+                  -0.55,
+                  0.245
+                ],
+                [
+                  -0.55,
+                  -0.245
+                ],
+                [
+                  -0.36,
+                  -0.245
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "penMm": 0.13,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A trolley sign 2.1 mm long and 2 mm high: a light trapezoid basket on a chassis line with two dots as wheels and a hooked handle stroke at the rear.",
-            "de": "Ein Wagenzeichen, 2,1 mm lang und 2 mm hoch: ein heller Trapezkorb auf einer Fahrgestelllinie mit zwei Punkten als Rädern und einem gekröpften Griffstrich hinten."
+            "en": "A trolley sign 2.1 mm long and 2 mm high: a light trapezoid basket on a chassis line with two dots as wheels and a hooked handle stroke at the rear. Front view: the basket as one trapezoid with the rear gate as an outline inside it, a U-shaped push handle above the rim, thin fork lines and two wheel blocks. Plan view: the basket rim as one rounded rectangle, the push handle as a U line behind it and the gate as one outline at the rear edge. The gate is an extruded solid on its hinge bone: swung up, it shrinks to a band at the top of the basket in the front view and reaches forward over the basket in the plan.",
+            "de": "Ein Wagenzeichen, 2,1 mm lang und 2 mm hoch: ein heller Trapezkorb auf einer Fahrgestelllinie mit zwei Punkten als Rädern und einem gekröpften Griffstrich hinten. Vorderansicht: der Korb als ein Trapez mit der hinteren Klappe als Umriss darin, ein U-förmiger Schiebegriff über dem Rand, dünne Gabellinien und zwei Radblöcke. Draufsicht: der Korbrand als ein abgerundetes Rechteck, der Schiebegriff als U-Linie dahinter und die Klappe als ein Umriss am hinteren Rand. Die Klappe ist ein extrudierter Körper am Scharnierknochen: hochgeschwenkt schrumpft sie in der Vorderansicht zu einem Band am oberen Korbrand und reicht in der Draufsicht nach vorn über den Korb."
           },
           "retained": {
-            "en": "Basket outline at real size and taper, chassis line, both strut strokes, handle height 1.0 m, two wheels.",
-            "de": "Korbumriss in realer Größe und Verjüngung, Fahrgestelllinie, beide Strebenstriche, Griffhöhe 1,0 m, zwei Räder."
+            "en": "Basket outline at real size and taper, chassis line, both strut strokes, handle height 1.0 m, two wheels. Front and plan view: gate, handle, wheels (front view only).",
+            "de": "Korbumriss in realer Größe und Verjüngung, Fahrgestelllinie, beide Strebenstriche, Griffhöhe 1,0 m, zwei Räder. Vorder- und Draufsicht: Klappe, Griff, Räder (nur Vorderansicht)."
           },
           "merged": {
             "en": "Basket wires and the rear gate are one light solid (the gate is edge-on at the basket back).",
             "de": "Korbdrähte und hintere Klappe sind ein heller Körper (die Klappe steht hinten am Korb kantenparallel)."
           },
           "omitted": {
-            "en": "All wire mesh, rim, castor forks, grip, hinge.",
-            "de": "Alles Drahtgitter, Rand, Rollengabeln, Griff, Gelenk."
+            "en": "All wire mesh, rim, castor forks, grip, hinge. Front and plan view: wire grid, chassis tube and castor plates are not drawn; in the plan the wheels are hidden below the basket.",
+            "de": "Alles Drahtgitter, Rand, Rollengabeln, Griff, Gelenk. Vorder- und Draufsicht: Drahtgitter, Fahrgestellrohr und Rollenplatten sind nicht gezeichnet; in der Draufsicht verschwinden die Räder unter dem Korb."
           },
           "thinElements": {
             "en": "Wires (4 mm) and tubes (20 mm) are 0.13 mm strokes; wheels are thickened to 0.15 m diameter (0.3 mm) from 0.125 m; the handle is a 0.18 mm stroke.",
@@ -709,10 +1040,9 @@
               "rx": 0.0625,
               "ry": 0.0625,
               "region": "wheels",
-              "material": "pu-tyre"
-            ,
+              "material": "pu-tyre",
               "penMm": 0.231
-             },
+            },
             {
               "id": "wheel-front",
               "bone": "chassis",
@@ -726,28 +1056,511 @@
               "rx": 0.0625,
               "ry": 0.0625,
               "region": "wheels",
-              "material": "pu-tyre"
-            ,
+              "material": "pu-tyre",
               "penMm": 0.231
-             }
+            }
+          ],
+          "front": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.12,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  0.88
+                ],
+                [
+                  0.285,
+                  0.88
+                ],
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  -0.2,
+                  0.38
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2272,
+                  0.54
+                ],
+                [
+                  0.2272,
+                  0.54
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2544,
+                  0.7
+                ],
+                [
+                  0.2544,
+                  0.7
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.282,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  0.215,
+                  0.17
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rear-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.38
+                ],
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  -0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "front-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  0.215,
+                  0.17
+                ],
+                [
+                  0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handle-post-l",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.245,
+                  0.88
+                ],
+                [
+                  -0.245,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handle-post-r",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.245,
+                  0.88
+                ],
+                [
+                  0.245,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "kind": "rect",
+              "x": -0.26,
+              "y": 0.96,
+              "w": 0.52,
+              "h": 0.04
+            },
+            {
+              "id": "wheel-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "penMm": 0.231,
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.125
+            },
+            {
+              "id": "wheel-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "penMm": 0.231,
+              "kind": "rect",
+              "x": -0.23,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.125
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.12,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.42,
+              "y": -0.285,
+              "w": 0.92,
+              "h": 0.57,
+              "r": 0.02
+            },
+            {
+              "id": "floor",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.12,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.2,
+              "w": 0.64,
+              "h": 0.4
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.0
+                ],
+                [
+                  0.34,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": -0.245,
+              "x1": -0.53,
+              "y1": 0.245,
+              "r0": 0.02,
+              "r1": 0.02
+            },
+            {
+              "id": "handle-arm-l",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": 0.245,
+              "x1": -0.36,
+              "y1": 0.245,
+              "r0": 0.015,
+              "r1": 0.015
+            },
+            {
+              "id": "handle-arm-r",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": -0.245,
+              "x1": -0.36,
+              "y1": -0.245,
+              "r0": 0.015,
+              "r1": 0.015
+            },
+            {
+              "id": "wheel-rear-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.36,
+              "y": 0.2,
+              "w": 0.125,
+              "h": 0.05
+            },
+            {
+              "id": "wheel-rear-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.36,
+              "y": -0.25,
+              "w": 0.125,
+              "h": 0.05
+            },
+            {
+              "id": "wheel-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.265,
+              "y": 0.2,
+              "w": 0.125,
+              "h": 0.05
+            },
+            {
+              "id": "wheel-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.265,
+              "y": -0.25,
+              "w": 0.125,
+              "h": 0.05
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A trolley 5.3 mm long and 5 mm high: light tapered basket with two wire lines, a rear gate stroke, chassis line with fork strokes, a grip bar on a post and two wheel discs.",
-            "de": "Ein Wagen 5,3 mm lang und 5 mm hoch: heller verjüngter Korb mit zwei Drahtlinien, ein Klappenstrich hinten, Fahrgestelllinie mit Gabelstrichen, ein Griffbalken auf einer Stütze und zwei Radscheiben."
+            "en": "A trolley 5.3 mm long and 5 mm high: light tapered basket with two wire lines, a rear gate stroke, chassis line with fork strokes, a grip bar on a post and two wheel discs. Front view: the tapering basket with two wire levels, the gate outline hung from the rear rim, the chassis tube, both forks, handle posts with the grip bar and the two front wheels. Plan view: the rim and floor of the basket, one wire line, the U-shaped push handle with grip bar, four wheel blocks beside the floor and the gate outline at the rear rim. The gate is an extruded solid on its hinge bone, so the swung gate rises into the top band in the front view and reaches forward in the plan.",
+            "de": "Ein Wagen 5,3 mm lang und 5 mm hoch: heller verjüngter Korb mit zwei Drahtlinien, ein Klappenstrich hinten, Fahrgestelllinie mit Gabelstrichen, ein Griffbalken auf einer Stütze und zwei Radscheiben. Vorderansicht: der konische Korb mit zwei Drahtebenen, der am hinteren Rand hängende Klappenumriss, das Fahrgestellrohr, beide Gabeln, Griffpfosten mit Griffstange und die zwei Vorderräder. Draufsicht: Rand und Boden des Korbs, eine Drahtlinie, der U-förmige Schiebegriff mit Griffstange, vier Radblöcke neben dem Boden und der Klappenumriss am hinteren Rand. Die Klappe ist ein extrudierter Körper am Scharnierknochen: die geschwenkte Klappe steigt in der Vorderansicht ins obere Band und reicht in der Draufsicht nach vorn."
           },
           "retained": {
-            "en": "Basket taper, two of the seven wire levels, gate, chassis, both forks, handle post and grip, both wheels at 0.125 m.",
-            "de": "Korbverjüngung, zwei der sieben Drahtebenen, Klappe, Fahrgestell, beide Gabeln, Griffstütze und Griff, beide Räder mit 0,125 m."
+            "en": "Basket taper, two of the seven wire levels, gate, chassis, both forks, handle post and grip, both wheels at 0.125 m. Front view: handle posts, grip bar, forks. Plan view: floor, U handle, wheels, gate.",
+            "de": "Korbverjüngung, zwei der sieben Drahtebenen, Klappe, Fahrgestell, beide Gabeln, Griffstütze und Griff, beide Räder mit 0,125 m. Vorderansicht: Griffpfosten, Griffstange, Gabeln. Draufsicht: Boden, U-Griff, Räder, Klappe."
           },
           "merged": {
             "en": "The paired side wire frames coincide in elevation; verticals are merged into the fill.",
             "de": "Die paarigen seitlichen Drahtrahmen fallen in der Ansicht zusammen; Senkrechte gehen in der Füllung auf."
           },
           "omitted": {
-            "en": "Vertical wires, rim double, castor plates, hubs.",
-            "de": "Senkrechte Drähte, Randdopplung, Rollenplatten, Naben."
+            "en": "Vertical wires, rim double, castor plates, hubs. Front and plan view: no hubs, no tread lines, only two wire levels.",
+            "de": "Senkrechte Drähte, Randdopplung, Rollenplatten, Naben. Vorder- und Draufsicht: keine Naben, keine Profillinien, nur zwei Drahtebenen."
           },
           "thinElements": {
             "en": "The gate (wire panel edge-on) is a 0.25 mm stroke, the chassis tube a 0.18 mm stroke; the grip is a 0.04 m (0.2 mm) bar.",
@@ -762,8 +1575,8 @@
             "de": "Korb 0,12, Räder 0,15, Griff 0,7; Körperstift 0,18 mm, Detail 0,13 mm."
           },
           "overlays": {
-            "en": "Wire lines carry basket-wire; the gate stroke gate-wire; forks and post frame-tube; the grip handle-grip; wheels wheels.",
-            "de": "Drahtlinien tragen basket-wire; der Klappenstrich gate-wire; Gabeln und Stütze frame-tube; der Griff handle-grip; Räder wheels."
+            "en": "Wire lines carry basket-wire; the gate stroke gate-wire; forks and post frame-tube; the grip handle-grip; the wheels wheels.",
+            "de": "Drahtlinien tragen basket-wire; der Klappenstrich gate-wire; Gabeln und Stütze frame-tube; der Griff handle-grip; die Räder wheels."
           }
         }
       },
@@ -1182,24 +1995,767 @@
               "ry": 0.022,
               "region": "wheels"
             }
+          ],
+          "front": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  0.88
+                ],
+                [
+                  0.285,
+                  0.88
+                ],
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  -0.2,
+                  0.38
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.217,
+                  0.48
+                ],
+                [
+                  0.217,
+                  0.48
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.234,
+                  0.58
+                ],
+                [
+                  0.234,
+                  0.58
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-2",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.251,
+                  0.68
+                ],
+                [
+                  0.251,
+                  0.68
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-3",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.268,
+                  0.78
+                ],
+                [
+                  0.268,
+                  0.78
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.13,
+                  0.38
+                ],
+                [
+                  -0.19,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.38
+                ],
+                [
+                  0.0,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-2",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.13,
+                  0.38
+                ],
+                [
+                  0.19,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rim",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  0.865
+                ],
+                [
+                  0.285,
+                  0.865
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  0.215,
+                  0.17
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rear-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.38
+                ],
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  -0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "front-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  0.215,
+                  0.17
+                ],
+                [
+                  0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handle-post-l",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.245,
+                  0.88
+                ],
+                [
+                  -0.245,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handle-post-r",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0.245,
+                  0.88
+                ],
+                [
+                  0.245,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "kind": "rect",
+              "x": -0.26,
+              "y": 0.96,
+              "w": 0.52,
+              "h": 0.04,
+              "r": 0.012
+            },
+            {
+              "id": "wheel-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.125,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.23,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.125,
+              "r": 0.01
+            },
+            {
+              "id": "hub-front-l",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wheels",
+              "kind": "rect",
+              "x": 0.195,
+              "y": 0.045,
+              "w": 0.03,
+              "h": 0.035
+            },
+            {
+              "id": "hub-front-r",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wheels",
+              "kind": "rect",
+              "x": -0.225,
+              "y": 0.045,
+              "w": 0.03,
+              "h": 0.035
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.1,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.42,
+              "y": -0.285,
+              "w": 0.92,
+              "h": 0.57,
+              "r": 0.02
+            },
+            {
+              "id": "floor",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.1,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.2,
+              "w": 0.64,
+              "h": 0.4
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  -0.1
+                ],
+                [
+                  0.34,
+                  -0.1
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.1
+                ],
+                [
+                  0.34,
+                  0.1
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.2
+                ],
+                [
+                  0.0,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  -0.2
+                ],
+                [
+                  0.2,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rim",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  -0.285
+                ],
+                [
+                  0.5,
+                  -0.285
+                ],
+                [
+                  0.5,
+                  0.285
+                ],
+                [
+                  -0.42,
+                  0.285
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": -0.245,
+              "x1": -0.53,
+              "y1": 0.245,
+              "r0": 0.02,
+              "r1": 0.02
+            },
+            {
+              "id": "handle-arm-l",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": 0.245,
+              "x1": -0.36,
+              "y1": 0.245,
+              "r0": 0.015,
+              "r1": 0.015
+            },
+            {
+              "id": "handle-arm-r",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": -0.245,
+              "x1": -0.36,
+              "y1": -0.245,
+              "r0": 0.015,
+              "r1": 0.015
+            },
+            {
+              "id": "wheel-rear-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.36,
+              "y": 0.2,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-rear-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.36,
+              "y": -0.24,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.265,
+              "y": 0.2,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.265,
+              "y": -0.24,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A trolley 10.5 mm long and 10 mm high: wire basket with a grid of four horizontals and three verticals, rim wire, rear gate band, chassis tube with forks, grip with post, two wheels with hubs.",
-            "de": "Ein Wagen 10,5 mm lang und 10 mm hoch: Drahtkorb mit einem Gitter aus vier Waagrechten und drei Senkrechten, Randdraht, hinteres Klappenband, Fahrgestellrohr mit Gabeln, Griff mit Stütze, zwei Räder mit Naben."
+            "en": "A trolley 10.5 mm long and 10 mm high: wire basket with a grid of four horizontals and three verticals, rim wire, rear gate band, chassis tube with forks, grip with post, two wheels with hubs. Front view: the tapering basket with four wire levels, three verticals, rim line, the rear gate as a filled panel, chassis tube, forks, handle posts with the rounded grip and the two front wheels with hubs. Plan view: the outer rim, the narrower floor with two wires each way, the U-shaped push handle with round grip bar, four wheels at the corners and the gate panel at the rear rim. The gate is an extruded solid on its hinge bone, so the swung gate rises inside the basket in the front view and reaches forward over it in the plan.",
+            "de": "Ein Wagen 10,5 mm lang und 10 mm hoch: Drahtkorb mit einem Gitter aus vier Waagrechten und drei Senkrechten, Randdraht, hinteres Klappenband, Fahrgestellrohr mit Gabeln, Griff mit Stütze, zwei Räder mit Naben. Vorderansicht: der konische Korb mit vier Drahtebenen, drei Senkrechten und Randlinie, die hintere Klappe als gefüllte Tafel, Fahrgestellrohr, Gabeln, Griffpfosten mit gerundeter Griffstange und die zwei Vorderräder mit Naben. Draufsicht: der äußere Rand, der engere Boden mit je zwei Drähten pro Richtung, der U-förmige Schiebegriff mit runder Griffstange, vier Räder an den Ecken und die Klappentafel am hinteren Rand. Die Klappe ist ein extrudierter Körper am Scharnierknochen: die geschwenkte Klappe steigt in der Vorderansicht im Korb auf und reicht in der Draufsicht nach vorn darüber."
           },
           "retained": {
-            "en": "Basket, grid, rim, gate, chassis, forks, handle, wheels with hubs.",
-            "de": "Korb, Gitter, Rand, Klappe, Fahrgestell, Gabeln, Griff, Räder mit Naben."
+            "en": "Basket, grid, rim, gate, chassis, forks, handle, wheels with hubs. Front view: wire levels, rim line, hubs. Plan view: rim outline, floor wires, gate panel.",
+            "de": "Korb, Gitter, Rand, Klappe, Fahrgestell, Gabeln, Griff, Räder mit Naben. Vorderansicht: Drahtebenen, Randlinie, Naben. Draufsicht: Randumriss, Bodendrähte, Klappentafel."
           },
           "merged": {
             "en": "The twelve real horizontal wires per side are drawn as four lines (spacing 1 mm); the far side frame coincides.",
             "de": "Die zwölf realen Waagrechtdrähte je Seite sind als vier Linien gezeichnet (Abstand 1 mm); der ferne Seitenrahmen fällt zusammen."
           },
           "omitted": {
-            "en": "Castor plates, wire bends, hinge eyes.",
-            "de": "Rollenplatten, Drahtbögen, Gelenkösen."
+            "en": "Castor plates, wire bends, hinge eyes. Front and plan view: castor plates and wheel tread are not drawn; the gate wires are one filled panel.",
+            "de": "Rollenplatten, Drahtbögen, Gelenkösen. Vorder- und Draufsicht: Rollenplatten und Reifenprofil sind nicht gezeichnet; die Klappendrähte sind eine gefüllte Tafel."
           },
           "thinElements": {
             "en": "Wires are 0.13 mm lines (real 4 mm = 0.04 mm); the gate is a 0.03 m (0.3 mm) band; tubes are 0.25 mm strokes.",
@@ -1866,24 +3422,1170 @@
               "ry": 0.047,
               "region": "wheels"
             }
+          ],
+          "front": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.08,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  0.88
+                ],
+                [
+                  0.285,
+                  0.88
+                ],
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  -0.2,
+                  0.38
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2102,
+                  0.44
+                ],
+                [
+                  0.2102,
+                  0.44
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2204,
+                  0.5
+                ],
+                [
+                  0.2204,
+                  0.5
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-2",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2306,
+                  0.56
+                ],
+                [
+                  0.2306,
+                  0.56
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-3",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2408,
+                  0.62
+                ],
+                [
+                  0.2408,
+                  0.62
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-4",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.251,
+                  0.68
+                ],
+                [
+                  0.251,
+                  0.68
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-5",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2612,
+                  0.74
+                ],
+                [
+                  0.2612,
+                  0.74
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-6",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2714,
+                  0.8
+                ],
+                [
+                  0.2714,
+                  0.8
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-7",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2816,
+                  0.86
+                ],
+                [
+                  0.2816,
+                  0.86
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-0",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0.38
+                ],
+                [
+                  -0.23,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-1",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0.38
+                ],
+                [
+                  -0.115,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-2",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.38
+                ],
+                [
+                  0.0,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-3",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.08,
+                  0.38
+                ],
+                [
+                  0.115,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-4",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.16,
+                  0.38
+                ],
+                [
+                  0.23,
+                  0.88
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rim",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.285,
+                  0.865
+                ],
+                [
+                  0.285,
+                  0.865
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "floor-wire",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.395
+                ],
+                [
+                  0.2,
+                  0.395
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "gate-eye-l",
+              "bone": "gate",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "region": "gate-wire",
+              "kind": "ellipse",
+              "cx": -0.24,
+              "cy": 0.88,
+              "rx": 0.014,
+              "ry": 0.014
+            },
+            {
+              "id": "gate-eye-r",
+              "bone": "gate",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "region": "gate-wire",
+              "kind": "ellipse",
+              "cx": 0.24,
+              "cy": 0.88,
+              "rx": 0.014,
+              "ry": 0.014
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  0.215,
+                  0.17
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rear-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.38
+                ],
+                [
+                  -0.215,
+                  0.17
+                ],
+                [
+                  -0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "front-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.38
+                ],
+                [
+                  0.215,
+                  0.17
+                ],
+                [
+                  0.2,
+                  0.0625
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "castor-plate-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "rect",
+              "x": -0.235,
+              "y": 0.165,
+              "w": 0.05,
+              "h": 0.015
+            },
+            {
+              "id": "castor-plate-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "rect",
+              "x": 0.185,
+              "y": 0.165,
+              "w": 0.05,
+              "h": 0.015
+            },
+            {
+              "id": "handle-post-l",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.245,
+                  0.88
+                ],
+                [
+                  -0.245,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handle-post-r",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.245,
+                  0.88
+                ],
+                [
+                  0.245,
+                  0.97
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "hatch": "grip-ribs",
+              "kind": "rect",
+              "x": -0.26,
+              "y": 0.96,
+              "w": 0.52,
+              "h": 0.04,
+              "r": 0.012
+            },
+            {
+              "id": "wheel-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.19,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.125,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.23,
+              "y": 0.0,
+              "w": 0.04,
+              "h": 0.125,
+              "r": 0.01
+            },
+            {
+              "id": "hub-front-l",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wheels",
+              "kind": "rect",
+              "x": 0.195,
+              "y": 0.045,
+              "w": 0.03,
+              "h": 0.035
+            },
+            {
+              "id": "hub-front-r",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "wheels",
+              "kind": "rect",
+              "x": -0.225,
+              "y": 0.045,
+              "w": 0.03,
+              "h": 0.035
+            },
+            {
+              "id": "tread-front-l",
+              "bone": "chassis",
+              "role": "texture",
+              "z": 2.55,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wheels",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.01
+                ],
+                [
+                  0.2,
+                  0.115
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tread-front-r",
+              "bone": "chassis",
+              "role": "texture",
+              "z": 2.55,
+              "filled": false,
+              "tone": 0.3,
+              "region": "wheels",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.01
+                ],
+                [
+                  -0.2,
+                  0.115
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.08,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.42,
+              "y": -0.285,
+              "w": 0.92,
+              "h": 0.57,
+              "r": 0.02
+            },
+            {
+              "id": "floor",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.08,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.3,
+              "y": -0.2,
+              "w": 0.64,
+              "h": 0.4
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  -0.15
+                ],
+                [
+                  0.34,
+                  -0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  -0.075
+                ],
+                [
+                  0.34,
+                  -0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-2",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.0
+                ],
+                [
+                  0.34,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-3",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.075
+                ],
+                [
+                  0.34,
+                  0.075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-h-4",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.15
+                ],
+                [
+                  0.34,
+                  0.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-0",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  -0.2
+                ],
+                [
+                  -0.2,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-1",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  -0.2
+                ],
+                [
+                  -0.08,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-2",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  -0.2
+                ],
+                [
+                  0.04,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-3",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.16,
+                  -0.2
+                ],
+                [
+                  0.16,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wire-v-4",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  0.28,
+                  -0.2
+                ],
+                [
+                  0.28,
+                  0.2
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rim",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "basket-wire",
+              "material": "zinc-wire",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  -0.285
+                ],
+                [
+                  0.5,
+                  -0.285
+                ],
+                [
+                  0.5,
+                  0.285
+                ],
+                [
+                  -0.42,
+                  0.285
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gate-hinge",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.35,
+              "filled": true,
+              "tone": 0.3,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "kind": "rect",
+              "x": -0.428,
+              "y": -0.24,
+              "w": 0.016,
+              "h": 0.48
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "hatch": "grip-ribs",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": -0.245,
+              "x1": -0.53,
+              "y1": 0.245,
+              "r0": 0.02,
+              "r1": 0.02
+            },
+            {
+              "id": "handle-arm-l",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": 0.245,
+              "x1": -0.36,
+              "y1": 0.245,
+              "r0": 0.015,
+              "r1": 0.015
+            },
+            {
+              "id": "handle-arm-r",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-tube",
+              "material": "zinc-tube",
+              "kind": "capsule",
+              "x0": -0.51,
+              "y0": -0.245,
+              "x1": -0.36,
+              "y1": -0.245,
+              "r0": 0.015,
+              "r1": 0.015
+            },
+            {
+              "id": "wheel-rear-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.36,
+              "y": 0.2,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-rear-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": -0.36,
+              "y": -0.24,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-front-l",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.265,
+              "y": 0.2,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "wheel-front-r",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "region": "wheels",
+              "material": "pu-tyre",
+              "kind": "rect",
+              "x": 0.265,
+              "y": -0.24,
+              "w": 0.125,
+              "h": 0.04,
+              "r": 0.01
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "gate-wire",
+              "material": "zinc-wire",
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              },
+              "kind": "poly",
+              "points": [
+                [
+                  0.01455,
+                  0.00364
+                ],
+                [
+                  0.13455,
+                  -0.47636
+                ],
+                [
+                  0.10545,
+                  -0.48364
+                ],
+                [
+                  -0.01455,
+                  -0.00364
+                ]
+              ],
+              "closed": true
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A trolley 21 mm long and 20 mm high in construction detail: wire basket with a mesh of eight horizontals and five verticals, rim and floor wire, gate band with hinge eye, chassis tube, forks, castor plate, ribbed grip, two wheels with hubs and tread ring.",
-            "de": "Ein Wagen 21 mm lang und 20 mm hoch im Konstruktionsdetail: Drahtkorb mit einem Gitter aus acht Waagrechten und fünf Senkrechten, Rand- und Bodendraht, Klappenband mit Gelenköse, Fahrgestellrohr, Gabeln, Rollenplatte, gerippter Griff, zwei Räder mit Naben und Laufring."
+            "en": "A trolley 21 mm long and 20 mm high in construction detail: wire basket with a mesh of eight horizontals and five verticals, rim and floor wire, gate band with hinge eye, chassis tube, forks, castor plate, ribbed grip, two wheels with hubs and tread ring. Front view: the tapering basket with eight wire levels, five verticals, rim line and floor wire, the gate panel with its two hinge eyes, chassis tube with castor plates, forks, handle posts, the ribbed grip bar and both front wheels with hubs and tread lines. Plan view: the outer rim, the floor with five wires each way, the hinge bar and the gate panel, the U-shaped push handle with ribbed grip and four wheels at the corners. The gate is an extruded solid on its hinge bone: swung up, it rises inside the basket in the front view and swings forward over the floor in the plan.",
+            "de": "Ein Wagen 21 mm lang und 20 mm hoch im Konstruktionsdetail: Drahtkorb mit einem Gitter aus acht Waagrechten und fünf Senkrechten, Rand- und Bodendraht, Klappenband mit Gelenköse, Fahrgestellrohr, Gabeln, Rollenplatte, gerippter Griff, zwei Räder mit Naben und Laufring. Vorderansicht: der konische Korb mit acht Drahtebenen, fünf Senkrechten, Randlinie und Bodendraht, die Klappentafel mit ihren zwei Scharnierösen, Fahrgestellrohr mit Rollenplatten, Gabeln, Griffpfosten, die geriffelte Griffstange und beide Vorderräder mit Naben und Profillinien. Draufsicht: der äußere Rand, der Boden mit je fünf Drähten pro Richtung, der Scharnierstab und die Klappentafel, der U-förmige Schiebegriff mit Riffelung und vier Räder an den Ecken. Die Klappe ist ein extrudierter Körper am Scharnierknochen: hochgeschwenkt steigt sie in der Vorderansicht im Korb auf und schwenkt in der Draufsicht nach vorn über den Boden."
           },
           "retained": {
-            "en": "All visible tubes, wires and the gate at real positions; mesh spacing 0.06 m horizontal, 0.12 m vertical.",
-            "de": "Alle sichtbaren Rohre, Drähte und die Klappe in realen Lagen; Gitterabstand 0,06 m waagrecht, 0,12 m senkrecht."
+            "en": "All visible tubes, wires and the gate at real positions; mesh spacing 0.06 m horizontal, 0.12 m vertical. Front view: eyes, castor plates, tread lines, floor wire. Plan view: hinge bar, ribbed grip.",
+            "de": "Alle sichtbaren Rohre, Drähte und die Klappe in realen Lagen; Gitterabstand 0,06 m waagrecht, 0,12 m senkrecht. Vorderansicht: Ösen, Rollenplatten, Profillinien, Bodendraht. Draufsicht: Scharnierstab, geriffelter Griff."
           },
           "merged": {
             "en": "The far-side frame coincides with the near side; the second front castor is hidden behind the first.",
             "de": "Der Rahmen der fernen Seite fällt mit der nahen zusammen; die zweite vordere Rolle ist hinter der ersten verdeckt."
           },
           "omitted": {
-            "en": "Wire cross welds, brake lever, coin lock.",
-            "de": "Drahtkreuzschweißungen, Bremshebel, Pfandschloss."
+            "en": "Wire cross welds, brake lever, coin lock. Front view: the rear wheels hide behind the front wheels; the gate wires are one panel. Plan view: the chassis tube lies hidden below the floor.",
+            "de": "Drahtkreuzschweißungen, Bremshebel, Pfandschloss. Vorderansicht: die Hinterräder verschwinden hinter den Vorderrädern; die Klappendrähte sind eine Tafel. Draufsicht: das Fahrgestellrohr liegt verdeckt unter dem Boden."
           },
           "thinElements": {
             "en": "Mesh lines are 0.13 mm (real wire 4 mm); the tread ring is a 0.13 mm ellipse; the hinge eye a 0.028 m (0.56 mm) circle.",
@@ -1919,30 +4621,32 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "wheel-rear",
-          "wheel-front"
+          "wheel-rear-left",
+          "wheel-rear-right",
+          "wheel-front-left",
+          "wheel-front-right"
         ],
         "thermal": {
           "regions": {
             "basket-wire": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4
             },
             "gate-wire": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4
             },
             "frame-tube": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "handle-grip": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "wheels": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1962,30 +4666,32 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "wheel-rear",
-          "wheel-front"
+          "wheel-rear-left",
+          "wheel-rear-right",
+          "wheel-front-left",
+          "wheel-front-right"
         ],
         "thermal": {
           "regions": {
             "basket-wire": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4
             },
             "gate-wire": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4
             },
             "frame-tube": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "handle-grip": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "wheels": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2038,13 +4744,15 @@
         },
         "ground": "auto",
         "contacts": [
-          "wheel-rear",
-          "wheel-front"
+          "wheel-rear-left",
+          "wheel-rear-right",
+          "wheel-front-left",
+          "wheel-front-right"
         ],
         "thermal": {
           "regions": {
             "basket-wire": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.4
             },
             "gate-wire": {
@@ -2052,16 +4760,16 @@
               "sunlitFraction": 0.4
             },
             "frame-tube": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.3
             },
             "handle-grip": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 1.0
+              "exposedFraction": 1,
+              "sunlitFraction": 1
             },
             "wheels": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2098,12 +4806,22 @@
         ],
         "contacts": [
           {
-            "anchor": "wheel-rear",
+            "anchor": "wheel-rear-left",
             "fromS": 0,
             "toS": 16
           },
           {
-            "anchor": "wheel-front",
+            "anchor": "wheel-rear-right",
+            "fromS": 0,
+            "toS": 16
+          },
+          {
+            "anchor": "wheel-front-left",
+            "fromS": 0,
+            "toS": 16
+          },
+          {
+            "anchor": "wheel-front-right",
             "fromS": 0,
             "toS": 16
           }
@@ -2237,12 +4955,22 @@
         ],
         "contacts": [
           {
-            "anchor": "wheel-rear",
+            "anchor": "wheel-rear-left",
             "fromS": 0,
             "toS": 12
           },
           {
-            "anchor": "wheel-front",
+            "anchor": "wheel-rear-right",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "wheel-front-left",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "wheel-front-right",
             "fromS": 0,
             "toS": 12
           }
@@ -2495,13 +5223,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "wheel-rear",
-        "wheel-front"
+        "wheel-rear-left",
+        "wheel-rear-right",
+        "wheel-front-left",
+        "wheel-front-right"
       ],
       "assumptions": [
         {
-          "en": "A rigid body on two wheel contacts in the plane (the paired wheels coincide in elevation); the gate is a revolute joint posed, not simulated.",
-          "de": "Ein starrer Körper auf zwei Radkontakten in der Ebene (die paarigen Räder fallen in der Ansicht zusammen); die Klappe ist ein Drehgelenk, das gestellt, nicht simuliert wird."
+          "en": "A rigid body on four wheel contacts (rear wheels at x = -0.295 m, front wheels at x = +0.33 m, each pair at z = +-0.22 m); the gate is a revolute joint posed, not simulated.",
+          "de": "Ein starrer Körper auf vier Radkontakten (hintere Räder bei x = -0,295 m, vordere Räder bei x = +0,33 m, jedes Paar bei z = +-0,22 m); die Klappe ist ein Drehgelenk, das gestellt, nicht simuliert wird."
         },
         {
           "en": "Goods mass of 30 kg and the 40 N push are authored estimates.",
@@ -2513,10 +5243,7 @@
     "presentation": {
       "defaultPose": "empty",
       "defaultClip": "load-groceries",
-      "defaultScale": 100,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 100
     },
     "exports": [
       "svg",

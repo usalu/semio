@@ -4,8 +4,8 @@ Built on the generate-manim-tutorial template:
 fixed type scale, typeset ``math_panel`` formulas with units, German ``caption_bar``
 subtitles, and ``hold_for`` timing.
 
-Every stage is drawn with the Physical Fundamentals glyphs (house and room
-sections, person, lamp, moon, thermometer) and its heat keeps moving while a
+Every stage is drawn with the Physical Fundamentals sections and moon and thermometer
+glyphs plus handcrafted thermal staffage (person, laptop, tower server, lamp); heat keeps moving while a
 subtitle is read — ripples for long-wave heat, particles for air, electricity
 and envelope losses, pulses for light.
 https://docs.manim.community/en/stable/reference/manim.animation.updaters.update.UpdateFromAlphaFunc.html
@@ -23,9 +23,6 @@ if str(_WORKSPACE_ROOT) not in sys.path:
 import numpy as np
 from manim import *
 
-from pathlib import Path as _Path
-import sys as _sys
-
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
@@ -36,6 +33,8 @@ BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+B5_ICON_METRE = 0.8
+room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
 PASTEL_PINK = _manim_module.PASTEL_PINK
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
@@ -49,7 +48,6 @@ highlight_param = _manim_module.highlight_param
 dim_arrow = _manim_module.dim_arrow
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
-de_num = _manim_module.de_num
 place_math = _manim_module.place_math
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
@@ -57,11 +55,12 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 watt_anchor = _manim_module.watt_anchor
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
+label_number = _manim_module.label_number
 house_section = _manim_module.house_section
 room_section = _manim_module.room_section
-person_glyph = _manim_module.person_glyph
-seated_person_glyph = _manim_module.seated_person_glyph
-lamp_glyph = _manim_module.lamp_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
 moon_glyph = _manim_module.moon_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
 ripples = _manim_module.ripples
@@ -84,6 +83,9 @@ COLOR_HEAT = PASTEL_ORANGE
 FORMULA_EDGE_BUFF = 1.2
 
 # Example office occupancy (DIN V 18599-10 style point loads) — one source per beat.
+DESK_SURFACE_M = 0.72
+SERVER_WARM_RATE = 30.0
+LAMP_WARM_RATE = 12.0
 PHI_P_W = 80.0
 PHI_E_LAPTOP_W, PHI_E_DEVICE_W = 60.0, 90.0
 PHI_E_W = PHI_E_LAPTOP_W + PHI_E_DEVICE_W
@@ -100,22 +102,20 @@ def _cycles(run_time: float, period: float = 1.3) -> int:
     return max(1, round(run_time / period))
 
 
-def _laptop(hinge, *, color=PASTEL_WHITE, w: float = 0.5, h: float = 0.42):
-    """💻 A solid side elevation with physical screen and chassis thickness."""
-    hinge = np.array(hinge, dtype=float)
-    profile = _manim_module.object_silhouette("laptop", color=color, width=w + 0.09)
-    profile.stretch_to_fit_height(h)
-    profile.move_to(hinge + np.array([-w / 2 + 0.045, h / 2, 0]))
-    return VGroup(profile)
+def _spot(group, fx: float, fy: float):
+    """📍 Point at fractions of a figure's bounding box — where its heat leaves."""
+    return np.array([group.get_left()[0] + fx * group.width, group.get_bottom()[1] + fy * group.height, 0.0])
 
 
-def _desk(x0: float, x1: float, top: float, floor: float, legs):
-    """🪑 Desk in side elevation — top board from ``x0`` to ``x1`` standing on legs at the ``legs`` x positions."""
-    return VGroup(
-        Line(np.array([x0, top, 0.0]), np.array([x1, top, 0.0]), color=PASTEL_WHITE, stroke_width=1.5),
-        *[Line(np.array([x, top, 0.0]), np.array([x, floor, 0.0]), color=PASTEL_WHITE, stroke_width=1.5)
-          for x in legs],
-    )
+def _worker(anchor, unit: float):
+    """🧑‍💻 Handcrafted seated office worker typing, in the animated thermal view, with the points heat leaves from."""
+    group = staffage_motion("heating-internal-gains-office-worker", unit=unit, anchor=anchor)
+    return {"group": group, "chest": _spot(group, 0.45, 0.62), "head": group.get_top(), "lap": _spot(group, 0.5, 0.38)}
+
+
+def _on_surface(cast: str, x: float, top: float, unit: float):
+    """💻 Thermal appliance standing on a surface at height ``top`` with its centre over ``x``."""
+    return staffage(cast, unit=unit, anchor=np.array([x, top, 0.0]))
 
 
 def _plume(top, ceiling_y: float, *, spread: float = 0.08):
@@ -134,7 +134,7 @@ def _light_rays(bulb, floor_y: float, dxs, *, color=COLOR_LIGHT):
 
 
 def _ray_paths(rays):
-    """⚡ Corner lists of each ray for ``pulse_flashes``."""
+    """🛤️ Corner lists of each ray for ``pulse_flashes``."""
     return [[r.get_start(), r.get_end()] for r in rays]
 
 
@@ -159,7 +159,7 @@ def _phi(sub: str) -> str:
 
 def _watts(sub: str, tracker) -> str:
     """⚡ Live ``Φ_x = … W`` source read from a tracker."""
-    return rf"{_phi(sub)} = {de_num(tracker.get_value())}\,\mathrm{{W}}"
+    return rf"{_phi(sub)} = {label_number(tracker.get_value())}\,\mathrm{{W}}"
 
 
 def _sum_parts(keys, *, lead=None):
@@ -246,24 +246,26 @@ def _envelope_losses(house):
 
 
 def _house_gains(house):
-    """💡 Person, desk laptop and pendant lamp in the house — the Physical Fundamentals glyphs, labelled."""
+    """👪 Person, desk laptop and pendant lamp in the house — handcrafted thermal staffage, labelled."""
     floor_y, mid_y = house["bottom_left"][1], house["level_1"].get_center()[1]
-    person = person_glyph(ORIGIN, color=COLOR_PEOPLE).set(height=0.7 * house["w_height"] / 2)
-    person.move_to(np.array([-1.3, floor_y + 0.02 + person.height / 2, 0.0]))
-    desk_y = mid_y + 0.5
-    desk = _desk(-0.6, 0.7, desk_y, mid_y, legs=(-0.5, 0.6))
-    laptop = _laptop(np.array([0.25, desk_y + 0.02, 0.0]), color=COLOR_EQUIP)
-    lamp = lamp_glyph(np.array([1.0, mid_y, 0.0]), drop=0.12)
-    bulb = lamp["bulb"].get_center()
+    unit = room_metre(house["h"] / 2)
+    person = staffage_motion("shared-person-winter", unit=unit,
+                             anchor=np.array([-1.3, floor_y + 0.02, 0.0]))
+    deck_top = mid_y + house["level_1"].height / 2
+    desk = staffage("shared-desk", unit=unit, anchor=np.array([0.05, deck_top, 0.0]), color=PASTEL_WHITE)
+    laptop = _on_surface("shared-laptop-winter", 0.05 + 1.15 * unit, deck_top + DESK_SURFACE_M * unit, unit)
+    lamp = staffage("shared-lamp-winter", unit=unit, anchor=np.array([1.0, mid_y, 0.0]))
+    lamp.shift(UP * (mid_y - lamp.get_top()[1]))
+    bulb = _spot(lamp, 0.5, 0.15)
     rays = _light_rays(bulb, floor_y + 0.02, (-0.5, -0.17, 0.17, 0.5))
     labels = VGroup(
-        Text("Personen", font_size=LABEL_FONT_SIZE, color=COLOR_PEOPLE).next_to(person, RIGHT, buff=0.45),
-        Text("Geräte", font_size=LABEL_FONT_SIZE, color=COLOR_EQUIP).next_to(desk, RIGHT, buff=0.3).set_y(desk_y + 0.2),
-        Text("Licht", font_size=LABEL_FONT_SIZE, color=COLOR_LIGHT).next_to(lamp["group"], RIGHT, buff=0.22),
+        Text(tr("People", "Personen"), font_size=LABEL_FONT_SIZE, color=COLOR_PEOPLE).next_to(person, RIGHT, buff=0.45),
+        Text(tr("Devices", "Geräte"), font_size=LABEL_FONT_SIZE, color=COLOR_EQUIP).next_to(desk, LEFT, buff=0.3).set_y(desk.get_top()[1] + 0.2),
+        Text(tr("Light", "Licht"), font_size=LABEL_FONT_SIZE, color=COLOR_LIGHT).next_to(lamp, RIGHT, buff=0.22),
     )
     return {
-        "sources": VGroup(person, VGroup(desk, laptop), lamp["group"]), "labels": labels, "lamp": lamp, "rays": rays,
-        "warm": [person.get_center() + UP * 0.12, laptop.get_center()], "bulb": bulb,
+        "sources": VGroup(person, VGroup(desk, laptop), lamp), "labels": labels, "rays": rays,
+        "warm": [_spot(person, 0.5, 0.6), laptop.get_center()], "bulb": bulb,
     }
 
 
@@ -292,7 +294,7 @@ class Beat1_WinterInterneGewinne(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Kalte Außenluft vs. interne Quellen")
+        subtitle = section_heading(tr("Cold outdoor air vs. internal sources", "Kalte Außenluft vs. interne Quellen"))
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "winter"))
@@ -325,8 +327,7 @@ class Beat1_WinterInterneGewinne(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "inside"))
         self.play(LaggedStart(*[FadeIn(m) for m in gains["sources"]], lag_ratio=0.3),
                   LaggedStart(*[FadeIn(m) for m in gains["labels"]], lag_ratio=0.3), *loss_flow(1.6), run_time=1.6)
-        self.play(gains["lamp"]["bulb"].animate.set_fill(COLOR_LIGHT, opacity=0.8),
-                  LaggedStart(*[Create(r) for r in gains["rays"]], lag_ratio=0.1),
+        self.play(LaggedStart(*[Create(r) for r in gains["rays"]], lag_ratio=0.1),
                   air.animate.set_fill(COLOR_HEAT, opacity=0.14), *loss_flow(1.6),
                   ripples(gains["warm"], r_max=0.35, color=COLOR_HEAT, cycles=1), run_time=1.6)
         hold_for(self, self.NARRATION, "inside", during=all_heat)
@@ -351,8 +352,8 @@ class Beat2_PersonenPhiP(Scene):
          "One seated person already sheds sensible heat into the room.",
          "Eine sitzende Person gibt schon fühlbare Wärme in den Raum ab."),
         ("power",
-         "That load is about eighty watts — roughly a bright bulb.",
-         "Diese Last liegt bei etwa achtzig Watt — etwa wie eine helle Birne."),
+         "That load is about eighty watts — roughly two thirds of a seated person's full output.",
+         "Diese Last liegt bei etwa achtzig Watt — rund zwei Drittel einer sitzenden Person."),
         ("phi_p",
          "We call the person heat flux Phi p — unit watt.",
          "Wir nennen den Personenwärmestrom Phi-p — Einheit Watt."),
@@ -361,7 +362,7 @@ class Beat2_PersonenPhiP(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Personenabwärme")
+        subtitle = section_heading(tr("Heat from people", "Personenabwärme"))
         din = _din_ref("DIN V 18599-10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -369,10 +370,9 @@ class Beat2_PersonenPhiP(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         room = room_section(B2_ROOM_C, w=5.6, h=3.3)
-        seated = seated_person_glyph(np.array([room["x_l"] + 1.9, room["y_f"], 0.0]), color=COLOR_PEOPLE, scale=0.52 * room["h"] / 0.55,
-                                     chair_color=PASTEL_WHITE)
+        seated = _worker(np.array([room["x_l"] + 1.9, room["y_f"], 0.0]), room["h"] / 2.6)
         chest = seated["chest"]
-        plume = _plume(seated["head"].get_top(), room["y_c"] - 0.08)
+        plume = _plume(seated["head"], room["y_c"] - 0.08)
 
         def body_heat(rt):
             cyc = _cycles(rt, 1.4)
@@ -390,7 +390,7 @@ class Beat2_PersonenPhiP(Scene):
             np.array([room["x_l"] + 3.3, room["y_c"] - 0.85, 0.0]),
             size=BODY_FONT_SIZE, color=COLOR_PEOPLE,
         )
-        anchor = watt_anchor(PHI_P_W, compare="bulb", title="eine sitzende Person", color=PASTEL_YELLOW)
+        anchor = watt_anchor(PHI_P_W, compare="seated", title=tr("a seated person", "eine sitzende Person"), color=PASTEL_YELLOW)
         anchor.next_to(room["wall_r"], RIGHT, buff=0.45).set_y(room["center"][1])
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "power"))
@@ -417,16 +417,6 @@ class Beat2_PersonenPhiP(Scene):
 B3_ROOM_C = np.array([-0.9, 0.0, 0.0])
 
 
-def _rack(center, *, w: float = 0.7, h: float = 1.05):
-    """🗄️ Small equipment tower — casing, four drive bays and their status LEDs."""
-    box = Rectangle(width=w, height=h, color=PASTEL_WHITE, stroke_width=1.6).move_to(center)
-    bays = VGroup(*[Line(box.get_top() + DOWN * (0.25 + 0.2 * i) + LEFT * (w / 2 - 0.1),
-                         box.get_top() + DOWN * (0.25 + 0.2 * i) + RIGHT * (w / 2 - 0.1),
-                         color=PASTEL_WHITE, stroke_width=1.0) for i in range(4)])
-    leds = VGroup(*[Dot(bay.get_start() + RIGHT * 0.06 + UP * 0.07, radius=0.025, color=COLOR_EQUIP) for bay in bays])
-    return VGroup(box, bays, leds)
-
-
 class Beat3_GeraetePhiE(Scene):
     NARRATION = [
         ("desk",
@@ -443,7 +433,7 @@ class Beat3_GeraetePhiE(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Geräteabwärme")
+        subtitle = section_heading(tr("Heat from equipment", "Geräteabwärme"))
         din = _din_ref("DIN V 18599-10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -452,32 +442,20 @@ class Beat3_GeraetePhiE(Scene):
 
         room = room_section(B3_ROOM_C, w=7.0, h=3.2)
         y_f = room["y_f"]
-        seated = seated_person_glyph(np.array([room["x_l"] + 1.4, y_f, 0.0]), color=COLOR_PEOPLE, scale=0.52 * room["h"] / 0.55,
-                                     chair_color=PASTEL_WHITE)
-        elbow = seated["lap"] + UP * (0.12 * seated["height"])
-        desk_y, x0 = elbow[1] - 0.1, elbow[0] + 0.1
-        desk = _desk(x0, x0 + 2.9, desk_y, y_f, legs=(x0 + 1.25, x0 + 2.8))
-        hinge = np.array([x0 + 1.0, desk_y + 0.02, 0.0])
-        laptop = _laptop(hinge)
-        server = _rack(np.array([x0 + 2.3, desk_y + 0.525 + 0.01, 0.0]))
-        server_box = server[0]
+        unit = room["h"] / 2.6
+        seated = _worker(np.array([room["x_l"] + 1.4, y_f, 0.0]), unit)
+        lap_at = _spot(seated["group"], 0.72, 0.62)
+        server = staffage_motion("heating-internal-gains-tower-server", unit=unit, anchor=np.array([room["x_r"] - 1.25, y_f, 0.0]), rate=0.0)
         sock = np.array([room["x_r"] - 0.1, y_f + 0.4, 0.0])
-        socket = VGroup(
-            Square(side_length=0.2, color=PASTEL_WHITE, stroke_width=1.6).move_to(sock),
-            Line(sock + np.array([-0.04, -0.05, 0.0]), sock + np.array([-0.04, 0.05, 0.0]), color=PASTEL_WHITE,
-                 stroke_width=1.2),
-            Line(sock + np.array([0.04, -0.05, 0.0]), sock + np.array([0.04, 0.05, 0.0]), color=PASTEL_WHITE,
-                 stroke_width=1.2),
-        )
         out = sock + LEFT * 0.1
         cables = [
-            smooth_path([out, out + np.array([-0.6, -0.27, 0.0]), np.array([x0 + 3.5, y_f + 0.1, 0.0]),
-                         np.array([x0 + 2.65, y_f + 0.45, 0.0]), server_box.get_bottom() + RIGHT * 0.18]),
-            smooth_path([out, out + np.array([-0.6, -0.33, 0.0]), np.array([x0 + 1.6, y_f + 0.05, 0.0]),
-                         np.array([x0 + 1.1, y_f + 0.45, 0.0]), hinge + DOWN * 0.02]),
+            smooth_path([out, out + np.array([-0.3, -0.2, 0.0]), np.array([server.get_center()[0] + 0.55, y_f + 0.08, 0.0]),
+                         server.get_bottom() + RIGHT * 0.15 + UP * 0.03]),
+            smooth_path([out, out + np.array([-0.6, -0.33, 0.0]), np.array([lap_at[0] + 0.7, y_f + 0.05, 0.0]),
+                         np.array([lap_at[0] + 0.2, y_f + 0.45, 0.0]), lap_at + DOWN * 0.1]),
         ]
         cable_lines = VGroup(*[c.copy().set_stroke(COLOR_EQUIP, width=1.3, opacity=0.45) for c in cables])
-        warm = [laptop.get_center(), server_box.get_top() + UP * 0.04]
+        warm = [lap_at, server.get_center() + UP * 0.35]
 
         def warm_heat(rt):
             cyc = _cycles(rt)
@@ -489,20 +467,19 @@ class Beat3_GeraetePhiE(Scene):
                                                    cycles=_cycles(rt), streak=False)]
 
         self.add(room["air"])
-        self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), FadeIn(seated["group"]), Create(desk), run_time=1.2)
-        self.play(LaggedStart(FadeIn(laptop, shift=DOWN * 0.15), FadeIn(server, shift=DOWN * 0.15), FadeIn(socket),
-                              lag_ratio=0.3), *warm_heat(1.4), run_time=1.4)
+        self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), FadeIn(seated["group"]), run_time=1.2)
+        self.play(FadeIn(server, shift=DOWN * 0.15), *warm_heat(1.4), run_time=1.4)
         hold_for(self, self.NARRATION, "desk", used=1.2 + 1.4, during=warm_heat)
 
         lap_w, dev_w = ValueTracker(0.0), ValueTracker(0.0)
         col_x = room["wall_r"].get_right()[0] + 0.35
         lap_live = _live(
-            lambda: rf"\text{{Laptop}}\;{de_num(lap_w.get_value())}\,\mathrm{{W}}",
+            lambda: rf"\text{{Laptop}}\;{label_number(lap_w.get_value())}\,\mathrm{{W}}",
             np.array([col_x, 0.8, 0.0]),
             size=LABEL_FONT_SIZE, color=COLOR_HEAT,
         )
         dev_live = _live(
-            lambda: rf"\text{{Gerät}}\;{de_num(dev_w.get_value())}\,\mathrm{{W}}",
+            lambda: rf"\text{{Server}}\;{label_number(dev_w.get_value())}\,\mathrm{{W}}",
             np.array([col_x, 0.38, 0.0]),
             size=LABEL_FONT_SIZE, color=COLOR_EQUIP,
         )
@@ -515,12 +492,13 @@ class Beat3_GeraetePhiE(Scene):
         )
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "spark"))
+        server.rate = SERVER_WARM_RATE
         self.play(Create(cable_lines), Flash(sock, color=COLOR_EQUIP, flash_radius=0.28, line_length=0.16),
                   *warm_heat(0.9), run_time=0.9)
         self.add(phi_e, lap_live, dev_live, phi_e_live)
-        self.play(*device_heat(1.3), laptop.animate.set_color(COLOR_HEAT), lap_w.animate.set_value(PHI_E_LAPTOP_W),
+        self.play(*device_heat(1.3), Flash(lap_at, color=COLOR_HEAT, flash_radius=0.3, line_length=0.12), lap_w.animate.set_value(PHI_E_LAPTOP_W),
                   run_time=1.3)
-        self.play(*device_heat(1.3), server_box.animate.set_color(COLOR_EQUIP), server[1].animate.set_color(COLOR_EQUIP),
+        self.play(*device_heat(1.3), Flash(server.get_center() + UP * 0.35, color=COLOR_EQUIP, flash_radius=0.5, line_length=0.16),
                   dev_w.animate.set_value(PHI_E_DEVICE_W), room["air"].animate.set_fill(COLOR_HEAT, opacity=0.08),
                   run_time=1.3)
         hold_for(self, self.NARRATION, "spark", during=device_heat)
@@ -540,7 +518,7 @@ class Beat3_GeraetePhiE(Scene):
 
 #region Beat4 — Lighting Φ_l
 B4_ROOM_C = np.array([0.0, 0.05, 0.0])
-B4_LAMP_SCALE = 1.8
+B4_LAMP_UNIT = 3.2
 
 
 class Beat4_BeleuchtungPhiL(Scene):
@@ -559,7 +537,7 @@ class Beat4_BeleuchtungPhiL(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Beleuchtungswärme")
+        subtitle = section_heading(tr("Heat from lighting", "Beleuchtungswärme"))
         din = _din_ref("DIN V 18599-10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -568,10 +546,9 @@ class Beat4_BeleuchtungPhiL(Scene):
 
         room = room_section(B4_ROOM_C, w=9.0, h=3.3)
         y_f = room["y_f"]
-        anchor = np.array([room["center"][0], room["y_c"], 0.0])
-        lamp = lamp_glyph(anchor, drop=0.45)
-        lamp["group"].scale(B4_LAMP_SCALE, about_point=anchor)
-        bulb = lamp["bulb"].get_center()
+        lamp = staffage_motion("heating-internal-gains-pendant-lamp-warm-up", unit=B4_LAMP_UNIT, anchor=np.array([room["center"][0], room["y_c"], 0.0]), rate=LAMP_WARM_RATE)
+        lamp.shift(UP * (room["y_c"] - lamp.get_top()[1]))
+        bulb = _spot(lamp, 0.5, 0.15)
         rays = _light_rays(bulb, y_f + 0.02, (-2.6, -1.3, 0.0, 1.3, 2.6))
         floor_patch = Ellipse(width=5.4, height=0.14, stroke_width=0, fill_color=COLOR_LIGHT, fill_opacity=0.35)
         floor_patch.move_to(np.array([bulb[0], y_f + 0.07, 0.0]))
@@ -590,16 +567,15 @@ class Beat4_BeleuchtungPhiL(Scene):
 
         self.add(room["air"])
         self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), run_time=1.0)
-        self.play(FadeIn(lamp["group"], shift=DOWN * 0.15), run_time=0.7)
+        self.play(FadeIn(lamp, shift=DOWN * 0.15), run_time=0.7)
         phi_l = ValueTracker(0.0)
         phi_l_live = _live(
             lambda: _watts("l", phi_l),
-            np.array([lamp["group"].get_right()[0] + 0.35, lamp["group"].get_bottom()[1] + 0.35, 0.0]),
+            np.array([lamp.get_right()[0] + 0.35, lamp.get_bottom()[1] + 0.35, 0.0]),
             size=BODY_FONT_SIZE, color=COLOR_LIGHT,
         )
         self.add(phi_l_live)
         self.play(
-            lamp["bulb"].animate.set_fill(COLOR_LIGHT, opacity=0.85),
             LaggedStart(*[Create(r) for r in rays], lag_ratio=0.08),
             FadeIn(floor_patch),
             phi_l.animate.set_value(PHI_L_W),
@@ -638,17 +614,17 @@ B5_ICON_Y = 1.3
 
 
 def _b5_icon(key: str, x: float):
-    """🧩 Source glyph above its bar — person, laptop or lamp — with the point its heat leaves from."""
-    at = np.array([x, B5_ICON_Y, 0.0])
+    """🧩 Thermal staffage above its bar — person, laptop or lamp — with the point its heat leaves from."""
+    feet = np.array([x, B5_ICON_Y - 0.45, 0.0])
     if key == "p":
-        fig = person_glyph(at, color=COLOR_PEOPLE, scale=0.8)
-        return fig, fig.get_center() + UP * 0.08, False
+        fig = staffage_motion("shared-person-winter", unit=B5_ICON_METRE, anchor=feet)
+        return fig, _spot(fig, 0.5, 0.6), False
     if key == "e":
-        lap = _laptop(at + np.array([0.22, -0.2, 0.0]), color=COLOR_EQUIP)
+        lap = staffage("shared-laptop-winter", unit=B5_ICON_METRE, anchor=feet + UP * 0.1)
         return lap, lap.get_center(), False
-    lamp = lamp_glyph(at + UP * 0.3, drop=0.1)
-    lamp["bulb"].set_fill(COLOR_LIGHT, opacity=0.85)
-    return lamp["group"], lamp["bulb"].get_center(), True
+    lamp = staffage("shared-lamp-winter", unit=B5_ICON_METRE, anchor=feet)
+    lamp.shift(UP * (B5_ICON_Y + 0.5 - lamp.get_top()[1]))
+    return lamp, _spot(lamp, 0.5, 0.15), True
 #endregion
 
 
@@ -671,16 +647,16 @@ class Beat5_SummeUndDichte(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Summe und Wärmestromdichte")
+        subtitle = section_heading(tr("Sum and heat flux density", "Summe und Wärmestromdichte"))
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "sources"))
         self.play(FadeIn(caption), run_time=0.3)
 
         sources = (
-            ("p", PHI_P_W, COLOR_PEOPLE, "Personen"),
-            ("e", PHI_E_W, COLOR_EQUIP, "Geräte"),
-            ("l", PHI_L_W, COLOR_LIGHT, "Beleuchtung"),
+            ("p", PHI_P_W, COLOR_PEOPLE, tr("People", "Personen")),
+            ("e", PHI_E_W, COLOR_EQUIP, tr("Equipment", "Geräte")),
+            ("l", PHI_L_W, COLOR_LIGHT, tr("Lighting", "Beleuchtung")),
         )
         grow = [ValueTracker(0.0) for _ in sources]
 
@@ -704,7 +680,7 @@ class Beat5_SummeUndDichte(Scene):
             names.add(Text(name, font_size=LABEL_FONT_SIZE, color=color).move_to(
                 np.array([x, B5_BASE_Y - 0.66, 0.0])))
             values.add(_live(
-                lambda t=t: rf"{de_num(t.get_value())}\,\mathrm{{W}}",
+                lambda t=t: rf"{label_number(t.get_value())}\,\mathrm{{W}}",
                 lambda bar=bar: bar.get_top() + UP * 0.14,
                 size=LABEL_FONT_SIZE, color=color, edge="center",
             ))
@@ -762,7 +738,7 @@ class Beat5_SummeUndDichte(Scene):
         hold_for(self, self.NARRATION, "sum")
         self.play(FadeOut(ring), run_time=0.25)
 
-        density_sub = section_heading("Spezifische Wärmestromdichte (DIN V 18599-10)")
+        density_sub = section_heading(tr("Specific heat flux density (DIN V 18599-10)", "Spezifische Wärmestromdichte (DIN V 18599-10)"))
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "density"))
         self.play(ReplacementTransform(subtitle, density_sub), run_time=0.7)
         subtitle = density_sub
@@ -781,7 +757,7 @@ class Beat5_SummeUndDichte(Scene):
             width=pw, height=pd, color=GREY_B, stroke_width=4,
             fill_color=PASTEL_CYAN, fill_opacity=0.10,
         ).move_to(B5_PLAN_C)
-        plan_tag = Text("Grundriss Büro", font_size=LABEL_FONT_SIZE, color=GREY_B)
+        plan_tag = Text(tr("Office floor plan", "Grundriss Büro"), font_size=LABEL_FONT_SIZE, color=GREY_B)
         plan_tag.next_to(plan, UP, buff=0.14)
         w_dim = dim_arrow(plan.get_corner(DL) + DOWN * 0.25, plan.get_corner(DR) + DOWN * 0.25, color=PASTEL_CYAN)
         d_dim = dim_arrow(plan.get_corner(DR) + RIGHT * 0.25, plan.get_corner(UR) + RIGHT * 0.25, color=PASTEL_CYAN)
@@ -791,25 +767,25 @@ class Beat5_SummeUndDichte(Scene):
             return w_on.get_value() * ROOM_W_M * d_on.get_value() * ROOM_D_M
 
         w_live = _live(
-            lambda: rf"{de_num(w_on.get_value() * ROOM_W_M)}\,\mathrm{{m}}",
+            lambda: rf"{label_number(w_on.get_value() * ROOM_W_M)}\,\mathrm{{m}}",
             np.array([plan.get_center()[0], plan.get_bottom()[1] - 0.62, 0.0]),
             size=LABEL_FONT_SIZE, color=PASTEL_CYAN, edge="center",
         )
         d_live = _live(
-            lambda: rf"{de_num(d_on.get_value() * ROOM_D_M)}\,\mathrm{{m}}",
+            lambda: rf"{label_number(d_on.get_value() * ROOM_D_M)}\,\mathrm{{m}}",
             np.array([plan.get_right()[0] + 0.45, plan.get_center()[1] - 0.08, 0.0]),
             size=LABEL_FONT_SIZE, color=PASTEL_CYAN,
         )
         a_live = _live(
-            lambda: rf"A_{{\mathrm{{N}}}} = {de_num(area())}\,\mathrm{{m^{{2}}}}",
+            lambda: rf"A_{{\mathrm{{N}}}} = {label_number(area())}\,\mathrm{{m^{{2}}}}",
             np.array([plan.get_center()[0], plan.get_center()[1] - 0.10, 0.0]),
             size=BODY_FONT_SIZE, color=PASTEL_CYAN, edge="center",
         )
         q_on = ValueTracker(0.0)
         q_live = _live(
-            lambda: (rf"q_{{\mathrm{{int}}}} = \frac{{{de_num(total.get_value())}\,\mathrm{{W}}}}"
-                     rf"{{{de_num(area())}\,\mathrm{{m^{{2}}}}}}"
-                     rf" = {de_num(q_on.get_value() * total.get_value() / max(area(), 1e-6), 1)}\,\mathrm{{W/m^{{2}}}}"),
+            lambda: (rf"q_{{\mathrm{{int}}}} = \frac{{{label_number(total.get_value())}\,\mathrm{{W}}}}"
+                     rf"{{{label_number(area())}\,\mathrm{{m^{{2}}}}}}"
+                     rf" = {label_number(q_on.get_value() * total.get_value() / max(area(), 1e-6), 1)}\,\mathrm{{W/m^{{2}}}}"),
             np.array([plan.get_center()[0], plan_tag.get_top()[1] + 0.42, 0.0]),
             size=BODY_FONT_SIZE, color=COLOR_HEAT, edge="center",
         )

@@ -8,8 +8,8 @@
  * @see ../🧍️figure/🟦️.tsx — the figure
  */
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { SCALE_PRESETS, VIEWS, formatNumber } from "@teaching/staffage";
-import type { Asset, ItemValue, View } from "@teaching/staffage";
+import { SCALE_PRESETS, VIEWPOINTS, VIEWS, formatNumber } from "@teaching/staffage";
+import type { Asset, ItemValue, View, Viewpoint } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useArchive, useRows } from "../🧭️context/🟦️.tsx";
@@ -20,10 +20,11 @@ import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } fr
 import { VIEW_NAMES, valueText } from "../🗣️labels/🟦️.ts";
 import { Transport } from "../⏯️transport/🟦️.tsx";
 import { useAssetLoading } from "../📚️catalog/🟦️.ts";
-import { COMPARE_LIMITS, compareFromParams, compareToParams, navigate, useAddress, type ComparePane, type CompareState } from "../🗺️routing/🟦️.ts";
+import { COMPARE_LIMITS, addressProblems, compareFromParams, compareToParams, navigate, useAddress, type ComparePane, type CompareState } from "../🗺️routing/🟦️.ts";
 import type { PaneView } from "../🥞️levels/🟦️.tsx";
 import { namedPoses, type Row } from "../🔎️search/🟦️.ts";
-import { ACROSS_VIEWS, clockSpan, defaultPanes, differentAssetsSameView, nextPane, paneQuery, sameAssetAcrossViews, selectionFromKey, selectionKey, swapFirstTwo } from "./🧮️panes/🟦️.ts";
+import { VIEWPOINT_NAMES, VIEWPOINT_PHRASES, resolveViewpoint, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
+import { ACROSS_VIEWS, clockSpan, defaultPanes, differentAssetsSameView, nextPane, paneQuery, sameAssetAcrossViewpoints, sameAssetAcrossViews, selectionFromKey, selectionKey, swapFirstTwo } from "./🧮️panes/🟦️.ts";
 
 type PaneProps = {
   readonly pane: ComparePane;
@@ -48,21 +49,27 @@ function ComparePaneCard(props: PaneProps): ReactElement {
   const title = row?.entry.title[language] ?? pane.asset;
   const options = ready.some((candidate) => candidate.entry.id === pane.asset) ? ready : row === undefined ? ready : [row, ...ready];
   const query = useMemo(() => (asset === undefined ? undefined : paneQuery(asset, pane.selection)), [asset, pane.selection]);
+  const resolution = useMemo(() => (asset === undefined ? undefined : resolveViewpoint(asset, pane.viewpoint, scale, language)), [asset, pane.viewpoint, scale, language]);
   return (
     <section aria-labelledby={`compare-pane-${index}`} data-compare-pane={index} className="flex min-w-0 flex-col gap-double border border-border bg-panel p-double">
       <div className="flex items-start justify-between gap-double">
         <h2 id={`compare-pane-${index}`} className="m-0 font-serif text-lg leading-tight">
           {title}
-          <span className="block font-sans text-xs font-normal text-muted-foreground">{VIEW_NAMES[pane.view][language]}</span>
+          <span className="block font-sans text-xs font-normal text-muted-foreground">{`${VIEW_NAMES[pane.view][language]} · ${VIEWPOINT_PHRASES[pane.viewpoint][language]}`}</span>
         </h2>
         {editable && canRemove ? <Button variant="quiet" icon="x" aria-label={t("compare.removePane", { index: index + 1 })} title={t("compare.removePane", { index: index + 1 })} onClick={onRemove} /> : null}
       </div>
       <div className="relative flex h-72 min-h-0 items-center justify-center overflow-hidden border border-border sm:h-80" data-compare-figure={index} style={{ backgroundColor: pane.view === "dark-line" || pane.view === "dark-solid" || (theme === "dark" && (pane.view === "thermal" || pane.view === "forces" || pane.view === "moments")) ? "#001117" : "#f7f3e3" }}>
         {asset === undefined ? (
           row === undefined ? <Notice kind="unavailable" compact title={t("compare.unknownAsset")} /> : <UnavailableNotice row={row} compact />
+        ) : resolution !== undefined && !resolution.available ? (
+          <Notice kind="unavailable" compact className="h-full w-full overflow-auto" title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[pane.viewpoint][language] })}>
+            <p className="m-0">{resolution.message[language]}</p>
+            <p className="m-0 text-muted-foreground">{viewpointWord("viewpoints.nothingInstead", language)}</p>
+          </Notice>
         ) : (
           <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact title={title}>{message}</Notice>}>
-            <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={pane.view} scale={{ denominator: scale }} language={language} theme={theme} {...(frame === undefined ? {} : { frame })} fit="contain" onInspect={(value, item) => setInspected(value === null ? null : { value, item: item?.region ?? item?.bone ?? "" })} />
+            <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={pane.view} viewpoint={pane.viewpoint} scale={{ denominator: scale }} language={language} theme={theme} {...(frame === undefined ? {} : { frame })} fit="contain" onInspect={(value, item) => setInspected(value === null ? null : { value, item: item?.region ?? item?.bone ?? "" })} />
           </FigureBoundary>
         )}
       </div>
@@ -78,8 +85,9 @@ function ComparePaneCard(props: PaneProps): ReactElement {
       )}
       {editable ? (
         <div className="grid gap-double sm:grid-cols-2">
-          <SelectField label={t("compare.asset")} value={pane.asset} onChange={(next) => onChange({ asset: next, view: pane.view, selection: null })} options={options.map((candidate) => ({ value: candidate.entry.id, label: candidate.entry.title[language] }))} />
+          <SelectField label={t("compare.asset")} value={pane.asset} onChange={(next) => onChange({ asset: next, view: pane.view, viewpoint: pane.viewpoint, selection: null })} options={options.map((candidate) => ({ value: candidate.entry.id, label: candidate.entry.title[language] }))} />
           <SelectField label={t("compare.view")} value={pane.view} onChange={(next: View) => onChange({ ...pane, view: next })} options={VIEWS.map((candidate) => ({ value: candidate, label: VIEW_NAMES[candidate][language] }))} />
+          <SelectField label={viewpointWord("viewpoints.label", language)} value={pane.viewpoint} onChange={(next: Viewpoint) => onChange({ ...pane, viewpoint: next })} options={VIEWPOINTS.map((candidate) => ({ value: candidate, label: VIEWPOINT_NAMES[candidate][language] }))} />
           <SelectField
             label={t("compare.pick")}
             value={selectionKey(pane.selection)}
@@ -140,9 +148,9 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
     try {
       const scenes = panes.flatMap((pane) => {
         const asset = find(pane.asset);
-        if (asset === undefined) return [];
+        if (asset === undefined || !resolveViewpoint(asset, pane.viewpoint, scale, language).available) return [];
         const query = paneQuery(asset, pane.selection) ?? { kind: "clip" as const, clip: asset.presentation.defaultClip, timeS: 0 };
-        return [sceneOf(evaluateState(asset, query), depictionOptions({ view: pane.view, scale: { denominator: scale }, language, theme, transparent: true }))];
+        return [sceneOf(evaluateState(asset, query), depictionOptions({ view: pane.view, viewpoint: pane.viewpoint, scale: { denominator: scale }, language, theme, transparent: true }))];
       });
       return scenes.length === 0 ? undefined : frameOf(scenes);
     } catch {
@@ -163,8 +171,9 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
           <Segmented label={t("compare.scale")} value={(SCALE_PRESETS as readonly number[]).includes(scale) ? scale : null} onChange={(next) => write({ scale: next })} options={SCALE_PRESETS.map((preset) => ({ value: preset, label: `1:${preset}` }))} />
           <NumberField label={t("compare.scaleCustom")} min={1} max={100000} step={1} value={scale} onChange={(next) => next !== null && next >= 1 && write({ scale: next })} className="w-32" unit="1:" />
           <div className="flex flex-wrap gap-single" role="group" aria-label={t("compare.quick")}>
-            <Button icon="layout-grid" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViews(first.asset, panes.length, first.selection))}>{t("compare.sameAsset")}</Button>
-            <Button icon="users" disabled={first === undefined} onClick={() => first !== undefined && setPanes(differentAssetsSameView(readyIds, first.asset, first.view, panes.length))}>{t("compare.sameView")}</Button>
+            <Button icon="layout-grid" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViews(first.asset, panes.length, first.selection, first.viewpoint))}>{t("compare.sameAsset")}</Button>
+            <Button icon="users" disabled={first === undefined} onClick={() => first !== undefined && setPanes(differentAssetsSameView(readyIds, first.asset, first.view, panes.length, first.viewpoint))}>{t("compare.sameView")}</Button>
+            <Button icon="box" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViewpoints(first.asset, first.view, first.selection))}>{t("compare.threeViews")}</Button>
             <Button icon="plus" disabled={panes.length >= COMPARE_LIMITS.max} onClick={() => setPanes([...panes, nextPane(panes)])}>{t("compare.addPane")}</Button>
             <Button icon="rotate-cw" onClick={() => setPanes(swapFirstTwo(panes))}>{t("compare.swap")}</Button>
             <Button icon="rotate-ccw" onClick={() => navigate({ page: "compare" }, new URLSearchParams(), true)}>{t("compare.reset")}</Button>
@@ -181,6 +190,7 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
     );
   return (
     <PageFrame page="compare" wide eyebrow={t("compare.eyebrow")} title={t("compare.title")} lede={t("compare.lede")}>
+      {view.opened ? addressProblems(address.params, "compare").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />) : null}
       {loading.busy ? <ProgressNotice label={t("state.loadingAssets")} done={loading.done} total={loading.total} cancelLabel={t("action.cancel")} onCancel={loading.cancel} /> : null}
       {loading.cancelled ? <Notice kind="info" compact title={t("state.cancelled.title")} actions={<Button onClick={loading.retry} icon="rotate-cw">{t("action.retry")}</Button>}>{t("state.cancelled.body")}</Notice> : null}
       {body}

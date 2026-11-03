@@ -11,7 +11,7 @@ import { playgroundFromParams, playgroundToParams } from "../../🔨️modules/�
 
 const block = (x: number, w: number): string => `<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="40mm" viewBox="0 0 20 40"><rect x="${x}" y="0" width="${w}" height="40" fill="#000000"/></svg>`;
 const part = (id: string, xM: number, markup: string, mirrored = false): ComposedPart => ({ id, asset: id, title: id, xM, mirrored, markup, widthMm: 20, heightMm: 40, originXMm: 10, originYMm: 40 });
-const options = (scale: number) => ({ scale, view: "light-line", lengthM: 10, background: "transparent" as const, language: "en" as const, title: "Playground" });
+const options = (scale: number) => ({ scale, view: "light-line", viewpoint: "elevation", lengthM: 10, background: "transparent" as const, language: "en" as const, title: "Playground" });
 
 const hasRsvg = ((): boolean => {
   try {
@@ -76,7 +76,7 @@ describe("🧪️ composition", () => {
 });
 
 describe("🧪️ placement events", () => {
-  const placement: Placement = { id: "p1", asset: "walking-commuter", xM: 3, pick: null, offsetS: 0, mirrored: false };
+  const placement: Placement = { id: "p1", asset: "walking-commuter", xM: 3, zM: 0, yawDeg: 0, pick: null, offsetS: 0, mirrored: false };
 
   it("adds, moves, clamps, duplicates and removes", () => {
     let state = reduce(INITIAL_STATE, { type: "placement-added", placement });

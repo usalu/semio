@@ -3,10 +3,13 @@
 import ast
 import importlib
 import json
+import os
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
+from manim import DOWN
 
 BASE = "🎓️teaching.🏛️architecture.⚡️energy."
 CASES = json.loads(Path(__file__).with_name("🔣️scenes.json").read_text(encoding="utf-8"))
@@ -20,26 +23,57 @@ class SceneScaleTest(unittest.TestCase):
             with self.subTest(helper=local):
                 self.assertIs(getattr(physics, local), getattr(shared, canonical))
 
+    def test_physics_figures_are_sized_staffage(self):
+        shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
+        physics = importlib.import_module(BASE + "🧲️physics.🎬️clip.🧲️fundamentals.🐍️")
+        spec = CASES["physics_staffage"]
+        foot = np.array([1.0, -2.0, 0.0])
+        radiator = physics._staffage(spec["radiator"]["cast"], unit=spec["radiator"]["height"] / physics._staffage_height(spec["radiator"]["cast"]), anchor=foot)
+        person = physics._person(spec["person"]["cast"], foot, spec["person"]["height"], motion=False)
+        lamp = physics._lamp(np.array([0.0, 1.0, 0.0]), spec["lamp"]["height"])
+        for name, figure, height in (("radiator", radiator, spec["radiator"]["height"]),
+                                     ("person", person, spec["person"]["height"]),
+                                     ("lamp", lamp["group"], spec["lamp"]["height"])):
+            with self.subTest(figure=name):
+                self.assertGreater(len(figure.submobjects), 0)
+                self.assertAlmostEqual(figure.height, height, delta=0.15 * height)
+        for name, figure in (("radiator", radiator), ("person", person)):
+            with self.subTest(foot=name):
+                self.assertAlmostEqual(figure.get_bottom()[1], foot[1], delta=0.06 * figure.height)
+                self.assertAlmostEqual(figure.get_center()[0], foot[0], delta=0.5 * figure.width)
+        self.assertAlmostEqual(lamp["group"].get_top()[1], 1.0, places=6)
+        bulb = lamp["bulb"].get_center()
+        self.assertGreater(bulb[1], lamp["group"].get_bottom()[1])
+        self.assertLess(bulb[1], lamp["group"].get_center()[1])
+        self.assertAlmostEqual(lamp["cable"].get_start()[1], 1.0, places=6)
+        self.assertTrue(callable(shared.staffage_height))
+
     def test_heating_plant_uses_one_physical_scale(self):
         module = importlib.import_module(BASE + "🔥️heating.🎬️clip.🧮️calculation.🐍️")
-        plant = module._plant_house()
+        with mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": CASES["language"]}):
+            plant = module._plant_house()
         scale = plant["room_height"] / CASES["house"]["storey_m"]
-        self.assertAlmostEqual(plant["person"].height, scale * CASES["house"]["person_m"], places=6)
-        self.assertAlmostEqual(plant["person"].get_bottom()[1], plant["floor_y"], places=6)
+        person_m = scale * CASES["house"]["person_m"]
+        shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
+        radiator_m = scale * shared.staffage_height("shared-radiator-thermostat")
+        self.assertAlmostEqual(plant["person"].height, person_m, delta=0.1 * person_m)
+        self.assertAlmostEqual(plant["person"].get_bottom()[1], plant["floor_y"], delta=0.05 * person_m)
         for radiator in plant["radiators"]:
-            self.assertAlmostEqual(radiator.height, scale * CASES["house"]["radiator_height_m"], places=6)
-            self.assertAlmostEqual(radiator.width, scale * CASES["house"]["radiator_width_m"], places=6)
-            self.assertAlmostEqual(radiator.get_bottom()[1] - plant["floor_y"], scale * 0.12, places=6)
+            self.assertAlmostEqual(radiator.height, radiator_m, delta=0.15 * radiator_m)
+            self.assertLessEqual(radiator.width, scale * CASES["house"]["radiator_width_m"] + 1e-6)
+            self.assertAlmostEqual(radiator.get_bottom()[1] - plant["floor_y"], 0.0, delta=0.08 * radiator_m)
 
     def test_overview_emitters_scale_with_house(self):
         module = importlib.import_module(BASE + "📊️demand.🎬️clip.⚡️demand-power.🐍️")
+        shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
         for scale in CASES["overview_scales"]:
             house = module._heated_house(np.zeros(3), scale)
             metre = house["storey"] / CASES["house"]["storey_m"]
+            nominal = metre * shared.staffage_height("shared-radiator-winter")
             for radiator, floor in zip(house["rads"], house["floors"]):
                 with self.subTest(scale=scale):
-                    self.assertAlmostEqual(radiator.height, metre * CASES["house"]["radiator_height_m"], places=6)
-                    self.assertAlmostEqual(radiator.get_bottom()[1] - floor, metre * 0.12, places=6)
+                    self.assertAlmostEqual(radiator.height, nominal, delta=0.08 * nominal)
+                    self.assertAlmostEqual(radiator.get_bottom()[1], floor, delta=0.08 * nominal)
 
 
     def test_openings_cut_through_section_material(self):
@@ -59,10 +93,12 @@ class SceneScaleTest(unittest.TestCase):
 
     def test_heating_closeup_retains_real_dimensions(self):
         module = importlib.import_module(BASE + "🔥️heating.🎬️clip.🧲️fundamentals.🐍️")
-        metre = (module.CEIL_Y - module.FLOOR_Y) / CASES["house"]["storey_m"]
+        shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
+        metre =(module.CEIL_Y - module.FLOOR_Y) / CASES["house"]["storey_m"]
         self.assertAlmostEqual(module.WALL_X1 - module.WALL_X0, 0.35 * metre, places=6)
-        self.assertAlmostEqual(module._occupant().height, CASES["house"]["person_m"] * metre, places=6)
-        self.assertAlmostEqual(module._radiator().height, CASES["house"]["radiator_height_m"] * metre, places=6)
+        stage = module._stage()
+        self.assertAlmostEqual(stage["occupant"].height, CASES["house"]["person_m"] * metre, delta=0.06 * metre)
+        self.assertAlmostEqual(stage["radiator"].height, shared.staffage_height("shared-radiator-front-winter") * metre, delta=0.06 * metre)
 
 
     def test_windows_are_uniformly_scaled_in_overviews(self):
@@ -76,13 +112,14 @@ class SceneScaleTest(unittest.TestCase):
 
     def test_plant_equipment_and_material_use_room_scale(self):
         module = importlib.import_module(BASE + "🔥️heating.🎬️clip.🧮️calculation.🐍️")
-        plant = module._plant_house()
+        with mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": CASES["language"]}):
+            plant = module._plant_house()
         metre = plant["room_height"] / CASES["house"]["storey_m"]
         for dimension in ("width", "height"):
-            self.assertAlmostEqual(getattr(plant["boiler"], dimension), metre * CASES["plant"]["boiler_" + dimension + "_m"], places=6)
-            self.assertAlmostEqual(getattr(plant["tank"]["frame"], dimension), metre * CASES["plant"]["tank_" + dimension + "_m"], places=6)
-        self.assertAlmostEqual(plant["boiler"].get_bottom()[1], plant["cellar"].get_bottom()[1], places=6)
-        self.assertAlmostEqual(plant["tank"]["frame"].get_bottom()[1], plant["cellar"].get_bottom()[1], places=6)
+            self.assertAlmostEqual(getattr(plant["boiler"], dimension), metre * CASES["plant"]["boiler_" + dimension + "_m"], delta=0.25 * metre * CASES["plant"]["boiler_" + dimension + "_m"])
+            self.assertAlmostEqual(getattr(plant["tank"]["frame"], dimension), metre * CASES["plant"]["tank_" + dimension + "_m"], delta=0.25 * metre * CASES["plant"]["tank_" + dimension + "_m"])
+        self.assertAlmostEqual(plant["boiler"].get_bottom()[1], plant["cellar"].get_bottom()[1], delta=0.06)
+        self.assertAlmostEqual(plant["tank"]["frame"].get_bottom()[1], plant["cellar"].get_bottom()[1], delta=0.06)
         for material in plant["walls"]:
             self.assertGreaterEqual(material.get_fill_opacity(), 0.7)
         np.testing.assert_allclose(plant["flow_paths"][0].get_start(), plant["boiler"].get_left(), atol=1e-6)
@@ -103,8 +140,11 @@ class SceneScaleTest(unittest.TestCase):
         right_edge = shared.window_opening(right.window).get_left()[0]
         self.assertGreaterEqual(people.get_left()[0] - left_edge, case["minimum_drawing_clearance"])
         self.assertGreaterEqual(right_edge - people.get_right()[0], case["minimum_drawing_clearance"])
-        for first, second in zip(people, list(people)[1:]):
-            self.assertGreater(second.get_left()[0], first.get_right()[0])
+        shift = [module._stand(center, case["height"], 0.0, mirror=mirror).get_x() for mirror in (False, True)]
+        feet = [person.get_x() - shift[index % 2] for index, person in enumerate(people)]
+        body = 0.2 * 0.7 * (case["height"] - 0.16)
+        for first, second in zip(feet, feet[1:]):
+            self.assertGreater(second - first, body)
 
 
     def test_ventilation_moisture_tracks_placed_occupants(self):
@@ -144,6 +184,41 @@ class SceneScaleTest(unittest.TestCase):
                 self.assertLessEqual(label.get_right()[0], room["x_r"] - gap)
                 self.assertLessEqual(label.get_top()[1], room["y_c"] - gap)
                 self.assertGreaterEqual(label.get_bottom()[1], room["y_f"] + gap)
+
+
+    def test_transport_casts_are_sized_and_floored_by_their_figure(self):
+        shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
+        case = CASES["transport_figure"]
+        for cast in case["casts"]:
+            with self.subTest(cast=cast):
+                index = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])
+                figure = index["figureBoundsM"]
+                width, height = figure["maxX"] - figure["minX"], figure["maxY"] - figure["minY"]
+                unit = case["height"] / height
+                self.assertAlmostEqual(shared.staffage_height(cast), height, delta=case["tolerance"] * height)
+                for group in (shared.fitted_staffage(cast, height=case["height"], rate=0.0), shared.fitted_staffage(cast, height=case["height"])):
+                    group.align_to(np.array([0.0, case["floor_y"], 0.0]), DOWN)
+                    self.assertAlmostEqual(group.height, case["height"], delta=case["tolerance"])
+                    self.assertAlmostEqual(group.width, width * unit, delta=case["tolerance"])
+                    self.assertAlmostEqual(group.get_bottom()[1], case["floor_y"], delta=case["tolerance"])
+                    self.assertGreater(max(member.get_top()[1] for member in group.family_members_with_points()), group.get_top()[1] + case["tolerance"])
+
+    def test_mirror_flips_every_path_about_the_origin_and_swaps_the_transport_bounds(self):
+        shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
+        case = CASES["transport_figure"]
+        cast = case["casts"][0]
+        figure = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])["figureBoundsM"]
+        for mirror in (False, True):
+            with self.subTest(mirror=mirror):
+                plain, flipped = (shared.staffage(cast, unit=1.0, mirror=flag) for flag in (False, mirror))
+                drawn = [[member for member in group.family_members_with_points() if member.get_num_points() > 1] for group in (plain, flipped)]
+                self.assertEqual(len(drawn[0]), len(drawn[1]))
+                for first, second in zip(*drawn):
+                    expected = first.get_all_points() * np.array([-1.0 if mirror else 1.0, 1.0, 1.0])
+                    self.assertTrue(np.allclose(second.get_all_points(), expected, atol=1e-9))
+                self.assertAlmostEqual(flipped.get_left()[0], -figure["maxX"] if mirror else figure["minX"], delta=case["tolerance"])
+                moving = shared.staffage_motion(cast, unit=1.0, mirror=mirror)
+                self.assertAlmostEqual(moving.get_right()[0], -figure["minX"] if mirror else figure["maxX"], delta=case["tolerance"])
 
 
 if __name__ == "__main__":

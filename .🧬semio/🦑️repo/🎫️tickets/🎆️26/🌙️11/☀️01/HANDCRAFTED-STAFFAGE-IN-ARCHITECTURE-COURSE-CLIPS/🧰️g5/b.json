@@ -1,0 +1,3 @@
+{"version": 1, "casts": {"t45": { "asset": "external-venetian-blind", "pose": "lowered-cut-off-45", "view": "thermal", "environment": "summer-hot-sun", "theme": "dark" },
+"t45m": { "asset": "external-venetian-blind", "pose": "lowered-cut-off-45", "view": "thermal", "environment": "summer-hot-sun", "mirror": true, "theme": "dark" },
+"th": { "asset": "external-venetian-blind", "pose": "lowered-horizontal", "view": "thermal", "environment": "summer-hot-sun", "theme": "dark" }}}

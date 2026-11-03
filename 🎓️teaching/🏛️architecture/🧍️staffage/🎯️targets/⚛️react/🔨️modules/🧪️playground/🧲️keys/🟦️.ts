@@ -1,12 +1,12 @@
 /** 🧲️ The keyboard model of a placement: a pure map from a key press to what it does.
  *
- * Left and Right move 0.1 m (Shift 1 m, Alt 0.01 m), Home and End go to the ends of the ground, Delete or Backspace removes, D duplicates, `[` and `]` select the previous and next placement.
+ * Left and Right move 0.1 m along the line (Shift 1 m, Alt 0.01 m), Up and Down move the same steps sideways (z, up is the asset's left), Page Up and Page Down turn it 5 degrees (Shift 45, Alt 1), Home and End go to the ends of the ground, Delete or Backspace removes, D duplicates, `[` and `]` select the previous and next placement.
  *
  * @see ../🟦️.tsx — where the action becomes an event
  */
 
 /** 🎬️ What a key press asks for. */
-export type KeyAction = { readonly kind: "move"; readonly deltaM: number } | { readonly kind: "to"; readonly end: "start" | "end" } | { readonly kind: "remove" } | { readonly kind: "duplicate" } | { readonly kind: "select"; readonly step: -1 | 1 };
+export type KeyAction = { readonly kind: "move"; readonly deltaM: number } | { readonly kind: "lateral"; readonly deltaM: number } | { readonly kind: "yaw"; readonly deltaDeg: number } | { readonly kind: "to"; readonly end: "start" | "end" } | { readonly kind: "remove" } | { readonly kind: "duplicate" } | { readonly kind: "select"; readonly step: -1 | 1 };
 
 /** ⌨️ The action of a key press, or null when the key means nothing here. */
 export function keyAction(event: { readonly key: string; readonly shiftKey: boolean; readonly altKey: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }): KeyAction | null {
@@ -17,6 +17,14 @@ export function keyAction(event: { readonly key: string; readonly shiftKey: bool
       return { kind: "move", deltaM: -size };
     case "ArrowRight":
       return { kind: "move", deltaM: size };
+    case "ArrowUp":
+      return { kind: "lateral", deltaM: size };
+    case "ArrowDown":
+      return { kind: "lateral", deltaM: -size };
+    case "PageUp":
+      return { kind: "yaw", deltaDeg: event.altKey ? 1 : event.shiftKey ? 45 : 5 };
+    case "PageDown":
+      return { kind: "yaw", deltaDeg: event.altKey ? -1 : event.shiftKey ? -45 : -5 };
     case "Home":
       return { kind: "to", end: "start" };
     case "End":

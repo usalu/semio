@@ -1,0 +1,1242 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "room-thermostat",
+    "category": "appliances",
+    "title": {
+      "en": "Wall-Mounted Room Thermostat with Dial",
+      "de": "Raumthermostat mit Drehknopf für die Wand"
+    },
+    "summary": {
+      "en": "A 90 mm square electronic room thermostat seen face-on: a housing with display window and heating-call lamp and a round set-point dial that turns; its electronics take 0.14 W at idle and 0.7 W while the relay is closed.",
+      "de": "Ein quadratischer elektronischer Raumthermostat von 90 mm in der Frontansicht: ein Gehäuse mit Anzeigefenster und Lampe für die Heizanforderung und ein runder Sollwert-Drehknopf, der sich dreht; die Elektronik nimmt 0,14 W im Leerlauf und 0,7 W bei geschlossenem Relais auf."
+    },
+    "tags": [
+      "thermostat",
+      "room-thermostat",
+      "heating-control",
+      "wall-mounted",
+      "appliance",
+      "electronics",
+      "internal-gain",
+      "electrical",
+      "dial"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (G1)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "din-en-60730-1-2020",
+          "citation": "DIN EN 60730-1:2020 Automatic electrical controls - Part 1: General requirements (room thermostats for heating systems, relay switching, power consumption of the control electronics)."
+        },
+        {
+          "id": "en-14597-2012",
+          "citation": "EN 14597:2012 Temperature control devices and temperature limiters for heat generating systems (set-point range and switching differential of room temperature controllers)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        }
+      ],
+      "notes": {
+        "en": "A battery-free electronic room thermostat for flush wall mounting at 1.5 m height seen face-on: a rounded square housing of 0.09 m by 0.09 m and 27 mm depth with a 36 mm by 21 mm display window, a 7 mm heating-call lamp and a 42 mm set-point dial turning over 270 degrees for 5 to 30 degrees Celsius. It stands for the circle on the wall next to the radiator in the heating clips. The origin is the centre of the housing in the wall plane. The control electronics (power supply, microcontroller, relay) take about 0.14 W at idle and 0.7 W with the relay coil and lamp energised, which also warms the housing by a few kelvin; all values are authored estimates for this product class. The dial angle follows from the set point: 135 degrees at 5 degrees Celsius to -135 degrees at 30 degrees Celsius, so 20 degrees Celsius stands at -27 degrees.",
+        "de": "Ein batterieloser elektronischer Raumthermostat zur Unterputzmontage in 1,5 m Höhe, frontal gesehen: ein gerundetes quadratisches Gehäuse von 0,09 m mal 0,09 m und 27 mm Tiefe mit einem Anzeigefenster von 36 mm mal 21 mm, einer Lampe für die Heizanforderung von 7 mm und einem Sollwert-Drehknopf von 42 mm, der sich über 270 Grad für 5 bis 30 Grad Celsius dreht. Er steht für den Kreis an der Wand neben dem Heizkörper in den Heizungsclips. Der Ursprung ist die Mitte des Gehäuses in der Wandebene. Die Regelelektronik (Netzteil, Mikrocontroller, Relais) nimmt im Leerlauf etwa 0,14 W und mit erregter Relaisspule und Lampe 0,7 W auf, was das Gehäuse um einige Kelvin erwärmt; alle Werte sind Schätzwerte für diese Produktklasse. Der Knopfwinkel folgt aus dem Sollwert: 135 Grad bei 5 Grad Celsius bis -135 Grad bei 30 Grad Celsius, also steht 20 Grad Celsius bei -27 Grad."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.09,
+      "widthM": 0.09,
+      "depthM": 0.027,
+      "massKg": 0.135
+    },
+    "materials": [
+      {
+        "id": "abs-plastic",
+        "title": {
+          "en": "White ABS plastic",
+          "de": "Weißer ABS-Kunststoff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "lcd-glass",
+        "title": {
+          "en": "Display glass",
+          "de": "Anzeigeglas"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1,
+        "specificHeatJKgK": 750,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "led-lens",
+        "title": {
+          "en": "Epoxy lamp lens",
+          "de": "Epoxid-Lampenlinse"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.2,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1100,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "housing",
+      "bones": [
+        {
+          "id": "housing",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Housing with display and electronics",
+            "de": "Gehäuse mit Anzeige und Elektronik"
+          },
+          "lengthM": 0.09,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.11,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "dial",
+          "parent": "housing",
+          "x": 0,
+          "y": -0.014,
+          "angleDeg": 0,
+          "title": {
+            "en": "Set-point dial",
+            "de": "Sollwert-Drehknopf"
+          },
+          "lengthM": 0.021,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -135,
+            "maxDeg": 135
+          },
+          "mass": {
+            "kg": 0.025,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-screw-top",
+        "bone": "housing",
+        "x": 0,
+        "y": 0.034,
+        "kind": "support",
+        "title": {
+          "en": "Upper screw in the wall box",
+          "de": "Obere Schraube in der Unterputzdose"
+        },
+        "support": "pin",
+        "normalDeg": 0,
+        "footprintLengthM": 0.012,
+        "footprintWidthM": 0.012
+      },
+      {
+        "id": "wall-screw-bottom",
+        "bone": "housing",
+        "x": 0,
+        "y": -0.034,
+        "kind": "support",
+        "title": {
+          "en": "Lower screw in the wall box",
+          "de": "Untere Schraube in der Unterputzdose"
+        },
+        "support": "roller",
+        "normalDeg": 0,
+        "footprintLengthM": 0.012,
+        "footprintWidthM": 0.012,
+        "frictionCoefficient": 0.4
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "housing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.045,
+              "w": 0.09,
+              "h": 0.09,
+              "r": 0.008,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "display",
+              "bone": "housing",
+              "role": "glazing",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "rect",
+              "x": -0.018,
+              "y": 0.016,
+              "w": 0.036,
+              "h": 0.021,
+              "region": "display",
+              "material": "lcd-glass"
+            },
+            {
+              "id": "led",
+              "bone": "housing",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0.0315,
+              "cy": 0.0265,
+              "rx": 0.0035,
+              "ry": 0.0035,
+              "region": "led",
+              "material": "led-lens"
+            },
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.021,
+              "ry": 0.021,
+              "region": "dial",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "pointer",
+              "bone": "dial",
+              "role": "detail",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.95,
+              "kind": "rect",
+              "x": -0.0055,
+              "y": 0.004,
+              "w": 0.011,
+              "h": 0.0145,
+              "region": "dial",
+              "material": "abs-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.021,
+              "ry": 0.021,
+              "region": "dial",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0135,
+                "z1": -0.0015
+              }
+            },
+            {
+              "id": "housing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.0015,
+              "w": 0.09,
+              "h": 0.015,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "housing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.0015,
+              "y": -0.045,
+              "w": 0.015,
+              "h": 0.09,
+              "r": 0.004,
+              "region": "casing",
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.021,
+              "ry": 0.021,
+              "region": "dial",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0135,
+                "z1": -0.0015
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 90 mm square wall thermostat seen face-on, 1.8 mm on paper: a rounded housing with a dark display window, a small lamp and a round set-point dial with a pointer. Front view: the 0.09 m high wall slab, 0.015 m thick, with the dial standing 0.012 m proud of its right-hand face; the front view of the wall side is on the left. Top view: the same slab 0.09 m wide with the dial 0.042 m wide.",
+            "de": "Ein quadratischer Raumthermostat von 90 mm in der Frontansicht, auf Papier 1,8 mm: ein Gehäuse mit gerundeten Ecken, ein dunkles Anzeigefenster, eine kleine Lampe und ein runder Sollwert-Drehknopf mit Zeiger. Vorderansicht: die 0,09 m hohe Wandplatte von 0,015 m Dicke mit dem Drehknopf, der 0,012 m aus der rechten Fläche ragt; die Wandseite liegt links. Draufsicht: dieselbe Platte, 0,09 m breit, mit dem 0,042 m breiten Drehknopf."
+          },
+          "retained": {
+            "en": "Housing of 0.09 m, display window of 36 by 21 mm, lamp of 7 mm, dial of 42 mm and the 11 mm pointer that turns with the dial bone.",
+            "de": "Gehäuse von 0,09 m, Anzeigefenster von 36 mal 21 mm, Lampe von 7 mm, Drehknopf von 42 mm und der 11 mm breite Zeiger, der sich mit dem Knopf dreht."
+          },
+          "merged": {
+            "en": "Nothing is merged: housing, display, lamp and dial each carry their own region.",
+            "de": "Nichts wird zusammengefasst: Gehäuse, Anzeige, Lampe und Drehknopf tragen je eine eigene Region."
+          },
+          "omitted": {
+            "en": "The scale ticks, the digits on the display, the screws and the wall-plate seam. Front and top view omit the display, the LED and the pointer, which lie on the right-hand face and are seen edge-on there.",
+            "de": "Die Skalenstriche, die Ziffern der Anzeige, die Schrauben und die Fuge zur Wandplatte. Vorder- und Draufsicht lassen Anzeige, Leuchtdiode und Zeiger weg, die auf der rechten Fläche liegen und dort nur von der Kante zu sehen wären."
+          },
+          "thinElements": {
+            "en": "The pointer is 11 mm wide (0.22 mm on paper) and filled, so that it stays above the feature width when the dial turns.",
+            "de": "Der Zeiger ist 11 mm breit (0,22 mm auf Papier) und gefüllt, damit er beim Drehen über der Mindestbreite bleibt."
+          },
+          "hatching": {
+            "en": "None; the display is a dark tone.",
+            "de": "Keine; die Anzeige ist ein dunkler Ton."
+          },
+          "styles": {
+            "en": "Housing 0.9, dial 0.62, pointer 0.95, display 0.12, lamp 0.35; body pen 0.18 mm, detail and glazing 0.13 mm, ground 0.35 mm.",
+            "de": "Gehäuse 0,9, Drehknopf 0,62, Zeiger 0,95, Anzeige 0,12, Lampe 0,35; Körperstift 0,18 mm, Detail und Verglasung 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Housing, display, lamp and dial are four regions: in the thermal view the housing warms with the electronics and the lamp glows when the relay is closed; the dial turns with its bone.",
+            "de": "Gehäuse, Anzeige, Lampe und Drehknopf sind vier Regionen: in der Thermalansicht erwärmt sich das Gehäuse mit der Elektronik, und die Lampe leuchtet bei geschlossenem Relais; der Knopf dreht sich mit seinem Knochen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "housing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.045,
+              "w": 0.09,
+              "h": 0.09,
+              "r": 0.008,
+              "regions": [
+                "casing",
+                "display",
+                "led"
+              ],
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.024,
+              "ry": 0.024,
+              "region": "dial",
+              "material": "abs-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.024,
+              "ry": 0.024,
+              "region": "dial",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0265,
+                "z1": -0.0065
+              }
+            },
+            {
+              "id": "housing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.0065,
+              "w": 0.09,
+              "h": 0.02,
+              "r": 0.004,
+              "regions": [
+                "casing",
+                "display",
+                "led"
+              ],
+              "material": "abs-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "housing",
+              "bone": "housing",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.0065,
+              "y": -0.045,
+              "w": 0.02,
+              "h": 0.09,
+              "r": 0.004,
+              "regions": [
+                "casing",
+                "display",
+                "led"
+              ],
+              "material": "abs-plastic"
+            },
+            {
+              "id": "dial",
+              "bone": "dial",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.024,
+              "ry": 0.024,
+              "region": "dial",
+              "material": "abs-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.0265,
+                "z1": -0.0065
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.9 mm square with a dark round dial. Front view: the wall slab with the dial thickened to 0.022 m so it stays above the feature width. Top view: the slab 0.09 m wide with the 0.048 m dial in front of it.",
+            "de": "Ein Quadrat von 0,9 mm mit einem dunklen runden Drehknopf. Vorderansicht: die Wandplatte mit dem auf 0,022 m verdickten Drehknopf, damit er über der Mindestbreite bleibt. Draufsicht: die 0,09 m breite Platte mit dem 0,048 m breiten Drehknopf davor."
+          },
+          "retained": {
+            "en": "Housing and the round dial that carries the set point.",
+            "de": "Gehäuse und der runde Drehknopf, der den Sollwert trägt."
+          },
+          "merged": {
+            "en": "Display and lamp join the housing (it carries their regions); the pointer joins the dial.",
+            "de": "Anzeige und Lampe gehen im Gehäuse auf (es trägt ihre Regionen); der Zeiger geht im Drehknopf auf."
+          },
+          "omitted": {
+            "en": "Display window, lamp and pointer: the turning of the dial is not drawn at this scale. Front and top view show slab and dial only; the slab is 0.020 m thick instead of 0.015 m and the dial stands 0.020 m proud instead of 0.012 m, so that both reach the 0.2 mm feature width and the depth stays within 0.04 m.",
+            "de": "Anzeigefenster, Lampe und Zeiger: das Drehen des Knopfs wird bei diesem Maßstab nicht gezeichnet. Vorder- und Draufsicht zeigen nur Platte und Drehknopf; die Platte ist 0,020 m statt 0,015 m dick und der Knopf steht 0,020 m statt 0,012 m vor, damit beide die Merkmalsbreite von 0,2 mm erreichen und die Tiefe innerhalb von 0,04 m bleibt."
+          },
+          "thinElements": {
+            "en": "The dial is widened to 48 mm (0.48 mm on paper) so that it prints as a filled disc.",
+            "de": "Der Drehknopf ist auf 48 mm (0,48 mm auf Papier) verbreitert, damit er als gefüllte Scheibe druckt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Housing 0.9, dial 0.45; one body pen of 0.18 mm.",
+            "de": "Gehäuse 0,9, Drehknopf 0,45; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The housing carries casing, display and lamp; the dial keeps its region.",
+            "de": "Das Gehäuse trägt Gehäuse, Anzeige und Lampe; der Drehknopf behält seine Region."
+          }
+        }
+      },
+      "200": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 200,
+        "reason": {
+          "en": "At 1:200 the 90 mm thermostat is 0.45 x 0.45 mm on paper, under the 3 mm an asset needs to be drawn. The dial (42 mm = 0.21 mm) just reaches the 0.2 mm feature width of the office laser profile, but the index mark (10 mm = 0.05 mm), the pointer (4 mm = 0.02 mm) and the 0.15 mm gap between dial and collar are below it, so the face would print as two touching discs; use the 1:100 or 1:50 drawing at this scale.",
+          "de": "Bei 1:200 ist der 90 mm große Thermostat 0,45 x 0,45 mm auf dem Papier, unter den 3 mm, die ein Objekt zum Zeichnen braucht. Der Drehknopf (42 mm = 0,21 mm) erreicht die Merkmalsbreite von 0,2 mm des Büro-Laser-Profils gerade, aber Index (10 mm = 0,05 mm), Zeiger (4 mm = 0,02 mm) und die Lücke von 0,15 mm zwischen Knopf und Kragen liegen darunter, das Gesicht druckte also als zwei sich berührende Scheiben; bei diesem Maßstab dient die Zeichnung 1:100 oder 1:50."
+        },
+        "limitingFeature": {
+          "en": "Index mark and pointer (10 mm = 0.05 mm, 4 mm = 0.02 mm)",
+          "de": "Indexmarke und Zeiger (10 mm = 0,05 mm, 4 mm = 0,02 mm)"
+        },
+        "limitingSizeM": 0.004,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 100
+          },
+          {
+            "kind": "scale",
+            "denominator": 50
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "cause": "below-printable-feature",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the 90 mm thermostat is 0.18 x 0.18 mm on paper, under the 3 mm an asset needs to be drawn. Its dial (42 mm = 0.084 mm) is below the feature width of every print profile (0.12 mm on plot, 0.2 mm on office laser), so only a speck would remain; use the 1:100 or 1:50 drawing.",
+          "de": "Bei 1:500 ist der 90 mm große Thermostat 0,18 x 0,18 mm auf dem Papier, unter den 3 mm, die ein Objekt zum Zeichnen braucht. Sein Drehknopf (42 mm = 0,084 mm) liegt unter der Merkmalsbreite jedes Druckprofils (0,12 mm Plot, 0,2 mm Büro-Laser), es bliebe nur ein Fleck; es dient die Zeichnung 1:100 oder 1:50."
+        },
+        "limitingFeature": {
+          "en": "Dial of 42 mm diameter (0.084 mm)",
+          "de": "Drehknopf von 42 mm Durchmesser (0,084 mm)"
+        },
+        "limitingSizeM": 0.042,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 100
+          },
+          {
+            "kind": "scale",
+            "denominator": 50
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "idle",
+        "title": {
+          "en": "Set point reached",
+          "de": "Sollwert erreicht"
+        },
+        "description": {
+          "en": "The dial stands at 20 degrees; the room is warm enough, the relay is open and the electronics idle at 0.14 W.",
+          "de": "Der Knopf steht auf 20 Grad; der Raum ist warm genug, das Relais ist offen und die Elektronik läuft im Leerlauf mit 0,14 W."
+        },
+        "bones": {
+          "dial": {
+            "angleDeg": -27
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "display": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "led": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "dial": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "electronics": 0.2
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 1.5
+        }
+      },
+      {
+        "id": "calling",
+        "title": {
+          "en": "Calling for heat",
+          "de": "Wärmeanforderung"
+        },
+        "description": {
+          "en": "The dial stands at 22 degrees; the room is colder than that, the relay is closed, the lamp glows and the thermostat takes 0.7 W.",
+          "de": "Der Knopf steht auf 22 Grad; der Raum ist kälter, das Relais ist geschlossen, die Lampe leuchtet und der Thermostat nimmt 0,7 W auf."
+        },
+        "bones": {
+          "dial": {
+            "angleDeg": -48.6
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "display": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "led": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "dial": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "electronics": 1
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 1.5
+        }
+      },
+      {
+        "id": "set-high",
+        "title": {
+          "en": "Turned up to 24 degrees",
+          "de": "Auf 24 Grad gedreht"
+        },
+        "description": {
+          "en": "The dial stands at 24 degrees and the relay stays closed until the room has caught up.",
+          "de": "Der Knopf steht auf 24 Grad und das Relais bleibt geschlossen, bis der Raum nachgezogen hat."
+        },
+        "bones": {
+          "dial": {
+            "angleDeg": -70.2
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "wall-screw-top",
+          "wall-screw-bottom"
+        ],
+        "thermal": {
+          "regions": {
+            "casing": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 21
+              }
+            },
+            "display": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "led": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "dial": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {},
+          "operating": {
+            "electronics": 1
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 1.5
+        }
+      }
+    ],
+    "clips": [
+      {
+        "id": "turn-up",
+        "title": {
+          "en": "Turning the set point up",
+          "de": "Sollwert hochdrehen"
+        },
+        "description": {
+          "en": "The dial rests at 20 degrees, is turned to 24 degrees between 1.5 and 4 seconds, and the relay closes the moment the set point lies above the room temperature.",
+          "de": "Der Knopf steht auf 20 Grad, wird zwischen 1,5 und 4 Sekunden auf 24 Grad gedreht, und das Relais schließt, sobald der Sollwert über der Raumtemperatur liegt."
+        },
+        "durationS": 6,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "idle",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "set-high",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "set-high",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "rest",
+            "fromS": 0,
+            "toS": 1.5,
+            "title": {
+              "en": "At rest",
+              "de": "In Ruhe"
+            }
+          },
+          {
+            "id": "turn",
+            "fromS": 1.5,
+            "toS": 4,
+            "title": {
+              "en": "Turning",
+              "de": "Drehen"
+            }
+          },
+          {
+            "id": "call",
+            "fromS": 4,
+            "toS": 6,
+            "title": {
+              "en": "Relay closed",
+              "de": "Relais geschlossen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3.6,
+            "kind": "operating",
+            "title": {
+              "en": "Relay closes",
+              "de": "Relais schließt"
+            },
+            "target": "electronics"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:electronics",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.2
+              },
+              {
+                "t": 3.6,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "heating-cycle",
+        "title": {
+          "en": "Two-point control cycle",
+          "de": "Zweipunktregelung"
+        },
+        "description": {
+          "en": "The relay is closed for 90 seconds while the room warms up, opens for 150 seconds and closes again for the last 60 seconds; the electronics warm and cool a little with it.",
+          "de": "Das Relais ist 90 Sekunden geschlossen, während sich der Raum erwärmt, öffnet 150 Sekunden lang und schließt in den letzten 60 Sekunden wieder; die Elektronik erwärmt und kühlt sich dabei leicht."
+        },
+        "durationS": 300,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "calling",
+            "ease": "step"
+          },
+          {
+            "t": 90,
+            "pose": "idle",
+            "ease": "step"
+          },
+          {
+            "t": 240,
+            "pose": "calling",
+            "ease": "step"
+          },
+          {
+            "t": 300,
+            "pose": "calling",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wall-screw-top",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "wall-screw-bottom",
+            "fromS": 0,
+            "toS": 300
+          }
+        ],
+        "phases": [
+          {
+            "id": "on",
+            "fromS": 0,
+            "toS": 90,
+            "title": {
+              "en": "Heating call",
+              "de": "Wärmeanforderung"
+            }
+          },
+          {
+            "id": "off",
+            "fromS": 90,
+            "toS": 240,
+            "title": {
+              "en": "Set point reached",
+              "de": "Sollwert erreicht"
+            }
+          },
+          {
+            "id": "on-again",
+            "fromS": 240,
+            "toS": 300,
+            "title": {
+              "en": "Heating call again",
+              "de": "Erneute Anforderung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 90,
+            "kind": "shutdown",
+            "title": {
+              "en": "Relay opens",
+              "de": "Relais öffnet"
+            },
+            "target": "electronics"
+          },
+          {
+            "t": 240,
+            "kind": "operating",
+            "title": {
+              "en": "Relay closes again",
+              "de": "Relais schließt wieder"
+            },
+            "target": "electronics"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:electronics",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 90,
+                "v": 0.2
+              },
+              {
+                "t": 240,
+                "v": 1
+              },
+              {
+                "t": 300,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "electronics",
+          "title": {
+            "en": "Control electronics",
+            "de": "Regelelektronik"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Unpowered",
+                "de": "Ohne Spannung"
+              }
+            },
+            {
+              "v": 0.2,
+              "title": {
+                "en": "Idle, relay open (0.14 W)",
+                "de": "Leerlauf, Relais offen (0,14 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Heating call, relay closed (0.7 W)",
+                "de": "Heizanforderung, Relais geschlossen (0,7 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Housing",
+            "de": "Gehäuse"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "abs-plastic",
+          "areaM2": 0.012,
+          "characteristicLengthM": 0.09,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "ABS shell 2 mm",
+                "de": "ABS-Schale 2 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.012,
+              "heatCapacityJM2K": 2000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2000,
+          "operating": {
+            "key": "electronics",
+            "heatW": 0.7
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "display",
+          "title": {
+            "en": "Display window",
+            "de": "Anzeigefenster"
+          },
+          "kind": "glazing",
+          "model": "passive",
+          "material": "lcd-glass",
+          "areaM2": 0.00076,
+          "characteristicLengthM": 0.036,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "glass",
+              "title": {
+                "en": "Glass 1 mm",
+                "de": "Glas 1 mm"
+              },
+              "kind": "glass",
+              "material": "lcd-glass",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.001,
+              "heatCapacityJM2K": 2000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "led",
+          "title": {
+            "en": "Heating-call lamp",
+            "de": "Heizanforderungs-Lampe"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "led-lens",
+          "areaM2": 0.0001,
+          "characteristicLengthM": 0.007,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "lens",
+              "title": {
+                "en": "Epoxy lens 2 mm",
+                "de": "Epoxidlinse 2 mm"
+              },
+              "kind": "polymer",
+              "material": "led-lens",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 2000,
+          "operating": {
+            "key": "electronics",
+            "heatW": 0.005
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "dial",
+          "title": {
+            "en": "Set-point dial",
+            "de": "Sollwert-Drehknopf"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "abs-plastic",
+          "areaM2": 0.0033,
+          "characteristicLengthM": 0.042,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "knob",
+              "title": {
+                "en": "ABS knob 3 mm",
+                "de": "ABS-Knopf 3 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.018,
+              "heatCapacityJM2K": 3000,
+              "source": "authored-estimate",
+              "reference": "incropera-2018"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "All of the electronic load ends as heat in the housing: 0.7 W with the relay closed, which holds the surface a few kelvin above the room; the lamp adds 5 mW at its lens.",
+          "de": "Die gesamte elektrische Last endet als Wärme im Gehäuse: 0,7 W bei geschlossenem Relais, was die Oberfläche einige Kelvin über dem Raum hält; die Lampe fügt 5 mW an ihrer Linse hinzu."
+        },
+        {
+          "en": "The sensor sits in the housing, so its reading is biased by the self-heating; the model reports the surface temperatures only and does not model the control loop.",
+          "de": "Der Fühler sitzt im Gehäuse, seine Anzeige wird also von der Eigenerwärmung verfälscht; das Modell gibt nur die Oberflächentemperaturen an und bildet den Regelkreis nicht nach."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-screw-top",
+        "wall-screw-bottom"
+      ],
+      "assumptions": [
+        {
+          "en": "The 0.135 kg thermostat hangs on the upper screw (pin) and leans against the wall at the lower screw (roller); the pair carries the weight and the small overturning moment of the 27 mm deep housing.",
+          "de": "Der 0,135 kg schwere Thermostat hängt an der oberen Schraube (Festlager) und lehnt an der unteren Schraube an der Wand (Rollenlager); das Paar trägt das Gewicht und das kleine Kippmoment des 27 mm tiefen Gehäuses."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "calling",
+      "defaultClip": "turn-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

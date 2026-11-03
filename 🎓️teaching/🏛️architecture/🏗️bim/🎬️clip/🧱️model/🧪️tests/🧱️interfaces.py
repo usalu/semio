@@ -72,7 +72,7 @@ class WallInterfaces(unittest.TestCase):
         json.dumps(parts)
     def test_native_cache_tracks_geometry_producer_identity(self):
         from unittest.mock import patch
-        case=json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf8'));backend=api._surface_finishes();source=api.load_model()
+        case=json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf8'));backend=api.surface_finishes();source=api.load_model()
         native={**case['cutter'],**api._polyhedron_part(case['cutter']['mesh']['vertices'],case['cutter']['mesh']['faces']),'owner':case['owner']}
         for name in case['cache_producers']:
             for scope in ('native','wall'):

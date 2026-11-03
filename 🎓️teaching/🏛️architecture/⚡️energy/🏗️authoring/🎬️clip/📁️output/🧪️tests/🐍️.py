@@ -26,16 +26,17 @@ class OutputTest(unittest.TestCase):
             narration = [(case["key"], case["english"], case["german"])]
             source.write_text(f"class {case['scene']}:\n    NARRATION = {narration!r}\n", encoding="utf-8")
             with patch.dict(os.environ, {"SEMIO_TEACHING_OUTPUT_ROOT": str(folder)}), patch.object(runtime, "teaching_root", return_value=folder):
-                clause = output.speech_root(folder) / case["file"]
+                owner = output.speech_root(folder)
+                clause = owner.parent / case["language"] / owner.name / case["file"]
                 clause.parent.mkdir(parents=True)
                 with wave.open(str(clause), "wb") as audio:
                     audio.setparams((1, 2, 8000, 0, "NONE", "not compressed"))
                     audio.writeframes(b"\0" * 1600)
                 segment = {"script": "scene.py", "scene": case["scene"]}
-                self.assertEqual(runtime.source_narration(segment), [(case["key"], clause)])
-                before = runtime.segment_state(segment, {})
+                self.assertEqual(runtime.source_narration(segment, language=case["language"]), [(case["key"], clause)])
+                before = runtime.segment_state(segment, {"language": case["language"]})
                 clause.write_bytes(clause.read_bytes() + b"\0\0")
-                self.assertNotEqual(before, runtime.segment_state(segment, {}))
+                self.assertNotEqual(before, runtime.segment_state(segment, {"language": case["language"]}))
 
     def test_narration_writers_and_composition_readers_share_generated_paths(self):
         output = importlib.import_module(MODULE)

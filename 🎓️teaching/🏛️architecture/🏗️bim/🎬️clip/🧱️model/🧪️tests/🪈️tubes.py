@@ -79,7 +79,7 @@ class HollowTubes(unittest.TestCase):
             route=profiles.hollow_polyline(row['points'],case['diameter'],case['gauge'],n,exact=True)
             for a,planes in zip(route['outer'],route['cap_planes'][1:]):
                 self.assertTrue(any(all(sum(plane['normal'][k]*(p[k]-plane['point'][k])for k in range(3))>=0 for p in a['mesh']['vertices'])for plane in planes))
-                self.assertTrue(api._surface_finishes().stock_separated(a,planes))
+                self.assertTrue(api.surface_finishes().stock_separated(a,planes))
 
     def test_route_anchor_preserves_exact_rail_intersection_after_terminal_inset(self):
         from fractions import Fraction

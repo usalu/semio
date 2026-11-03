@@ -1,0 +1,2885 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "electric-fan-heater",
+    "category": "appliances",
+    "title": {
+      "en": "Electric Fan Heater",
+      "de": "Elektrischer Heizlüfter"
+    },
+    "summary": {
+      "en": "A portable 2000 W fan heater, 0.31 m high, in two 1000 W stages: the fan blows 0.032 m3/s of air warmed by about 50 K out of the front grille as a warm jet, while grille, top cover and housing release the remaining 75 W.",
+      "de": "Ein tragbarer Heizlüfter von 2000 W, 0,31 m hoch, in zwei Stufen zu je 1000 W: Der Lüfter bläst 0,032 m3/s um etwa 50 K erwärmte Luft als warmen Strahl aus dem vorderen Gitter, während Gitter, Haube und Gehäuse die restlichen 75 W abgeben."
+    },
+    "tags": [
+      "fan-heater",
+      "heater",
+      "appliance",
+      "internal-gain",
+      "electric",
+      "heat-source",
+      "air-jet"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A4)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-60335-2-30",
+          "citation": "IEC 60335-2-30 Household and similar electrical appliances - Safety - Part 2-30: Particular requirements for room heaters (product class; fan heaters of 1000 and 2000 W stages)."
+        },
+        {
+          "id": "eu-2015-1188",
+          "citation": "Commission Regulation (EU) 2015/1188 implementing Directive 2009/125/EC with regard to ecodesign requirements for local space heaters (portable electric fan heaters fall into its scope; the full input leaves as heat in the room)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (jets, emissivities, convection)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (polymers, steel)."
+        }
+      ],
+      "notes": {
+        "en": "Side view of a typical upright portable fan heater (no single product): 0.196 m x 0.24 m x 0.272 m housing plus a 0.038 m handle, feet 0.016 m, mass 1.5 kg, rated 2000 W in two stages (class of IEC 60335-2-30). All 2000 W end up in the room: 1925 W as warm air (2 x 0.016 m3/s at 49 K and 51 K rise), 20 W in the outlet grille, 22 W in the top cover and 33 W in the housing; the split is an authored estimate that keeps the plastic cover near 65 degC and the grille bars near 70 degC. Each stage owns one emitter and one operating key, because the emitter model scales flow and temperature rise together with its strength, so one emitter at half strength would carry only a quarter of the heat.",
+        "de": "Seitenansicht eines typischen stehenden tragbaren Heizlüfters (kein einzelnes Produkt): Gehäuse 0,196 m x 0,24 m x 0,272 m plus 0,038 m Griff, Füße 0,016 m, Masse 1,5 kg, Nennleistung 2000 W in zwei Stufen (Klasse der IEC 60335-2-30). Alle 2000 W landen im Raum: 1925 W als Warmluft (2 x 0,016 m3/s bei 49 K und 51 K Anstieg), 20 W im Auslassgitter, 22 W in der Haube und 33 W im Gehäuse; die Aufteilung ist ein Schätzwert, der die Kunststoffhaube bei etwa 65 degC und die Gitterstäbe bei etwa 70 degC hält. Jede Stufe hat einen eigenen Emitter und einen eigenen Betriebsschlüssel, weil das Emittermodell Volumenstrom und Temperaturanstieg gemeinsam mit seiner Stärke skaliert, ein Emitter bei halber Stärke also nur ein Viertel der Wärme trüge."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.31,
+      "widthM": 0.196,
+      "depthM": 0.24,
+      "massKg": 1.5
+    },
+    "materials": [
+      {
+        "id": "abs-cream",
+        "title": {
+          "en": "Cream ABS housing",
+          "de": "Cremefarbenes ABS-Gehäuse"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "pc-heat",
+        "title": {
+          "en": "Heat-stabilised polycarbonate grille",
+          "de": "Hitzestabilisiertes Polycarbonat-Gitter"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.85,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "steel-mesh",
+        "title": {
+          "en": "Black-painted steel grille",
+          "de": "Schwarz lackiertes Stahlgitter"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "pp-dial",
+        "title": {
+          "en": "Dark polypropylene",
+          "de": "Dunkles Polypropylen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 900,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "rubber-foot",
+        "title": {
+          "en": "Rubber foot",
+          "de": "Gummifuß"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 2000,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "body",
+      "bones": [
+        {
+          "id": "body",
+          "parent": null,
+          "title": {
+            "en": "Housing with grilles, handle and feet",
+            "de": "Gehäuse mit Gittern, Griff und Füßen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.31,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.47,
+            "comX": 0,
+            "comY": 0.14,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "iec-60335-2-30"
+          }
+        },
+        {
+          "id": "knob",
+          "parent": "body",
+          "title": {
+            "en": "Thermostat dial",
+            "de": "Thermostatregler"
+          },
+          "x": 0,
+          "y": 0.185,
+          "angleDeg": 0,
+          "lengthM": 0.024,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 270
+          },
+          "mass": {
+            "kg": 0.03,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-back",
+        "bone": "body",
+        "x": -0.058,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Rear foot",
+          "de": "Hinterer Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.035,
+        "footprintWidthM": 0.04,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "foot-front",
+        "bone": "body",
+        "x": 0.058,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front foot",
+          "de": "Vorderer Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.035,
+        "footprintWidthM": 0.04,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "outlet",
+        "bone": "body",
+        "x": 0.098,
+        "y": 0.145,
+        "kind": "emitter",
+        "title": {
+          "en": "Warm air outlet in the front grille",
+          "de": "Warmluftauslass im vorderen Gitter"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-back",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0,
+              "w": 0.035,
+              "h": 0.016,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-front",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0,
+              "w": 0.035,
+              "h": 0.016,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "handle",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M -0.045 0.268 C -0.045 0.3 -0.04 0.31 -0.02 0.31 L 0.03 0.31 C 0.05 0.31 0.055 0.3 0.055 0.268 Z",
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "handle-opening",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.028,
+              "y": 0.278,
+              "w": 0.065,
+              "h": 0.02,
+              "r": 0.008,
+              "region": "casing"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.09 0.032 C -0.09 0.022 -0.085 0.016 -0.075 0.016 L 0.08 0.016 C 0.09 0.016 0.095 0.022 0.095 0.032 L 0.095 0.25 C 0.095 0.265 0.088 0.272 0.075 0.272 L -0.07 0.272 C -0.083 0.272 -0.09 0.265 -0.09 0.25 Z",
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "top-cover",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.09 0.25 L 0.095 0.25 C 0.095 0.265 0.088 0.272 0.075 0.272 L -0.07 0.272 C -0.083 0.272 -0.09 0.265 -0.09 0.25 Z",
+              "region": "top-cover",
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.078,
+              "y": 0.06,
+              "w": 0.02,
+              "h": 0.17,
+              "r": 0.004,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.075
+                ],
+                [
+                  0.098,
+                  0.066
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.095
+                ],
+                [
+                  0.098,
+                  0.08600000000000001
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.11499999999999999
+                ],
+                [
+                  0.098,
+                  0.106
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.135
+                ],
+                [
+                  0.098,
+                  0.126
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.155
+                ],
+                [
+                  0.098,
+                  0.146
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-5",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.175
+                ],
+                [
+                  0.098,
+                  0.16599999999999998
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-6",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.195
+                ],
+                [
+                  0.098,
+                  0.186
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-7",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.21500000000000002
+                ],
+                [
+                  0.098,
+                  0.20600000000000002
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "inlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.098,
+              "y": 0.05,
+              "w": 0.01,
+              "h": 0.16,
+              "r": 0.003,
+              "region": "intake",
+              "material": "pc-heat"
+            },
+            {
+              "id": "inlet-slot-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.06
+                ],
+                [
+                  -0.088,
+                  0.06
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "inlet-slot-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.08166666666666667
+                ],
+                [
+                  -0.088,
+                  0.08166666666666667
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "inlet-slot-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.10333333333333333
+                ],
+                [
+                  -0.088,
+                  0.10333333333333333
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "inlet-slot-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.125
+                ],
+                [
+                  -0.088,
+                  0.125
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "inlet-slot-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.14666666666666667
+                ],
+                [
+                  -0.088,
+                  0.14666666666666667
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "inlet-slot-5",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.16833333333333333
+                ],
+                [
+                  -0.088,
+                  0.16833333333333333
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "inlet-slot-6",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.098,
+                  0.19
+                ],
+                [
+                  -0.088,
+                  0.19
+                ]
+              ],
+              "closed": false,
+              "region": "intake"
+            },
+            {
+              "id": "seam-lower",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.09,
+                  0.045
+                ],
+                [
+                  0.095,
+                  0.045
+                ]
+              ],
+              "closed": false,
+              "region": "casing"
+            },
+            {
+              "id": "highlight",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.06,
+                  0.255
+                ],
+                [
+                  -0.06,
+                  0.2
+                ]
+              ],
+              "closed": false,
+              "region": "casing"
+            },
+            {
+              "id": "dial",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.024,
+              "ry": 0.024,
+              "region": "control",
+              "material": "pp-dial"
+            },
+            {
+              "id": "dial-hub",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.012,
+              "ry": 0.012,
+              "region": "control"
+            },
+            {
+              "id": "dial-pointer",
+              "bone": "knob",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.006
+                ],
+                [
+                  0,
+                  0.022
+                ]
+              ],
+              "closed": false,
+              "region": "control"
+            },
+            {
+              "id": "mode-switch",
+              "bone": "body",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.02,
+              "y": 0.092,
+              "w": 0.04,
+              "h": 0.02,
+              "r": 0.006,
+              "region": "control",
+              "material": "pp-dial"
+            },
+            {
+              "id": "mode-mark",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.01,
+                  0.102
+                ],
+                [
+                  0.01,
+                  0.102
+                ]
+              ],
+              "closed": false,
+              "region": "control"
+            }
+          ],
+          "plan": [
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.115,
+              "w": 0.185,
+              "h": 0.235,
+              "r": 0.02,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "top-cover",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.08,
+              "y": -0.105,
+              "w": 0.165,
+              "h": 0.215,
+              "r": 0.015,
+              "region": "top-cover",
+              "material": "abs-cream"
+            },
+            {
+              "id": "handle",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.065,
+              "w": 0.1,
+              "h": 0.13,
+              "r": 0.015,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "handle-grip",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.005,
+                  -0.055
+                ],
+                [
+                  0.005,
+                  0.055
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.078,
+              "y": -0.105,
+              "w": 0.02,
+              "h": 0.21,
+              "r": 0.004,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "inlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.098,
+              "y": -0.105,
+              "w": 0.01,
+              "h": 0.21,
+              "r": 0.003,
+              "region": "intake",
+              "material": "pc-heat"
+            },
+            {
+              "id": "dial",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.024,
+              "y": -0.12,
+              "w": 0.048,
+              "h": 0.005,
+              "region": "control",
+              "material": "pp-dial"
+            },
+            {
+              "id": "highlight",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.06,
+                  0.1
+                ],
+                [
+                  -0.06,
+                  -0.1
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-cream"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.07,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.016,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.016,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "handle",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0.268,
+              "w": 0.13,
+              "h": 0.042,
+              "r": 0.012,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.115,
+              "y": 0.016,
+              "w": 0.235,
+              "h": 0.256,
+              "r": 0.02,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "top-cover",
+              "bone": "body",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.115,
+              "y": 0.25,
+              "w": 0.235,
+              "h": 0.022,
+              "r": 0.01,
+              "region": "top-cover",
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.06,
+              "w": 0.21,
+              "h": 0.17,
+              "r": 0.004,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.075
+                ],
+                [
+                  0.1,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.095
+                ],
+                [
+                  0.1,
+                  0.095
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.115
+                ],
+                [
+                  0.1,
+                  0.115
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.135
+                ],
+                [
+                  0.1,
+                  0.135
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-4",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.155
+                ],
+                [
+                  0.1,
+                  0.155
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-5",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.175
+                ],
+                [
+                  0.1,
+                  0.175
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-6",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.195
+                ],
+                [
+                  0.1,
+                  0.195
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-7",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.215
+                ],
+                [
+                  0.1,
+                  0.215
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "seam-lower",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.115,
+                  0.045
+                ],
+                [
+                  0.12,
+                  0.045
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "dial",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0.161,
+              "w": 0.005,
+              "h": 0.048,
+              "region": "control",
+              "material": "pp-dial"
+            },
+            {
+              "id": "handle-grip",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.289
+                ],
+                [
+                  0.05,
+                  0.289
+                ]
+              ],
+              "closed": false,
+              "region": "casing",
+              "material": "abs-cream"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fan heater 3.9 mm wide and 6.2 mm high in side view: a cream upright housing with a carry handle, a protruding louvred outlet grille at the front, a ribbed inlet grille at the back, a thermostat dial with pointer and a mode switch on the side wall, on two rubber feet. Front, 4.8 mm by 6.2 mm on paper: the broad cream housing with a rounded top cover, the handle bar, the louvred outlet grille with eight louvre lines, two rubber feet and the dial standing out of the right wall. Plan, 3.9 mm by 4.8 mm: housing and top cover, the handle bar, the outlet grille at the front, the inlet grille at the back, the dial bump on the right wall and a highlight along the top.",
+            "de": "Ein Heizlüfter, in der Seitenansicht 3,9 mm breit und 6,2 mm hoch: ein cremefarbenes stehendes Gehäuse mit Tragegriff, ein vorstehendes Lamellengitter als Auslass vorn, ein geschlitztes Einlassgitter hinten, ein Thermostatregler mit Zeiger und ein Betriebsartenschalter an der Seitenwand, auf zwei Gummifüßen. Vorderansicht, 4,8 mm auf 6,2 mm: das breite cremefarbene Gehäuse mit gerundeter Oberschale, der Tragegriff, das Auslassgitter mit acht Lamellenlinien, zwei Gummifüße und der Drehknopf, der aus der rechten Wand steht. Grundriss, 3,9 mm auf 4,8 mm: Gehäuse und Oberschale, der Tragegriff, das Auslassgitter vorn, das Eintrittsgitter hinten, der Knopfwulst an der rechten Wand und ein Glanzstrich oben."
+          },
+          "retained": {
+            "en": "Width 0.196 m, height 0.31 m, feet 0.016 m, the 3 mm protrusion of the outlet grille and the 10 mm of the inlet grille; eight louvre fins at an angle, seven inlet slots, handle opening, lower seam, top-cover edge, dial pointer.",
+            "de": "Breite 0,196 m, Höhe 0,31 m, Füße 0,016 m, die 3 mm Auskragung des Auslassgitters und die 10 mm des Einlassgitters; acht schräge Lamellen, sieben Einlassschlitze, Griffloch, untere Fuge, Haubenkante, Reglerzeiger."
+          },
+          "merged": {
+            "en": "Handle and housing keep one region; the two grille frames and their bars are one shape each.",
+            "de": "Griff und Gehäuse behalten eine Region; die zwei Gitterrahmen und ihre Stäbe sind je eine Form."
+          },
+          "omitted": {
+            "en": "Mains cable, tip-over switch, label, side vent slots, fan blades inside. The mode switch is omitted in front and plan (below 0.01 m); the handle opening is not seen from the front or from above.",
+            "de": "Netzkabel, Kippschalter, Typenschild, seitliche Lüftungsschlitze, Lüfterflügel im Inneren. Der Betriebsartenschalter entfällt in Vorderansicht und Grundriss (unter 0,01 m); die Grifföffnung ist von vorn und von oben nicht zu sehen."
+          },
+          "thinElements": {
+            "en": "Louvre fins and inlet slots are 0.13 mm strokes at 0.02 m (0.4 mm) spacing; the grille frames are 0.01-0.02 m = 0.2-0.4 mm.",
+            "de": "Lamellen und Einlassschlitze sind 0,13-mm-Striche im Abstand 0,02 m (0,4 mm); die Gitterrahmen sind 0,01-0,02 m = 0,2-0,4 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Housing 0.78, handle 0.75, top cover 0.6, grille 0.2, inlet 0.3, controls 0.2, feet 0.15; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Gehäuse 0,78, Griff 0,75, Haube 0,6, Gitter 0,2, Einlass 0,3, Bedienung 0,2, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Six regions: the thermal view paints the hot outlet grille and the warm top cover, the cool inlet and the housing; the warm jet leaves the grille to the right.",
+            "de": "Sechs Regionen: Die Thermalansicht färbt heißes Auslassgitter und warme Haube, kühlen Einlass und Gehäuse; der warme Luftstrahl verlässt das Gitter nach rechts."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-back",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.075,
+              "y": 0,
+              "w": 0.035,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-front",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0,
+              "w": 0.035,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "handle",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M -0.045 0.268 C -0.045 0.3 -0.04 0.31 -0.02 0.31 L 0.03 0.31 C 0.05 0.31 0.055 0.3 0.055 0.268 Z",
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.09 0.032 C -0.09 0.022 -0.085 0.02 -0.075 0.02 L 0.08 0.02 C 0.09 0.02 0.095 0.022 0.095 0.032 L 0.095 0.25 C 0.095 0.265 0.088 0.272 0.075 0.272 L -0.07 0.272 C -0.083 0.272 -0.09 0.265 -0.09 0.25 Z",
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "top-cover-edge",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0.258
+                ],
+                [
+                  0.09,
+                  0.258
+                ]
+              ],
+              "closed": false,
+              "region": "top-cover"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.078,
+              "y": 0.06,
+              "w": 0.02,
+              "h": 0.17,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.075
+                ],
+                [
+                  0.098,
+                  0.066
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.12166666666666667
+                ],
+                [
+                  0.098,
+                  0.11266666666666668
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.16833333333333333
+                ],
+                [
+                  0.098,
+                  0.15933333333333333
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "louvre-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.079,
+                  0.21500000000000002
+                ],
+                [
+                  0.098,
+                  0.20600000000000002
+                ]
+              ],
+              "closed": false,
+              "region": "grille"
+            },
+            {
+              "id": "inlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.098,
+              "y": 0.05,
+              "w": 0.01,
+              "h": 0.16,
+              "region": "intake",
+              "material": "pc-heat"
+            },
+            {
+              "id": "dial",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.024,
+              "ry": 0.024,
+              "region": "control",
+              "material": "pp-dial"
+            },
+            {
+              "id": "dial-pointer",
+              "bone": "knob",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.95,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.006
+                ],
+                [
+                  0,
+                  0.022
+                ]
+              ],
+              "closed": false,
+              "region": "control"
+            }
+          ],
+          "plan": [
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.115,
+              "w": 0.185,
+              "h": 0.235,
+              "r": 0.015,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "handle",
+              "bone": "body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.065,
+              "w": 0.1,
+              "h": 0.13,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.078,
+              "y": -0.105,
+              "w": 0.02,
+              "h": 0.21,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "inlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.098,
+              "y": -0.105,
+              "w": 0.01,
+              "h": 0.21,
+              "region": "intake",
+              "material": "pc-heat"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.07,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "body",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.1,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.02,
+              "region": "feet",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "handle",
+              "bone": "body",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "rect",
+              "x": -0.065,
+              "y": 0.268,
+              "w": 0.13,
+              "h": 0.042,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "housing",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.115,
+              "y": 0.02,
+              "w": 0.235,
+              "h": 0.252,
+              "r": 0.015,
+              "region": "casing",
+              "material": "abs-cream"
+            },
+            {
+              "id": "top-cover-edge",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.258
+                ],
+                [
+                  0.11,
+                  0.258
+                ]
+              ],
+              "closed": false,
+              "region": "top-cover",
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.06,
+              "w": 0.21,
+              "h": 0.17,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.075
+                ],
+                [
+                  0.1,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.1217
+                ],
+                [
+                  0.1,
+                  0.1217
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.1684
+                ],
+                [
+                  0.1,
+                  0.1684
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            },
+            {
+              "id": "louvre-3",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.2151
+                ],
+                [
+                  0.1,
+                  0.2151
+                ]
+              ],
+              "closed": false,
+              "region": "grille",
+              "material": "steel-mesh"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fan heater 2 mm wide and 3.1 mm high: an upright cream block with a handle bump, a front outlet grille with four louvre lines, a back inlet grille, a round dial and two stub feet. Front, 2.4 mm by 3.1 mm: block with handle, grille with four louvre lines and two feet. Plan, 2 mm by 2.4 mm: housing, handle and the two grilles.",
+            "de": "Ein Heizlüfter, 2 mm breit und 3,1 mm hoch: ein stehender cremefarbener Block mit Griffbuckel, ein vorderes Auslassgitter mit vier Lamellenlinien, ein hinteres Einlassgitter, ein runder Regler und zwei Stummelfüße. Vorderansicht, 2,4 mm auf 3,1 mm: Block mit Griff, Gitter mit vier Lamellenlinien und zwei Füße. Grundriss, 2 mm auf 2,4 mm: Gehäuse, Griff und die beiden Gitter."
+          },
+          "retained": {
+            "en": "Overall size, grille protrusions, four of the eight louvre lines, handle, dial, top-cover edge.",
+            "de": "Gesamtgröße, Gitterauskragungen, vier der acht Lamellenlinien, Griff, Regler, Haubenkante."
+          },
+          "merged": {
+            "en": "Handle opening, mode switch, lower seam and inlet slots merge into the block.",
+            "de": "Griffloch, Betriebsartenschalter, untere Fuge und Einlassschlitze gehen im Block auf."
+          },
+          "omitted": {
+            "en": "Highlight, dial hub, mode mark, louvre details, cable. Dial, top cover and highlight in front and plan.",
+            "de": "Lichtkante, Reglernabe, Schaltermarke, Lamellendetails, Kabel. Drehknopf, Oberschale und Glanzstrich in Vorderansicht und Grundriss."
+          },
+          "thinElements": {
+            "en": "The feet are 0.016 m = 0.16 mm high in reality: thickened to 0.02 m (0.2 mm); the louvre lines are 0.13 mm strokes at 0.04 m (0.4 mm).",
+            "de": "Die Füße sind real 0,016 m = 0,16 mm hoch: auf 0,02 m (0,2 mm) verdickt; die Lamellenlinien sind 0,13-mm-Striche im Abstand 0,04 m (0,4 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "As at 1:50; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Wie bei 1:50; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "All six regions are drawn; the top cover is the edge line.",
+            "de": "Alle sechs Regionen sind gezeichnet; die Haube ist die Kantenlinie."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "block",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M -0.09 0 L 0.095 0 L 0.095 0.25 C 0.095 0.265 0.088 0.272 0.075 0.272 L 0.055 0.272 L 0.055 0.3 C 0.055 0.31 0.05 0.31 0.03 0.31 L -0.02 0.31 C -0.04 0.31 -0.045 0.3 -0.045 0.272 L -0.07 0.272 C -0.083 0.272 -0.09 0.265 -0.09 0.25 Z",
+              "regions": [
+                "casing",
+                "top-cover",
+                "intake",
+                "control",
+                "feet"
+              ],
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.078,
+              "y": 0.06,
+              "w": 0.02,
+              "h": 0.17,
+              "region": "grille",
+              "material": "steel-mesh"
+            }
+          ],
+          "plan": [
+            {
+              "id": "block",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.115,
+              "w": 0.185,
+              "h": 0.235,
+              "regions": [
+                "casing",
+                "top-cover",
+                "intake",
+                "control",
+                "feet"
+              ],
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": 0.078,
+              "y": -0.105,
+              "w": 0.02,
+              "h": 0.21,
+              "region": "grille",
+              "material": "steel-mesh"
+            }
+          ],
+          "front": [
+            {
+              "id": "block",
+              "bone": "body",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.115,
+                  0
+                ],
+                [
+                  0.12,
+                  0
+                ],
+                [
+                  0.12,
+                  0.25
+                ],
+                [
+                  0.1,
+                  0.272
+                ],
+                [
+                  0.065,
+                  0.272
+                ],
+                [
+                  0.065,
+                  0.31
+                ],
+                [
+                  -0.065,
+                  0.31
+                ],
+                [
+                  -0.065,
+                  0.272
+                ],
+                [
+                  -0.095,
+                  0.272
+                ],
+                [
+                  -0.115,
+                  0.25
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "casing",
+                "top-cover",
+                "intake",
+                "control",
+                "feet"
+              ],
+              "material": "abs-cream"
+            },
+            {
+              "id": "outlet-grille",
+              "bone": "body",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.06,
+              "w": 0.21,
+              "h": 0.17,
+              "region": "grille",
+              "material": "steel-mesh"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fan heater 1 mm wide and 1.55 mm high: one upright block with a handle bump and a small protruding outlet grille. Front, 1.2 mm by 1.55 mm: one block with handle bump and the grille. Plan, 1 mm by 1.2 mm: one block and the outlet strip.",
+            "de": "Ein Heizlüfter, 1 mm breit und 1,55 mm hoch: ein stehender Block mit Griffbuckel und einem kleinen vorstehenden Auslassgitter. Vorderansicht, 1,2 mm auf 1,55 mm: ein Block mit Griffbuckel und das Gitter. Grundriss, 1 mm auf 1,2 mm: ein Block und der Auslassstreifen."
+          },
+          "retained": {
+            "en": "Height 0.31 m, width 0.196 m, the grille at the front where the jet leaves.",
+            "de": "Höhe 0,31 m, Breite 0,196 m, das Gitter vorn, wo der Luftstrahl austritt."
+          },
+          "merged": {
+            "en": "Housing, top cover, inlet, controls and feet are one block (regions listed).",
+            "de": "Gehäuse, Haube, Einlass, Bedienung und Füße sind ein Block (Regionen gelistet)."
+          },
+          "omitted": {
+            "en": "Louvres, dial, switch, handle opening, feet gap, seams. Feet, louvres and inlet grille.",
+            "de": "Lamellen, Regler, Schalter, Griffloch, Fußlücke, Fugen. Füße, Lamellen und Eintrittsgitter."
+          },
+          "thinElements": {
+            "en": "The outlet grille protrudes 0.02 m = 0.1 mm in reality and is drawn at that depth within the 0.15 mm stroke of the block.",
+            "de": "Das Auslassgitter steht real 0,02 m = 0,1 mm vor und ist in dieser Tiefe innerhalb des 0,15-mm-Strichs des Blocks gezeichnet."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Block 0.78, grille 0.2; body pen 0.18 mm.",
+            "de": "Block 0,78, Gitter 0,2; Körperstift 0,18 mm."
+          },
+          "overlays": {
+            "en": "The block lists five regions and the grille keeps its own, so the hot grille stays distinct on the thermal view.",
+            "de": "Der Block listet fünf Regionen und das Gitter behält seine eigene, sodass das heiße Gitter in der Thermalansicht erkennbar bleibt."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "A fan heater is 0.196 m x 0.31 m = 0.4 x 0.6 mm on paper at 1:500: the grille, handle and feet are far below the 0.2 mm feature width and only a speck would print.",
+          "de": "Ein Heizlüfter misst 0,196 m x 0,31 m = 0,4 x 0,6 mm auf dem Papier bei 1:500: Gitter, Griff und Füße liegen weit unter der Merkmalsbreite von 0,2 mm, es würde nur ein Fleck drucken."
+        },
+        "limitingFeature": {
+          "en": "Grille, handle and feet (0.016-0.05 m = 0.03-0.1 mm)",
+          "de": "Gitter, Griff und Füße (0,016-0,05 m = 0,03-0,1 mm)"
+        },
+        "limitingSizeM": 0.02,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off",
+        "title": {
+          "en": "Off",
+          "de": "Aus"
+        },
+        "description": {
+          "en": "Cold heater, dial at zero, mode switch off.",
+          "de": "Kalter Heizlüfter, Regler auf null, Betriebsartenschalter aus."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-back",
+          "foot-front"
+        ],
+        "loads": [],
+        "thermal": {
+          "operating": {
+            "stage-1": 0,
+            "stage-2": 0
+          },
+          "regions": {
+            "casing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-cover": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "intake": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "control": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "warm-air-1": 0,
+            "warm-air-2": 0
+          }
+        }
+      },
+      {
+        "id": "heating-low",
+        "title": {
+          "en": "Heating on the first stage",
+          "de": "Heizt auf der ersten Stufe"
+        },
+        "description": {
+          "en": "1000 W: the fan blows 0.016 m3/s of air warmed by 49 K out of the front grille.",
+          "de": "1000 W: Der Lüfter bläst 0,016 m3/s um 49 K erwärmte Luft aus dem vorderen Gitter."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 120
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-back",
+          "foot-front"
+        ],
+        "loads": [],
+        "thermal": {
+          "operating": {
+            "stage-1": 1,
+            "stage-2": 0
+          },
+          "regions": {
+            "casing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-cover": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "intake": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "control": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "warm-air-1": 1,
+            "warm-air-2": 0
+          }
+        }
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "Heating on both stages",
+          "de": "Heizt auf beiden Stufen"
+        },
+        "description": {
+          "en": "2000 W: 0.032 m3/s of air warmed by about 50 K leaves the front grille as a warm jet; grille and top cover are the hottest surfaces.",
+          "de": "2000 W: 0,032 m3/s um etwa 50 K erwärmte Luft verlassen das vordere Gitter als warmer Strahl; Gitter und Haube sind die heißesten Flächen."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 240
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-back",
+          "foot-front"
+        ],
+        "loads": [],
+        "thermal": {
+          "operating": {
+            "stage-1": 1,
+            "stage-2": 1
+          },
+          "regions": {
+            "casing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "top-cover": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "grille": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "intake": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "control": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "feet": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "warm-air-1": 1,
+            "warm-air-2": 1
+          }
+        }
+      }
+    ],
+    "clips": [
+      {
+        "id": "warm-up",
+        "title": {
+          "en": "Switch on and warm up",
+          "de": "Einschalten und aufwärmen"
+        },
+        "description": {
+          "en": "Cold start on both stages: the grille and cover heat up within a minute and the room air starts to warm up.",
+          "de": "Kaltstart auf beiden Stufen: Gitter und Haube heizen sich binnen einer Minute auf und die Raumluft beginnt sich zu erwärmen."
+        },
+        "durationS": 900,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "heating",
+            "ease": "step"
+          },
+          {
+            "t": 900,
+            "pose": "heating",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-back",
+            "fromS": 0,
+            "toS": 900
+          },
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 900
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Cold",
+              "de": "Kalt"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 900,
+            "title": {
+              "en": "Heating at 2000 W",
+              "de": "Heizt mit 2000 W"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Both stages on",
+              "de": "Beide Stufen an"
+            },
+            "target": "stage-1"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:stage-1",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:stage-2",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:warm-air-1",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:warm-air-2",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "step-down-and-off",
+        "title": {
+          "en": "Step down and switch off",
+          "de": "Herunterschalten und ausschalten"
+        },
+        "description": {
+          "en": "After half an hour on 2000 W the second stage goes off, later the first one; grille and cover cool down.",
+          "de": "Nach einer halben Stunde mit 2000 W schaltet die zweite Stufe ab, später die erste; Gitter und Haube kühlen ab."
+        },
+        "durationS": 1800,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "heating",
+            "ease": "step"
+          },
+          {
+            "t": 60,
+            "pose": "heating-low",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 1800,
+            "pose": "off",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-back",
+            "fromS": 0,
+            "toS": 1800
+          },
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 1800
+          }
+        ],
+        "phases": [
+          {
+            "id": "full",
+            "fromS": 0,
+            "toS": 60,
+            "title": {
+              "en": "2000 W",
+              "de": "2000 W"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 60,
+            "toS": 600,
+            "title": {
+              "en": "1000 W",
+              "de": "1000 W"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 600,
+            "toS": 1800,
+            "title": {
+              "en": "Off, cooling",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 60,
+            "kind": "operating",
+            "title": {
+              "en": "Second stage off",
+              "de": "Zweite Stufe aus"
+            },
+            "target": "stage-2"
+          },
+          {
+            "t": 600,
+            "kind": "shutdown",
+            "title": {
+              "en": "First stage off",
+              "de": "Erste Stufe aus"
+            },
+            "target": "stage-1"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:stage-1",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:stage-2",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:warm-air-1",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:warm-air-2",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325,
+        "skyTempC": 20,
+        "groundTempC": 20
+      },
+      "operating": [
+        {
+          "id": "stage-1",
+          "title": {
+            "en": "First heating stage and fan",
+            "de": "Erste Heizstufe und Lüfter"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "On (1000 W)",
+                "de": "Ein (1000 W)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "stage-2",
+          "title": {
+            "en": "Second heating stage",
+            "de": "Zweite Heizstufe"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "On (further 1000 W)",
+                "de": "Ein (weitere 1000 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "casing",
+          "title": {
+            "en": "Housing walls and handle",
+            "de": "Gehäusewände und Griff"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "abs-cream",
+          "areaM2": 0.17,
+          "characteristicLengthM": 0.28,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "ABS wall 2.5 mm",
+                "de": "ABS-Wand 2,5 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-cream",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.014706,
+              "heatCapacityJM2K": 3675,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3675,
+          "operating": {
+            "key": "stage-1",
+            "heatW": 33
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-30"
+        },
+        {
+          "id": "top-cover",
+          "title": {
+            "en": "Top cover over the heating coils",
+            "de": "Haube über den Heizwendeln"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "abs-cream",
+          "areaM2": 0.035,
+          "characteristicLengthM": 0.17,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.9,
+          "layers": [
+            {
+              "id": "cover",
+              "title": {
+                "en": "ABS cover 2.5 mm",
+                "de": "ABS-Haube 2,5 mm"
+              },
+              "kind": "polymer",
+              "material": "abs-cream",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.014706,
+              "heatCapacityJM2K": 3675,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3675,
+          "operating": {
+            "key": "stage-2",
+            "heatW": 22
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-30"
+        },
+        {
+          "id": "grille",
+          "title": {
+            "en": "Warm air outlet grille",
+            "de": "Warmluft-Auslassgitter"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "steel-mesh",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.17,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "bars",
+              "title": {
+                "en": "Steel grille bars 1.5 mm",
+                "de": "Stahlgitterstäbe 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "steel-mesh",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.00003,
+              "heatCapacityJM2K": 5299,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5299,
+          "operating": {
+            "key": "stage-1",
+            "heatW": 20
+          },
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-30"
+        },
+        {
+          "id": "intake",
+          "title": {
+            "en": "Air inlet grille at the back",
+            "de": "Lufteinlassgitter hinten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pc-heat",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.16,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "inlet",
+              "title": {
+                "en": "Polycarbonate grille 2 mm",
+                "de": "Polycarbonatgitter 2 mm"
+              },
+              "kind": "polymer",
+              "material": "pc-heat",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 2880,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2880,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "control",
+          "title": {
+            "en": "Dial and mode switch",
+            "de": "Regler und Betriebsartenschalter"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pp-dial",
+          "areaM2": 0.004,
+          "characteristicLengthM": 0.04,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "dial",
+              "title": {
+                "en": "Polypropylene 3 mm",
+                "de": "Polypropylen 3 mm"
+              },
+              "kind": "polymer",
+              "material": "pp-dial",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.013636,
+              "heatCapacityJM2K": 5130,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5130,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "feet",
+          "title": {
+            "en": "Rubber feet",
+            "de": "Gummifüße"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "rubber-foot",
+          "areaM2": 0.003,
+          "characteristicLengthM": 0.04,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.1,
+          "layers": [
+            {
+              "id": "foot",
+              "title": {
+                "en": "Rubber 10 mm",
+                "de": "Gummi 10 mm"
+              },
+              "kind": "polymer",
+              "material": "rubber-foot",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.05,
+              "heatCapacityJM2K": 22000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 22000,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "warm-air-1",
+          "kind": "fan",
+          "title": {
+            "en": "Warm air of the first heating stage",
+            "de": "Warmluft der ersten Heizstufe"
+          },
+          "anchor": "outlet",
+          "directionDeg": 0,
+          "diameterM": 0.1,
+          "operatingKey": "stage-1",
+          "volumeFlowM3S": 0.016,
+          "temperatureRiseK": 49.1,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-30"
+        },
+        {
+          "id": "warm-air-2",
+          "kind": "fan",
+          "title": {
+            "en": "Warm air of the second heating stage",
+            "de": "Warmluft der zweiten Heizstufe"
+          },
+          "anchor": "outlet",
+          "directionDeg": 0,
+          "diameterM": 0.1,
+          "operatingKey": "stage-2",
+          "volumeFlowM3S": 0.016,
+          "temperatureRiseK": 50.7,
+          "vapourKgPerKg": 0,
+          "source": "authored-estimate",
+          "reference": "iec-60335-2-30"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The heating coils and the fan motor inside are not regions: their 2000 W leave as warm jet air (1925 W), through the outlet grille (20 W), top cover (22 W) and housing (33 W). A room sees all of it as an internal gain.",
+          "de": "Heizwendeln und Lüftermotor im Inneren sind keine Regionen: Ihre 2000 W verlassen das Gerät als warme Strahlluft (1925 W), durch das Auslassgitter (20 W), die Haube (22 W) und das Gehäuse (33 W). Ein Raum erlebt alles davon als innere Last."
+        },
+        {
+          "en": "The jet leaves horizontally to the right (direction 0 degrees) at about 3 m/s through the 0.1 m outlet and is carried by the air-jet transport model; room air entrainment is left to that model.",
+          "de": "Der Strahl tritt waagerecht nach rechts (Richtung 0 Grad) mit etwa 3 m/s durch den 0,1-m-Auslass aus und wird vom Luftstrahl-Transportmodell getragen; die Raumlufteinmischung bleibt diesem Modell überlassen."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-back",
+        "foot-front"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid body standing on two rubber feet.",
+          "de": "Ein starrer Körper auf zwei Gummifüßen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "heating",
+      "defaultClip": "warm-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -4,7 +4,7 @@
  * @see ../🟦️.ts — `validateAsset`, `validateManifest`
  * @see ../../../🗂️catalog/🔣️.json — the manifest
  */
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Asset, AssetDocument, EnvironmentDocument, Manifest, PrintProfileDocument, Slug } from "../../../🧬️schema/🟦️.ts";
@@ -23,6 +23,14 @@ export const PRINT_PROFILES_FOLDER = "🖨️print-profiles";
 
 /** 🌤️ The folder name of the environment document under the catalog root. */
 export const ENVIRONMENTS_FOLDER = "🌤️environments";
+
+/** ⚛️ Writes a JSON document so a concurrent reader sees the old or the new file, never half of it: the text goes to a temporary file in the same folder, which is then renamed over `path`. */
+export async function writeJsonAtomic(path: string, value: unknown): Promise<void> {
+  const temporary = `${path}.${process.pid}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(value, null, 2)}
+`, "utf8");
+  await rename(temporary, path);
+}
 
 async function readJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   signal?.throwIfAborted();

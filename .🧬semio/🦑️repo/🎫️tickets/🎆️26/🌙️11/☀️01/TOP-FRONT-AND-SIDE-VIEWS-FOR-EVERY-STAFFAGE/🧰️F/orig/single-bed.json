@@ -1,0 +1,2198 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "single-bed",
+    "category": "furniture",
+    "title": {
+      "en": "Single bed with slatted base",
+      "de": "Einzelbett mit Lattenrost"
+    },
+    "summary": {
+      "en": "A 0.90 x 2.00 m pine single bed with an adjustable slatted base in three sections and a 0.20 m foam mattress that sinks under the sleeper; side elevation and the conventional plan sign.",
+      "de": "Ein Einzelbett aus Kiefer, 0,90 x 2,00 m, mit verstellbarem Lattenrost in drei Teilen und einer 0,20 m dicken Schaumstoffmatratze, die unter dem Schläfer einsinkt; Seitenansicht und das übliche Grundrisszeichen."
+    },
+    "tags": [
+      "bed",
+      "single-bed",
+      "sleeping",
+      "slatted-base",
+      "mattress",
+      "interior"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-F)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values (conductivity, specific heat capacity, density of timber, wood-based boards, steel, aluminium, flexible polyurethane foam, rubber)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: General actions - densities, self-weight, imposed loads for buildings (Table 6.2 category A floors 1.5-2.0 kN/m2, category C tables 3.0 kN/m2, Table 6.7/6.8 storage, Annex A densities of stored materials)."
+        },
+        {
+          "id": "en-1725",
+          "citation": "EN 1725:1998 Domestic furniture - Beds and mattresses - Safety requirements and test methods (static load tests of bed bases)."
+        },
+        {
+          "id": "en-1957",
+          "citation": "EN 1957:2012 Furniture - Beds and mattresses - Test methods for the determination of functional characteristics."
+        },
+        {
+          "id": "iso-3386-1",
+          "citation": "ISO 3386-1:1986 Polymeric materials, cellular flexible - Determination of stress-strain characteristics in compression, Part 1 (compression stress at 40 % strain of 3-6 kPa typical for upholstery foams of 30-40 kg/m3)."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment - Analytical determination and interpretation of thermal comfort (outer clothing surface temperatures of seated persons around 28-32 degC in comfort conditions; 30 degC used for the contact surface)."
+        },
+        {
+          "id": "wood-handbook-2021",
+          "citation": "Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service (density and elastic modulus of oak, beech and pine; air-dry rounded values)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface radiative properties, convection correlations, thermal penetration depth)."
+        },
+        {
+          "id": "semio-nwf",
+          "citation": "Semio staffage content NW-F: dimensions and masses are authored from typical market products (see provenance notes); parameters tagged authored-estimate are not taken from a datasheet."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation 2.12 x 0.95 m (headboard 0.95 m, footboard 0.55 m, mattress top 0.485 m), width across 0.90 m. Masses from nominal volumes; the mattress is 22 kg of cold foam. Sleeper and sheets are not drawn.",
+        "de": "Seitenansicht 2,12 x 0,95 m (Kopfbrett 0,95 m, Fußbrett 0,55 m, Matratzenoberkante 0,485 m), Breite quer 0,90 m. Massen aus Nennvolumen; die Matratze ist 22 kg Kaltschaum. Schläfer und Bettwäsche sind nicht gezeichnet."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.95,
+      "widthM": 2.12,
+      "depthM": 0.9,
+      "massKg": 59.2
+    },
+    "materials": [
+      {
+        "id": "pine-timber",
+        "title": {
+          "en": "Solid pine, waxed",
+          "de": "Kiefer massiv, gewachst"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 500,
+        "conductivityWmK": 0.13,
+        "specificHeatJKgK": 1600,
+        "elasticModulusPa": 11000000000.0,
+        "strengthPa": 24000000.0,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "birch-slat",
+        "title": {
+          "en": "Birch laminated slats 12 mm",
+          "de": "Birkenschichtholz-Federleisten 12 mm"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 650,
+        "conductivityWmK": 0.15,
+        "specificHeatJKgK": 1600,
+        "elasticModulusPa": 9000000000.0,
+        "strengthPa": 40000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "quilted-cover",
+        "title": {
+          "en": "Quilted cotton cover with batting",
+          "de": "Gesteppter Baumwollbezug mit Vlies"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 150,
+        "conductivityWmK": 0.04,
+        "specificHeatJKgK": 1300,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "cold-foam",
+        "title": {
+          "en": "Cold-cure PU foam 40 kg/m3",
+          "de": "Kaltschaum 40 kg/m3"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 40,
+        "conductivityWmK": 0.045,
+        "specificHeatJKgK": 1400,
+        "elasticModulusPa": 10000.0,
+        "strengthPa": 6000.0,
+        "source": "authored-estimate",
+        "reference": "iso-3386-1"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "ground",
+      "bones": [
+        {
+          "id": "ground",
+          "parent": null,
+          "title": {
+            "en": "Floor reference",
+            "de": "Bodenbezug"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 2.12,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "frame",
+          "parent": "ground",
+          "title": {
+            "en": "Bed frame: posts, boards and side rails",
+            "de": "Bettrahmen: Pfosten, Bretter und Seitenholme"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 2.12,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 27.6,
+            "comX": 1.06,
+            "comY": 0.3,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "slat-head",
+          "parent": "frame",
+          "title": {
+            "en": "Head section of the slatted base",
+            "de": "Kopfteil des Lattenrosts"
+          },
+          "x": 0.78,
+          "y": 0.285,
+          "angleDeg": 0,
+          "lengthM": 0.72,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.5,
+            "comX": -0.36,
+            "comY": -0.01,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "slat-mid",
+          "parent": "frame",
+          "title": {
+            "en": "Middle section of the slatted base",
+            "de": "Mittelteil des Lattenrosts"
+          },
+          "x": 0.78,
+          "y": 0.285,
+          "angleDeg": 0,
+          "lengthM": 0.6,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.2,
+            "comX": 0.3,
+            "comY": -0.01,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "slat-foot",
+          "parent": "frame",
+          "title": {
+            "en": "Foot section of the slatted base",
+            "de": "Fußteil des Lattenrosts"
+          },
+          "x": 1.38,
+          "y": 0.285,
+          "angleDeg": 0,
+          "lengthM": 0.68,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.7,
+            "comX": 0.34,
+            "comY": -0.01,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "mat-head",
+          "parent": "slat-head",
+          "title": {
+            "en": "Mattress head part",
+            "de": "Matratze Kopfteil"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.72,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.06,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 8.1,
+            "comX": -0.36,
+            "comY": 0.1,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "iso-3386-1"
+          }
+        },
+        {
+          "id": "mat-mid",
+          "parent": "slat-mid",
+          "title": {
+            "en": "Mattress middle part",
+            "de": "Matratze Mittelteil"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.6,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.06,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 7.0,
+            "comX": 0.3,
+            "comY": 0.1,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "iso-3386-1"
+          }
+        },
+        {
+          "id": "mat-foot",
+          "parent": "slat-foot",
+          "title": {
+            "en": "Mattress foot part",
+            "de": "Matratze Fußteil"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.68,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.06,
+            "maxM": 0
+          },
+          "mass": {
+            "kg": 7.1,
+            "comX": 0.34,
+            "comY": 0.1,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "iso-3386-1"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-head",
+        "bone": "frame",
+        "x": 0.03,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Head-end post feet",
+          "de": "Füße der Kopfpfosten"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.06,
+        "footprintWidthM": 0.9,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "foot-mid",
+        "bone": "frame",
+        "x": 1.06,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Centre support leg",
+          "de": "Mittelfuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.06,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "foot-foot",
+        "bone": "frame",
+        "x": 2.09,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Foot-end post feet",
+          "de": "Füße der Fußpfosten"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.06,
+        "footprintWidthM": 0.9,
+        "frictionCoefficient": 0.5
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 351,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.95,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 2.02,
+              "y": 0.0,
+              "w": 0.1,
+              "h": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.06,
+              "y": 0.14,
+              "w": 2.0,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "material": "quilted-cover",
+              "regions": [
+                "mattress",
+                "slats"
+              ]
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "material": "quilted-cover",
+              "regions": [
+                "mattress",
+                "slats"
+              ]
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "material": "quilted-cover",
+              "regions": [
+                "mattress",
+                "slats"
+              ]
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Bed sign 4.2 x 1.9 mm: head and foot blocks, a rail and three mattress parts, the head part movable.",
+            "de": "Bettzeichen 4,2 x 1,9 mm: Kopf- und Fußblock, ein Holm und drei Matratzenteile, das Kopfteil beweglich."
+          },
+          "retained": {
+            "en": "Headboard 0.95 m and footboard 0.55 m, side rail, mattress top at 0.485 m.",
+            "de": "Kopfbrett 0,95 m und Fußbrett 0,55 m, Seitenholm, Matratzenoberkante 0,485 m."
+          },
+          "merged": {
+            "en": "Slats lie under the mattress parts and are merged into them; boards and posts are one block each.",
+            "de": "Latten liegen unter den Matratzenteilen und sind in sie eingeflossen; Bretter und Pfosten sind je ein Block."
+          },
+          "omitted": {
+            "en": "Centre leg, slat strips, piping.",
+            "de": "Mittelfuß, Lattenstreifen, Paspeln."
+          },
+          "thinElements": {
+            "en": "Board posts (0.06 m) are drawn 0.10 m wide (0.2 mm); the 0.04 m overshoot runs inside the mattress end.",
+            "de": "Brettpfosten (0,06 m) sind 0,10 m breit gezeichnet (0,2 mm); die Überhöhung von 0,04 m liegt im Matratzenende."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Frame 0.5-0.55, mattress 0.85.",
+            "de": "Rahmen 0,5-0,55, Matratze 0,85."
+          },
+          "overlays": {
+            "en": "Mattress parts list mattress and slats as merged; blocks and rail carry bed-frame.",
+            "de": "Matratzenteile führen mattress und slats zusammen; Blöcke und Holm tragen bed-frame."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 151,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.95,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 2.06,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.55,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.14,
+              "w": 2.04,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 1.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "regions": [
+                "mattress",
+                "slats"
+              ],
+              "material": "quilted-cover"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Bed 10.6 x 4.8 mm: posts, rail, centre leg and three rounded mattress parts.",
+            "de": "Bett 10,6 x 4,8 mm: Pfosten, Holm, Mittelfuß und drei gerundete Matratzenteile."
+          },
+          "retained": {
+            "en": "Posts at real width 0.06 m, the centre leg, the rounded mattress parts (head part follows the raised section).",
+            "de": "Pfosten in Realbreite 0,06 m, der Mittelfuß, die gerundeten Matratzenteile (das Kopfteil folgt dem hochgestellten Teil)."
+          },
+          "merged": {
+            "en": "Slats are merged into the mattress parts.",
+            "de": "Latten sind in die Matratzenteile eingeflossen."
+          },
+          "omitted": {
+            "en": "Slat strips (0.02 m = 0.1 mm), piping.",
+            "de": "Lattenstreifen (0,02 m = 0,1 mm), Paspeln."
+          },
+          "thinElements": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "As 1:500.",
+            "de": "Wie 1:500."
+          },
+          "overlays": {
+            "en": "As 1:500.",
+            "de": "Wie 1:500."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 76,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0 0 L 0 0.93 Q 0 0.95 0.02 0.95 L 0.04 0.95 Q 0.06 0.95 0.06 0.93 L 0.06 0 Z",
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 2.06 0 L 2.06 0.53 Q 2.06 0.55 2.08 0.55 L 2.1 0.55 Q 2.12 0.55 2.12 0.53 L 2.12 0 Z",
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.14,
+              "w": 2.04,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 1.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber"
+            },
+            {
+              "id": "slats-head",
+              "bone": "slat-head",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.022,
+              "w": 0.72,
+              "h": 0.022,
+              "region": "slats",
+              "material": "birch-slat"
+            },
+            {
+              "id": "slats-mid",
+              "bone": "slat-mid",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.6,
+              "h": 0.022,
+              "region": "slats",
+              "material": "birch-slat"
+            },
+            {
+              "id": "slats-foot",
+              "bone": "slat-foot",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.68,
+              "h": 0.022,
+              "region": "slats",
+              "material": "birch-slat"
+            },
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "piping-mat-head",
+              "bone": "mat-head",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.725,
+                  0.15
+                ],
+                [
+                  -0.28,
+                  0.15
+                ]
+              ],
+              "closed": false,
+              "region": "mattress"
+            },
+            {
+              "id": "piping-mat-mid",
+              "bone": "mat-mid",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.065,
+                  0.15
+                ],
+                [
+                  0.54,
+                  0.15
+                ]
+              ],
+              "closed": false,
+              "region": "mattress"
+            },
+            {
+              "id": "piping-mat-foot",
+              "bone": "mat-foot",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.065,
+                  0.15
+                ],
+                [
+                  0.685,
+                  0.15
+                ]
+              ],
+              "closed": false,
+              "region": "mattress"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Bed 21 x 9.5 mm: rounded posts, rail, centre leg, three slat strips, three mattress parts with piping.",
+            "de": "Bett 21 x 9,5 mm: gerundete Pfosten, Holm, Mittelfuß, drei Lattenstreifen, drei Matratzenteile mit Paspel."
+          },
+          "retained": {
+            "en": "The slat sections as strips (they show when a section is raised), mattress piping.",
+            "de": "Die Lattenteile als Streifen (sie zeigen sich, wenn ein Teil hochgestellt ist), Matratzenpaspel."
+          },
+          "merged": {
+            "en": "Single slats are one strip per section.",
+            "de": "Einzelne Latten sind ein Streifen je Teil."
+          },
+          "omitted": {
+            "en": "Slat gaps, bolts.",
+            "de": "Lattenfugen, Schrauben."
+          },
+          "thinElements": {
+            "en": "Strips 0.022 m thick (slat 0.012 m).",
+            "de": "Streifen 0,022 m dick (Latte 0,012 m)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Mattress 0.85, frame 0.5.",
+            "de": "Matratze 0,85, Rahmen 0,5."
+          },
+          "overlays": {
+            "en": "One shape per part.",
+            "de": "Eine Form je Teil."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.5,
+          "detail": 0.25,
+          "texture": 0.13,
+          "glazing": 0.18,
+          "ground": 0.7
+        },
+        "hatches": [
+          {
+            "id": "grain-h",
+            "title": {
+              "en": "Grain horizontal",
+              "de": "Maserung waagerecht"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.6,
+            "penMm": 0.13
+          },
+          {
+            "id": "grain-v",
+            "title": {
+              "en": "Grain vertical",
+              "de": "Maserung senkrecht"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.6,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "head",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0 0 L 0 0.93 Q 0 0.95 0.02 0.95 L 0.04 0.95 Q 0.06 0.95 0.06 0.93 L 0.06 0 Z",
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v"
+            },
+            {
+              "id": "foot",
+              "bone": "frame",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 2.06 0 L 2.06 0.53 Q 2.06 0.55 2.08 0.55 L 2.1 0.55 Q 2.12 0.55 2.12 0.53 L 2.12 0 Z",
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v"
+            },
+            {
+              "id": "rail",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.04,
+              "y": 0.14,
+              "w": 2.04,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-h"
+            },
+            {
+              "id": "leg-mid",
+              "bone": "frame",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 1.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 0.16,
+              "region": "bed-frame",
+              "material": "pine-timber",
+              "hatch": "grain-v"
+            },
+            {
+              "id": "slats-head",
+              "bone": "slat-head",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.72,
+              "y": -0.022,
+              "w": 0.72,
+              "h": 0.022,
+              "region": "slats",
+              "material": "birch-slat"
+            },
+            {
+              "id": "slats-mid",
+              "bone": "slat-mid",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.6,
+              "h": 0.022,
+              "region": "slats",
+              "material": "birch-slat"
+            },
+            {
+              "id": "slats-foot",
+              "bone": "slat-foot",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.022,
+              "w": 0.68,
+              "h": 0.022,
+              "region": "slats",
+              "material": "birch-slat"
+            },
+            {
+              "id": "mat-head",
+              "bone": "mat-head",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M -0.725 -0.01 L -0.725 0.16 Q -0.725 0.2 -0.685 0.2 L -0.02 0.2 Q 0.02 0.2 0.02 0.16 L 0.02 -0.01 Z",
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "mat-mid",
+              "bone": "mat-mid",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.58 0.2 Q 0.62 0.2 0.62 0.16 L 0.62 -0.01 Z",
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "mat-foot",
+              "bone": "mat-foot",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.645 0.2 Q 0.685 0.2 0.685 0.16 L 0.685 -0.01 Z",
+              "regions": [
+                "mattress"
+              ],
+              "material": "quilted-cover"
+            },
+            {
+              "id": "piping-top-mat-head",
+              "bone": "mat-head",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.725,
+                  0.165
+                ],
+                [
+                  -0.28,
+                  0.165
+                ]
+              ],
+              "closed": false,
+              "region": "mattress"
+            },
+            {
+              "id": "piping-top-mat-mid",
+              "bone": "mat-mid",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.065,
+                  0.165
+                ],
+                [
+                  0.54,
+                  0.165
+                ]
+              ],
+              "closed": false,
+              "region": "mattress"
+            },
+            {
+              "id": "piping-top-mat-foot",
+              "bone": "mat-foot",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.065,
+                  0.165
+                ],
+                [
+                  0.685,
+                  0.165
+                ]
+              ],
+              "closed": false,
+              "region": "mattress"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Bed 42 x 19 mm with grain on rail and posts, slat strips and mattress with top piping.",
+            "de": "Bett 42 x 19 mm mit Maserung an Holm und Pfosten, Lattenstreifen und Matratze mit Paspel oben."
+          },
+          "retained": {
+            "en": "As 1:100 plus grain hatching.",
+            "de": "Wie 1:100 plus Maserungsschraffur."
+          },
+          "merged": {
+            "en": "Single slats are one strip per section.",
+            "de": "Einzelne Latten sind ein Streifen je Teil."
+          },
+          "omitted": {
+            "en": "Slat gaps, bolts, mattress handles.",
+            "de": "Lattenfugen, Schrauben, Matratzengriffe."
+          },
+          "thinElements": {
+            "en": "Strips 0.022 m thick (slat 0.012 m).",
+            "de": "Streifen 0,022 m dick (Latte 0,012 m)."
+          },
+          "hatching": {
+            "en": "Grain lines at 0.6 mm, pen 0.13.",
+            "de": "Maserungslinien im Abstand 0,6 mm, Stift 0,13."
+          },
+          "styles": {
+            "en": "As 1:100.",
+            "de": "Wie 1:100."
+          },
+          "overlays": {
+            "en": "One shape per part.",
+            "de": "Eine Form je Teil."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "bed-plan",
+        "title": {
+          "en": "Single bed plan symbol",
+          "de": "Einzelbett-Grundrisssymbol"
+        },
+        "description": {
+          "en": "Conventional plan sign of a single bed 0.90 x 2.00 m: mattress outline, head board at the left, pillow rectangle and the turned-down cover edge.",
+          "de": "Übliches Grundrisszeichen eines Einzelbetts 0,90 x 2,00 m: Matratzenkontur, Kopfbrett links, Kissenrechteck und umgeschlagene Deckenkante."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "plan-frame",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  2.12,
+                  0
+                ],
+                [
+                  2.12,
+                  0.9
+                ],
+                [
+                  0,
+                  0.9
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plan-mattress",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.08,
+                  0.04
+                ],
+                [
+                  2.03,
+                  0.04
+                ],
+                [
+                  2.03,
+                  0.86
+                ],
+                [
+                  0.08,
+                  0.86
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plan-pillow",
+              "bone": "ground",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.12,
+                  0.12
+                ],
+                [
+                  0.52,
+                  0.12
+                ],
+                [
+                  0.52,
+                  0.78
+                ],
+                [
+                  0.12,
+                  0.78
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plan-turn",
+              "bone": "ground",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.7,
+                  0.04
+                ],
+                [
+                  0.7,
+                  0.86
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Model metres at real size: x along the bed 0 to 2.12 m (head at 0), y across 0 to 0.90 m. Pillow and cover edge are conventional marks with their real size.",
+          "de": "Modellmeter in Originalgröße: x entlang des Betts 0 bis 2,12 m (Kopf bei 0), y quer 0 bis 0,90 m. Kissen und Deckenkante sind übliche Zeichen in Realgröße."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "flat",
+        "title": {
+          "en": "Flat, empty",
+          "de": "Flach, leer"
+        },
+        "description": {
+          "en": "All sections flat; a sun patch from the window lies on the mattress.",
+          "de": "Alle Teile flach; ein Fenster-Sonnenfleck liegt auf der Matratze."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foot-head",
+          "foot-mid",
+          "foot-foot"
+        ],
+        "thermal": {
+          "regions": {
+            "mattress": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "slats": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            },
+            "bed-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "head-raised",
+        "title": {
+          "en": "Head section raised",
+          "de": "Kopfteil hochgestellt"
+        },
+        "description": {
+          "en": "Head section raised by 50 degrees (empty bed).",
+          "de": "Kopfteil um 50 Grad hochgestellt (leeres Bett)."
+        },
+        "bones": {
+          "slat-head": {
+            "angleDeg": -50
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-head",
+          "foot-mid",
+          "foot-foot"
+        ],
+        "thermal": {
+          "regions": {
+            "mattress": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.2
+            },
+            "slats": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0.0
+            },
+            "bed-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "asleep",
+        "title": {
+          "en": "Person asleep",
+          "de": "Person schläft"
+        },
+        "description": {
+          "en": "One adult lies flat (75 kg): the mattress sinks 28 mm at the hips; contact with the back and legs at 30 degC.",
+          "de": "Eine erwachsene Person liegt flach (75 kg): die Matratze sinkt an der Hüfte um 28 mm; Kontakt mit Rücken und Beinen bei 30 degC."
+        },
+        "bones": {
+          "mat-head": {
+            "dy": -0.02
+          },
+          "mat-mid": {
+            "dy": -0.028
+          },
+          "mat-foot": {
+            "dy": -0.012
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-head",
+          "foot-mid",
+          "foot-foot"
+        ],
+        "thermal": {
+          "regions": {
+            "mattress": {
+              "exposedFraction": 0.65,
+              "sunlitFraction": 0.0,
+              "contact": {
+                "fraction": 0.35,
+                "tempC": 30
+              }
+            },
+            "slats": {
+              "exposedFraction": 0.0,
+              "sunlitFraction": 0.0
+            },
+            "bed-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "occupant-head",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant share on the mattress head part (40 % of 75 kg)",
+              "de": "Anteil der Person auf dem Matratzenteil Kopf (40 % von 75 kg)"
+            },
+            "distributed": {
+              "bone": "mat-head",
+              "fromM": -0.72,
+              "toM": 0,
+              "wxNPerM": 0,
+              "wyNPerM": -408.6
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          },
+          {
+            "id": "occupant-mid",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant share on the mattress mid part (35 % of 75 kg)",
+              "de": "Anteil der Person auf dem Matratzenteil Mitte (35 % von 75 kg)"
+            },
+            "distributed": {
+              "bone": "mat-mid",
+              "fromM": 0,
+              "toM": 0.6,
+              "wxNPerM": 0,
+              "wyNPerM": -429.0
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          },
+          {
+            "id": "occupant-foot",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant share on the mattress foot part (25 % of 75 kg)",
+              "de": "Anteil der Person auf dem Matratzenteil Fuß (25 % von 75 kg)"
+            },
+            "distributed": {
+              "bone": "mat-foot",
+              "fromM": 0,
+              "toM": 0.68,
+              "wxNPerM": 0,
+              "wyNPerM": -270.4
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "reading-in-bed",
+        "title": {
+          "en": "Sitting up to read",
+          "de": "Aufrecht zum Lesen"
+        },
+        "description": {
+          "en": "Head section at 50 degrees; the person sits up against the raised head section.",
+          "de": "Kopfteil bei 50 Grad; die Person sitzt aufrecht am hochgestellten Kopfteil."
+        },
+        "bones": {
+          "slat-head": {
+            "angleDeg": -50
+          },
+          "mat-head": {
+            "dy": -0.025
+          },
+          "mat-mid": {
+            "dy": -0.03
+          },
+          "mat-foot": {
+            "dy": -0.01
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-head",
+          "foot-mid",
+          "foot-foot"
+        ],
+        "thermal": {
+          "regions": {
+            "mattress": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 30
+              }
+            },
+            "slats": {
+              "exposedFraction": 0.3,
+              "sunlitFraction": 0.0
+            },
+            "bed-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "occupant-head",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant share on the mattress head part (55 % of 75 kg)",
+              "de": "Anteil der Person auf dem Matratzenteil Kopf (55 % von 75 kg)"
+            },
+            "distributed": {
+              "bone": "mat-head",
+              "fromM": -0.72,
+              "toM": 0,
+              "wxNPerM": 0,
+              "wyNPerM": -561.8
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          },
+          {
+            "id": "occupant-mid",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant share on the mattress mid part (30 % of 75 kg)",
+              "de": "Anteil der Person auf dem Matratzenteil Mitte (30 % von 75 kg)"
+            },
+            "distributed": {
+              "bone": "mat-mid",
+              "fromM": 0,
+              "toM": 0.6,
+              "wxNPerM": 0,
+              "wyNPerM": -367.8
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          },
+          {
+            "id": "occupant-foot",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant share on the mattress foot part (15 % of 75 kg)",
+              "de": "Anteil der Person auf dem Matratzenteil Fuß (15 % von 75 kg)"
+            },
+            "distributed": {
+              "bone": "mat-foot",
+              "fromM": 0,
+              "toM": 0.68,
+              "wxNPerM": 0,
+              "wyNPerM": -162.2
+            },
+            "fxN": 0.0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "half-raised-key",
+        "title": {
+          "en": "Head half raised (key)",
+          "de": "Kopfteil halb hoch (Schlüssel)"
+        },
+        "description": {
+          "en": "Head section at 25 degrees.",
+          "de": "Kopfteil bei 25 Grad."
+        },
+        "key": true,
+        "bones": {
+          "slat-head": {
+            "angleDeg": -25
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-head",
+          "foot-mid",
+          "foot-foot"
+        ],
+        "thermal": {
+          "regions": {
+            "mattress": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "slats": {
+              "exposedFraction": 0.1,
+              "sunlitFraction": 0.0
+            },
+            "bed-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "raise-head-section",
+        "title": {
+          "en": "Raise the head section",
+          "de": "Kopfteil hochstellen"
+        },
+        "description": {
+          "en": "The head section rises to 50 degrees in 6 s, the mattress follows the slats.",
+          "de": "Das Kopfteil hebt sich in 6 s auf 50 Grad, die Matratze folgt dem Lattenrost."
+        },
+        "durationS": 6.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "flat",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.0,
+            "pose": "half-raised-key",
+            "ease": "smooth"
+          },
+          {
+            "t": 6.0,
+            "pose": "head-raised",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-head",
+            "fromS": 0,
+            "toS": 6.0
+          },
+          {
+            "anchor": "foot-mid",
+            "fromS": 0,
+            "toS": 6.0
+          },
+          {
+            "anchor": "foot-foot",
+            "fromS": 0,
+            "toS": 6.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "raise",
+            "fromS": 0,
+            "toS": 6.0,
+            "title": {
+              "en": "Raising",
+              "de": "Hochstellen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 6.0,
+            "kind": "motion",
+            "title": {
+              "en": "Sections reach their stops",
+              "de": "Teile erreichen ihre Anschläge"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "get-into-bed",
+        "title": {
+          "en": "Get into bed",
+          "de": "Ins Bett legen"
+        },
+        "description": {
+          "en": "An adult lies down on the flat bed; the mattress sinks and the contact surface warms.",
+          "de": "Eine erwachsene Person legt sich auf das flache Bett; die Matratze sinkt ein und die Kontaktfläche erwärmt sich."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "flat",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.0,
+            "pose": "asleep",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "asleep",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-head",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "foot-mid",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "foot-foot",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "lie",
+            "fromS": 0,
+            "toS": 2.0,
+            "title": {
+              "en": "Lie down",
+              "de": "Hinlegen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.5,
+            "kind": "load-on",
+            "title": {
+              "en": "Occupant lies on the mattress",
+              "de": "Person liegt auf der Matratze"
+            },
+            "target": "occupant-mid"
+          },
+          {
+            "t": 1.5,
+            "kind": "thermal",
+            "title": {
+              "en": "Mattress top takes up 30 degC contact heat",
+              "de": "Matratzenoberseite nimmt 30-degC-Kontaktwärme auf"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:occupant-head",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.0,
+                "v": 0
+              },
+              {
+                "t": 2.0,
+                "v": 1
+              },
+              {
+                "t": 4.0,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:occupant-mid",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.0,
+                "v": 0
+              },
+              {
+                "t": 2.0,
+                "v": 1
+              },
+              {
+                "t": 4.0,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:occupant-foot",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.0,
+                "v": 0
+              },
+              {
+                "t": 2.0,
+                "v": 1
+              },
+              {
+                "t": 4.0,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sit-up-to-read",
+        "title": {
+          "en": "Sit up to read",
+          "de": "Aufsetzen zum Lesen"
+        },
+        "description": {
+          "en": "The sleeper sits up: the head section is raised while the load shifts to the head part.",
+          "de": "Die schlafende Person richtet sich auf: das Kopfteil wird hochgestellt, während die Last auf den Kopfteil wandert."
+        },
+        "durationS": 6.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "asleep",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.0,
+            "pose": "half-raised-key",
+            "ease": "smooth"
+          },
+          {
+            "t": 6.0,
+            "pose": "reading-in-bed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-head",
+            "fromS": 0,
+            "toS": 6.0
+          },
+          {
+            "anchor": "foot-mid",
+            "fromS": 0,
+            "toS": 6.0
+          },
+          {
+            "anchor": "foot-foot",
+            "fromS": 0,
+            "toS": 6.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "sit",
+            "fromS": 0,
+            "toS": 6.0,
+            "title": {
+              "en": "Sitting up",
+              "de": "Aufsetzen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.0,
+            "kind": "load-on",
+            "title": {
+              "en": "Occupant on the bed",
+              "de": "Person auf dem Bett"
+            },
+            "target": "occupant-mid"
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 350,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "mattress",
+          "title": {
+            "en": "Mattress cover and sides",
+            "de": "Matratzenbezug und Seiten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "quilted-cover",
+          "areaM2": 2.5,
+          "characteristicLengthM": 0.9,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "quilt",
+              "title": {
+                "en": "Quilted cover 10 mm",
+                "de": "Steppbezug 10 mm"
+              },
+              "kind": "clothing",
+              "material": "quilted-cover",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.25,
+              "heatCapacityJM2K": 1950,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            },
+            {
+              "id": "foam-core",
+              "title": {
+                "en": "Cold foam 0.18 m",
+                "de": "Kaltschaum 0,18 m"
+              },
+              "kind": "insulation",
+              "material": "cold-foam",
+              "thicknessM": 0.18,
+              "resistanceM2KW": 4.0,
+              "heatCapacityJM2K": 3012,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4962,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "slats",
+          "title": {
+            "en": "Slatted base",
+            "de": "Lattenrost"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "birch-slat",
+          "areaM2": 1.5,
+          "characteristicLengthM": 0.07,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "slat-birch",
+              "title": {
+                "en": "Birch slat 12 mm",
+                "de": "Birkenleiste 12 mm"
+              },
+              "kind": "timber",
+              "material": "birch-slat",
+              "thicknessM": 0.012,
+              "resistanceM2KW": 0.08,
+              "heatCapacityJM2K": 12480,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 12480,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007",
+          "hidden": {
+            "en": "The slats lie under the mattress and behind the side rail; they show only where a raised section opens the base.",
+            "de": "Die Latten liegen unter der Matratze und hinter dem Seitenholm; sie zeigen sich nur dort, wo ein angehobener Teil den Rost öffnet."
+          }
+        },
+        {
+          "id": "bed-frame",
+          "title": {
+            "en": "Frame, boards and side rails",
+            "de": "Rahmen, Bretter und Seitenholme"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pine-timber",
+          "areaM2": 4.0,
+          "characteristicLengthM": 0.16,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.45,
+          "layers": [
+            {
+              "id": "pine-member",
+              "title": {
+                "en": "Pine 40 mm, half thickness 20 mm",
+                "de": "Kiefer 40 mm, halbe Dicke 20 mm"
+              },
+              "kind": "timber",
+              "material": "pine-timber",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.153846,
+              "heatCapacityJM2K": 16000,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 16000,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The mattress cover is a 10 mm quilted layer (effective 150 kg/m3, 0.04 W/mK; authored-estimate) over 0.18 m cold foam (0.045 W/mK): the surface follows the contact body quickly (about 2.2 kJ/m2K) and insulates it from the foam; slats and frame are birch and pine after ISO 10456.",
+          "de": "Der Matratzenbezug ist eine 10 mm Steppschicht (effektiv 150 kg/m3, 0,04 W/mK; Schätzwert) über 0,18 m Kaltschaum (0,045 W/mK): die Oberfläche folgt dem Kontaktkörper schnell (etwa 2,2 kJ/m2K) und isoliert ihn vom Schaum; Latten und Rahmen sind Birke und Kiefer nach ISO 10456."
+        },
+        {
+          "en": "A lying person covers 35 % of the mattress surface (0.6 m2 of the 1.7 m2 top) with a clothed body at 30 degC (ISO 7730 clothing surface; a duvet is not modelled).",
+          "de": "Eine liegende Person bedeckt 35 % der Matratzenoberfläche (0,6 m2 der 1,7 m2 Oberseite) mit einem bekleideten Körper bei 30 degC (Bekleidungsoberfläche nach ISO 7730; eine Bettdecke ist nicht modelliert)."
+        },
+        {
+          "en": "The slat region is declared hidden: it lies behind the side rail and under the mattress; raised poses bind more exposure to it.",
+          "de": "Die Lattenregion ist als verdeckt erklärt: sie liegt hinter dem Seitenholm und unter der Matratze; angehobene Posen binden mehr Luftkontakt."
+        },
+        {
+          "en": "Reference case: bedroom at 21 degC, still air, 350 W/m2 window sun patch behind glazing on the flat bed.",
+          "de": "Referenzfall: Schlafzimmer bei 21 degC, ruhige Luft, 350 W/m2 Fenster-Sonnenfleck hinter Verglasung auf dem flachen Bett."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-head",
+        "foot-mid",
+        "foot-foot"
+      ],
+      "assumptions": [
+        {
+          "en": "The frame is a rigid body on three foot contacts (head posts, centre leg, foot posts); the slatted base is three sections, the head section on a revolute hinge at x = 0.78 m (0 to 65 degrees); the foot section is fixed because a raised foot section would pass within a few centimetres of the footboard; each mattress part rides on its section and sinks along the section normal.",
+          "de": "Der Rahmen ist ein starrer Körper auf drei Fußkontakten (Kopfpfosten, Mittelfuß, Fußpfosten); der Lattenrost besteht aus drei Teilen, das Kopfteil an einem Drehgelenk bei x = 0,78 m (0 bis 65 Grad); das Fußteil ist fest, weil ein hochgestelltes Fußteil nur wenige Zentimeter am Fußbrett vorbeiliefe; jedes Matratzenteil sitzt auf seinem Teil und sinkt entlang der Teilnormalen ein."
+        },
+        {
+          "en": "Mattress sink: hips 28 mm, shoulders 20 mm, heels 12 mm (authored-estimate for firm cold foam 0.18 m, ISO 3386-1 order of 6 kPa at 40 percent strain); the occupant load of 75 kg is split 40/35/25 percent lying and 55/30/15 percent sitting up.",
+          "de": "Matratzeneinsinken: Hüfte 28 mm, Schultern 20 mm, Fersen 12 mm (Schätzwert für festen Kaltschaum 0,18 m, Größenordnung 6 kPa bei 40 Prozent Stauchung nach ISO 3386-1); die Personenlast von 75 kg verteilt sich liegend 40/35/25 Prozent und aufrecht 55/30/15 Prozent."
+        },
+        {
+          "en": "Static load tests of bed bases follow EN 1725 (scope only; no test magnitude is modelled).",
+          "de": "Statische Lastprüfungen von Bettunterbauten folgen EN 1725 (nur Rahmen; keine Prüflast modelliert)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "flat",
+      "defaultClip": "raise-head-section",
+      "defaultScale": 50,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const root = process.argv[2]!;
+const shapes = `${root}/🔨️modules/🎨️depiction/🧩️shapes/🟦️.ts`;
+let text = readFileSync(shapes, "utf8");
+const start = text.indexOf("/** ⚖️ The area-weighted value");
+const end = text.indexOf("/** 🔭️ Selects the shapes");
+if (start < 0 || end < start) throw new Error("anchor");
+text = text.slice(0, start) + text.slice(end);
+writeFileSync(shapes, text);
+const barrel = `${root}/📦️packages/🟦️typescript/🟦️.ts`;
+let b = readFileSync(barrel, "utf8");
+b = b.replace('export { areaWeighted, hatchOf, regionsOf }', 'export { hatchOf, regionsOf }');
+writeFileSync(barrel, b);

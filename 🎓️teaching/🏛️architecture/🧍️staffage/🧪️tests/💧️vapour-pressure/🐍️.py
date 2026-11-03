@@ -2,7 +2,7 @@
 
 The saturation pressures are cross-checked against psychrolib (ASHRAE Handbook, Hyland-Wexler) within 0.3 %.
 
-Run `uv run --with CoolProp --with psychrolib python -I 🐍️.py [--write]`.
+Run `uv run --project 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python --group test python -I 🐍️.py [--write]`.
 """
 import json
 import sys

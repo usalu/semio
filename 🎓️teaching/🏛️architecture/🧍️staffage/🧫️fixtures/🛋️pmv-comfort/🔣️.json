@@ -1,0 +1,197 @@
+{
+ "id": "pmv-comfort",
+ "oracle": "pythermalcomfort pmv_ppd_iso(model='7730-2005', limit_inputs=False, round_output=False); vr is the relative air speed",
+ "tolerances": {
+  "pmv": 0.01,
+  "ppdPercent": 0.1
+ },
+ "cases": [
+  {
+   "id": "neutral-office",
+   "inputs": {
+    "id": "neutral-office",
+    "tdb": 24.0,
+    "tr": 24.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 1.2,
+    "clo": 0.6
+   },
+   "expected": {
+    "pmv": -0.02053024963322107,
+    "ppd": 5.008725242735295,
+    "tsv": "Neutral"
+   }
+  },
+  {
+   "id": "iso-example-b",
+   "inputs": {
+    "id": "iso-example-b",
+    "tdb": 22.0,
+    "tr": 22.0,
+    "v": 0.1,
+    "rh": 60.0,
+    "met": 1.2,
+    "clo": 0.5
+   },
+   "expected": {
+    "pmv": -0.7523668571085066,
+    "ppd": 16.921191640039524,
+    "tsv": "Slightly Cool"
+   }
+  },
+  {
+   "id": "warm-summer-clothes",
+   "inputs": {
+    "id": "warm-summer-clothes",
+    "tdb": 28.0,
+    "tr": 28.0,
+    "v": 0.2,
+    "rh": 50.0,
+    "met": 1.0,
+    "clo": 0.4
+   },
+   "expected": {
+    "pmv": 0.290319312480143,
+    "ppd": 6.751038055463667,
+    "tsv": "Neutral"
+   }
+  },
+  {
+   "id": "cool-winter-indoor",
+   "inputs": {
+    "id": "cool-winter-indoor",
+    "tdb": 18.0,
+    "tr": 18.0,
+    "v": 0.1,
+    "rh": 40.0,
+    "met": 1.0,
+    "clo": 1.0
+   },
+   "expected": {
+    "pmv": -1.462066308106354,
+    "ppd": 48.844480066349696,
+    "tsv": "Slightly Cool"
+   }
+  },
+  {
+   "id": "cold-radiant-wall",
+   "inputs": {
+    "id": "cold-radiant-wall",
+    "tdb": 21.0,
+    "tr": 14.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 1.2,
+    "clo": 0.8
+   },
+   "expected": {
+    "pmv": -1.1940846660816997,
+    "ppd": 34.95887433197245,
+    "tsv": "Slightly Cool"
+   }
+  },
+  {
+   "id": "hot-radiant-sun",
+   "inputs": {
+    "id": "hot-radiant-sun",
+    "tdb": 26.0,
+    "tr": 38.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 1.2,
+    "clo": 0.5
+   },
+   "expected": {
+    "pmv": 2.1900309801387743,
+    "ppd": 84.5523460532779,
+    "tsv": "Warm"
+   }
+  },
+  {
+   "id": "walking-indoors",
+   "inputs": {
+    "id": "walking-indoors",
+    "tdb": 22.0,
+    "tr": 22.0,
+    "v": 0.3,
+    "rh": 50.0,
+    "met": 2.0,
+    "clo": 0.7
+   },
+   "expected": {
+    "pmv": 0.5016621394486023,
+    "ppd": 10.260100612263074,
+    "tsv": "Slightly Warm"
+   }
+  },
+  {
+   "id": "light-work-fan",
+   "inputs": {
+    "id": "light-work-fan",
+    "tdb": 27.0,
+    "tr": 27.0,
+    "v": 0.6,
+    "rh": 60.0,
+    "met": 1.6,
+    "clo": 0.5
+   },
+   "expected": {
+    "pmv": 0.7823482036337953,
+    "ppd": 17.899357778508374,
+    "tsv": "Slightly Warm"
+   }
+  },
+  {
+   "id": "sleeping-bedding",
+   "inputs": {
+    "id": "sleeping-bedding",
+    "tdb": 17.0,
+    "tr": 17.0,
+    "v": 0.05,
+    "rh": 50.0,
+    "met": 0.9,
+    "clo": 2.0
+   },
+   "expected": {
+    "pmv": -0.5845210307504258,
+    "ppd": 12.16026120407912,
+    "tsv": "Slightly Cool"
+   }
+  },
+  {
+   "id": "outdoor-cold-extrapolated",
+   "inputs": {
+    "id": "outdoor-cold-extrapolated",
+    "tdb": 5.0,
+    "tr": 5.0,
+    "v": 1.0,
+    "rh": 70.0,
+    "met": 1.4,
+    "clo": 1.5
+   },
+   "expected": {
+    "pmv": -2.305855869381822,
+    "ppd": 88.44163302780409,
+    "tsv": "Cool"
+   }
+  },
+  {
+   "id": "outdoor-hot-extrapolated",
+   "inputs": {
+    "id": "outdoor-hot-extrapolated",
+    "tdb": 36.0,
+    "tr": 40.0,
+    "v": 0.5,
+    "rh": 40.0,
+    "met": 1.8,
+    "clo": 0.3
+   },
+   "expected": {
+    "pmv": 3.879586370787654,
+    "ppd": 99.99820294810723,
+    "tsv": "Hot"
+   }
+  }
+ ]
+}

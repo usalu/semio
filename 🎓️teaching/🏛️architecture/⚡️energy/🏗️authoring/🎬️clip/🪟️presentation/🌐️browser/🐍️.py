@@ -22,9 +22,15 @@ _MEMBERSHIP = None
 _LOCK = threading.RLock()
 
 
+_REPO = {}
+
+
 def _repo() -> str:
-    """🧰 Resolve the host's provisioned command without assuming a platform-specific binary."""
-    configured = os.environ.get("SEMIO_REPO_BINARY") or shutil.which("repo")
+    """🧰 Resolve the host's provisioned command once per PATH without assuming a platform-specific binary."""
+    path = os.environ.get("PATH")
+    if path not in _REPO:
+        _REPO[path] = shutil.which("repo")
+    configured = os.environ.get("SEMIO_REPO_BINARY") or _REPO[path]
     if configured:
         return configured
     marker = _WORKSPACE / ".🧬semio/🦑️repo/native-repo-path"
@@ -220,22 +226,28 @@ def _membership(sources) -> tuple:
     for base, _, negative in sorted(entries, key=lambda item: len(str(item[0]))):
         if not negative and not any(base.is_relative_to(root) for root in roots):
             roots.append(base)
+    prefixed = [(str(base) + os.sep, patterns, negative) for base, patterns, negative in entries]
     members = set()
     for root in roots:
         if not root.is_dir():
             members.add("missing:" + str(root))
             continue
         for directory, children, files in os.walk(root, followlinks=False):
-            children[:] = [name for name in children if name not in (".git", "node_modules") and not (Path(directory) / name).is_symlink()]
+            children[:] = [name for name in children if name not in (".git", "node_modules") and not os.path.islink(os.path.join(directory, name))]
+            applicable = [(prefix, patterns, negative) for prefix, patterns, negative in prefixed
+                if directory == prefix[:-1] or directory.startswith(prefix)]
+            if not applicable:
+                continue
             for name in files:
-                path = Path(directory) / name
+                path = os.path.join(directory, name)
                 included, excluded = False, False
-                for base, patterns, negative in entries:
-                    if path.is_relative_to(base) and any(pattern.fullmatch(path.relative_to(base).as_posix()) for pattern in patterns):
+                for prefix, patterns, negative in applicable:
+                    relative = path[len(prefix):].replace(os.sep, "/")
+                    if any(pattern.fullmatch(relative) for pattern in patterns):
                         excluded |= negative
                         included |= not negative
                 if included and not excluded:
-                    members.add(str(path.resolve()))
+                    members.add(os.path.realpath(path) if os.path.islink(path) else path)
     return tuple(sorted(members))
 
 

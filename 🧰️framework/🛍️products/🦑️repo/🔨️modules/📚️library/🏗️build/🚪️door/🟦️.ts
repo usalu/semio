@@ -17,8 +17,19 @@ export type BuildDoorPolicyV1=Readonly<{version:1;liveness:Readonly<{delaysSecon
 /** 🚧️ The refusals the front door can state before any storage, lease or graph exists. */
 export type BuildDoorRefusalIdV1="unknownCommand"|"unknownSubcommand"|"invalidValue"|"missingArgument";
 
-/** 🛣️ Where one invocation goes: help, a refusal, a light command that owns its closure, or the full implementation. */
-export type BuildDoorRouteV1=Readonly<{kind:"full"}>|Readonly<{kind:"help";args:readonly string[]}>|Readonly<{kind:"refused";id:BuildDoorRefusalIdV1;values:Readonly<Record<string,string>>}>|Readonly<{kind:"light";operation:string;args:readonly string[]}>;
+/** 🛣️ Where one invocation goes: help, a refusal, a light command that owns its closure, the installed dashboard, or the full implementation. */
+export type BuildDoorRouteV1=Readonly<{kind:"full"}>|Readonly<{kind:"help";args:readonly string[]}>|Readonly<{kind:"refused";id:BuildDoorRefusalIdV1;values:Readonly<Record<string,string>>}>|Readonly<{kind:"light";operation:string;args:readonly string[]}>|Readonly<{kind:"dashboard";args:readonly string[]}>;
+
+const nativeDashboardTargetsV1=new Set(["run","daemon","preferences"]);
+
+/** 🎛️ The control-plane targets that only hand the terminal to the installed dashboard. Graph, batch and dependency flags stay on the full implementation. */
+export function nativeDashboardDoorV1(operation:readonly string[],prefixes:readonly string[]):boolean{
+ if(operation[0]!=="run")return false;
+ const target=operation[1],prefix=prefixes.find(item=>target?.startsWith(item));
+ if(target===undefined||prefix===undefined||!nativeDashboardTargetsV1.has(target.slice(prefix.length)))return false;
+ const boundary=operation.indexOf("--"),options=operation.slice(2,boundary<0?undefined:boundary);
+ return !options.some(option=>/^--(?:graph|batch|parallel|exclude-dependencies)(?:=|$)/u.test(option));
+}
 
 /** 🗺️ The language every later text uses and the route chosen once. */
 export type BuildDoorPlanV1=Readonly<{language:string;route:BuildDoorRouteV1}>;
@@ -76,6 +87,7 @@ export function planBuildDoorV1(typed:readonly string[],environment:NodeJS.Proce
  const selection=selectBuildDoorArgumentsV1(args.slice(args[0]==="repo"?1:0),environment,source,rules);
  if("refused" in selection)return {language,route:{kind:"refused",id:"invalidValue",values:selection.refused}};
  const operation=selection.args,command=operation[0];
+ if(nativeDashboardDoorV1(operation,rules.fullTargetPrefixes))return {language,route:{kind:"dashboard",args:operation}};
  if(command==="run"&&rules.fullTargetPrefixes.some(prefix=>operation[1]?.startsWith(prefix)))return full;
  if(buildDoorRequestsHelpV1(operation))return {language,route:{kind:"help",args:operation}};
  const row=command===undefined||command.startsWith("-")?undefined:source.operations.find(candidate=>candidate.name===command);
@@ -96,7 +108,7 @@ export function renderBuildDoorRefusalV1(route:Extract<BuildDoorRouteV1,{kind:"r
 }
 
 /** 🪛️ What the front door needs from its process: output, exit code and the loader of one light command. */
-export type BuildDoorPortsV1=Readonly<{write:(line:string)=>void;error:(line:string)=>void;exit:(code:number)=>void;load:(operation:string)=>Promise<Readonly<Record<string,unknown>>>}>;
+export type BuildDoorPortsV1=Readonly<{write:(line:string)=>void;error:(line:string)=>void;exit:(code:number)=>void;load:(operation:string)=>Promise<Readonly<Record<string,unknown>>>;dashboard?:(root:string,args:readonly string[],environment:NodeJS.ProcessEnv)=>Promise<number>}>;
 
 /** 🖥️ The ports of the real process. */
 export function buildDoorProcessPortsV1():BuildDoorPortsV1{
@@ -121,6 +133,7 @@ export async function runBuildDoorV1(root:string,typed:readonly string[],environ
  if(environment===process.env)process.env.SEMIO_LANGUAGE=plan.language;
  const route=plan.route,localized={...environment,SEMIO_LANGUAGE:plan.language};
  if(route.kind==="full")return "full";
+ if(route.kind==="dashboard"){const code=ports.dashboard?await ports.dashboard(root,route.args,localized):await (await profilePhaseV1("door.dashboard",()=>import("./🎛️control/🟦️.ts"))).runDashboardDoorV1(root,route.args,localized);ports.exit(code);return "handled";}
  if(route.kind==="help"){ports.write(buildHelpForArgumentsV1(route.args,localized));return "handled";}
  if(route.kind==="refused"){ports.error(renderBuildDoorRefusalV1(route,plan.language,rules));ports.exit(rules.refusedExitCode);return "handled";}
  const row=rules.light.find(candidate=>candidate.operation===route.operation)!,run=(await profilePhaseV1("door.light-load",()=>ports.load(route.operation)))[row.export] as (...parameters:unknown[])=>Promise<number>;

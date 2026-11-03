@@ -1,0 +1,12 @@
+const L = "C:/git/semio/🎓️teaching/🏛️architecture/🧍️staffage";
+const { evaluate } = await import(`${L}/🔨️modules/🧮️evaluation/🟦️.ts`);
+const { readFileSync, existsSync } = await import("node:fs");
+const [slug, scale, view, axis] = process.argv.slice(2);
+const f = ["🪑️objects", "🛋️furniture"].map((c) => `${L}/🗂️catalog/${c}/${slug}/🔣️.json`).find(existsSync)!;
+const a = JSON.parse(readFileSync(f, "utf8")).asset;
+const st = evaluate(a, { kind: "pose", pose: a.presentation.defaultPose }, { kind: "scale", scale: { denominator: +scale } });
+const rows = st.shapes[view].filter((s: any) => s.shape.role !== "ground").map((s: any) => { const p = s.rings.flat(); const v = p.map((q: any) => q[axis]); return { id: s.shape.id, bone: s.shape.bone, min: Math.min(...v), max: Math.max(...v) }; });
+rows.sort((x: any, y: any) => y.max - x.max);
+console.log("MAX", rows.slice(0, 4).map((r: any) => `${r.id}:${r.max.toFixed(3)}`).join(" "));
+rows.sort((x: any, y: any) => x.min - y.min);
+console.log("MIN", rows.slice(0, 4).map((r: any) => `${r.id}:${r.min.toFixed(3)}`).join(" "));

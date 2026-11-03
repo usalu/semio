@@ -7,7 +7,7 @@
  * @see https://unicode.org/reports/tr15/ — normalisation behind accent folding
  */
 import { CATEGORIES, COMPLETION } from "@teaching/staffage";
-import type { Asset, CategoryId, Completion, Issue, Language, ManifestEntry } from "@teaching/staffage";
+import type { Asset, CategoryId, Completion, Revision, Issue, Language, ManifestEntry } from "@teaching/staffage";
 
 /** 🧮️ The analyses an asset can offer. */
 export const ANALYTICS = ["thermal", "structural"] as const;
@@ -38,7 +38,7 @@ export type Filters = {
 export const NO_FILTERS: Filters = { q: "", categories: [], analytics: [], heightMinM: null, heightMaxM: null, rootMotion: false, completion: [], sort: "name", descending: false };
 
 /** 🗂️ One catalog row: the manifest entry, and the asset once its category is loaded and valid. `pending`: its category is not loaded yet; `missing`: loaded, but the asset is not authored; `failed`: its category file could not be read; `invalid`: authored, but it fails validation (`issues` say why). */
-export type Row = { readonly entry: ManifestEntry; readonly status: "ready" | "pending" | "invalid" | "missing" | "failed"; readonly asset?: Asset; readonly issues?: readonly Issue[] };
+export type Row = { readonly entry: ManifestEntry; readonly status: "ready" | "pending" | "invalid" | "missing" | "failed"; readonly asset?: Asset; readonly revision?: Revision; readonly issues?: readonly Issue[] };
 
 function list<T extends string>(value: string | null, allowed: readonly T[]): readonly T[] {
   return (value ?? "")

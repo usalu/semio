@@ -13,9 +13,6 @@ semio_color = _theme_module.color
 import numpy as np
 from manim import *
 
-from pathlib import Path as _Path
-import sys as _sys
-
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
@@ -26,6 +23,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
@@ -53,12 +51,15 @@ ripples = _manim_module.ripples
 radiation_ray = _manim_module.radiation_ray
 color_ramp = _manim_module.color_ramp
 house_section = _manim_module.house_section
-radiator = _manim_module.radiator
-person_glyph = _manim_module.person_glyph
+staffage = _manim_module.staffage
+staffage_motion = _manim_module.staffage_motion
+staffage_height = _manim_module.staffage_height
+fitted_staffage = _manim_module.fitted_staffage
+BOILER_RATE = 60.0
 sun_glyph = _manim_module.sun_glyph
 cloud_glyph = _manim_module.cloud_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
-lamp_glyph = _manim_module.lamp_glyph
+pendant_lamp = _manim_module.pendant_lamp
 clock_glyph = _manim_module.clock_glyph
 meter = _manim_module.meter
 bind_meter = _manim_module.bind_meter
@@ -71,17 +72,18 @@ pulse_flashes = _manim_module.pulse_flashes
 math_label = _manim_module.math_label
 math_panel = _manim_module.math_panel
 math_readout = _manim_module.math_readout
-de_num = _manim_module.de_num
+label_number = _manim_module.label_number
 highlight_param = _manim_module.highlight_param
 caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
+tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
-_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -136,17 +138,21 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 
-def _stand(floor_y, room_h, x, color=P_ORANGE):
-    """🧍 Occupant at true scale — 70 % of the clear room height, feet on the floor line at ``x``."""
-    height = 0.7 * room_h
-    return person_glyph(np.array([x, floor_y + height / 2, 0.0]), color=color, scale=height / 0.66)
+def _stand(floor_y, room_h, x):
+    """🧍 Breathing thermal occupant at true scale — 70 % of the clear room height, feet on the floor line at ``x``."""
+    cast = "shared-person-winter"
+    return staffage_motion(cast, unit=0.7 * room_h / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
+
+
+def _talker(floor_y, room_h, x):
+    """🗣️ Breathing thermal speaker at true scale — 70 % of the clear room height, feet on the floor line at ``x``."""
+    cast = "shared-person-neutral"
+    return staffage_motion(cast, unit=0.7 * room_h / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
 
 
 def _heater(floor_y, room_h, x):
-    """♨️ Physical panel size and floor clearance for a 2.5 m room."""
-    metre = room_h / 2.5
-    return radiator(np.array([x, floor_y + (0.12 + 0.65 / 2) * metre, 0.0]),
-                    height=0.65 * metre, width=1.3 * metre)
+    """♨️ Thermal panel radiator at its physical size on the floor line of a 2.5 m room."""
+    return staffage("shared-radiator-front-winter", unit=room_metre(room_h), anchor=np.array([x, floor_y, 0.0]))
 
 
 def _stream(path, rate, *, color, color_end=None, count: int = 5, speed: float = 0.45, radius: float = 0.05,
@@ -300,7 +306,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Warum Rechnung und Abrechnung auseinanderlaufen")
+        subtitle = section_heading(tr("Why calculation and billing diverge", "Warum Rechnung und Abrechnung auseinanderlaufen"))
         din = _din_ref("DIN V 18599-10:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -322,7 +328,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         th_tick = Line(np.array([-4.17, tick_y, 0.0]), np.array([-4.07, tick_y, 0.0]), color=CALC_CYAN, stroke_width=2.4)
         temp = th["level"]
         temp_read = math_readout(
-            lambda: rf"{de_num(10 + 20 * temp.get_value())}\,\mathrm{{°C}}",
+            lambda: rf"{label_number(10 + 20 * temp.get_value())}\,\mathrm{{°C}}",
             np.array([-3.98, tick_y - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_WHITE, edge="left")
         spout_y, spout_x = y_mid + 0.80, -3.10
         spout = VGroup(
@@ -410,7 +416,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
 
         calc_total = sum(SEG_NORM)
         calc_lbl = _bar_label("berechnet", CALC_CYAN, BAR_Y_CALC + 0.36)
-        meas_lbl = _bar_label("gemessen", REAL_ORANGE, BAR_Y_MEAS + 0.36)
+        meas_lbl = _bar_label(tr("measured", "gemessen"), REAL_ORANGE, BAR_Y_MEAS + 0.36)
         calc_bar = _bar(calc_total, CALC_CYAN, BAR_Y_CALC)
         meas_bar = _bar(0.68, REAL_ORANGE, BAR_Y_MEAS)
         calc_segs = _segments(SEG_NORM, BAR_Y_CALC)
@@ -422,12 +428,12 @@ class Beat1_BerechnungVsAbrechnung(Scene):
             return row.arrange(RIGHT, buff=0.14).move_to(np.array([BAR_X0, -0.45, 0.0]), aligned_edge=LEFT)
 
         legend = [
-            _legend(r"\text{Innentemperatur}\;20\,\mathrm{°C}\;\text{Sollwert}", SEG_COLOURS[0]),
-            _legend(r"\text{Luftwechsel genormt}", SEG_COLOURS[1]),
-            _legend(r"\text{Warmwasser pauschal je}\;\mathrm{m^{2}}", SEG_COLOURS[2]),
-            _legend(r"\text{Referenzklima}", SEG_COLOURS[3]),
+            _legend(tr(r"\text{Indoor temperature}\;20\,\mathrm{°C}\;\text{setpoint}", r"\text{Innentemperatur}\;20\,\mathrm{°C}\;\text{Sollwert}"), SEG_COLOURS[0]),
+            _legend(tr(r"\text{Standardised air change}", r"\text{Luftwechsel genormt}"), SEG_COLOURS[1]),
+            _legend(tr(r"\text{Hot water flat rate per}\;\mathrm{m^{2}}", r"\text{Warmwasser pauschal je}\;\mathrm{m^{2}}"), SEG_COLOURS[2]),
+            _legend(tr(r"\text{Reference climate}", r"\text{Referenzklima}"), SEG_COLOURS[3]),
         ]
-        norm_note = note_line("Die Berechnung rechnet mit Normbedingungen", color=CALC_CYAN)
+        norm_note = note_line(tr("The calculation uses standard conditions", "Die Berechnung rechnet mit Normbedingungen"), color=CALC_CYAN)
 
         self.play(FadeIn(calc_lbl), GrowFromEdge(calc_bar, LEFT), run_time=1.4)
         self.play(FadeIn(meas_lbl), GrowFromEdge(meas_bar, LEFT), run_time=1.4)
@@ -497,13 +503,13 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         self.play(FadeIn(legend[3], shift=UP * 0.1), cover.animate.set_value(1.0), *heat(2.2), run_time=2.2)
         hold_for(self, self.NARRATION, "real_wetter", during=heat)
 
-        axes = labeled_axes(AX_ORIGIN, x_len=AX_X_LEN, y_len=AX_Y_LEN, x_label="berechnet  →", color=P_WHITE)
-        y_cap = body_text("gemessen", font_size=LABEL_FONT_SIZE - 2, color=P_WHITE)
+        axes = labeled_axes(AX_ORIGIN, x_len=AX_X_LEN, y_len=AX_Y_LEN, x_label=tr("calculated  →", "berechnet  →"), color=P_WHITE)
+        y_cap = body_text(tr("measured", "gemessen"), font_size=LABEL_FONT_SIZE - 2, color=P_WHITE)
         y_cap.set_opacity(0.85).rotate(PI / 2).next_to(axes["y_axis"], LEFT, buff=0.14)
         diagonal = DashedLine(axes["pt"](0.0, 0.0), axes["pt"](1.0, 1.0), color=P_WHITE, stroke_width=2, stroke_opacity=0.55)
-        diag_tag = body_text("Rechnung = Messung", font_size=LABEL_FONT_SIZE - 4, color=P_WHITE)
+        diag_tag = body_text(tr("Calculation = measurement", "Rechnung = Messung"), font_size=LABEL_FONT_SIZE - 4, color=P_WHITE)
         diag_tag.set_opacity(0.6).next_to(axes["pt"](0.88, 0.88), UL, buff=0.06)
-        schematic_tag = body_text("schematische Darstellung", font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY)
+        schematic_tag = body_text(tr("schematic diagram", "schematische Darstellung"), font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY)
         schematic_tag.set_opacity(0.8).next_to(axes["x_label"], DOWN, buff=0.12)
         meas_total = sum(_measured_lengths())
         x_seg = Line(axes["pt"](0, 0), axes["pt"](calc_total, 0), color=CALC_CYAN, stroke_width=8)
@@ -555,7 +561,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "prebound"))
         trend = Line(axes["pt"](0.10, 0.352), axes["pt"](0.96, 0.799), color=REAL_ORANGE, stroke_width=3)
         pre_zone = _zone(0.62, 1.0, GOOD_GREEN)
-        pre_card = stat_card("schlecht gedämmt · im Mittel", "gemessen < berechnet", color=GOOD_GREEN,
+        pre_card = stat_card(tr("poorly insulated · on average", "schlecht gedämmt · im Mittel"), tr("measured < calculated", "gemessen < berechnet"), color=GOOD_GREEN,
                              caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CARD_AT)
         pre_dot = axes["pt"](0.85, 0.70)
         self.play(FadeOut(x_seg), FadeOut(y_seg), FadeOut(proj), FadeIn(pre_zone), Create(trend), FadeIn(pre_card),
@@ -566,14 +572,14 @@ class Beat1_BerechnungVsAbrechnung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "prebound_grund"))
         arrow_pre = _arrow(0.85, 0.85, 0.70, GOOD_GREEN)
-        pre_cause = stat_card("Ursache", "heizt sparsamer", color=GOOD_GREEN,
+        pre_cause = stat_card(tr("Cause", "Ursache"), tr("heats more sparingly", "heizt sparsamer"), color=GOOD_GREEN,
                               caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CAUSE_AT)
         self.play(GrowArrow(arrow_pre), FadeIn(pre_cause), run_time=1.4)
         hold_for(self, self.NARRATION, "prebound_grund")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rebound"))
         re_zone = _zone(0.0, 0.45, WARM_RED)
-        re_card = stat_card("effizient · im Mittel", "gemessen > berechnet", color=WARM_RED,
+        re_card = stat_card(tr("efficient · on average", "effizient · im Mittel"), tr("measured > calculated", "gemessen > berechnet"), color=WARM_RED,
                             caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CARD_AT)
         re_dot = axes["pt"](0.20, 0.47)
         self.play(FadeOut(pre_zone), FadeOut(pre_card), FadeOut(pre_cause), FadeOut(arrow_pre), FadeIn(re_zone),
@@ -582,13 +588,13 @@ class Beat1_BerechnungVsAbrechnung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rebound_grund"))
         arrow_re = _arrow(0.20, 0.20, 0.47, WARM_RED)
-        re_cause = stat_card("Ursache", "höhere Komforttemperatur", color=WARM_RED,
+        re_cause = stat_card(tr("Cause", "Ursache"), tr("higher comfort temperature", "höhere Komforttemperatur"), color=WARM_RED,
                              caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CAUSE_AT)
         self.play(GrowArrow(arrow_re), FadeIn(re_cause), run_time=1.4)
         hold_for(self, self.NARRATION, "rebound_grund")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "fazit"))
-        verdict = note_line("genormte Randbedingungen machen Gebäude vergleichbar — nicht Haushalte", color=P_PRIMARY)
+        verdict = note_line(tr("standardised boundary conditions make buildings comparable — not households", "genormte Randbedingungen machen Gebäude vergleichbar — nicht Haushalte"), color=P_PRIMARY)
         self.play(
             FadeIn(verdict), FadeOut(trend), FadeOut(re_zone), FadeOut(re_card), FadeOut(re_cause), FadeOut(arrow_re),
             FadeOut(ring),
@@ -611,7 +617,8 @@ class Beat1_BerechnungVsAbrechnung(Scene):
 
 #region Beat 2 – Hydraulischer Abgleich
 
-PUMP_SPIN = 4.0
+VALVE_CLOSE_S = 6.0
+VALVE_OPEN_AT_S = 1.0
 UNIT_SPEED = 0.36
 FLOW_UNBALANCED = (2.0, 1.36, 0.73, 0.36)
 FLOW_BALANCED = (1.0, 1.0, 1.0, 1.0)
@@ -636,35 +643,14 @@ def _room_row(x_left, width, count, cy, height, t=0.14):
             "ceil_bottom": cy + height / 2 - t / 2, "x_left": x_left, "width": width, "t": t}
 
 
-def _valve(center, opening, gate):
-    """🎚️ Radiator valve on the riser — the handle turns with the ``opening`` tracker (1 wide open … 0 shut) and fades with ``gate``."""
-    c = np.array(center, dtype=float)
-    body = VGroup(Circle(radius=0.10, color=P_PRIMARY, stroke_width=2.2).set_fill(P_DEEP_DARK, opacity=1.0).move_to(c),
-                  Line(c + LEFT * 0.10, c + RIGHT * 0.10, color=P_PRIMARY, stroke_width=2.2))
-    handle = always_redraw(lambda: VGroup(
-        Line(c, c + 0.26 * np.array([np.sin((1 - opening.get_value()) * PI / 2), np.cos((1 - opening.get_value()) * PI / 2), 0.0]),
-             color=P_PRIMARY, stroke_width=3),
-    ).set_opacity(float(gate.get_value())))
-    return body, handle
+def _valve(center, opening):
+    """🎚️ Handcrafted thermostatic radiator valve on the riser — its knob follows the ``opening`` tracker (1 wide open … 0 shut) through the close-down clip."""
+    group = fitted_staffage("demand-practice-valve", width=0.3, height=0.42, rate=0.0).move_to(np.array(center, dtype=float))
+    group.add_updater(lambda m: m.seek(VALVE_OPEN_AT_S + (1.0 - float(np.clip(opening.get_value(), 0.0, 1.0))) * VALVE_CLOSE_S))
+    return group
 
 
-def _thermo(bottom, height, level, gate):
-    """🌡️ Room thermometer whose column colour runs cold → comfortable → hot with the ``level`` tracker and fades with ``gate``."""
-    b = np.array(bottom, dtype=float)
-    ramp = color_ramp([(0.0, COLD_BLUE), (0.5, GOOD_GREEN), (1.0, WARM_RED)])
-    tube = RoundedRectangle(width=0.2, height=height, corner_radius=0.1, color=P_WHITE, stroke_width=2).move_to(b + UP * height / 2)
-    bulb = Circle(radius=0.15, color=P_WHITE, stroke_width=2).set_fill(P_DEEP_DARK, opacity=1.0).move_to(b)
-    tick_y = b[1] + 0.05 + (height - 0.12) * 0.5
-    tick = Line(np.array([b[0] + 0.12, tick_y, 0.0]), np.array([b[0] + 0.22, tick_y, 0.0]), color=CALC_CYAN, stroke_width=2.4)
-
-    def column():
-        v = float(np.clip(level.get_value(), 0.0, 1.0))
-        h = max(0.02, (height - 0.12) * v)
-        col = Rectangle(width=0.1, height=h, stroke_width=0, fill_color=ramp(v), fill_opacity=0.95).move_to(b + UP * (h / 2 + 0.05))
-        dot = Circle(radius=0.115, stroke_width=0, fill_color=ramp(v), fill_opacity=0.95).move_to(b)
-        return VGroup(dot, col).set_opacity(0.95 * float(gate.get_value()))
-
-    return {"frame": VGroup(tube, bulb), "tick": tick, "column": always_redraw(column), "top": b + UP * height}
+THERMO_RAMP = color_ramp([(0.0, COLD_BLUE), (0.5, GOOD_GREEN), (1.0, WARM_RED)])
 
 
 class Beat2_HydraulischerAbgleich(Scene):
@@ -713,7 +699,7 @@ class Beat2_HydraulischerAbgleich(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Hydraulischer Abgleich")
+        subtitle = section_heading(tr("Hydraulic balancing", "Hydraulischer Abgleich"))
         din = _din_ref("GEG § 60c · VOB/C DIN 18380")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -734,12 +720,11 @@ class Beat2_HydraulischerAbgleich(Scene):
             for x in xs
         ])
         rads = VGroup(*[_heater(floor_top, clear_h, x - 0.62) for x in xs])
-        rad_x = [float(r.get_center()[0]) for r in rads]
         rad_bottom = float(rads[0].get_bottom()[1])
         rad_mid = float(rads[0].get_center()[1])
         levels = [ValueTracker(0.5) for _ in xs]
         room_gate = ValueTracker(0.0)
-        thermos = [_thermo(np.array([x + 0.84, floor_top + 0.30, 0.0]), 1.0, lv, room_gate) for x, lv in zip(xs, levels)]
+        thermos = [thermometer_glyph(np.array([x + 0.84, floor_top + 0.30, 0.0]), height=1.0, tracker=lv, ramp=THERMO_RAMP, gate=room_gate, tick_color=CALC_CYAN) for x, lv in zip(xs, levels)]
 
         x_in = [float(r.get_left()[0]) for r in rads]
         x_out = [float(r.get_right()[0]) for r in rads]
@@ -754,23 +739,20 @@ class Beat2_HydraulischerAbgleich(Scene):
             *[Line(np.array([xo, rad_bottom, 0.0]), np.array([xo, y_ret, 0.0]), color=COLD_BLUE, stroke_width=3.2, stroke_opacity=0.55)
               for xo in x_out],
         )
-        pump = VGroup(Circle(radius=0.30, color=P_ORANGE, stroke_width=2.2).set_fill(P_ORANGE, opacity=0.35).move_to(pump_c))
-        impeller = VGroup(Line(LEFT * 0.20, RIGHT * 0.20), Line(DOWN * 0.20, UP * 0.20)).set_stroke(P_WHITE, width=2.6).move_to(pump_c)
-        impeller.add_updater(lambda m, dt: m.rotate(-dt * PUMP_SPIN, about_point=pump_c))
-        pump_tag = body_text("Pumpe", font_size=LABEL_FONT_SIZE - 2, color=P_ORANGE).move_to(pump_c + UP * 0.58)
+        pump = fitted_staffage("shared-pump-run-high", width=0.6, height=0.6, rate=1.0, loop=True).move_to(pump_c)
+        pump_tag = body_text(tr("Pump", "Pumpe"), font_size=LABEL_FONT_SIZE - 2, color=P_ORANGE).move_to(pump_c + UP * 0.58)
 
         vl = ValueTracker(0.55)
         vl_gate = ValueTracker(0.0)
-        vl_th = _thermo(np.array([-6.45, -0.92, 0.0]), 1.0, vl, vl_gate)
+        vl_th = thermometer_glyph(np.array([-6.45, -0.92, 0.0]), height=1.0, tracker=vl, ramp=THERMO_RAMP, gate=vl_gate, tick_color=CALC_CYAN)
         vl_tag = math_label(r"\vartheta_{\mathrm{VL}}", at=np.array([-6.45, 0.28, 0.0]), size=BODY_FONT_SIZE, color=WATER_HOT)
 
         flows = [ValueTracker(1.0) for _ in xs]
         sections = [ValueTracker(0.0) for _ in xs]
         for k, sec in enumerate(sections):
             sec.add_updater(lambda m, k=k: m.set_value(sum(f.get_value() for f in flows[k:])))
-        valve_gate = ValueTracker(0.0)
         opens = [ValueTracker(1.0) for _ in xs]
-        valves = [_valve(np.array([xi, -0.28, 0.0]), op, valve_gate) for xi, op in zip(x_in, opens)]
+        valves = [_valve(np.array([xi, -0.28, 0.0]), op) for xi, op in zip(x_in, opens)]
 
         feed_on, back_on = ValueTracker(0.0), ValueTracker(0.0)
         mid_colour = interpolate_color(ManimColor(WATER_HOT), ManimColor(COLD_BLUE), 0.5)
@@ -803,7 +785,7 @@ class Beat2_HydraulischerAbgleich(Scene):
             half.add_updater(lambda m, f=flows[k]: m.set_value(f.get_value() / 2))
             bind_meter(g, half)
             mid_tick = Line(g["track"].get_center() + UP * 0.10, g["track"].get_center() + UP * 0.20, color=CALC_CYAN, stroke_width=2.4)
-            read = _dim_readout(lambda f=flows[k]: de_num(f.get_value(), 1), np.array([x + 0.50, gauge_y - 0.07, 0.0]),
+            read = _dim_readout(lambda f=flows[k]: label_number(f.get_value(), 1), np.array([x + 0.50, gauge_y - 0.07, 0.0]),
                                 gauge_gate, size=LABEL_FONT_SIZE, color=P_WHITE)
             gauges.append(VGroup(g["track"], g["fill"], mid_tick))
             readouts.append(read)
@@ -817,14 +799,14 @@ class Beat2_HydraulischerAbgleich(Scene):
                             color=P_RED, cycles=max(1.0, rt / 1.4)) for k in range(count)]
 
         self.add(*flows, *sections, *halves, *opens, *sec_feed, *flow_feed, *sec_back, *flow_back, *readouts,
-                 *[th["column"] for th in thermos], vl_th["column"], *[v[1] for v in valves])
+                 *[th["column"] for th in thermos], vl_th["column"])
 
         self.play(Create(row["shell"]), FadeIn(washes), run_time=1.4)
         self.play(FadeIn(rads), run_time=1.2)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.2, during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vorlauf"))
-        self.play(Create(supply), FadeIn(pump), FadeIn(impeller), FadeIn(pump_tag), run_time=1.6)
+        self.play(Create(supply), FadeIn(pump), FadeIn(pump_tag), run_time=1.6)
         self.add(feed_streams)
         self.play(feed_on.animate.set_value(1.0), *heat(1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "vorlauf", during=heat)
@@ -854,26 +836,26 @@ class Beat2_HydraulischerAbgleich(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "folge"))
         verdicts = VGroup(*[
             body_text(text, font_size=LABEL_FONT_SIZE, color=colour).move_to(np.array([x, ceil_bottom + 0.36, 0.0]))
-            for x, text, colour in zip(xs, ("zu heiß", "zu heiß", "zu kalt", "zu kalt"), (WARM_RED, WARM_RED, COLD_BLUE, COLD_BLUE))
+            for x, text, colour in zip(xs, (tr("too hot", "zu heiß"), tr("too hot", "zu heiß"), tr("too cold", "zu kalt"), tr("too cold", "zu kalt")), (WARM_RED, WARM_RED, COLD_BLUE, COLD_BLUE))
         ])
         tints = [(WARM_RED, 0.16), (WARM_RED, 0.10), (COLD_BLUE, 0.10), (COLD_BLUE, 0.16)]
         self.play(FadeOut(near), FadeOut(gauge_set), gauge_gate.animate.set_value(0.0), run_time=0.6)
         self.play(
-            *[FadeIn(th["frame"]) for th in thermos], *[FadeIn(th["tick"]) for th in thermos], room_gate.animate.set_value(1.0),
+            *[FadeIn(th["group"]) for th in thermos], *[FadeIn(th["tick"]) for th in thermos], room_gate.animate.set_value(1.0),
             *[lv.animate.set_value(v) for lv, v in zip(levels, (0.78, 0.66, 0.36, 0.28))],
             *[w.animate.set_fill(c, opacity=o) for w, (c, o) in zip(washes, tints)],
             LaggedStart(*[FadeIn(v) for v in verdicts], lag_ratio=0.2), *heat(2.2), run_time=2.2)
         hold_for(self, self.NARRATION, "folge", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "folge_vorlauf"))
-        self.play(FadeOut(verdicts), FadeIn(vl_th["frame"]), FadeIn(vl_th["tick"]), FadeIn(vl_tag),
+        self.play(FadeOut(verdicts), FadeIn(vl_th["group"]), FadeIn(vl_th["tick"]), FadeIn(vl_tag),
                   vl_gate.animate.set_value(1.0), run_time=1.0)
         self.play(vl.animate.set_value(0.85),
                   *[lv.animate.set_value(v) for lv, v in zip(levels, (0.90, 0.76, 0.46, 0.36))], *heat(1.8), run_time=1.8)
         hold_for(self, self.NARRATION, "folge_vorlauf", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "abgleich"))
-        self.play(*[FadeIn(v[0]) for v in valves], valve_gate.animate.set_value(1.0), *heat(1.4), run_time=1.4)
+        self.play(*[FadeIn(v) for v in valves], *heat(1.4), run_time=1.4)
         hold_for(self, self.NARRATION, "abgleich", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "abgleich_ventil"))
@@ -887,8 +869,8 @@ class Beat2_HydraulischerAbgleich(Scene):
         hold_for(self, self.NARRATION, "abgleich_ventil", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gewinn"))
-        self.play(FadeOut(gauge_set), gauge_gate.animate.set_value(0.0), valve_gate.animate.set_value(0.0),
-                  *[FadeOut(v[0]) for v in valves], feed_on.animate.set_value(0.0), back_on.animate.set_value(0.0),
+        self.play(FadeOut(gauge_set), gauge_gate.animate.set_value(0.0),
+                  *[FadeOut(v) for v in valves], feed_on.animate.set_value(0.0), back_on.animate.set_value(0.0),
                   run_time=0.8)
         self.play(vl.animate.set_value(0.40), *heat(1.8), run_time=1.8)
         hold_for(self, self.NARRATION, "gewinn", during=heat)
@@ -899,11 +881,11 @@ class Beat2_HydraulischerAbgleich(Scene):
         jaz_meter["group"].move_to(np.array([6.25, 0.10, 0.0]))
         bind_meter(jaz_meter, jaz)
         panel, box, items = math_panel([
-            ("ab", r"\text{Abgleich}", GOOD_GREEN), (None, r"\to", P_WHITE),
-            ("vl", r"\vartheta_{\mathrm{VL}}\;\text{sinkt}", WATER_HOT), (None, r"\to", P_WHITE),
-            ("jaz", r"\mathrm{JAZ}\uparrow", GOOD_GREEN),
+            ("ab", tr(r"\text{Balancing}", r"\text{Abgleich}"), GOOD_GREEN), (None, r"\to", P_WHITE),
+            ("vl", tr(r"\vartheta_{\mathrm{VL}}\;\text{drops}", r"\vartheta_{\mathrm{VL}}\;\text{sinkt}"), WATER_HOT), (None, r"\to", P_WHITE),
+            ("jaz", tr(r"\mathrm{SPF}\uparrow", r"\mathrm{JAZ}\uparrow"), GOOD_GREEN),
         ])
-        duty = note_line("für viele Heizungsanlagen verpflichtend — GEG § 60c", color=P_PRIMARY)
+        duty = note_line(tr("mandatory for many heating systems — GEG § 60c", "für viele Heizungsanlagen verpflichtend — GEG § 60c"), color=P_PRIMARY)
         self.play(Create(box), FadeIn(panel), FadeIn(jaz_meter["group"]), run_time=1.2)
         ring_vl = highlight_param(items, "vl", color=WATER_HOT)
         self.play(Create(ring_vl), *heat(1.4), run_time=1.4)
@@ -933,6 +915,8 @@ X_A, X_B, X_C = -3.05, -0.75, 1.95
 X_B_WP, X_C_WP = -0.22, 2.45
 CUT_X = (-3.55, -1.45, 1.30)
 METER_X, TANK_X = -1.90, 0.55
+GAS_METER_TURN_S = 4.0
+STORE_CHARGE_S = 900.0
 CLASS_X, CHIP_X = 6.25, 5.10
 PIPE_Y = STAGE_Y - 0.16
 
@@ -970,7 +954,7 @@ def _class_scale(x, top, bottom):
 
 
 def _class_chip(letter, colour, at):
-    """🔤 Efficiency-class letter on a coloured tile."""
+    """🏅 Efficiency-class letter on a coloured tile."""
     tile = RoundedRectangle(width=0.54, height=0.54, corner_radius=0, color=colour, stroke_width=_theme_module.CHROME_BORDER,
                             fill_color=colour, fill_opacity=0.95)
     mark = body_text(letter, font_size=BODY_FONT_SIZE + 6, color=P_DEEP_DARK).move_to(tile.get_center())
@@ -978,27 +962,31 @@ def _class_chip(letter, colour, at):
 
 
 def _gas_meter(center, rate):
-    """⏱️ Gas meter box on the house line — the needle turns with the gas ``rate``."""
-    c = np.array(center, dtype=float)
-    box = RoundedRectangle(width=0.50, height=0.66, corner_radius=0.06, color=P_WHITE, stroke_width=2.0).move_to(c)
-    dial_c = c + UP * 0.12
-    dial = Circle(radius=0.16, color=P_WHITE, stroke_width=1.6).move_to(dial_c)
-    needle = Line(dial_c, dial_c + UP * 0.13, color=COL_END, stroke_width=2.6)
-    needle.add_updater(lambda m, dt: m.rotate(-dt * 3.0 * float(rate.get_value()), about_point=dial_c))
-    counter = VGroup(*[Rectangle(width=0.08, height=0.12, color=P_WHITE, stroke_width=1.2).move_to(c + DOWN * 0.20 + RIGHT * dx)
-                       for dx in (-0.12, -0.04, 0.04, 0.12)])
-    return VGroup(box, dial, counter, needle)
+    """⏱️ Handcrafted bellows gas meter on the house line — the test-dial pointer turns with the gas ``rate`` tracker by seeking through the ``run`` clip."""
+    group = fitted_staffage("shared-gas-meter-run", width=0.50, height=0.60, rate=0.0).move_to(np.array(center, dtype=float))
+    turns = ValueTracker(0.0)
+
+    def turn(m, dt):
+        turns.increment_value(dt * 0.25 * float(rate.get_value()))
+        m.seek((turns.get_value() % 1.0) * GAS_METER_TURN_S)
+
+    group.add_updater(turn)
+    return group
 
 
-def _boiler(center):
-    """🔥 Wall boiler with a flame — where the gas becomes heat in the house."""
-    c = np.array(center, dtype=float)
-    casing = Rectangle(width=0.42, height=0.64, color=P_WHITE, stroke_width=2.0).move_to(c)
-    flame = Polygon(c + DOWN * 0.18 + LEFT * 0.09, c + DOWN * 0.18 + RIGHT * 0.09, c + UP * 0.02, color=P_ORANGE,
-                    stroke_width=1.4, fill_color=P_ORANGE, fill_opacity=0.8)
-    core = Polygon(c + DOWN * 0.18 + LEFT * 0.04, c + DOWN * 0.18 + RIGHT * 0.04, c + DOWN * 0.06, color=P_YELLOW,
-                   stroke_width=1.0, fill_color=P_YELLOW, fill_opacity=0.9)
-    return VGroup(casing, flame, core)
+def _store(center, width, height, level=1.0):
+    """🛢️ Hot-water cylinder of the building — ``level`` is a 0–1 tracker that seeks the charge-up clip, so the shown charge is the scenario state."""
+    tracker = ValueTracker(level)
+    group = fitted_staffage("shared-tank-charge-up", width=width, height=height, rate=0.0).move_to(np.array(center, dtype=float))
+    group.add_updater(lambda m: m.seek(float(np.clip(tracker.get_value(), 0.0, 1.0)) * STORE_CHARGE_S))
+    return {"group": group, "fill": VGroup(), "level": tracker}
+
+
+def _boiler(floor_y, room_h, x):
+    """🔥 Gas boiler in elevation at true scale — 40 % of the clear room height, foot on the floor line at ``x``."""
+    h = 0.4 * room_h
+    return fitted_staffage("shared-boiler-heating-cycle", width=0.806 * h, height=h, rate=BOILER_RATE).move_to(
+        np.array([x, floor_y + h / 2, 0.0]))
 
 
 def _tile(cx, title, detail, colour):
@@ -1068,7 +1056,7 @@ class Beat3_SerienAbschluss(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading("Die Serie im Rückblick")
+        subtitle = section_heading(tr("The series in review", "Die Serie im Rückblick"))
         din = _din_ref("GEG · DIN V 18599:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1078,8 +1066,7 @@ class Beat3_SerienAbschluss(Scene):
         xs = (-5.40, -2.70, 0.0, 2.70, 5.40)
         small = 0.36
         anchor = np.array([xs[0] - 0.55, 1.62, 0.0])
-        lamp = lamp_glyph(anchor, drop=0.25)
-        lamp["group"].scale(1.5, about_point=anchor)
+        lamp = pendant_lamp(anchor, 0.9, on_cast="shared-lamp-winter", off_cast="shared-lamp-off-winter")
         gauge = thermometer_glyph(np.array([xs[0] + 0.62, 0.22, 0.0]), height=1.15, color=P_RED, level=0.0)
         glow = lambda rt: [ripples([lamp["bulb"].get_center()], r_max=0.55, color=P_YELLOW, down=True, cycles=max(1.0, rt / 1.4))]
         hs_vent = house_section(np.array([xs[1] + 0.20, 0.78, 0.0]), scale=small)
@@ -1100,11 +1087,11 @@ class Beat3_SerienAbschluss(Scene):
         vent_out = [smooth_path([(vent_left + 0.50, y, 0), (vent_left, y, 0), (vent_left - 0.42, y, 0)])
                     for y in (float(hs_vent["windows"][1]["center"][1]),)]
         tiles = VGroup(
-            _tile(xs[0], "1 · Grundlagen", math_label(r"\mathrm{W},\;\mathrm{J},\;\Delta T", size=LABEL_FONT_SIZE, color=P_WHITE), P_YELLOW),
-            _tile(xs[1], "2 · Lüftung", math_label(r"\dot{V},\;Q_{V}", size=LABEL_FONT_SIZE, color=P_WHITE), VENT_BLUE),
-            _tile(xs[2], "3 · Heizen", body_text("Verluste & Gewinne", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_ORANGE),
-            _tile(xs[3], "4 · Kühlen", body_text("Sommerlasten", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_CYAN),
-            _tile(xs[4], "5 · Energiebilanz", body_text("Gesetz & Ausweis", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_PRIMARY),
+            _tile(xs[0], tr("1 · Fundamentals", "1 · Grundlagen"), math_label(r"\mathrm{W},\;\mathrm{J},\;\Delta T", size=LABEL_FONT_SIZE, color=P_WHITE), P_YELLOW),
+            _tile(xs[1], tr("2 · Ventilation", "2 · Lüftung"), math_label(r"\dot{V},\;Q_{V}", size=LABEL_FONT_SIZE, color=P_WHITE), VENT_BLUE),
+            _tile(xs[2], tr("3 · Heating", "3 · Heizen"), body_text(tr("Losses & gains", "Verluste & Gewinne"), font_size=LABEL_FONT_SIZE, color=P_WHITE), P_ORANGE),
+            _tile(xs[3], tr("4 · Cooling", "4 · Kühlen"), body_text(tr("Summer loads", "Sommerlasten"), font_size=LABEL_FONT_SIZE, color=P_WHITE), P_CYAN),
+            _tile(xs[4], tr("5 · Energy balance", "5 · Energiebilanz"), body_text(tr("Law & certificate", "Gesetz & Ausweis"), font_size=LABEL_FONT_SIZE, color=P_WHITE), P_PRIMARY),
         )
         line_y = -1.18
         thread = smooth_path([(-6.0, line_y, 0), (0.0, line_y, 0), (6.0, line_y, 0)])
@@ -1121,8 +1108,8 @@ class Beat3_SerienAbschluss(Scene):
         self.play(FadeOut(thread_guide), pace.animate.set_value(0.0), run_time=0.6)
         self.remove(thread_flow)
         self.add(gauge["column"])
-        self.play(Create(lamp["group"]), Create(gauge["group"]), tiles[0][0].animate.set_stroke(width=3.6), run_time=1.0)
-        self.play(gauge["level"].animate.set_value(0.8), lamp["bulb"].animate.set_fill(P_YELLOW, opacity=0.9), *glow(1.6),
+        self.play(FadeIn(lamp["group"]), Create(gauge["group"]), tiles[0][0].animate.set_stroke(width=3.6), run_time=1.0)
+        self.play(gauge["level"].animate.set_value(0.8), lamp["on"].animate.set_opacity(1), lamp["off"].animate.set_opacity(0), *glow(1.6),
                   run_time=1.6)
         hold_for(self, self.NARRATION, "kette_grund", during=glow)
 
@@ -1150,7 +1137,7 @@ class Beat3_SerienAbschluss(Scene):
         bl, br = hs["bottom_left"], hs["bottom_right"]
         room_h = hs["w_height"] / 2
         rad = _heater(float(bl[1]), room_h, float(bl[0]) + 0.62)
-        boiler = _boiler(np.array([float(br[0]) - 0.42, STAGE_Y + 0.32 + 0.02, 0.0]))
+        boiler = _boiler(float(bl[1]), room_h, float(br[0]) - 0.42)
         person = _stand(float(bl[1]), room_h, float(bl[0]) + 1.25)
         gas = ValueTracker(0.0)
         gas_path = _polyline([(TANK_X, STAGE_Y + 0.10, 0), (TANK_X, PIPE_Y, 0), (float(br[0]) - 0.42, PIPE_Y, 0),
@@ -1169,8 +1156,8 @@ class Beat3_SerienAbschluss(Scene):
                                    dash_length=0.12)
                         for x, c in zip(CUT_X, (COL_NUTZ, COL_END, COL_PRIM))])
         names = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([x, 1.92, 0.0]))
-                         for x, t, c in zip(CUT_X, ("Raum", "Zähler", "Quelle"), (COL_NUTZ, COL_END, COL_PRIM))])
-        ausweis = body_text("Ausweis", font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([CLASS_X, STAGE_Y + 2.20, 0.0]))
+                         for x, t, c in zip(CUT_X, (tr("Room", "Raum"), tr("Meter", "Zähler"), tr("Source", "Quelle")), (COL_NUTZ, COL_END, COL_PRIM))])
+        ausweis = body_text(tr("Certificate", "Ausweis"), font_size=LABEL_FONT_SIZE, color=P_YELLOW).move_to(np.array([CLASS_X, STAGE_Y + 2.20, 0.0]))
         warm_spots = [rad.get_top() + UP * 0.02, person.get_top() + UP * 0.04]
 
         def heat(rt, r_max=0.30):
@@ -1231,17 +1218,17 @@ class Beat3_SerienAbschluss(Scene):
             return math_readout(expr, lambda: np.array([x_left, max(y_min, stack["top"]() + 0.30), 0.0]), size=LABEL_FONT_SIZE,
                                 color=colour, edge="left")
 
-        qh_read = top_read(lambda: rf"Q_{{h}}={de_num(stack_a['total']())}", stack_a, X_A - 0.25, COL_NUTZ)
-        qe_read = top_read(lambda: rf"Q_{{E}}={de_num(stack_a['total']())}\cdot {de_num(e_p(), 2)}={de_num(stack_b['total']())}",
+        qh_read = top_read(lambda: rf"Q_{{h}}={label_number(stack_a['total']())}", stack_a, X_A - 0.25, COL_NUTZ)
+        qe_read = top_read(lambda: rf"Q_{{E}}={label_number(stack_a['total']())}\cdot {label_number(e_p(), 2)}={label_number(stack_b['total']())}",
                            stack_b, X_B - 0.25, COL_END, y_min=1.40)
-        qp_read = top_read(lambda: rf"Q_{{P}}={de_num(stack_b['total']())}\cdot {de_num(f_p(), 1)}={de_num(stack_c['total']())}",
+        qp_read = top_read(lambda: rf"Q_{{P}}={label_number(stack_b['total']())}\cdot {label_number(f_p(), 1)}={label_number(stack_c['total']())}",
                            stack_c, X_C - 0.25, COL_PRIM, y_min=1.40)
-        wp_e_read = math_readout(lambda: de_num(stack_bw["total"]()), lambda: np.array([X_B_WP, stack_bw["top"]() + 0.28, 0.0]),
+        wp_e_read = math_readout(lambda: label_number(stack_bw["total"]()), lambda: np.array([X_B_WP, stack_bw["top"]() + 0.28, 0.0]),
                                  size=LABEL_FONT_SIZE, color=COL_END, edge="center")
-        wp_p_read = math_readout(lambda: de_num(stack_cw["total"]()), lambda: np.array([X_C_WP, stack_cw["top"]() + 0.28, 0.0]),
+        wp_p_read = math_readout(lambda: label_number(stack_cw["total"]()), lambda: np.array([X_C_WP, stack_cw["top"]() + 0.28, 0.0]),
                                  size=LABEL_FONT_SIZE, color=COL_PRIM, edge="center")
         unit_note = VGroup(
-            body_text("Gaskessel-Variante, schematisches Beispiel, in", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+            body_text(tr("Gas boiler variant, schematic example, in", "Gaskessel-Variante, schematisches Beispiel, in"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
             math_label(r"\mathrm{kWh/(m^{2}\cdot a)}", size=LABEL_FONT_SIZE, color=P_PRIMARY),
         ).arrange(RIGHT, buff=0.14, aligned_edge=DOWN).move_to(np.array([0.0, 2.30, 0.0]))
         gas_class, gas_colour = _class_of(CHAIN_END)
@@ -1251,8 +1238,8 @@ class Beat3_SerienAbschluss(Scene):
         chip_wp = _class_chip(wp_class, wp_colour, np.array([CHIP_X, y_wp, 0.0]))
         link_gas = Line(chip_gas.get_right(), np.array([CLASS_X - 0.31, y_gas, 0.0]), color=gas_colour, stroke_width=2.4)
         link_wp = Line(chip_wp.get_right(), np.array([CLASS_X - 0.31, y_wp, 0.0]), color=wp_colour, stroke_width=2.4)
-        tag_gas = body_text("Gaskessel", font_size=LABEL_FONT_SIZE, color=gas_colour).next_to(chip_gas, LEFT, buff=0.16)
-        tag_wp = body_text("Wärmepumpe", font_size=LABEL_FONT_SIZE, color=wp_colour).next_to(chip_wp, LEFT, buff=0.16)
+        tag_gas = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE, color=gas_colour).next_to(chip_gas, LEFT, buff=0.16)
+        tag_wp = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE, color=wp_colour).next_to(chip_wp, LEFT, buff=0.16)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_nutz"))
         stage = VGroup(hs["group"], rad, boiler, person, pipe, meter_glyph, tank["group"], tank["fill"])
@@ -1304,8 +1291,8 @@ class Beat3_SerienAbschluss(Scene):
         cold_wall = Line(ho_bl + RIGHT * 0.01, ho_bl + UP * ho_room_h + RIGHT * 0.01, color=COLD_BLUE, stroke_width=6)
         cold_spots = [ho_bl + UP * 0.30 + RIGHT * 0.03, ho_bl + UP * 0.80 + RIGHT * 0.03]
         ground = Line(np.array([2.00, ho_floor, 0.0]), np.array([4.40, ho_floor, 0.0]), color=P_PRIMARY, stroke_width=2.2)
-        landlord = _stand(ho_floor, ho_room_h, 2.70)
-        tenant = _stand(ho_floor, ho_room_h, 3.50, color=P_CYAN)
+        landlord = _talker(ho_floor, ho_room_h, 2.70)
+        tenant = _talker(ho_floor, ho_room_h, 3.50)
         speech = _class_chip(gas_class, gas_colour, np.array([2.70, 0.30, 0.0]))
         cloud = cloud_glyph(speech, pad=(0.34, 0.26))
         trail = cloud_trail(cloud, landlord.get_top() + UP * 0.12)

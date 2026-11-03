@@ -1,0 +1,4437 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "operating-table",
+    "category": "furniture",
+    "title": {
+      "en": "Operating Table with Surgical Light",
+      "de": "Operationstisch mit Operationsleuchte"
+    },
+    "summary": {
+      "en": "A mobile operating table 2.0 m long and 0.5 m wide with a 0.90 m high padded top on a telescopic column and a mobile stand whose spring arm carries a 120 W surgical light over the table; the top tilts to head down, the lamp head is the only warm surface.",
+      "de": "Ein fahrbarer Operationstisch von 2,0 m Länge und 0,5 m Breite mit einer 0,90 m hohen gepolsterten Platte auf einer Teleskopsäule und ein fahrbarer Ständer, dessen Federarm eine 120-W-Operationsleuchte über den Tisch trägt; die Platte kippt in Kopftieflage, der Leuchtenkopf ist die einzige warme Fläche."
+    },
+    "tags": [
+      "operating-table",
+      "operating-theatre",
+      "surgical-light",
+      "hospital",
+      "furniture",
+      "internal-gain",
+      "electrical"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A8)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "iec-60601-2-46",
+          "citation": "IEC 60601-2-46: Medical electrical equipment - Part 2-46: Particular requirements for the basic safety and essential performance of operating tables (table top size class, height range, tilt)."
+        },
+        {
+          "id": "iec-60601-2-41",
+          "citation": "IEC 60601-2-41: Medical electrical equipment - Part 2-41: Particular requirements for the basic safety and essential performance of surgical luminaires and luminaires for diagnosis (head size, working distance, power)."
+        },
+        {
+          "id": "ashrae-170-2021",
+          "citation": "ANSI/ASHRAE/ASHE Standard 170-2021: Ventilation of Health Care Facilities (operating rooms: air temperature 20 to 24 degrees Celsius, equipment heat gains in surgical suites)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of a mobile operating table and a mobile surgical light stand, the table top surface at 0.90 m (adjustable between 0.8 and 1.0 m on the real column, drawn at 0.90 m), 2.0 m long and 0.5 m wide (IEC 60601-2-46 class), a pad of 0.08 m on a 0.04 m stainless carrier, a bellows column and a 0.8 m carriage on two visible castors. The stand stands 0.62 m beside the table centre with a 1.96 m high column and a 0.5 m spring arm that carries a lamp head of 0.5 m diameter with its lens 1.66 m above the floor (0.76 m working distance, IEC 60601-2-41). Dimensions and masses (table 210 kg, stand 38 kg) are rounded from this product class (authored estimate). The origin is on the floor under the table column; the table top tilts about the pivot on the column head by up to 25 degrees. The light takes 120 W at level 1, which ends entirely as heat in the room (an LED or halogen head converts almost all of its electrical power into heat and absorbed light); the asset releases it at the head: 90 W at the housing and 30 W at the lens, a split that is an authored estimate.",
+        "de": "Seitenansicht eines fahrbaren Operationstisches und eines fahrbaren Operationsleuchtenständers, Oberfläche der Platte auf 0,90 m (an der echten Säule zwischen 0,8 und 1,0 m verstellbar, gezeichnet bei 0,90 m), 2,0 m lang und 0,5 m breit (Klasse nach IEC 60601-2-46), ein Polster von 0,08 m auf einem 0,04 m starken Edelstahlträger, eine Balgsäule und ein 0,8 m langes Fahrgestell mit zwei sichtbaren Rollen. Der Ständer steht 0,62 m neben der Tischmitte mit einer 1,96 m hohen Säule und einem 0,5 m langen Federarm, der einen Leuchtenkopf von 0,5 m Durchmesser trägt, dessen Linse 1,66 m über dem Boden liegt (0,76 m Arbeitsabstand, IEC 60601-2-41). Maße und Massen (Tisch 210 kg, Ständer 38 kg) sind aus dieser Produktklasse gerundet (Schätzwert). Der Ursprung liegt auf dem Boden unter der Tischsäule; die Tischplatte kippt um den Drehpunkt auf dem Säulenkopf bis 25 Grad. Die Leuchte nimmt auf Stufe 1 120 W auf, die vollständig als Wärme im Raum enden (ein LED- oder Halogenkopf wandelt fast die gesamte elektrische Leistung in Wärme und absorbiertes Licht um); das Asset gibt sie am Kopf ab: 90 W am Gehäuse und 30 W an der Linse, eine Aufteilung als Schätzwert."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.96,
+      "widthM": 2.45,
+      "depthM": 0.5,
+      "massKg": 248
+    },
+    "materials": [
+      {
+        "id": "pad-foam",
+        "title": {
+          "en": "PU-coated vinyl over polyurethane foam",
+          "de": "PU-beschichtetes Vinyl über Polyurethanschaum"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 40,
+        "conductivityWmK": 0.04,
+        "specificHeatJKgK": 1500,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "stainless-steel",
+        "title": {
+          "en": "Brushed stainless steel",
+          "de": "Gebürsteter Edelstahl"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7900,
+        "conductivityWmK": 15,
+        "specificHeatJKgK": 500,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "powder-coated-steel",
+        "title": {
+          "en": "Powder-coated steel",
+          "de": "Pulverbeschichteter Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "rubber-castor",
+        "title": {
+          "en": "Conductive rubber castor tyre",
+          "de": "Leitfähiger Gummireifen der Rolle"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.25,
+        "specificHeatJKgK": 1800,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "light-aluminium",
+        "title": {
+          "en": "Painted die-cast aluminium",
+          "de": "Lackierter Aluminiumdruckguss"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 160,
+        "specificHeatJKgK": 900,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "light-lens-glass",
+        "title": {
+          "en": "Clear polycarbonate lens",
+          "de": "Klare Polycarbonatlinse"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.1,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1200,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Carriage base with castors",
+            "de": "Fahrgestell mit Lenkrollen"
+          },
+          "lengthM": 0.8,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 120,
+            "comX": 0,
+            "comY": 0.08,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "column",
+          "parent": "base",
+          "x": 0,
+          "y": 0.16,
+          "angleDeg": 0,
+          "title": {
+            "en": "Telescopic column",
+            "de": "Teleskopsäule"
+          },
+          "lengthM": 0.62,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 42,
+            "comX": 0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "top",
+          "parent": "column",
+          "x": 0,
+          "y": 0.62,
+          "angleDeg": 0,
+          "title": {
+            "en": "Table top with pad",
+            "de": "Tischplatte mit Polster"
+          },
+          "lengthM": 2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -25,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 48,
+            "comX": 0,
+            "comY": 0.07,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stand-base",
+          "parent": "base",
+          "x": 1.17,
+          "y": 0,
+          "angleDeg": 0,
+          "title": {
+            "en": "Light stand base with castors",
+            "de": "Leuchtenfuß mit Lenkrollen"
+          },
+          "lengthM": 0.56,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 18,
+            "comX": 0,
+            "comY": 0.06,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stand-column",
+          "parent": "stand-base",
+          "x": 0,
+          "y": 0.1,
+          "angleDeg": 0,
+          "title": {
+            "en": "Light stand column",
+            "de": "Leuchtensäule"
+          },
+          "lengthM": 1.86,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 6,
+            "comX": 0,
+            "comY": 0.9,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stand-arm",
+          "parent": "stand-column",
+          "x": 0,
+          "y": 1.82,
+          "angleDeg": 0,
+          "title": {
+            "en": "Spring arm",
+            "de": "Federarm"
+          },
+          "lengthM": 0.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5,
+            "comX": -0.25,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "light-head",
+          "parent": "stand-arm",
+          "x": -0.5,
+          "y": -0.26,
+          "angleDeg": 0,
+          "title": {
+            "en": "Surgical light head",
+            "de": "Operationsleuchtenkopf"
+          },
+          "lengthM": 0.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 9,
+            "comX": 0,
+            "comY": 0.06,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "castor-table-rear-left",
+        "bone": "base",
+        "x": -0.32,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Table castor, rear left",
+          "de": "Tischrolle hinten links"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": 0.17
+      },
+      {
+        "id": "castor-table-rear-right",
+        "bone": "base",
+        "x": -0.32,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Table castor, rear right",
+          "de": "Tischrolle hinten rechts"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": -0.17
+      },
+      {
+        "id": "castor-table-front-left",
+        "bone": "base",
+        "x": 0.32,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Table castor, front left",
+          "de": "Tischrolle vorn links"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": 0.17
+      },
+      {
+        "id": "castor-table-front-right",
+        "bone": "base",
+        "x": 0.32,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Table castor, front right",
+          "de": "Tischrolle vorn rechts"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": -0.17
+      },
+      {
+        "id": "castor-stand-rear-left",
+        "bone": "stand-base",
+        "x": -0.22,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Stand castor, rear left",
+          "de": "Ständerrolle hinten links"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": 0.195
+      },
+      {
+        "id": "castor-stand-rear-right",
+        "bone": "stand-base",
+        "x": -0.22,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Stand castor, rear right",
+          "de": "Ständerrolle hinten rechts"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": -0.195
+      },
+      {
+        "id": "castor-stand-front-left",
+        "bone": "stand-base",
+        "x": 0.22,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Stand castor, front left",
+          "de": "Ständerrolle vorn links"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": 0.195
+      },
+      {
+        "id": "castor-stand-front-right",
+        "bone": "stand-base",
+        "x": 0.22,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Stand castor, front right",
+          "de": "Ständerrolle vorn rechts"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5,
+        "z": -0.195
+      },
+      {
+        "id": "light-top",
+        "bone": "light-head",
+        "x": 0,
+        "y": 0.115,
+        "kind": "emitter",
+        "title": {
+          "en": "Top of the lamp head",
+          "de": "Scheitel des Leuchtenkopfes"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.06
+                ],
+                [
+                  0.28,
+                  0.06
+                ],
+                [
+                  0.24,
+                  0.105
+                ],
+                [
+                  -0.24,
+                  0.105
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-castor-a",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.22,
+              "cy": 0.03,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "stand",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "st-castor-b",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.22,
+              "cy": 0.03,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "stand",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.005,
+              "w": 0.06,
+              "h": 1.775,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-collar",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.045,
+              "y": 1.78,
+              "w": 0.09,
+              "h": 0.08,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.5,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-knob",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.45,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": -0.5,
+              "cy": 0,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-rod",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.512,
+              "y": -0.14,
+              "w": 0.024,
+              "h": 0.12,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "head-housing",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M -0.25 0.015 L 0.25 0.015 L 0.25 0.04 C 0.25 0.1 0.12 0.12 0 0.12 C -0.12 0.12 -0.25 0.1 -0.25 0.04 Z",
+              "region": "light-housing",
+              "material": "light-aluminium"
+            },
+            {
+              "id": "head-lens",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.65,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.24,
+              "y": 0,
+              "w": 0.48,
+              "h": 0.015,
+              "region": "light-lens",
+              "material": "light-lens-glass"
+            },
+            {
+              "id": "head-handle",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.55,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.02,
+              "y": -0.06,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "light-housing",
+              "material": "light-aluminium"
+            },
+            {
+              "id": "head-groove",
+              "bone": "light-head",
+              "role": "detail",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.24,
+                  0.055
+                ],
+                [
+                  0.24,
+                  0.055
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.07
+                ],
+                [
+                  0.4,
+                  0.07
+                ],
+                [
+                  0.4,
+                  0.12
+                ],
+                [
+                  0.3,
+                  0.16
+                ],
+                [
+                  -0.3,
+                  0.16
+                ],
+                [
+                  -0.4,
+                  0.12
+                ]
+              ],
+              "closed": true,
+              "region": "table-base",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "tb-castor-a",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.32,
+              "cy": 0.04,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "table-base",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "tb-castor-b",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.32,
+              "cy": 0.04,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "table-base",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "col-lower",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0
+                ],
+                [
+                  0.15,
+                  0
+                ],
+                [
+                  0.13,
+                  0.24
+                ],
+                [
+                  -0.13,
+                  0.24
+                ]
+              ],
+              "closed": true,
+              "region": "table-column",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "col-upper",
+              "bone": "column",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.24,
+              "w": 0.21,
+              "h": 0.34,
+              "region": "table-column",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "col-head",
+              "bone": "column",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.16,
+              "y": 0.58,
+              "w": 0.32,
+              "h": 0.04,
+              "region": "table-frame",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "pleat-1",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.3
+                ],
+                [
+                  0.105,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-2",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.36
+                ],
+                [
+                  0.105,
+                  0.36
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-3",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.42
+                ],
+                [
+                  0.105,
+                  0.42
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-4",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.48
+                ],
+                [
+                  0.105,
+                  0.48
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-5",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.54
+                ],
+                [
+                  0.105,
+                  0.54
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "top-carrier",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 1.96,
+              "h": 0.04,
+              "region": "table-frame",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "top-pad",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 2,
+              "h": 0.08,
+              "r": 0.03,
+              "region": "table-pad",
+              "material": "pad-foam"
+            },
+            {
+              "id": "pad-joint-1",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.62,
+                  0.04
+                ],
+                [
+                  -0.62,
+                  0.12
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pad-joint-2",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.04
+                ],
+                [
+                  -0.05,
+                  0.12
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pad-joint-3",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.04
+                ],
+                [
+                  0.2,
+                  0.12
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "top-pad",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 2,
+              "h": 0.08,
+              "r": 0.03,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-carrier",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 1.96,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "top-end-0",
+              "bone": "top",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 0.03,
+              "h": 0.08,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-end-1",
+              "bone": "top",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": 0.97,
+              "y": 0.04,
+              "w": 0.03,
+              "h": 0.08,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "carrier-end-0",
+              "bone": "top",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "carrier-end-1",
+              "bone": "top",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": 0.95,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.06
+                ],
+                [
+                  0.25,
+                  0.06
+                ],
+                [
+                  0.22,
+                  0.105
+                ],
+                [
+                  -0.22,
+                  0.105
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "st-castor-0",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "stand",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": 0.185,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.06,
+              "r": 0.01
+            },
+            {
+              "id": "tb-castor-0",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "table-base",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": 0.15,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.08,
+              "r": 0.012
+            },
+            {
+              "id": "st-castor-1",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "stand",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": -0.215,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.06,
+              "r": 0.01
+            },
+            {
+              "id": "tb-castor-1",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "table-base",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": -0.19,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.08,
+              "r": 0.012
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.105,
+              "w": 0.06,
+              "h": 1.775
+            },
+            {
+              "id": "st-collar",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.045,
+              "y": 1.88,
+              "w": 0.09,
+              "h": 0.08
+            },
+            {
+              "id": "head-housing",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.35,
+              "region": "light-housing",
+              "material": "light-aluminium",
+              "kind": "path",
+              "d": "M -0.25 1.675 L 0.25 1.675 L 0.25 1.7 C 0.25 1.76 0.12 1.78 0 1.78 C -0.12 1.78 -0.25 1.76 -0.25 1.7 Z"
+            },
+            {
+              "id": "head-lens",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.65,
+              "filled": true,
+              "tone": 0.9,
+              "region": "light-lens",
+              "material": "light-lens-glass",
+              "kind": "rect",
+              "x": -0.24,
+              "y": 1.66,
+              "w": 0.48,
+              "h": 0.015
+            },
+            {
+              "id": "head-handle",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.55,
+              "filled": true,
+              "tone": 0.4,
+              "region": "light-housing",
+              "material": "light-aluminium",
+              "kind": "rect",
+              "x": -0.02,
+              "y": 1.6,
+              "w": 0.04,
+              "h": 0.06
+            },
+            {
+              "id": "head-groove",
+              "bone": "light-head",
+              "role": "detail",
+              "z": 2.7,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.24,
+                  1.715
+                ],
+                [
+                  0.24,
+                  1.715
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-base",
+              "material": "powder-coated-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.07
+                ],
+                [
+                  0.2,
+                  0.07
+                ],
+                [
+                  0.2,
+                  0.12
+                ],
+                [
+                  0.15,
+                  0.16
+                ],
+                [
+                  -0.15,
+                  0.16
+                ],
+                [
+                  -0.2,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "col-lower",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "table-column",
+              "material": "stainless-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0.16
+                ],
+                [
+                  0.15,
+                  0.16
+                ],
+                [
+                  0.13,
+                  0.4
+                ],
+                [
+                  -0.13,
+                  0.4
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "col-upper",
+              "bone": "column",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-column",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.4,
+              "w": 0.21,
+              "h": 0.34
+            },
+            {
+              "id": "col-head",
+              "bone": "column",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.74,
+              "w": 0.4,
+              "h": 0.04
+            },
+            {
+              "id": "pleat-1",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.46
+                ],
+                [
+                  0.105,
+                  0.46
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-2",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.52
+                ],
+                [
+                  0.105,
+                  0.52
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-3",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.58
+                ],
+                [
+                  0.105,
+                  0.58
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-4",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.64
+                ],
+                [
+                  0.105,
+                  0.64
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "pleat-5",
+              "bone": "column",
+              "role": "detail",
+              "z": 3.35,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105,
+                  0.7
+                ],
+                [
+                  0.105,
+                  0.7
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-pad",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 2,
+              "h": 0.08,
+              "r": 0.03,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-carrier",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 1.96,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.89,
+              "y": -0.25,
+              "w": 0.56,
+              "h": 0.5,
+              "r": 0.03
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.67,
+              "y": -0.02,
+              "w": 0.5,
+              "h": 0.04
+            },
+            {
+              "id": "head-housing",
+              "bone": "light-head",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "light-housing",
+              "material": "light-aluminium",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25
+            },
+            {
+              "id": "head-groove",
+              "bone": "light-head",
+              "role": "detail",
+              "z": 8.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.2,
+              "ry": 0.2
+            },
+            {
+              "id": "st-collar",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "ellipse",
+              "cx": 1.17,
+              "cy": 0,
+              "rx": 0.045,
+              "ry": 0.045
+            },
+            {
+              "id": "st-knob",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9.5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.03,
+              "ry": 0.03
+            },
+            {
+              "id": "st-rod",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9.6,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "pad-joint-1",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.62,
+                  0.04
+                ],
+                [
+                  -0.62,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "pad-joint-2",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.04
+                ],
+                [
+                  -0.05,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "pad-joint-3",
+              "bone": "top",
+              "role": "detail",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.04
+                ],
+                [
+                  0.2,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2.45 m long, 1.96 m high sign, 49 mm by 39 mm on paper: a flat pad on a stainless carrier and a telescopic column over a low carriage, and a mobile light stand behind it whose spring arm carries a domed lamp head over the middle of the table. Front view: the pivot section with the base plate, castors, the stacked column with its bellows pleats and head, the carrier and the rounded pad as extruded side profiles that rise and dip when the table tilts, and the stand with its collar, column and castors in front of the light head with lens, handle and groove. Plan: carrier and pad as extruded profiles with the three pad joints, the stand base at the sides, the arm with the stand collar and the round light head with its groove, knob and rod. The two end faces of the pad are drawn on top of the tilt envelope so the tilt reads as a slab, not a block; the joints follow the tilt in plan.",
+            "de": "Ein 2,45 m langes und 1,96 m hohes Zeichen, auf Papier 49 mm mal 39 mm: ein flaches Polster auf einem Edelstahlträger und eine Teleskopsäule über einem niedrigen Fahrgestell, dahinter ein fahrbarer Leuchtenständer, dessen Federarm einen gewölbten Leuchtenkopf über die Tischmitte trägt. Vorderansicht: der Schwenkschnitt mit Fußplatte, Rollen, der gestapelten Säule mit ihren Faltenbalgfalten und dem Kopf, Träger und gerundetes Polster als gezogene Seitenprofile, die sich beim Kippen des Tisches heben und senken, und der Ständer mit Manschette, Säule und Rollen vor dem Leuchtenkopf mit Linse, Griff und Rille. Grundriss: Träger und Polster als gezogene Profile mit den drei Polsterfugen, der Ständerfuß an den Seiten, der Arm mit der Ständermanschette und der runde Leuchtenkopf mit Rille, Knauf und Stange. Die beiden Stirnflächen des Polsters liegen über der Kipphülle, damit das Kippen als Platte und nicht als Block lesbar ist; die Fugen folgen im Grundriss der Neigung."
+          },
+          "retained": {
+            "en": "Overall length 2.0 m, top surface 0.90 m, pad thickness 0.08 m, carriage 0.8 m with two castors, bellows column with five pleats, the four pad sections, the lamp head 0.5 m wide with lens and sterile handle, the stand column and the spring arm.",
+            "de": "Gesamtlänge 2,0 m, Oberfläche 0,90 m, Polsterstärke 0,08 m, Fahrgestell 0,8 m mit zwei Lenkrollen, Balgsäule mit fünf Falten, die vier Polsterabschnitte, der Leuchtenkopf von 0,5 m Breite mit Linse und Sterilgriff, Leuchtensäule und Federarm."
+          },
+          "merged": {
+            "en": "The accessory rail and the carrier are one stainless strip; the hull of the stand base and its five-star foot read as one plate.",
+            "de": "Zubehörschiene und Träger sind ein Edelstahlstreifen; Gehäuse und Sternfuß des Leuchtenständers lesen sich als eine Platte."
+          },
+          "omitted": {
+            "en": "Armrests, leg-section hinges, the brake pedals, cables, the control handset and the counterweight of the spring arm.",
+            "de": "Armstützen, Gelenke der Beinplatte, Bremspedale, Kabel, die Handbedienung und das Gegengewicht des Federarms."
+          },
+          "thinElements": {
+            "en": "The rod to the lamp head is 24 mm (0.48 mm on paper) and the pleat lines are 0.13 mm detail strokes.",
+            "de": "Die Stange zum Leuchtenkopf ist 24 mm breit (0,48 mm auf Papier) und die Faltenlinien sind 0,13-mm-Detailstriche."
+          },
+          "hatching": {
+            "en": "None; the lens is a light fill instead.",
+            "de": "Keine; stattdessen ist die Linse hell gefüllt."
+          },
+          "styles": {
+            "en": "Pad 0.3, stainless parts 0.5 to 0.7, powder-coated stand 0.45 to 0.5, castors 0.2, lamp housing 0.35, lens 0.9; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Polster 0,3, Edelstahlteile 0,5 bis 0,7, pulverbeschichteter Ständer 0,45 bis 0,5, Rollen 0,2, Leuchtengehäuse 0,35, Linse 0,9; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Pad, frame, column, carriage, stand, lamp housing and lens are separate regions: in the thermal view only the lamp head glows, the table stays at room temperature.",
+            "de": "Polster, Rahmen, Säule, Fahrgestell, Ständer, Leuchtengehäuse und Linse sind getrennte Regionen: in der Thermalansicht glüht nur der Leuchtenkopf, der Tisch bleibt auf Raumtemperatur."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.06
+                ],
+                [
+                  0.28,
+                  0.06
+                ],
+                [
+                  0.24,
+                  0.105
+                ],
+                [
+                  -0.24,
+                  0.105
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-castor-a",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.22,
+              "cy": 0.03,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "stand",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "st-castor-b",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.22,
+              "cy": 0.03,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "stand",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.005,
+              "w": 0.07,
+              "h": 1.775,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.51,
+              "y": -0.02,
+              "w": 0.52,
+              "h": 0.045,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-rod",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.515,
+              "y": -0.14,
+              "w": 0.03,
+              "h": 0.12,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "head-housing",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M -0.25 0.015 L 0.25 0.015 L 0.25 0.04 C 0.25 0.1 0.12 0.12 0 0.12 C -0.12 0.12 -0.25 0.1 -0.25 0.04 Z",
+              "region": "light-housing",
+              "material": "light-aluminium"
+            },
+            {
+              "id": "head-lens",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.65,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": -0.24,
+              "y": -0.005,
+              "w": 0.48,
+              "h": 0.02,
+              "region": "light-lens",
+              "material": "light-lens-glass"
+            },
+            {
+              "id": "head-handle",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.55,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "rect",
+              "x": -0.02,
+              "y": -0.06,
+              "w": 0.04,
+              "h": 0.06,
+              "region": "light-housing",
+              "material": "light-aluminium"
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.07
+                ],
+                [
+                  0.4,
+                  0.07
+                ],
+                [
+                  0.4,
+                  0.12
+                ],
+                [
+                  0.3,
+                  0.16
+                ],
+                [
+                  -0.3,
+                  0.16
+                ],
+                [
+                  -0.4,
+                  0.12
+                ]
+              ],
+              "closed": true,
+              "region": "table-base",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "tb-castor-a",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.32,
+              "cy": 0.04,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "table-base",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "tb-castor-b",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.32,
+              "cy": 0.04,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "table-base",
+              "material": "rubber-castor"
+            },
+            {
+              "id": "col-lower",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0
+                ],
+                [
+                  0.15,
+                  0
+                ],
+                [
+                  0.13,
+                  0.24
+                ],
+                [
+                  -0.13,
+                  0.24
+                ]
+              ],
+              "closed": true,
+              "region": "table-column",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "col-upper",
+              "bone": "column",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.24,
+              "w": 0.21,
+              "h": 0.34,
+              "region": "table-column",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "col-head",
+              "bone": "column",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.16,
+              "y": 0.58,
+              "w": 0.32,
+              "h": 0.04,
+              "region": "table-frame",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "top-carrier",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 1.96,
+              "h": 0.04,
+              "region": "table-frame",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "top-pad",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 2,
+              "h": 0.08,
+              "r": 0.03,
+              "region": "table-pad",
+              "material": "pad-foam"
+            }
+          ],
+          "front": [
+            {
+              "id": "top-pad",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 2,
+              "h": 0.08,
+              "r": 0.03,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-end-0",
+              "bone": "top",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 0.03,
+              "h": 0.08,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-end-1",
+              "bone": "top",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": 0.97,
+              "y": 0.04,
+              "w": 0.03,
+              "h": 0.08,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "carrier-end-0",
+              "bone": "top",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "carrier-end-1",
+              "bone": "top",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": 0.95,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.06
+                ],
+                [
+                  0.25,
+                  0.06
+                ],
+                [
+                  0.22,
+                  0.105
+                ],
+                [
+                  -0.22,
+                  0.105
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "st-castor-0",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "stand",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": 0.185,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.06,
+              "r": 0.01
+            },
+            {
+              "id": "tb-castor-0",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "table-base",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": 0.15,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.08,
+              "r": 0.012
+            },
+            {
+              "id": "st-castor-1",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "stand",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": -0.215,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.06,
+              "r": 0.01
+            },
+            {
+              "id": "tb-castor-1",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.2,
+              "region": "table-base",
+              "material": "rubber-castor",
+              "kind": "rect",
+              "x": -0.19,
+              "y": 0,
+              "w": 0.04,
+              "h": 0.08,
+              "r": 0.012
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.105,
+              "w": 0.07,
+              "h": 1.775
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.0225,
+              "y": 1.9,
+              "w": 0.045,
+              "h": 0.045
+            },
+            {
+              "id": "head-housing",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.35,
+              "region": "light-housing",
+              "material": "light-aluminium",
+              "kind": "path",
+              "d": "M -0.25 1.675 L 0.25 1.675 L 0.25 1.7 C 0.25 1.76 0.12 1.78 0 1.78 C -0.12 1.78 -0.25 1.76 -0.25 1.7 Z"
+            },
+            {
+              "id": "head-lens",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.65,
+              "filled": true,
+              "tone": 0.9,
+              "region": "light-lens",
+              "material": "light-lens-glass",
+              "kind": "rect",
+              "x": -0.24,
+              "y": 1.655,
+              "w": 0.48,
+              "h": 0.02
+            },
+            {
+              "id": "head-handle",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.55,
+              "filled": true,
+              "tone": 0.4,
+              "region": "light-housing",
+              "material": "light-aluminium",
+              "kind": "rect",
+              "x": -0.02,
+              "y": 1.6,
+              "w": 0.04,
+              "h": 0.06
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-base",
+              "material": "powder-coated-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.07
+                ],
+                [
+                  0.2,
+                  0.07
+                ],
+                [
+                  0.2,
+                  0.12
+                ],
+                [
+                  0.15,
+                  0.16
+                ],
+                [
+                  -0.15,
+                  0.16
+                ],
+                [
+                  -0.2,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "col-lower",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "table-column",
+              "material": "stainless-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0.16
+                ],
+                [
+                  0.15,
+                  0.16
+                ],
+                [
+                  0.13,
+                  0.4
+                ],
+                [
+                  -0.13,
+                  0.4
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "col-upper",
+              "bone": "column",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "region": "table-column",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.105,
+              "y": 0.4,
+              "w": 0.21,
+              "h": 0.34
+            },
+            {
+              "id": "col-head",
+              "bone": "column",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.74,
+              "w": 0.4,
+              "h": 0.04
+            },
+            {
+              "id": "top-carrier",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 1.96,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-pad",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0.04,
+              "w": 2,
+              "h": 0.08,
+              "r": 0.03,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-carrier",
+              "bone": "top",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "table-frame",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.98,
+              "y": 0,
+              "w": 1.96,
+              "h": 0.04,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.89,
+              "y": -0.25,
+              "w": 0.56,
+              "h": 0.5
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.67,
+              "y": -0.0225,
+              "w": 0.52,
+              "h": 0.045
+            },
+            {
+              "id": "head-housing",
+              "bone": "light-head",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.35,
+              "region": "light-housing",
+              "material": "light-aluminium",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25
+            },
+            {
+              "id": "st-rod",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.03,
+              "ry": 0.03
+            },
+            {
+              "id": "pad-joint-0",
+              "bone": "top",
+              "role": "body",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.62,
+                  0.04
+                ],
+                [
+                  -0.62,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "pad-joint-1",
+              "bone": "top",
+              "role": "body",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.04
+                ],
+                [
+                  -0.05,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            },
+            {
+              "id": "pad-joint-2",
+              "bone": "top",
+              "role": "body",
+              "z": 3.7,
+              "filled": false,
+              "tone": 0.5,
+              "region": "table-pad",
+              "material": "pad-foam",
+              "kind": "poly",
+              "points": [
+                [
+                  0.2,
+                  0.04
+                ],
+                [
+                  0.2,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.24,
+                "z1": 0.24
+              }
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 24.5 mm by 19.6 mm sign: a slab on a column over a low carriage with a stand and a round lamp head hanging in front of it. Front view: the pivot section with the base plate and castors, the column in its stacked sections, the head and the carrier and pad as extruded side profiles that rise and dip when the table tilts, and the stand with its column and castors in front of the light head with lens and handle. Plan: carrier and pad as extruded profiles with the pad joints, the stand base at the sides, the arm and the round light head with its knob. The two end faces of the pad are drawn on top of the tilt envelope so the tilt reads as a slab, not a block; the joints follow the tilt in plan.",
+            "de": "Ein Zeichen von 24,5 mm mal 19,6 mm: eine Platte auf einer Säule über einem niedrigen Fahrgestell, dazu ein Ständer mit einem runden Leuchtenkopf, der davor hängt. Vorderansicht: der Schwenkschnitt mit Fußplatte und Rollen, die Säule in ihren gestapelten Abschnitten, der Kopf und Träger und Polster als gezogene Seitenprofile, die sich beim Kippen des Tisches heben und senken, und der Ständer mit Säule und Rollen vor dem Leuchtenkopf mit Linse und Griff. Grundriss: Träger und Polster als gezogene Profile mit den Polsterfugen, der Ständerfuß an den Seiten, der Arm und der runde Leuchtenkopf mit seinem Knauf. Die beiden Stirnflächen des Polsters liegen über der Kipphülle, damit das Kippen als Platte und nicht als Block lesbar ist; die Fugen folgen im Grundriss der Neigung."
+          },
+          "retained": {
+            "en": "Length 2.0 m, top 0.90 m, pad and carrier as two strips, carriage with two castors, column in two parts, lamp head 0.5 m wide with lens and handle, stand column and arm.",
+            "de": "Länge 2,0 m, Oberfläche 0,90 m, Polster und Träger als zwei Streifen, Fahrgestell mit zwei Rollen, Säule in zwei Teilen, Leuchtenkopf von 0,5 m Breite mit Linse und Griff, Ständersäule und Arm."
+          },
+          "merged": {
+            "en": "The column collar and the bellows form two trapezoids; the stand collar joins the column.",
+            "de": "Säulenmanschette und Balg bilden zwei Trapeze; der Kragen des Ständers geht in die Säule auf."
+          },
+          "omitted": {
+            "en": "Pleat lines, pad joints, the lamp groove, the arm knob, the collar and every accessory.",
+            "de": "Faltenlinien, Polsterfugen, die Leuchtenrille, der Armknauf, der Kragen und jedes Zubehör."
+          },
+          "thinElements": {
+            "en": "The rod is widened from 24 to 30 mm and the stand column from 60 to 70 mm so that fill and 0.18 mm pen reach the feature width.",
+            "de": "Die Stange ist von 24 auf 30 mm und die Ständersäule von 60 auf 70 mm verbreitert, damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Pad 0.3, stainless 0.5 to 0.7, stand 0.45 to 0.5, castors 0.2, housing 0.35, lens 0.9; one body pen of 0.18 mm.",
+            "de": "Polster 0,3, Edelstahl 0,5 bis 0,7, Ständer 0,45 bis 0,5, Rollen 0,2, Gehäuse 0,35, Linse 0,9; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "Regions stay separate, so the lamp head carries the heat of the light and the table stays cool.",
+            "de": "Die Regionen bleiben getrennt, sodass der Leuchtenkopf die Wärme der Leuchte trägt und der Tisch kühl bleibt."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0
+                ],
+                [
+                  0.28,
+                  0
+                ],
+                [
+                  0.24,
+                  0.105
+                ],
+                [
+                  -0.24,
+                  0.105
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.005,
+              "w": 0.08,
+              "h": 1.795,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.52,
+              "y": -0.03,
+              "w": 0.54,
+              "h": 0.06,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-rod",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.52,
+              "y": -0.14,
+              "w": 0.04,
+              "h": 0.12,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "head",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.25 0 L 0.25 0 L 0.25 0.04 C 0.25 0.1 0.12 0.12 0 0.12 C -0.12 0.12 -0.25 0.1 -0.25 0.04 Z",
+              "regions": [
+                "light-housing",
+                "light-lens"
+              ],
+              "material": "light-aluminium"
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0
+                ],
+                [
+                  0.4,
+                  0
+                ],
+                [
+                  0.4,
+                  0.12
+                ],
+                [
+                  0.3,
+                  0.16
+                ],
+                [
+                  -0.3,
+                  0.16
+                ],
+                [
+                  -0.4,
+                  0.12
+                ]
+              ],
+              "closed": true,
+              "region": "table-base",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "col",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0
+                ],
+                [
+                  0.16,
+                  0
+                ],
+                [
+                  0.11,
+                  0.62
+                ],
+                [
+                  -0.11,
+                  0.62
+                ]
+              ],
+              "closed": true,
+              "region": "table-column",
+              "material": "stainless-steel"
+            },
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.12,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam"
+            }
+          ],
+          "front": [
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.12,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-end-0",
+              "bone": "top",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.12,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "top-end-1",
+              "bone": "top",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": 0.97,
+              "y": 0,
+              "w": 0.03,
+              "h": 0.12,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0
+                ],
+                [
+                  0.25,
+                  0
+                ],
+                [
+                  0.22,
+                  0.105
+                ],
+                [
+                  -0.22,
+                  0.105
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.105,
+              "w": 0.08,
+              "h": 1.795
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 1.89,
+              "w": 0.06,
+              "h": 0.06
+            },
+            {
+              "id": "head",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "light-housing",
+                "light-lens"
+              ],
+              "material": "light-aluminium",
+              "kind": "path",
+              "d": "M -0.25 1.66 L 0.25 1.66 L 0.25 1.7 C 0.25 1.76 0.12 1.78 0 1.78 C -0.12 1.78 -0.25 1.76 -0.25 1.7 Z"
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-base",
+              "material": "powder-coated-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0
+                ],
+                [
+                  0.2,
+                  0
+                ],
+                [
+                  0.2,
+                  0.12
+                ],
+                [
+                  0.15,
+                  0.16
+                ],
+                [
+                  -0.15,
+                  0.16
+                ],
+                [
+                  -0.2,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "col",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "region": "table-column",
+              "material": "stainless-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.16,
+                  0.16
+                ],
+                [
+                  0.16,
+                  0.16
+                ],
+                [
+                  0.11,
+                  0.78
+                ],
+                [
+                  -0.11,
+                  0.78
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "plan": [
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.12,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.89,
+              "y": -0.25,
+              "w": 0.56,
+              "h": 0.5
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.67,
+              "y": -0.03,
+              "w": 0.5,
+              "h": 0.06
+            },
+            {
+              "id": "head",
+              "bone": "light-head",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "light-housing",
+                "light-lens"
+              ],
+              "material": "light-aluminium",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 12.3 mm by 9.8 mm sign: a slab on a column over a plate, with a stand and a lamp dome next to it. Front view: the pivot section of the table, a tapered base and column under the pad, which is drawn as its extruded side profile so it rises and dips when the table tilts, and the stand with its column in front of the round light head. Plan: the pad as the extruded profile, the stand base showing at its sides, the arm and the round light head above it. The two end faces of the pad are drawn on top of the tilt envelope so the tilt reads as a slab, not a block; the joints follow the tilt in plan.",
+            "de": "Ein Zeichen von 12,3 mm mal 9,8 mm: eine Platte auf einer Säule über einer Grundplatte, daneben ein Ständer mit einer Leuchtenkuppel. Vorderansicht: der Schwenkschnitt des Tisches, ein verjüngter Fuß und Säule unter der Polsterfläche, die als gezogenes Seitenprofil gezeichnet ist und sich beim Kippen des Tisches hebt und senkt, und der Ständer mit seiner Säule vor dem runden Leuchtenkopf. Grundriss: die Polsterfläche als gezogenes Profil, der Ständerfuß an ihren Seiten sichtbar, der Arm und darüber der runde Leuchtenkopf. Die beiden Stirnflächen des Polsters liegen über der Kipphülle, damit das Kippen als Platte und nicht als Block lesbar ist; die Fugen folgen im Grundriss der Neigung."
+          },
+          "retained": {
+            "en": "Length 2.0 m, top surface 0.90 m, column, carriage plate, stand with arm and the 0.5 m lamp dome with its hanging rod.",
+            "de": "Länge 2,0 m, Oberfläche 0,90 m, Säule, Fahrgestellplatte, Ständer mit Arm und die Leuchtenkuppel von 0,5 m mit ihrer Hängestange."
+          },
+          "merged": {
+            "en": "Pad and carrier are one 0.12 m slab (regions pad and frame merged); castors join the carriage plate; lens and housing are one dome (regions housing and lens merged); collar, knob and handle join their parts.",
+            "de": "Polster und Träger sind eine 0,12 m dicke Platte (Regionen Polster und Rahmen zusammengeführt); Rollen gehen in der Fahrgestellplatte auf; Linse und Gehäuse sind eine Kuppel (Regionen Gehäuse und Linse zusammengeführt); Kragen, Knauf und Griff gehen in ihren Teilen auf."
+          },
+          "omitted": {
+            "en": "Castors, pleats, pad joints, the lamp groove, the handle and the arm knob.",
+            "de": "Rollen, Falten, Polsterfugen, die Leuchtenrille, der Griff und der Armknauf."
+          },
+          "thinElements": {
+            "en": "The stand column is widened from 60 to 80 mm, the arm from 40 to 60 mm and the rod from 24 to 40 mm (0.2 mm on paper).",
+            "de": "Die Ständersäule ist von 60 auf 80 mm, der Arm von 40 auf 60 mm und die Stange von 24 auf 40 mm (0,2 mm auf Papier) verbreitert."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Slab 0.35, column 0.65, carriage 0.5, stand 0.5, lamp dome 0.4; one body pen of 0.18 mm.",
+            "de": "Platte 0,35, Säule 0,65, Fahrgestell 0,5, Ständer 0,5, Leuchtenkuppel 0,4; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The slab shape lists pad and frame as merged regions and the dome lists housing and lens, so the thermal view still marks the lamp as the warm part.",
+            "de": "Die Plattenform führt Polster und Rahmen als zusammengeführte Regionen und die Kuppel Gehäuse und Linse, sodass die Thermalansicht die Leuchte weiter als warmen Teil markiert."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "x": -0.28,
+              "y": 0,
+              "w": 0.56,
+              "h": 0.105
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.005,
+              "w": 0.08,
+              "h": 1.795,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.52,
+              "y": -0.03,
+              "w": 0.54,
+              "h": 0.06,
+              "region": "stand",
+              "material": "powder-coated-steel"
+            },
+            {
+              "id": "head",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.25 0 L 0.25 0 L 0.25 0.04 C 0.25 0.1 0.12 0.12 0 0.12 C -0.12 0.12 -0.25 0.1 -0.25 0.04 Z",
+              "regions": [
+                "light-housing",
+                "light-lens"
+              ],
+              "material": "light-aluminium"
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "region": "table-base",
+              "material": "powder-coated-steel",
+              "x": -0.4,
+              "y": 0,
+              "w": 0.8,
+              "h": 0.16
+            },
+            {
+              "id": "col",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "kind": "rect",
+              "region": "table-column",
+              "material": "stainless-steel",
+              "x": -0.14,
+              "y": 0,
+              "w": 0.28,
+              "h": 0.62
+            },
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.12,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam"
+            }
+          ],
+          "front": [
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.12,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0,
+              "w": 0.5,
+              "h": 0.105
+            },
+            {
+              "id": "st-column",
+              "bone": "stand-column",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.105,
+              "w": 0.08,
+              "h": 1.795
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.03,
+              "y": 1.89,
+              "w": 0.06,
+              "h": 0.06
+            },
+            {
+              "id": "head",
+              "bone": "light-head",
+              "role": "body",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "light-housing",
+                "light-lens"
+              ],
+              "material": "light-aluminium",
+              "kind": "path",
+              "d": "M -0.25 1.66 L 0.25 1.66 L 0.25 1.7 C 0.25 1.76 0.12 1.78 0 1.78 C -0.12 1.78 -0.25 1.76 -0.25 1.7 Z"
+            },
+            {
+              "id": "tb-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "region": "table-base",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0,
+              "w": 0.4,
+              "h": 0.16
+            },
+            {
+              "id": "col",
+              "bone": "column",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.65,
+              "region": "table-column",
+              "material": "stainless-steel",
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.16,
+              "w": 0.28,
+              "h": 0.62
+            }
+          ],
+          "plan": [
+            {
+              "id": "top",
+              "bone": "top",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.35,
+              "regions": [
+                "table-pad",
+                "table-frame"
+              ],
+              "material": "pad-foam",
+              "kind": "rect",
+              "x": -1,
+              "y": 0,
+              "w": 2,
+              "h": 0.12,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.25,
+                "z1": 0.25
+              }
+            },
+            {
+              "id": "st-base",
+              "bone": "stand-base",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.89,
+              "y": -0.25,
+              "w": 0.56,
+              "h": 0.5
+            },
+            {
+              "id": "st-arm",
+              "bone": "stand-arm",
+              "role": "body",
+              "z": 9,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stand",
+              "material": "powder-coated-steel",
+              "kind": "rect",
+              "x": 0.67,
+              "y": -0.03,
+              "w": 0.5,
+              "h": 0.06
+            },
+            {
+              "id": "head",
+              "bone": "light-head",
+              "role": "body",
+              "z": 8,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "light-housing",
+                "light-lens"
+              ],
+              "material": "light-aluminium",
+              "kind": "ellipse",
+              "cx": 0.67,
+              "cy": 0,
+              "rx": 0.25,
+              "ry": 0.25
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Operating-room sign 4.9 x 3.9 mm: the 2 m table top as a long slab on its column and base plate, the lamp stand beside it with its horizontal arm and the lamp head hanging on it; the front view is the 0.5 m wide slab with the stand column behind, the plan the slab, the stand foot, the arm and the round lamp head; the top tilts with its bone.",
+            "de": "Zeichen des OP-Raums 4,9 x 3,9 mm: die 2 m lange Tischplatte als langer Balken auf Säule und Fußplatte, daneben der Leuchtenständer mit waagrechtem Ausleger und daran hängendem Leuchtenkopf; die Vorderansicht ist der 0,5 m breite Balken mit der Ständersäule dahinter, die Draufsicht Balken, Ständerfuß, Ausleger und runder Leuchtenkopf; die Platte kippt mit ihrem Knochen."
+          },
+          "retained": {
+            "en": "Overall length 2.45 m, lamp height 1.96 m, slab, column, base plate, stand column, arm and lamp head as separate bone-bound shapes.",
+            "de": "Gesamtlänge 2,45 m, Leuchtenhöhe 1,96 m, Platte, Säule, Fußplatte, Ständersäule, Ausleger und Leuchtenkopf als getrennte, an Knochen gebundene Formen."
+          },
+          "merged": {
+            "en": "Pad and frame of the top are one slab.",
+            "de": "Polster und Rahmen der Platte sind ein Balken."
+          },
+          "omitted": {
+            "en": "Lamp rod, castors, rails, handles and the control box (all below 0.1 m).",
+            "de": "Leuchtenstab, Rollen, Schienen, Griffe und der Schaltkasten (alle unter 0,1 m)."
+          },
+          "thinElements": {
+            "en": "The stand column of 0.08 m is 0.16 mm and the arm 0.06 m is 0.12 mm; they are drawn as single outlines of 0.18 mm, which thickens them slightly.",
+            "de": "Die Ständersäule von 0,08 m ist 0,16 mm und der Ausleger von 0,06 m 0,12 mm; sie werden als einfache 0,18-mm-Konturen gezeichnet, was sie leicht verstärkt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Slab light, base and stand mid-tone, lamp head dark; one 0.18 mm outline.",
+            "de": "Balken hell, Fuß und Ständer mittlerer Ton, Leuchtenkopf dunkel; eine 0,18-mm-Kontur."
+          },
+          "overlays": {
+            "en": "Thermal regions as at 1:200: the lamp head carries the housing and lens regions.",
+            "de": "Thermische Regionen wie bei 1:200: der Leuchtenkopf trägt die Gehäuse- und Linsenregion."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "light-off",
+        "title": {
+          "en": "Light off",
+          "de": "Leuchte aus"
+        },
+        "description": {
+          "en": "The table is flat at 0.90 m and the surgical light is switched off: everything is at room temperature.",
+          "de": "Der Tisch steht eben auf 0,90 m und die Operationsleuchte ist ausgeschaltet: alles hat Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "castor-table-rear-left",
+          "castor-table-rear-right",
+          "castor-table-front-left",
+          "castor-table-front-right",
+          "castor-stand-rear-left",
+          "castor-stand-rear-right",
+          "castor-stand-front-left",
+          "castor-stand-front-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-pad": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0
+            },
+            "table-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "table-column": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "table-base": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "stand": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "light-housing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "light-lens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "light-plume": 0
+          },
+          "operating": {
+            "light": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "light-on",
+        "title": {
+          "en": "Light on",
+          "de": "Leuchte an"
+        },
+        "description": {
+          "en": "The table is flat and the surgical light shines at full power: the lamp head releases 120 W and a plume rises over it.",
+          "de": "Der Tisch steht eben und die Operationsleuchte leuchtet mit voller Leistung: der Leuchtenkopf gibt 120 W ab und eine Fahne steigt darüber auf."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "castor-table-rear-left",
+          "castor-table-rear-right",
+          "castor-table-front-left",
+          "castor-table-front-right",
+          "castor-stand-rear-left",
+          "castor-stand-rear-right",
+          "castor-stand-front-left",
+          "castor-stand-front-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-pad": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0
+            },
+            "table-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "table-column": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "table-base": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "stand": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "light-housing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "light-lens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "light-plume": 1
+          },
+          "operating": {
+            "light": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "head-down",
+        "title": {
+          "en": "Head down 12 degrees",
+          "de": "Kopftieflage 12 Grad"
+        },
+        "description": {
+          "en": "The top is tilted by 12 degrees about its pivot so the head end is lower than the foot end, the light stays on.",
+          "de": "Die Platte ist um 12 Grad um ihren Drehpunkt gekippt, sodass das Kopfende tiefer liegt als das Fußende; die Leuchte bleibt an."
+        },
+        "bones": {
+          "top": {
+            "angleDeg": 12
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "castor-table-rear-left",
+          "castor-table-rear-right",
+          "castor-table-front-left",
+          "castor-table-front-right",
+          "castor-stand-rear-left",
+          "castor-stand-rear-right",
+          "castor-stand-front-left",
+          "castor-stand-front-right"
+        ],
+        "thermal": {
+          "regions": {
+            "table-pad": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0
+            },
+            "table-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "table-column": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "table-base": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 21
+              }
+            },
+            "stand": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "light-housing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "light-lens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "light-plume": 1
+          },
+          "operating": {
+            "light": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "switch-on-warm-up",
+        "title": {
+          "en": "Switch on and warm up",
+          "de": "Einschalten und aufwärmen"
+        },
+        "description": {
+          "en": "The surgical light is switched on after five seconds: the lens warms within a minute and the housing within ten minutes while a plume builds up above the head.",
+          "de": "Die Operationsleuchte wird nach fünf Sekunden eingeschaltet: die Linse wärmt sich binnen einer Minute und das Gehäuse binnen zehn Minuten auf, während über dem Kopf eine Fahne entsteht."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "light-off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "light-on",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "light-on",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "castor-table-rear-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-table-rear-right",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-table-front-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-table-front-right",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-stand-rear-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-stand-rear-right",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-stand-front-left",
+            "fromS": 0,
+            "toS": 600
+          },
+          {
+            "anchor": "castor-stand-front-right",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 600,
+            "title": {
+              "en": "Lit, warming up",
+              "de": "Leuchtet, wärmt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Light switched on",
+              "de": "Leuchte eingeschaltet"
+            },
+            "target": "light"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:light",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:light-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tilt-table",
+        "title": {
+          "en": "Tilt the table head down",
+          "de": "Tisch in Kopftieflage kippen"
+        },
+        "description": {
+          "en": "The top tilts from flat to 12 degrees head down in six seconds, stays for four seconds and returns, the light stays on.",
+          "de": "Die Platte kippt in sechs Sekunden von eben auf 12 Grad Kopftieflage, bleibt vier Sekunden stehen und kehrt zurück; die Leuchte bleibt an."
+        },
+        "durationS": 20,
+        "fps": 15,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "light-on",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "head-down",
+            "ease": "smooth"
+          },
+          {
+            "t": 10,
+            "pose": "head-down",
+            "ease": "smooth"
+          },
+          {
+            "t": 16,
+            "pose": "light-on",
+            "ease": "smooth"
+          },
+          {
+            "t": 20,
+            "pose": "light-on",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "castor-table-rear-left",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-table-rear-right",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-table-front-left",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-table-front-right",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-stand-rear-left",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-stand-rear-right",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-stand-front-left",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "castor-stand-front-right",
+            "fromS": 0,
+            "toS": 20
+          }
+        ],
+        "phases": [
+          {
+            "id": "tilt",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Tilting",
+              "de": "Kippen"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 6,
+            "toS": 10,
+            "title": {
+              "en": "Held",
+              "de": "Halten"
+            }
+          },
+          {
+            "id": "return",
+            "fromS": 10,
+            "toS": 16,
+            "title": {
+              "en": "Returning",
+              "de": "Zurückkehren"
+            }
+          },
+          {
+            "id": "rest",
+            "fromS": 16,
+            "toS": 20,
+            "title": {
+              "en": "Flat",
+              "de": "Eben"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Tilt starts",
+              "de": "Kippen beginnt"
+            }
+          },
+          {
+            "t": 6,
+            "kind": "motion",
+            "title": {
+              "en": "Head-down position reached",
+              "de": "Kopftieflage erreicht"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:light",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 20,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:light-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 20,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "light",
+          "title": {
+            "en": "Surgical light",
+            "de": "Operationsleuchte"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.5,
+              "title": {
+                "en": "Half power (60 W)",
+                "de": "Halbe Leistung (60 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Full power (120 W)",
+                "de": "Volle Leistung (120 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "table-pad",
+          "title": {
+            "en": "Table pad (vinyl over foam)",
+            "de": "Tischpolster (Vinyl über Schaum)"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pad-foam",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.45,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "vinyl",
+              "title": {
+                "en": "PU-coated vinyl 1 mm",
+                "de": "PU-beschichtetes Vinyl 1 mm"
+              },
+              "kind": "polymer",
+              "material": "pad-foam",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.00625,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            },
+            {
+              "id": "foam",
+              "title": {
+                "en": "Polyurethane foam 70 mm",
+                "de": "Polyurethanschaum 70 mm"
+              },
+              "kind": "insulation",
+              "material": "pad-foam",
+              "thicknessM": 0.07,
+              "resistanceM2KW": 1.75,
+              "heatCapacityJM2K": 3150,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3150,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "table-frame",
+          "title": {
+            "en": "Carrier, rails and column head",
+            "de": "Träger, Schienen und Säulenkopf"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stainless-steel",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.2,
+          "layers": [
+            {
+              "id": "carrier",
+              "title": {
+                "en": "Stainless steel 2 mm",
+                "de": "Edelstahl 2 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-steel",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.000133,
+              "heatCapacityJM2K": 7900,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7900,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "table-column",
+          "title": {
+            "en": "Telescopic column cover",
+            "de": "Hülle der Teleskopsäule"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stainless-steel",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.6,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "cover",
+              "title": {
+                "en": "Stainless steel and polymer bellows 2 mm",
+                "de": "Edelstahl und Kunststoffbalg 2 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-steel",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.000133,
+              "heatCapacityJM2K": 7900,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7900,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "table-base",
+          "title": {
+            "en": "Carriage and castors",
+            "de": "Fahrgestell und Rollen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "powder-coated-steel",
+          "areaM2": 0.9,
+          "characteristicLengthM": 0.8,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Powder-coated steel 3 mm",
+                "de": "Pulverbeschichteter Stahl 3 mm"
+              },
+              "kind": "metal",
+              "material": "powder-coated-steel",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.00006,
+              "heatCapacityJM2K": 11700,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 11700,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "stand",
+          "title": {
+            "en": "Light stand, arm and base",
+            "de": "Leuchtenständer, Arm und Fuß"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "powder-coated-steel",
+          "areaM2": 0.75,
+          "characteristicLengthM": 1.9,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Powder-coated steel tube 2.5 mm",
+                "de": "Pulverbeschichtetes Stahlrohr 2,5 mm"
+              },
+              "kind": "metal",
+              "material": "powder-coated-steel",
+              "thicknessM": 0.0025,
+              "resistanceM2KW": 0.00005,
+              "heatCapacityJM2K": 9750,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 9750,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "light-housing",
+          "title": {
+            "en": "Lamp head housing",
+            "de": "Gehäuse des Leuchtenkopfes"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "light-aluminium",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.5,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "housing",
+              "title": {
+                "en": "Die-cast aluminium 3 mm",
+                "de": "Aluminiumdruckguss 3 mm"
+              },
+              "kind": "metal",
+              "material": "light-aluminium",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.000014,
+              "heatCapacityJM2K": 7290,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7290,
+          "operating": {
+            "key": "light",
+            "heatW": 90
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "light-lens",
+          "title": {
+            "en": "Lamp head lens",
+            "de": "Linse des Leuchtenkopfes"
+          },
+          "kind": "lamp",
+          "model": "operating",
+          "material": "light-lens-glass",
+          "areaM2": 0.19,
+          "characteristicLengthM": 0.48,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.2,
+          "layers": [
+            {
+              "id": "lens",
+              "title": {
+                "en": "Polycarbonate lens 4 mm",
+                "de": "Polycarbonatlinse 4 mm"
+              },
+              "kind": "polymer",
+              "material": "light-lens-glass",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.02,
+              "heatCapacityJM2K": 4800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4800,
+          "operating": {
+            "key": "light",
+            "heatW": 30
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "light-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Hot air rising over the lamp head",
+            "de": "Heißluft über dem Leuchtenkopf"
+          },
+          "anchor": "light-top",
+          "directionDeg": 90,
+          "diameterM": 0.4,
+          "region": "light-housing",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The 120 W of the light end entirely as heat in the room: 90 W at the housing and 30 W at the lens at level 1; the light output is absorbed by the drapes and the patient and counted in the surfaces of the room.",
+          "de": "Die 120 W der Leuchte enden vollständig als Wärme im Raum: 90 W am Gehäuse und 30 W an der Linse auf Stufe 1; die Lichtleistung wird von den Abdeckungen und dem Patienten absorbiert und in den Flächen des Raumes mitgezählt."
+        },
+        {
+          "en": "The table carries no patient and no electrical load; the heat of a patient is the business of the person asset placed on it.",
+          "de": "Der Tisch trägt keinen Patienten und keine elektrische Last; die Wärme eines Patienten gehört zum Personen-Asset, das darauf gelegt wird."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "castor-table-rear-left",
+        "castor-table-rear-right",
+        "castor-table-front-left",
+        "castor-table-front-right",
+        "castor-stand-rear-left",
+        "castor-stand-rear-right",
+        "castor-stand-front-left",
+        "castor-stand-front-right"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid assembly standing on four table castors (x = +-0.32 m, z = +-0.17 m) and four stand castors (x = 1.17 m +- 0.22 m, z = +-0.195 m); the locked castors carry the weight, the tilted top shifts the centre of mass inside the carriage footprint.",
+          "de": "Eine starre Baugruppe auf vier Tischrollen (x = +-0,32 m, z = +-0,17 m) und vier Ständerrollen (x = 1,17 m +- 0,22 m, z = +-0,195 m); die arretierten Rollen tragen das Gewicht, die gekippte Platte verschiebt den Schwerpunkt innerhalb der Aufstandsfläche des Fahrgestells."
+        },
+        {
+          "en": "The light stand stands beyond the head end of the table (column at 1.17 m, the table top ends at 1.0 m), so neither the level nor the tilted top can touch the column; the arm reaches back over the table.",
+          "de": "Der Leuchtenständer steht hinter dem Kopfende des Tisches (Säule bei 1,17 m, die Tischplatte endet bei 1,0 m), sodass weder die ebene noch die gekippte Platte die Säule berühren kann; der Arm reicht zurück über den Tisch."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "light-on",
+      "defaultClip": "switch-on-warm-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

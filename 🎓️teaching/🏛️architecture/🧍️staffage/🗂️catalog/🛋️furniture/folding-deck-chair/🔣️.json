@@ -289,36 +289,72 @@
     },
     "anchors": [
       {
-        "id": "foot-rear",
+        "id": "foot-rear-left",
         "bone": "rear",
-        "x": 0.0,
-        "y": 0.0,
+        "x": 0,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Rear feet",
-          "de": "Hintere Füße"
+          "en": "Rear left foot",
+          "de": "Hinterer linker Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.05,
-        "footprintWidthM": 0.58,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.045,
+        "frictionCoefficient": 0.5,
+        "z": 0.27
       },
       {
-        "id": "foot-front",
-        "bone": "front",
-        "x": 0.320039,
-        "y": 0.601905,
+        "id": "foot-rear-right",
+        "bone": "rear",
+        "x": 0,
+        "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Front feet",
-          "de": "Vordere Füße"
+          "en": "Rear right foot",
+          "de": "Hinterer rechter Fuß"
         },
         "support": "contact",
         "normalDeg": 90,
         "footprintLengthM": 0.05,
-        "footprintWidthM": 0.58,
-        "frictionCoefficient": 0.5
+        "footprintWidthM": 0.045,
+        "frictionCoefficient": 0.5,
+        "z": -0.27
+      },
+      {
+        "id": "foot-front-left",
+        "bone": "front",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front left foot",
+          "de": "Vorderer linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.045,
+        "frictionCoefficient": 0.5,
+        "z": 0.235
+      },
+      {
+        "id": "foot-front-right",
+        "bone": "front",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front right foot",
+          "de": "Vorderer rechter Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.045,
+        "frictionCoefficient": 0.5,
+        "z": -0.235
       },
       {
         "id": "sling",
@@ -337,7 +373,7 @@
         "status": "authored",
         "denominator": 500,
         "validRange": {
-          "minDenominator": 351,
+          "minDenominator": 350,
           "maxDenominator": 1000
         },
         "pens": {
@@ -382,12 +418,12 @@
               "kind": "poly",
               "points": [
                 [
-                  1.3e-05,
-                  2.4e-05
+                  0.000013,
+                  0.000024
                 ],
                 [
                   0.726013,
-                  2.4e-05
+                  0.000024
                 ]
               ],
               "closed": false,
@@ -431,7 +467,7 @@
                 ],
                 [
                   0.6,
-                  -1e-06
+                  -0.000001
                 ]
               ],
               "closed": false,
@@ -441,12 +477,464 @@
                 "canvas-seat"
               ]
             }
+          ],
+          "front": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "canvas-back",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "canvas-back",
+                "canvas-seat"
+              ],
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "canvas-seat",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "canvas-back",
+                "canvas-seat"
+              ],
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            }
+          ],
+          "plan": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "canvas-back",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "canvas-back",
+                "canvas-seat"
+              ],
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "canvas-seat",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.7,
+              "regions": [
+                "canvas-back",
+                "canvas-seat"
+              ],
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Chair sign 1.6 x 1.9 mm: the scissor frames and the seat frame as three strokes with the sling as one stroke.",
-            "de": "Stuhlzeichen 1,6 x 1,9 mm: die Scherenrahmen und der Sitzrahmen als drei Striche mit dem Segeltuch als einem Strich."
+            "en": "Chair sign 1.6 x 1.9 mm: the scissor frames and the seat frame as three strokes with the sling as one stroke. Front and plan: every frame rail and both canvas panels are the elevation profiles of their bones extruded across the width, so the chair folds flat in all three views; the rear rails sit outermost, the front rails inside them and the seat rails innermost.",
+            "de": "Stuhlzeichen 1,6 x 1,9 mm: die Scherenrahmen und der Sitzrahmen als drei Striche mit dem Segeltuch als einem Strich. Vorder- und Draufsicht: jeder Rahmenholm und beide Bespannungen sind die Seitenansichtsprofile ihrer Knochen, über die Breite gezogen, so klappt der Stuhl in allen drei Ansichten flach zusammen; die hinteren Holme liegen außen, die vorderen innen davon und die Sitzholme ganz innen."
           },
           "retained": {
             "en": "The crossing A of rear and front frame, the seat frame and the hanging back canvas.",
@@ -482,7 +970,7 @@
         "status": "authored",
         "denominator": 200,
         "validRange": {
-          "minDenominator": 151,
+          "minDenominator": 150,
           "maxDenominator": 350
         },
         "pens": {
@@ -527,12 +1015,12 @@
               "kind": "poly",
               "points": [
                 [
-                  1.3e-05,
-                  2.4e-05
+                  0.000013,
+                  0.000024
                 ],
                 [
                   0.726013,
-                  2.4e-05
+                  0.000024
                 ]
               ],
               "closed": false,
@@ -576,7 +1064,7 @@
                 ],
                 [
                   0.6,
-                  -1e-06
+                  -0.000001
                 ]
               ],
               "closed": false,
@@ -605,12 +1093,452 @@
               "region": "canvas-seat",
               "penMm": 0.13
             }
+          ],
+          "front": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "canvas-back",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "canvas-seat",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            }
+          ],
+          "plan": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.000013,
+                  0.000024
+                ],
+                [
+                  0.726013,
+                  0.000024
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "frame-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "canvas-back",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "canvas-seat",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.13
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Chair 3.6 x 4.7 mm: three frame strokes and two canvas strokes meeting at the sag.",
-            "de": "Stuhl 3,6 x 4,7 mm: drei Rahmenstriche und zwei Segeltuchstriche, die sich im Durchhang treffen."
+            "en": "Chair 3.6 x 4.7 mm: three frame strokes and two canvas strokes meeting at the sag. Front and plan: the three frame rails per side and the back and seat canvas are the elevation profiles extruded across their widths; the rails are offset sideways so the three frames stay apart as the chair folds.",
+            "de": "Stuhl 3,6 x 4,7 mm: drei Rahmenstriche und zwei Segeltuchstriche, die sich im Durchhang treffen. Vorder- und Draufsicht: die drei Rahmenholme je Seite und die Rücken- und Sitzbespannung sind die über ihre Breite gezogenen Seitenansichtsprofile; die Holme sind seitlich versetzt, damit die drei Rahmen beim Zusammenklappen getrennt bleiben."
           },
           "retained": {
             "en": "Scissor, seat frame, both canvas halves with the sag.",
@@ -646,7 +1574,7 @@
         "status": "authored",
         "denominator": 100,
         "validRange": {
-          "minDenominator": 76,
+          "minDenominator": 75,
           "maxDenominator": 150
         },
         "pens": {
@@ -686,9 +1614,9 @@
               "tone": 0.55,
               "kind": "capsule",
               "x0": 0.022513,
-              "y0": 2.4e-05,
+              "y0": 0.000024,
               "x1": 0.703513,
-              "y1": 2.4e-05,
+              "y1": 0.000024,
               "r0": 0.0225,
               "r1": 0.0225,
               "region": "frame-timber",
@@ -728,7 +1656,7 @@
                 ],
                 [
                   0.6,
-                  -1e-06
+                  -0.000001
                 ]
               ],
               "closed": false,
@@ -773,12 +1701,572 @@
               "material": "steel-hardware",
               "penMm": 0.13
             }
+          ],
+          "front": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 1.0225,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.022513,
+              "y0": 0.000024,
+              "x1": 0.703513,
+              "y1": 0.000024,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 0.4725,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 1.0225,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.022513,
+              "y0": 0.000024,
+              "x1": 0.703513,
+              "y1": 0.000024,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 0.4725,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "canvas-back",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "canvas-seat",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "bolt-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2575,
+                "z1": 0.2925
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "bolt-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2575
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "top-rail",
+              "bone": "rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 1.045,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.27,
+                "z1": 0.27
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "front-rail",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.495,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.18,
+                "z1": 0.18
+              },
+              "penMm": 0.13
+            }
+          ],
+          "plan": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 1.0225,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.022513,
+              "y0": 0.000024,
+              "x1": 0.703513,
+              "y1": 0.000024,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 0.4725,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 1.0225,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.022513,
+              "y0": 0.000024,
+              "x1": 0.703513,
+              "y1": 0.000024,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 0.4725,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "canvas-back",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "canvas-seat",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.18
+            },
+            {
+              "id": "bolt-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2575,
+                "z1": 0.2925
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "bolt-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2575
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "top-rail",
+              "bone": "rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 1.045,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.27,
+                "z1": 0.27
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "front-rail",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.495,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.18,
+                "z1": 0.18
+              },
+              "penMm": 0.13
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Chair 7.8 x 9.3 mm: three tubes as filled capsules, two canvas strokes and the pivot bolt.",
-            "de": "Stuhl 7,8 x 9,3 mm: drei Leisten als gefüllte Kapseln, zwei Segeltuchstriche und der Gelenkbolzen."
+            "en": "Chair 7.8 x 9.3 mm: three tubes as filled capsules, two canvas strokes and the pivot bolt. Front and plan: tube rails, the pivot bolts on the outer rails, the top and front cross rails and the two canvas panels are extruded elevation profiles, so each follows its folding bone.",
+            "de": "Stuhl 7,8 x 9,3 mm: drei Leisten als gefüllte Kapseln, zwei Segeltuchstriche und der Gelenkbolzen. Vorder- und Draufsicht: Rohrholme, die Drehbolzen an den äußeren Holmen, die obere und vordere Querleiste und die zwei Bespannungen sind gezogene Seitenansichtsprofile, so folgt jedes seinem Faltknochen."
           },
           "retained": {
             "en": "Real rail depth 45 mm, the pivot, the canvas sling.",
@@ -935,7 +2423,7 @@
                 ],
                 [
                   0.6,
-                  -1e-06
+                  -0.000001
                 ]
               ],
               "closed": false,
@@ -1012,12 +2500,728 @@
               "material": "beech-timber",
               "penMm": 0.13
             }
+          ],
+          "front": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.025053,
+                  0.022233
+                ],
+                [
+                  1.044994,
+                  0.0225
+                ],
+                [
+                  1.045006,
+                  -0.0225
+                ],
+                [
+                  0.025064,
+                  -0.022767
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02508,
+                  0.022791
+                ],
+                [
+                  0.726021,
+                  0.022524
+                ],
+                [
+                  0.726004,
+                  -0.022476
+                ],
+                [
+                  0.025063,
+                  -0.022209
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  -0.0225
+                ],
+                [
+                  0.0,
+                  -0.0225
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.025053,
+                  0.022233
+                ],
+                [
+                  1.044994,
+                  0.0225
+                ],
+                [
+                  1.045006,
+                  -0.0225
+                ],
+                [
+                  0.025064,
+                  -0.022767
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02508,
+                  0.022791
+                ],
+                [
+                  0.726021,
+                  0.022524
+                ],
+                [
+                  0.726004,
+                  -0.022476
+                ],
+                [
+                  0.025063,
+                  -0.022209
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  -0.0225
+                ],
+                [
+                  0.0,
+                  -0.0225
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "canvas-back",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "canvas-seat",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "bolt-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2575,
+                "z1": 0.2925
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "bolt-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2575
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "top-rail",
+              "bone": "rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 1.045,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.27,
+                "z1": 0.27
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "front-rail",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 0.495,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.18,
+                "z1": 0.18
+              },
+              "penMm": 0.13
+            }
+          ],
+          "plan": [
+            {
+              "id": "rear-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.025053,
+                  0.022233
+                ],
+                [
+                  1.044994,
+                  0.0225
+                ],
+                [
+                  1.045006,
+                  -0.0225
+                ],
+                [
+                  0.025064,
+                  -0.022767
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2475,
+                "z1": 0.2925
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-0",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02508,
+                  0.022791
+                ],
+                [
+                  0.726021,
+                  0.022524
+                ],
+                [
+                  0.726004,
+                  -0.022476
+                ],
+                [
+                  0.025063,
+                  -0.022209
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2125,
+                "z1": 0.2575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-0",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  -0.0225
+                ],
+                [
+                  0.0,
+                  -0.0225
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.1575,
+                "z1": 0.2025
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.025053,
+                  0.022233
+                ],
+                [
+                  1.044994,
+                  0.0225
+                ],
+                [
+                  1.045006,
+                  -0.0225
+                ],
+                [
+                  0.025064,
+                  -0.022767
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2475
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "front-1",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02508,
+                  0.022791
+                ],
+                [
+                  0.726021,
+                  0.022524
+                ],
+                [
+                  0.726004,
+                  -0.022476
+                ],
+                [
+                  0.025063,
+                  -0.022209
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2575,
+                "z1": -0.2125
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "seat-1",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  -0.0225
+                ],
+                [
+                  0.0,
+                  -0.0225
+                ]
+              ],
+              "closed": true,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2025,
+                "z1": -0.1575
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "region": "canvas-back",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -0.000001
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.65,
+              "region": "canvas-seat",
+              "material": "cotton-canvas",
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2,
+                "z1": 0.2
+              },
+              "penMm": 0.25
+            },
+            {
+              "id": "bolt-0",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": 0.2575,
+                "z1": 0.2925
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "bolt-1",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.2925,
+                "z1": -0.2575
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "top-rail",
+              "bone": "rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 1.045,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.27,
+                "z1": 0.27
+              },
+              "penMm": 0.13
+            },
+            {
+              "id": "front-rail",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.4,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "kind": "ellipse",
+              "cx": 0.495,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "solid": {
+                "kind": "extruded",
+                "z0": -0.18,
+                "z1": 0.18
+              },
+              "penMm": 0.13
+            }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "Chair 15.6 x 18.6 mm: rails as capsules, top rail and front rail dowels in section, pivot bolt and canvas strokes.",
-            "de": "Stuhl 15,6 x 18,6 mm: Leisten als Kapseln, Kopf- und Vorderleiste als Rundholzschnitt, Gelenkbolzen und Segeltuchstriche."
+            "en": "Chair 15.6 x 18.6 mm: rails as capsules, top rail and front rail dowels in section, pivot bolt and canvas strokes. Front and plan: timber rails, pivot bolts, the top and front cross rails and the back and seat canvas as extruded elevation profiles at their own lateral positions, so every part folds with its bone; the outer bolts sit proud of the rear rails.",
+            "de": "Stuhl 15,6 x 18,6 mm: Leisten als Kapseln, Kopf- und Vorderleiste als Rundholzschnitt, Gelenkbolzen und Segeltuchstriche. Vorder- und Draufsicht: Holzholme, Drehbolzen, die obere und vordere Querleiste sowie Rücken- und Sitzbespannung als gezogene Seitenansichtsprofile an ihren eigenen Seitenpositionen, so faltet jedes Teil mit seinem Knochen; die äußeren Bolzen stehen vor den hinteren Holmen."
           },
           "retained": {
             "en": "Dowels that hold the canvas, bolt, real rail depth.",
@@ -1052,14 +3256,14 @@
     },
     "symbols": [
       {
-        "id": "chair-plan",
+        "id": "folding-deck-chair-symbol",
         "title": {
-          "en": "Deck chair plan symbol",
-          "de": "Liegestuhl-Grundrisssymbol"
+          "en": "Chair symbol, true extent",
+          "de": "Stuhlsymbol, wahre Ausdehnung"
         },
         "description": {
-          "en": "Plan sign of the unfolded chair: footprint 0.78 x 0.58 m with the canvas strip.",
-          "de": "Grundrisszeichen des aufgeklappten Stuhls: Grundfläche 0,78 x 0,58 m mit dem Segeltuchstreifen."
+          "en": "The unfolded deck chair in all three views: rear and front frame legs, the seat arms with the front rail, the canvas sling and the top rail.",
+          "de": "Der aufgeklappte Liegestuhl in allen drei Ansichten: hintere und vordere Rahmenbeine, die Sitzarme mit Frontholm, die Leinwand und der obere Holm."
         },
         "semantics": "true-extent",
         "units": "model-m",
@@ -1077,69 +3281,369 @@
         },
         "hatches": [],
         "geometry": {
-          "elevation": [],
-          "plan": [
+          "elevation": [
             {
-              "id": "plan-frame",
+              "id": "rear",
               "bone": "ground",
               "role": "body",
-              "z": 1,
-              "filled": false,
-              "tone": 0.5,
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
               "kind": "poly",
               "points": [
                 [
                   0,
-                  0
+                  0.0353
                 ],
                 [
-                  0.78,
-                  0
+                  0.468,
+                  0.9403
                 ],
                 [
-                  0.78,
-                  0.58
+                  0.508,
+                  0.9197
                 ],
                 [
-                  0,
-                  0.58
+                  0.04,
+                  0.0147
                 ]
               ],
               "closed": true
             },
             {
-              "id": "plan-canvas",
+              "id": "front",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "poly",
+              "points": [
+                [
+                  0.6552,
+                  0.0144
+                ],
+                [
+                  0.3282,
+                  0.6254
+                ],
+                [
+                  0.3678,
+                  0.6466
+                ],
+                [
+                  0.6948,
+                  0.0356
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "seat",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3663,
+                  0.6595
+                ],
+                [
+                  0.7733,
+                  0.4245
+                ],
+                [
+                  0.7507,
+                  0.3855
+                ],
+                [
+                  0.3437,
+                  0.6205
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "canvas-a",
               "bone": "ground",
               "role": "detail",
-              "z": 2,
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3182,
+                  0.3484
+                ],
+                [
+                  0.4862,
+                  0.9244
+                ],
+                [
+                  0.4958,
+                  0.9216
+                ],
+                [
+                  0.3278,
+                  0.3456
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "canvas-b",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
               "filled": false,
               "tone": 0.5,
               "kind": "poly",
               "points": [
                 [
-                  0.05,
-                  0.04
+                  0.323,
+                  0.371
                 ],
                 [
-                  0.73,
-                  0.04
-                ],
-                [
-                  0.73,
-                  0.54
-                ],
-                [
-                  0.05,
-                  0.54
+                  0.77,
+                  0.371
                 ]
               ],
-              "closed": true
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "rear-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.292,
+              "y": 0.011,
+              "w": 0.045,
+              "h": 0.914
+            },
+            {
+              "id": "rear-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.247,
+              "y": 0.011,
+              "w": 0.045,
+              "h": 0.914
+            },
+            {
+              "id": "front-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.258,
+              "y": 0.011,
+              "w": 0.045,
+              "h": 0.633
+            },
+            {
+              "id": "front-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.212,
+              "y": 0.011,
+              "w": 0.045,
+              "h": 0.633
+            },
+            {
+              "id": "seat-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.203,
+              "y": 0.384,
+              "w": 0.045,
+              "h": 0.268
+            },
+            {
+              "id": "seat-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.158,
+              "y": 0.384,
+              "w": 0.045,
+              "h": 0.268
+            },
+            {
+              "id": "top-rail",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.91,
+              "w": 0.54,
+              "h": 0.025
+            },
+            {
+              "id": "canvas",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.347,
+              "w": 0.4,
+              "h": 0.576
+            }
+          ],
+          "plan": [
+            {
+              "id": "rear-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.008,
+              "y": 0.247,
+              "w": 0.511,
+              "h": 0.045
+            },
+            {
+              "id": "rear-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": -0.008,
+              "y": -0.292,
+              "w": 0.511,
+              "h": 0.045
+            },
+            {
+              "id": "front-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.329,
+              "y": 0.212,
+              "w": 0.365,
+              "h": 0.045
+            },
+            {
+              "id": "front-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.1,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.329,
+              "y": -0.258,
+              "w": 0.365,
+              "h": 0.045
+            },
+            {
+              "id": "seat-l",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.338,
+              "y": 0.158,
+              "w": 0.435,
+              "h": 0.045
+            },
+            {
+              "id": "seat-r",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.338,
+              "y": -0.203,
+              "w": 0.435,
+              "h": 0.045
+            },
+            {
+              "id": "top-rail",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.478,
+              "y": -0.27,
+              "w": 0.025,
+              "h": 0.54
+            },
+            {
+              "id": "front-rail",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "rect",
+              "x": 0.758,
+              "y": -0.18,
+              "w": 0.025,
+              "h": 0.36
+            },
+            {
+              "id": "canvas",
+              "bone": "ground",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.323,
+              "y": -0.2,
+              "w": 0.447,
+              "h": 0.4
             }
           ]
         },
         "dimensionalNote": {
-          "en": "Model metres at real size: x along the chair 0 to 0.78 m, y across 0 to 0.58 m, unfolded.",
-          "de": "Modellmeter in Originalgröße: x entlang 0 bis 0,78 m, y quer 0 bis 0,58 m, aufgeklappt."
+          "en": "Model metres at real size in the frame of the asset (x ahead, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the default pose. The sling hangs between the top rail at the back and the front rail of the seat; the chair faces ahead (+x).",
+          "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die Standardhaltung. Die Bespannung hängt zwischen dem oberen Holm hinten und dem Frontholm des Sitzes; der Stuhl blickt nach vorn (+x)."
         }
       }
     ],
@@ -1157,21 +3661,23 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-rear",
-          "foot-front"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "frame-timber": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "canvas-back": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.8
             },
             "canvas-seat": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.7
             }
           },
@@ -1191,13 +3697,13 @@
         },
         "bones": {
           "rear": {
-            "angleDeg": 22.0
+            "angleDeg": 22
           },
           "front-slide": {
             "dx": -0.5299
           },
           "front": {
-            "angleDeg": -22.0
+            "angleDeg": -22
           },
           "seat": {
             "angleDeg": -88.2
@@ -1211,8 +3717,10 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-rear",
-          "foot-front"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
@@ -1245,13 +3753,13 @@
         },
         "bones": {
           "rear": {
-            "angleDeg": -6.0
+            "angleDeg": -6
           },
           "front-slide": {
             "dx": 0.13028
           },
           "front": {
-            "angleDeg": 6.0
+            "angleDeg": 6
           },
           "seat": {
             "angleDeg": 9.8
@@ -1265,13 +3773,15 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-rear",
-          "foot-front"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "frame-timber": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "canvas-back": {
@@ -1302,7 +3812,7 @@
               "de": "Sitzende Person im Segeltuch (75 kg)"
             },
             "anchor": "sling",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -735.5,
             "source": "authored-estimate",
             "reference": "en-1991-1-1"
@@ -1322,21 +3832,23 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "foot-rear",
-          "foot-front"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "frame-timber": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "canvas-back": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.8
             },
             "canvas-seat": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.7
             }
           },
@@ -1351,7 +3863,7 @@
               "de": "Statische Sitzprüflast (1600 N)"
             },
             "anchor": "sling",
-            "fxN": 0.0,
+            "fxN": 0,
             "fyN": -1600,
             "source": "authored-estimate",
             "reference": "en-581-2"
@@ -1371,13 +3883,13 @@
         "key": true,
         "bones": {
           "rear": {
-            "angleDeg": 11.0
+            "angleDeg": 11
           },
           "front-slide": {
             "dx": -0.25715
           },
           "front": {
-            "angleDeg": -11.0
+            "angleDeg": -11
           },
           "seat": {
             "angleDeg": -41.2
@@ -1391,13 +3903,15 @@
         },
         "ground": "auto",
         "contacts": [
-          "foot-rear",
-          "foot-front"
+          "foot-rear-left",
+          "foot-rear-right",
+          "foot-front-left",
+          "foot-front-right"
         ],
         "thermal": {
           "regions": {
             "frame-timber": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "canvas-back": {
@@ -1425,7 +3939,7 @@
           "en": "The front feet slide back, the scissor frames close and the sling collapses between them (4 s).",
           "de": "Die Vorderfüße gleiten zurück, die Scherenrahmen schließen sich und das Segeltuch fällt dazwischen zusammen (4 s)."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1436,33 +3950,43 @@
             "ease": "smooth"
           },
           {
-            "t": 2.0,
+            "t": 2,
             "pose": "half-folded-key",
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "folded",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-rear",
+            "anchor": "foot-rear-left",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "foot-front",
+            "anchor": "foot-rear-right",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
           {
             "id": "close",
             "fromS": 0,
-            "toS": 4.0,
+            "toS": 4,
             "title": {
               "en": "Closing",
               "de": "Schließen"
@@ -1471,7 +3995,7 @@
         ],
         "events": [
           {
-            "t": 4.0,
+            "t": 4,
             "kind": "motion",
             "title": {
               "en": "Chair is flat",
@@ -1489,7 +4013,7 @@
                 "v": 0.8
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 0.3
               }
             ]
@@ -1503,7 +4027,7 @@
                 "v": 0.7
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 0.2
               }
             ]
@@ -1520,7 +4044,7 @@
           "en": "The frames open until the seat frame locks on the ratchet at 62 degrees.",
           "de": "Die Rahmen öffnen sich, bis der Sitzrahmen bei 62 Grad in der Raste einrastet."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1531,33 +4055,43 @@
             "ease": "smooth"
           },
           {
-            "t": 2.0,
+            "t": 2,
             "pose": "half-folded-key",
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "unfolded",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-rear",
+            "anchor": "foot-rear-left",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "foot-front",
+            "anchor": "foot-rear-right",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
           {
             "id": "open",
             "fromS": 0,
-            "toS": 4.0,
+            "toS": 4,
             "title": {
               "en": "Opening",
               "de": "Öffnen"
@@ -1566,7 +4100,7 @@
         ],
         "events": [
           {
-            "t": 4.0,
+            "t": 4,
             "kind": "motion",
             "title": {
               "en": "Frame locks on the ratchet",
@@ -1586,7 +4120,7 @@
           "en": "An adult sits in the open chair and the frame slides into the second notch while the sling takes the load.",
           "de": "Eine erwachsene Person setzt sich in den geöffneten Stuhl, der Rahmen gleitet in die zweite Raste, während das Segeltuch die Last aufnimmt."
         },
-        "durationS": 4.0,
+        "durationS": 4,
         "fps": 30,
         "loop": false,
         "rootMotion": "none",
@@ -1607,21 +4141,31 @@
             "ease": "smooth"
           },
           {
-            "t": 4.0,
+            "t": 4,
             "pose": "reclined-seated",
             "ease": "smooth"
           }
         ],
         "contacts": [
           {
-            "anchor": "foot-rear",
+            "anchor": "foot-rear-left",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
           },
           {
-            "anchor": "foot-front",
+            "anchor": "foot-rear-right",
             "fromS": 0,
-            "toS": 4.0
+            "toS": 4
+          },
+          {
+            "anchor": "foot-front-left",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "foot-front-right",
+            "fromS": 0,
+            "toS": 4
           }
         ],
         "phases": [
@@ -1637,7 +4181,7 @@
           {
             "id": "recline",
             "fromS": 1.5,
-            "toS": 4.0,
+            "toS": 4,
             "title": {
               "en": "Recline",
               "de": "Zurücklehnen"
@@ -1673,7 +4217,7 @@
                 "v": 0
               },
               {
-                "t": 1.0,
+                "t": 1,
                 "v": 0
               },
               {
@@ -1681,7 +4225,7 @@
                 "v": 1
               },
               {
-                "t": 4.0,
+                "t": 4,
                 "v": 1
               }
             ]
@@ -1827,13 +4371,15 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "foot-rear",
-        "foot-front"
+        "foot-rear-left",
+        "foot-rear-right",
+        "foot-front-left",
+        "foot-front-right"
       ],
       "assumptions": [
         {
-          "en": "The chair is a scissor mechanism: the front frame tip coincides with the rear frame at 0.726 m for every angle, so the front foot slides by x = 1.452 m cos(alpha) (prismatic joint) while the rear foot turns on the ground; the seat frame pivots at the scissor joint.",
-          "de": "Der Stuhl ist ein Scherenmechanismus: die Vorderrahmenspitze fällt bei jedem Winkel mit dem Hinterrahmen bei 0,726 m zusammen, der Vorderfuß gleitet daher um x = 1,452 m cos(alpha) (Schiebegelenk), während sich der Hinterfuß am Boden dreht; der Sitzrahmen dreht am Scherengelenk."
+          "en": "The chair is a scissor mechanism: the front frame tip coincides with the rear frame at 0.726 m for every angle, so the front foot slides by x = 1.452 m cos(alpha) (prismatic joint) while the rear foot turns on the ground; the seat frame pivots at the scissor joint. Every foot is one contact: two rear feet at z = +-0.27 m and two sliding front feet at z = +-0.235 m.",
+          "de": "Der Stuhl ist ein Scherenmechanismus: die Vorderrahmenspitze fällt bei jedem Winkel mit dem Hinterrahmen bei 0,726 m zusammen, der Vorderfuß gleitet daher um x = 1,452 m cos(alpha) (Schiebegelenk), während sich der Hinterfuß am Boden dreht; der Sitzrahmen dreht am Scherengelenk. Jeder Fuß ist ein Kontakt: zwei hintere Füße bei z = +-0,27 m und zwei gleitende Vorderfüße bei z = +-0,235 m."
         },
         {
           "en": "The canvas is two bones (0.60 m and 0.45 m, together 1.05 m, inextensible): their joint is solved for every pose as the lower intersection of the two circles around the top rail and the front rail (IK), hence the hanging sling.",
@@ -1849,10 +4395,7 @@
     "presentation": {
       "defaultPose": "unfolded",
       "defaultClip": "fold-chair",
-      "defaultScale": 50,
-      "viewpoints": [
-        "elevation"
-      ]
+      "defaultScale": 50
     },
     "exports": [
       "svg",

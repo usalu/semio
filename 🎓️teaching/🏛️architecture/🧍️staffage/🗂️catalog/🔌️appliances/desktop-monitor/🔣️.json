@@ -1,0 +1,1903 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "desktop-monitor",
+    "category": "appliances",
+    "title": {
+      "en": "Desktop Monitor with Stand",
+      "de": "Desktop-Monitor mit Standfuß"
+    },
+    "summary": {
+      "en": "A 24-inch LED desktop monitor on a stand, 0.41 m high and 0.21 m deep, panel tilted back by 5 degrees: it releases 25 W as heat when on, most of it through the rear housing, 0.25 W in standby.",
+      "de": "Ein 24-Zoll-LED-Desktop-Monitor auf Standfuß, 0,41 m hoch und 0,21 m tief, Panel um 5 Grad nach hinten geneigt: eingeschaltet gibt er 25 W als Wärme ab, den größten Teil über das Rückgehäuse, im Bereitschaftsbetrieb 0,25 W."
+    },
+    "tags": [
+      "monitor",
+      "display",
+      "office-equipment",
+      "internal-gain",
+      "electrical",
+      "heat-source"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (A3)",
+      "method": "handcrafted",
+      "created": "2026-11-01",
+      "references": [
+        {
+          "id": "wilkins-hosni-2011",
+          "citation": "Wilkins, C. K., Hosni, M. H. (2011). Plug load design factors. ASHRAE Journal 53(5), 30-34 (measured heat gains of laptops, displays and other office equipment in active, idle and sleep states)."
+        },
+        {
+          "id": "hosni-1999",
+          "citation": "Hosni, M. H., Jones, B. W., Xu, H. (1999). Experimental results for heat gain and radiant/convective split from equipment in buildings. ASHRAE Transactions 105(2), 527-539."
+        },
+        {
+          "id": "energy-star-displays-v8",
+          "citation": "ENERGY STAR Program Requirements for Displays, Version 8.0 (2019) (on, sleep and off mode power of computer displays)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of a 24-inch (0.61 m diagonal) 16:9 IPS LED monitor with a height-fixed stand: panel 0.54 m wide and 0.323 m high, thin edge 9.5 mm, rear housing up to 40 mm, base plate 0.21 m deep, mass 3.6 kg; the sizes are rounded from this product class (authored estimate, no single product). The 25 W at level 1 are an authored estimate within the 15 to 35 W class of the measured LCD displays of Wilkins and Hosni 2011, standby 0.25 W follows the 0.5 W ceiling of the ENERGY STAR displays specification. All electrical power ends as heat: 9 W at the panel front (LED backlight and panel), 16 W at the rear housing (power supply, driver boards, backlight driver).",
+        "de": "Seitenansicht eines 24-Zoll-16:9-IPS-LED-Monitors (0,61 m Diagonale) mit höhenfestem Standfuß: Panel 0,54 m breit und 0,323 m hoch, dünner Rand 9,5 mm, Rückgehäuse bis 40 mm, Fußplatte 0,21 m tief, Masse 3,6 kg; die Maße sind aus dieser Produktklasse gerundet (Schätzwert, kein einzelnes Produkt). Die 25 W auf Stufe 1 sind ein Schätzwert innerhalb der Klasse von 15 bis 35 W gemessener LCD-Displays von Wilkins und Hosni 2011, der Bereitschaftsbetrieb mit 0,25 W folgt der Obergrenze von 0,5 W der ENERGY-STAR-Anforderungen für Displays. Alle elektrische Leistung endet als Wärme: 9 W an der Panelfront (LED-Hintergrundbeleuchtung und Panel), 16 W am Rückgehäuse (Netzteil, Treiberplatinen, Treiber der Hintergrundbeleuchtung)."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.411,
+      "widthM": 0.211,
+      "depthM": 0.54,
+      "massKg": 3.6
+    },
+    "materials": [
+      {
+        "id": "bezel-plastic",
+        "title": {
+          "en": "Black ABS bezel",
+          "de": "Schwarzer ABS-Rahmen"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "housing-plastic",
+        "title": {
+          "en": "Grey ABS rear housing",
+          "de": "Grauweißes ABS-Rückgehäuse"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.17,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "stand-plastic",
+        "title": {
+          "en": "ABS stand over steel core",
+          "de": "ABS-Standfuß über Stahlkern"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 1900,
+        "conductivityWmK": 0.4,
+        "specificHeatJKgK": 1000,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "display-glass",
+        "title": {
+          "en": "Display cover glass",
+          "de": "Display-Deckglas"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1.4,
+        "specificHeatJKgK": 840,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "rubber-foot",
+        "title": {
+          "en": "Rubber foot",
+          "de": "Gummifuß"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.15,
+        "specificHeatJKgK": 1800,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "title": {
+            "en": "Base plate",
+            "de": "Fußplatte"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.21,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.85,
+            "comX": 0.01,
+            "comY": 0.006,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "neck",
+          "parent": "base",
+          "title": {
+            "en": "Neck column",
+            "de": "Halssäule"
+          },
+          "x": -0.06,
+          "y": 0.012,
+          "angleDeg": 0,
+          "lengthM": 0.243,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.35,
+            "comX": 0,
+            "comY": 0.12,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        },
+        {
+          "id": "panel",
+          "parent": "neck",
+          "title": {
+            "en": "Display panel with housing",
+            "de": "Displaypanel mit Gehäuse"
+          },
+          "x": 0,
+          "y": 0.243,
+          "angleDeg": 95,
+          "lengthM": 0.323,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -5,
+            "maxDeg": 20
+          },
+          "mass": {
+            "kg": 2.4,
+            "comX": -0.01,
+            "comY": -0.025,
+            "source": "authored-estimate",
+            "distribution": "point"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "base",
+        "x": 0.01,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Base plate on the desk",
+          "de": "Fußplatte auf dem Tisch"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.19,
+        "footprintWidthM": 0.2,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "housing-top",
+        "bone": "panel",
+        "x": 0.06,
+        "y": -0.004,
+        "kind": "emitter",
+        "title": {
+          "en": "Warm air above the rear housing",
+          "de": "Warme Luft über dem Rückgehäuse"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "foot-front",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.085,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.002,
+              "region": "stand",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.088,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.002,
+              "region": "stand",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.096 0.002 L 0.114 0.002 L 0.114 0.0075 C 0.114 0.0105 0.108 0.0122 0.098 0.0122 L -0.082 0.0122 C -0.092 0.0122 -0.096 0.0105 -0.096 0.0075 Z",
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.018,
+                  0
+                ],
+                [
+                  0.018,
+                  0
+                ],
+                [
+                  0.013,
+                  0.2
+                ],
+                [
+                  0.016,
+                  0.243
+                ],
+                [
+                  -0.016,
+                  0.243
+                ],
+                [
+                  -0.013,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "hinge",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0.243,
+              "rx": 0.012,
+              "ry": 0.012,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "housing",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.125 -0.0305 C -0.125 -0.015 -0.105 -0.004 -0.085 -0.004 L 0.07 -0.004 C 0.09 -0.004 0.11 -0.015 0.11 -0.0305 Z",
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "vents",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.012,
+                  -0.0075
+                ],
+                [
+                  0.012,
+                  -0.0125
+                ],
+                [
+                  0.0121,
+                  -0.0125
+                ],
+                [
+                  0.0121,
+                  -0.0075
+                ],
+                [
+                  0.026,
+                  -0.0075
+                ],
+                [
+                  0.026,
+                  -0.0125
+                ],
+                [
+                  0.0261,
+                  -0.0125
+                ],
+                [
+                  0.0261,
+                  -0.0075
+                ],
+                [
+                  0.04,
+                  -0.0075
+                ],
+                [
+                  0.04,
+                  -0.0125
+                ],
+                [
+                  0.0401,
+                  -0.0125
+                ],
+                [
+                  0.0401,
+                  -0.0075
+                ],
+                [
+                  0.054,
+                  -0.0075
+                ],
+                [
+                  0.054,
+                  -0.0125
+                ],
+                [
+                  0.0541,
+                  -0.0125
+                ],
+                [
+                  0.0541,
+                  -0.0075
+                ],
+                [
+                  0.068,
+                  -0.0075
+                ],
+                [
+                  0.068,
+                  -0.0125
+                ],
+                [
+                  0.0681,
+                  -0.0125
+                ],
+                [
+                  0.0681,
+                  -0.0075
+                ],
+                [
+                  0.082,
+                  -0.0075
+                ],
+                [
+                  0.082,
+                  -0.0125
+                ],
+                [
+                  0.0821,
+                  -0.0125
+                ],
+                [
+                  0.0821,
+                  -0.0075
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "panel-slab",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.17,
+              "y": -0.04,
+              "w": 0.323,
+              "h": 0.0095,
+              "r": 0.0015,
+              "region": "panel-front",
+              "material": "bezel-plastic"
+            },
+            {
+              "id": "screen-glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.158,
+              "y": -0.04,
+              "w": 0.299,
+              "h": 0.0016,
+              "region": "panel-front",
+              "material": "display-glass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.096,
+              "y": -0.125,
+              "w": 0.21,
+              "h": 0.25,
+              "r": 0.012,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.078,
+              "y": -0.035,
+              "w": 0.036,
+              "h": 0.07,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "housing",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.0656,
+              "y": -0.27,
+              "w": 0.0226,
+              "h": 0.54,
+              "r": 0.004,
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "panel-edge",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.043,
+              "y": -0.27,
+              "w": 0.0095,
+              "h": 0.54,
+              "region": "panel-front",
+              "material": "bezel-plastic"
+            },
+            {
+              "id": "screen-glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.0335,
+              "y": -0.255,
+              "w": 0.0281,
+              "h": 0.51,
+              "region": "panel-front",
+              "material": "display-glass"
+            },
+            {
+              "id": "vents-1",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.062,
+                  -0.15
+                ],
+                [
+                  -0.047,
+                  -0.15
+                ]
+              ],
+              "closed": false,
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "vents-2",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.062,
+                  -0.075
+                ],
+                [
+                  -0.047,
+                  -0.075
+                ]
+              ],
+              "closed": false,
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "vents-3",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.062,
+                  0
+                ],
+                [
+                  -0.047,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "vents-4",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.062,
+                  0.075
+                ],
+                [
+                  -0.047,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "vents-5",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.062,
+                  0.15
+                ],
+                [
+                  -0.047,
+                  0.15
+                ]
+              ],
+              "closed": false,
+              "region": "housing",
+              "material": "housing-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.09,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.002,
+              "region": "stand",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.112,
+              "y": 0,
+              "w": 0.022,
+              "h": 0.002,
+              "region": "stand",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0.002,
+              "w": 0.25,
+              "h": 0.0102,
+              "r": 0.005,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.035,
+                  0.0122
+                ],
+                [
+                  0.035,
+                  0.0122
+                ],
+                [
+                  0.03,
+                  0.2
+                ],
+                [
+                  0.032,
+                  0.255
+                ],
+                [
+                  -0.032,
+                  0.255
+                ],
+                [
+                  -0.03,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "panel-slab",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.0857,
+              "w": 0.54,
+              "h": 0.3217,
+              "r": 0.006,
+              "followTip": true,
+              "region": "panel-front",
+              "material": "bezel-plastic"
+            },
+            {
+              "id": "screen-glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.255,
+              "y": 0.0976,
+              "w": 0.51,
+              "h": 0.2978,
+              "followTip": true,
+              "region": "panel-front",
+              "material": "display-glass"
+            },
+            {
+              "id": "power-led",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": -0.24,
+              "cy": 0.092,
+              "rx": 0.003,
+              "ry": 0.003,
+              "region": "panel-front",
+              "material": "bezel-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 0.41 m side view, 8.2 mm tall on paper: a flat base plate, a slim neck, and a panel tilted back by 5 degrees with a tapered rear housing and a dark front glass. Front, 10.8 mm by 8.2 mm on paper: the wide panel with its bezel, the dark screen glass and a power light above the two-footed base plate, with the neck showing between them. The panel is bound to the panel bone and follows its tilt. Plan, 4.2 mm by 10.8 mm: the base plate, the neck behind the panel, the rear housing with five vent marks, the top edge of the panel and the screen seen at a slant because the panel leans back.",
+            "de": "Eine Seitenansicht von 0,41 m, auf Papier 8,2 mm hoch: eine flache Fußplatte, ein schlanker Hals und ein um 5 Grad nach hinten geneigtes Panel mit verjüngtem Rückgehäuse und dunklem Frontglas. Vorderansicht, 10,8 mm auf 8,2 mm: das breite Panel mit Rahmen, dem dunklen Bildschirmglas und einer Betriebsleuchte über der Fußplatte mit zwei Füßen, dazwischen der Hals. Das Panel ist an den Panel-Knochen gebunden und folgt seiner Neigung. Grundriss, 4,2 mm auf 10,8 mm: die Fußplatte, der Hals hinter dem Panel, das hintere Gehäuse mit fünf Lüftungsstrichen, die Oberkante des Panels und der Bildschirm in schräger Sicht, weil das Panel nach hinten geneigt ist."
+          },
+          "retained": {
+            "en": "Overall height 0.411 m, base depth 0.21 m, the 5 degree tilt, panel height 0.323 m, the 9.5 mm panel edge, the tapered housing, the neck width and the tilt hinge, both rubber feet.",
+            "de": "Gesamthöhe 0,411 m, Fußtiefe 0,21 m, die Neigung von 5 Grad, Panelhöhe 0,323 m, der 9,5 mm dicke Panelrand, das verjüngte Gehäuse, die Halsbreite und das Neigegelenk, beide Gummifüße."
+          },
+          "merged": {
+            "en": "Bezel and panel back are one slab; the stand neck and its cable duct are one profile.",
+            "de": "Rahmen und Panelrückseite sind eine Platte; Standfuß-Hals und Kabelführung sind ein Profil."
+          },
+          "omitted": {
+            "en": "Ports on the rear, the on-screen-menu buttons, the power cable and the VESA mount, which lie outside the silhouette. Hinge, cables and the rear vents are hidden in the front view.",
+            "de": "Anschlüsse hinten, die Menütasten, das Netzkabel und die VESA-Aufnahme, die außerhalb der Silhouette liegen. Gelenk, Kabel und die hinteren Lüftungsschlitze sind in der Vorderansicht verdeckt."
+          },
+          "thinElements": {
+            "en": "The 1.6 mm cover glass is a 0.032 mm glazing stroke on the front slab; vent slots are one detail polyline of 5 mm slits.",
+            "de": "Das 1,6 mm dicke Deckglas ist ein 0,032-mm-Glasstrich auf der Frontplatte; Lüftungsschlitze sind ein Detailzug aus 5-mm-Schlitzen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Base 0.5, neck 0.45, housing 0.55, panel slab 0.6, glass 0.1 dark; body pen 0.18 mm, detail and glazing 0.13 mm.",
+            "de": "Fuß 0,5, Hals 0,45, Gehäuse 0,55, Panelplatte 0,6, Glas 0,1 dunkel; Körperstift 0,18 mm, Detail und Glas 0,13 mm."
+          },
+          "overlays": {
+            "en": "Panel front, rear housing and stand are three regions: the thermal view shows the warm rear housing and the cooler front and stand.",
+            "de": "Panelfront, Rückgehäuse und Standfuß sind drei Regionen: die Thermalansicht zeigt das warme Rückgehäuse sowie die kühlere Front und den kühleren Fuß."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.096 0 L 0.114 0 L 0.114 0.0075 C 0.114 0.0105 0.108 0.0122 0.098 0.0122 L -0.082 0.0122 C -0.092 0.0122 -0.096 0.0105 -0.096 0.0075 Z",
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.019,
+                  0
+                ],
+                [
+                  0.019,
+                  0
+                ],
+                [
+                  0.014,
+                  0.2
+                ],
+                [
+                  0.017,
+                  0.243
+                ],
+                [
+                  -0.017,
+                  0.243
+                ],
+                [
+                  -0.014,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "housing",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.125 -0.0305 C -0.125 -0.015 -0.105 -0.004 -0.085 -0.004 L 0.07 -0.004 C 0.09 -0.004 0.11 -0.015 0.11 -0.0305 Z",
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "panel-slab",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.17,
+              "y": -0.04,
+              "w": 0.323,
+              "h": 0.0105,
+              "r": 0.0015,
+              "region": "panel-front",
+              "material": "bezel-plastic"
+            },
+            {
+              "id": "screen-glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.158,
+              "y": -0.04,
+              "w": 0.299,
+              "h": 0.0018,
+              "region": "panel-front",
+              "material": "display-glass"
+            }
+          ],
+          "plan": [
+            {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.096,
+              "y": -0.125,
+              "w": 0.21,
+              "h": 0.25,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.078,
+              "y": -0.035,
+              "w": 0.036,
+              "h": 0.07,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "housing",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.0656,
+              "y": -0.27,
+              "w": 0.0321,
+              "h": 0.54,
+              "region": "housing",
+              "material": "housing-plastic"
+            },
+            {
+              "id": "screen-glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.0335,
+              "y": -0.255,
+              "w": 0.0281,
+              "h": 0.51,
+              "region": "panel-front",
+              "material": "display-glass"
+            }
+          ],
+          "front": [
+            {
+              "id": "base-plate",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.125,
+              "y": 0,
+              "w": 0.25,
+              "h": 0.0122,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.035,
+                  0.0122
+                ],
+                [
+                  0.035,
+                  0.0122
+                ],
+                [
+                  0.03,
+                  0.2
+                ],
+                [
+                  0.032,
+                  0.255
+                ],
+                [
+                  -0.032,
+                  0.255
+                ],
+                [
+                  -0.03,
+                  0.2
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "panel-slab",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.0857,
+              "w": 0.54,
+              "h": 0.3217,
+              "followTip": true,
+              "region": "panel-front",
+              "material": "bezel-plastic"
+            },
+            {
+              "id": "screen-glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3.7,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": -0.25,
+              "y": 0.1,
+              "w": 0.5,
+              "h": 0.2955,
+              "followTip": true,
+              "region": "panel-front",
+              "material": "display-glass"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A tall flag sign 4.1 mm high on paper: a base plate, a neck column and a slightly back-leaning panel with a wedge-shaped housing. Front, 5.4 mm by 4.1 mm: base plate, neck and panel with its glass. Plan, 2.1 mm by 5.4 mm: base plate, neck, one housing block and the screen strip.",
+            "de": "Ein hohes Fahnenzeichen von 4,1 mm Höhe auf Papier: eine Fußplatte, eine Halssäule und ein leicht nach hinten geneigtes Panel mit keilförmigem Gehäuse. Vorderansicht, 5,4 mm auf 4,1 mm: Fußplatte, Hals und Panel mit Glas. Grundriss, 2,1 mm auf 5,4 mm: Fußplatte, Hals, ein Gehäuseblock und der Bildschirmstreifen."
+          },
+          "retained": {
+            "en": "Height 0.411 m, base depth 0.21 m, the 5 degree tilt, the panel height and the tapered housing.",
+            "de": "Höhe 0,411 m, Fußtiefe 0,21 m, die Neigung von 5 Grad, die Panelhöhe und das verjüngte Gehäuse."
+          },
+          "merged": {
+            "en": "Feet join the base plate, the tilt hinge joins the neck.",
+            "de": "Die Füße gehen in der Fußplatte auf, das Neigegelenk im Hals."
+          },
+          "omitted": {
+            "en": "Feet, tilt hinge, vent slots and all connectors. Feet, power light, vent marks and the separate panel edge.",
+            "de": "Füße, Neigegelenk, Lüftungsschlitze und alle Anschlüsse. Füße, Betriebsleuchte, Lüftungsstriche und die getrennte Panelkante."
+          },
+          "thinElements": {
+            "en": "The 9.5 mm panel edge is widened to 10.5 mm, the neck by 2 mm, so that fill and 0.18 mm pen reach the feature width; the cover glass is a 0.036 mm glazing stroke.",
+            "de": "Der 9,5 mm dicke Panelrand ist auf 10,5 mm verbreitert, der Hals um 2 mm, damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen; das Deckglas ist ein 0,036-mm-Glasstrich."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Base 0.5, neck 0.45, housing 0.55, panel 0.6, glass 0.1; body pen 0.18 mm, glazing 0.13 mm.",
+            "de": "Fuß 0,5, Hals 0,45, Gehäuse 0,55, Panel 0,6, Glas 0,1; Körperstift 0,18 mm, Glas 0,13 mm."
+          },
+          "overlays": {
+            "en": "The three regions keep their own shapes, so the rear housing reads warmer than the panel face and the stand.",
+            "de": "Die drei Regionen behalten ihre eigenen Formen, sodass das Rückgehäuse wärmer als Panelfront und Standfuß lesbar ist."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stand",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.096 0 L 0.114 0 L 0.114 0.012 L 0.0 0.012 L 0.0 0.26 L -0.06 0.26 L -0.06 0.012 L -0.096 0.012 Z",
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "panel",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "path",
+              "d": "M -0.17 -0.04 L 0.153 -0.04 L 0.153 -0.0275 L 0.11 -0.0275 L 0.11 -0.004 L -0.125 -0.004 L -0.125 -0.0275 L -0.17 -0.0275 Z",
+              "regions": [
+                "panel-front",
+                "housing"
+              ],
+              "material": "housing-plastic"
+            }
+          ],
+          "plan": [
+            {
+              "id": "stand",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.096,
+              "y": -0.125,
+              "w": 0.21,
+              "h": 0.25,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "panel",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.0656,
+              "y": -0.27,
+              "w": 0.0602,
+              "h": 0.54,
+              "regions": [
+                "panel-front",
+                "housing"
+              ],
+              "material": "housing-plastic"
+            }
+          ],
+          "front": [
+            {
+              "id": "stand",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.125,
+                  0
+                ],
+                [
+                  0.125,
+                  0
+                ],
+                [
+                  0.125,
+                  0.012
+                ],
+                [
+                  0.035,
+                  0.012
+                ],
+                [
+                  0.035,
+                  0.26
+                ],
+                [
+                  -0.035,
+                  0.26
+                ],
+                [
+                  -0.035,
+                  0.012
+                ],
+                [
+                  -0.125,
+                  0.012
+                ]
+              ],
+              "closed": true,
+              "region": "stand",
+              "material": "stand-plastic"
+            },
+            {
+              "id": "panel",
+              "bone": "panel",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.58,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.0857,
+              "w": 0.54,
+              "h": 0.3217,
+              "followTip": true,
+              "regions": [
+                "panel-front",
+                "housing"
+              ],
+              "material": "housing-plastic"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A flag 2.05 mm wide and 2.05 mm high on paper: a stand bar with foot and a back-leaning panel bar with a thicker lower body. Front, 2.7 mm by 2 mm: a T-shaped stand and one panel mass. Plan, 1 mm by 2.7 mm: the base plate and one panel bar.",
+            "de": "Eine Fahne von 2,05 mm Breite und 2,05 mm Höhe auf Papier: ein Standbalken mit Fuß und ein nach hinten geneigter Panelbalken mit dickerem unterem Körper. Vorderansicht, 2,7 mm auf 2 mm: ein T-förmiger Ständer und eine Panelmasse. Grundriss, 1 mm auf 2,7 mm: die Fußplatte und ein Panelbalken."
+          },
+          "retained": {
+            "en": "Height 0.411 m, base depth 0.21 m, the 5 degree lean and the housing bulge.",
+            "de": "Höhe 0,411 m, Fußtiefe 0,21 m, die Neigung von 5 Grad und die Gehäusewölbung."
+          },
+          "merged": {
+            "en": "Base plate, neck and hinge form one stand shape; panel face and housing form one panel shape.",
+            "de": "Fußplatte, Hals und Gelenk bilden eine Standform; Panelfront und Gehäuse bilden eine Panelform."
+          },
+          "omitted": {
+            "en": "Feet, glass line, vents, tilt hinge and connectors. Glass, bezel and housing are one mass.",
+            "de": "Füße, Glaslinie, Lüftung, Neigegelenk und Anschlüsse. Glas, Rahmen und Gehäuse sind eine Masse."
+          },
+          "thinElements": {
+            "en": "The neck is widened to 0.06 m (0.3 mm) and the panel edge to 12.5 mm so that both reach the feature width.",
+            "de": "Der Hals ist auf 0,06 m (0,3 mm) und der Panelrand auf 12,5 mm verbreitert, damit beide die Mindestbreite erreichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Stand 0.5, panel 0.58; one body pen of 0.18 mm.",
+            "de": "Fuß 0,5, Panel 0,58; ein Körperstift von 0,18 mm."
+          },
+          "overlays": {
+            "en": "The panel shape lists panel front and housing as merged regions; the stand is its own region.",
+            "de": "Die Panelform führt Panelfront und Gehäuse als zusammengeführte Regionen; der Fuß ist eine eigene Region."
+          }
+        }
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "cause": "below-printable-feature",
+        "reason": {
+          "en": "At 1:500 the monitor is 0.4 mm wide and 0.8 mm tall with a 0.015 mm thick panel edge, below every print profile.",
+          "de": "Bei 1:500 ist der Monitor 0,4 mm breit und 0,8 mm hoch mit einem 0,015 mm dicken Panelrand, unter jedem Druckprofil."
+        },
+        "limitingFeature": {
+          "en": "Panel edge thickness of 9.5 mm",
+          "de": "Dicke des Panelrands von 9,5 mm"
+        },
+        "limitingSizeM": 0.0095,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "on",
+        "title": {
+          "en": "On, showing a picture",
+          "de": "An, zeigt ein Bild"
+        },
+        "description": {
+          "en": "Backlight on, 25 W: the rear housing with the power supply is warmest, the panel front is a few kelvin above the room, a plume rises behind the panel.",
+          "de": "Hintergrundbeleuchtung an, 25 W: das Rückgehäuse mit dem Netzteil ist am wärmsten, die Panelfront liegt einige Kelvin über der Raumtemperatur, hinter dem Panel steigt eine Fahne auf."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "panel-front": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "housing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "stand": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-plume": 1
+          },
+          "operating": {
+            "power": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "standby",
+        "title": {
+          "en": "In standby",
+          "de": "Im Bereitschaftsbetrieb"
+        },
+        "description": {
+          "en": "Backlight off, only the controller listens: 0.25 W, no measurable warmth.",
+          "de": "Hintergrundbeleuchtung aus, nur die Steuerung lauscht: 0,25 W, keine messbare Wärme."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "panel-front": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "housing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "stand": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-plume": 0
+          },
+          "operating": {
+            "power": 0.01
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "off",
+        "title": {
+          "en": "Switched off",
+          "de": "Ausgeschaltet"
+        },
+        "description": {
+          "en": "Switched off at the mains switch, room temperature.",
+          "de": "Am Netzschalter ausgeschaltet, Raumtemperatur."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "panel-front": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "housing": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "stand": {
+              "exposedFraction": 0.9,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.05,
+                "tempC": 21
+              }
+            }
+          },
+          "emitters": {
+            "rear-plume": 0
+          },
+          "operating": {
+            "power": 0
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "power-on-warm-up",
+        "title": {
+          "en": "Power on and warm up",
+          "de": "Einschalten und aufwärmen"
+        },
+        "description": {
+          "en": "Cold start: the monitor is switched on after five seconds and its housing and panel warm up over ten minutes to their working temperature.",
+          "de": "Kaltstart: der Monitor wird nach fünf Sekunden eingeschaltet, und Gehäuse und Panel wärmen sich über zehn Minuten auf ihre Arbeitstemperatur auf."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "on",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "on",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Off",
+              "de": "Aus"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 600,
+            "title": {
+              "en": "On, warming up",
+              "de": "An, wärmt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "operating",
+            "title": {
+              "en": "Switched on",
+              "de": "Eingeschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:rear-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "standby-cool-down",
+        "title": {
+          "en": "Standby and cool down",
+          "de": "Bereitschaft und abkühlen"
+        },
+        "description": {
+          "en": "The warm monitor goes to standby after five seconds; the housing and the panel cool down to room temperature over ten minutes.",
+          "de": "Der warme Monitor geht nach fünf Sekunden in den Bereitschaftsbetrieb; Gehäuse und Panel kühlen in zehn Minuten auf Raumtemperatur ab."
+        },
+        "durationS": 600,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "on",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "standby",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "standby",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 600
+          }
+        ],
+        "phases": [
+          {
+            "id": "working",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "On",
+              "de": "An"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 5,
+            "toS": 600,
+            "title": {
+              "en": "Standby, cooling",
+              "de": "Bereitschaft, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "shutdown",
+            "title": {
+              "en": "Switched to standby",
+              "de": "In den Bereitschaftsbetrieb geschaltet"
+            },
+            "target": "power"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:power",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 0.01
+              }
+            ]
+          },
+          {
+            "target": "emitter:rear-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0,
+        "pressurePa": 101325
+      },
+      "passengers": [],
+      "operating": [
+        {
+          "id": "power",
+          "title": {
+            "en": "Electrical power",
+            "de": "Elektrische Leistung"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.01,
+              "title": {
+                "en": "Standby (0.25 W)",
+                "de": "Bereitschaft (0,25 W)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "On (25 W)",
+                "de": "An (25 W)"
+              }
+            }
+          ]
+        }
+      ],
+      "regions": [
+        {
+          "id": "panel-front",
+          "title": {
+            "en": "Panel front with cover glass",
+            "de": "Panelfront mit Deckglas"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "bezel-plastic",
+          "areaM2": 0.175,
+          "characteristicLengthM": 0.32,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "front-stack",
+              "title": {
+                "en": "LCD stack with cover glass 4 mm",
+                "de": "LCD-Aufbau mit Deckglas 4 mm"
+              },
+              "kind": "polymer",
+              "material": "display-glass",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.0037,
+              "heatCapacityJM2K": 4800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4800,
+          "operating": {
+            "key": "power",
+            "heatW": 9
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "housing",
+          "title": {
+            "en": "Rear housing with power supply and driver boards",
+            "de": "Rückgehäuse mit Netzteil und Treiberplatinen"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "housing-plastic",
+          "areaM2": 0.22,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "housing-shell",
+              "title": {
+                "en": "ABS housing 2 mm",
+                "de": "ABS-Gehäuse 2 mm"
+              },
+              "kind": "polymer",
+              "material": "housing-plastic",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 4800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4800,
+          "operating": {
+            "key": "power",
+            "heatW": 16
+          },
+          "source": "authored-estimate",
+          "reference": "wilkins-hosni-2011"
+        },
+        {
+          "id": "stand",
+          "title": {
+            "en": "Stand with neck and base plate",
+            "de": "Standfuß mit Hals und Fußplatte"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stand-plastic",
+          "areaM2": 0.125,
+          "characteristicLengthM": 0.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "stand-body",
+              "title": {
+                "en": "ABS over a steel core, 3 mm",
+                "de": "ABS über Stahlkern, 3 mm"
+              },
+              "kind": "polymer",
+              "material": "stand-plastic",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.015,
+              "heatCapacityJM2K": 4800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4800,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "rear-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Free convection behind the warm housing",
+            "de": "Freie Konvektion hinter dem warmen Gehäuse"
+          },
+          "anchor": "housing-top",
+          "directionDeg": 90,
+          "diameterM": 0.3,
+          "region": "housing",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Every watt ends as heat in the room: the panel front releases 9 W and the rear housing 16 W at level 1 (25 W together); the stand is passive and stays at room temperature.",
+          "de": "Jedes Watt endet als Wärme im Raum: die Panelfront gibt bei Stufe 1 9 W und das Rückgehäuse 16 W ab (zusammen 25 W); der Standfuß ist passiv und bleibt auf Raumtemperatur."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid body on four rubber feet; the 2.4 kg panel leans back by 5 degrees over the neck and its centre of mass lies 0.05 m behind the base centre, inside the footprint.",
+          "de": "Ein starrer Körper auf vier Gummifüßen; das 2,4 kg schwere Panel neigt sich um 5 Grad über dem Hals nach hinten und sein Schwerpunkt liegt 0,05 m hinter der Fußmitte, innerhalb der Standfläche."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "on",
+      "defaultClip": "power-on-warm-up",
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

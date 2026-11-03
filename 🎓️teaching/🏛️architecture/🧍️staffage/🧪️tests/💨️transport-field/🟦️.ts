@@ -8,6 +8,10 @@ import { PLUME_SOURCE_EXCESS_K, emissionsAt, STEPS_PER_S } from "../../🔨️mo
 import { moistFrom, enthalpy, volumePerDryKg } from "../../🔨️modules/💨️transport/🌫️air/🟦️.ts";
 import { respirationState } from "../../🔨️modules/💨️transport/🫁️respiration/🟦️.ts";
 import { DEFAULT_TURBULENCE } from "../../🔨️modules/💨️transport/🟦️.ts";
+import { loadCatalogFromFiles, loadEnvironments } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { BREATH_SPREAD_RAD } from "../../🔨️modules/💨️transport/🧮️parcels/🟦️.ts";
+import { STAFFAGE_ROOT } from "../🧰️support/🧰️.ts";
+import { join } from "node:path";
 
 const calm = SCENARIOS.environments["calm-cold"];
 const rest = (t: number): EvaluationQuery => ({ kind: "pose", pose: "rest", timeS: t });
@@ -47,8 +51,11 @@ describe("💨️ world-space parcels", () => {
       }
     }
     expect(compared).toBeGreaterThan(20);
-    const direction = (t: number) => solveTransport(s.asset, rest(t), calm, s.options).emitters.find((e) => e.emitter === "nose")!.directionRad;
-    expect(((direction(6) - direction(2)) * 180) / Math.PI).toBeCloseTo(90, 9);
+    const heading = (t: number) => {
+      const d = solveTransport(s.asset, rest(t), calm, s.options).emitters.find((e) => e.emitter === "nose")!.direction;
+      return Math.atan2(d.y, d.x);
+    };
+    expect(((heading(6) - heading(2)) * 180) / Math.PI).toBeCloseTo(90, 9);
   });
 
   it("emits along the head direction of the birth instant, not the current one", () => {
@@ -175,7 +182,7 @@ describe("💨️ category sources", () => {
 
   it("releases exactly the exhaled tidal volume per breath through the emitters", () => {
     const s = scenario("human");
-    const track = createTrack(s.asset, rest(0), calm, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE }, s.options.evaluate, s.options.thermal);
+    const track = createTrack(s.asset, rest(0), calm, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE, periodSteps: 0 }, s.options.evaluate, s.options.thermal);
     const volume = (emitter: number) => {
       let v = 0;
       for (let k = 0; k < 150; k++) for (const e of emissionsAt(track.world, emitter, k)) v += e.md * volumePerDryKg(moistFrom(e.h, e.wt, 101325).tC, e.wt, 101325);
@@ -204,7 +211,7 @@ describe("💨️ category sources", () => {
 
   it("releases the solved sensible heat of the plume region as a buoyant stream", () => {
     const s = scenario("human");
-    const track = createTrack(s.asset, rest(0), calm, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE }, s.options.evaluate, s.options.thermal);
+    const track = createTrack(s.asset, rest(0), calm, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE, periodSteps: 0 }, s.options.evaluate, s.options.thermal);
     let heat = 0;
     const emissions = Array.from({ length: 50 }, (_, k) => emissionsAt(track.world, 2, k)).flat();
     for (const e of emissions) heat += e.md * (e.h - enthalpy(5, track.world.ambientAt(1).wv, 0));
@@ -230,7 +237,7 @@ describe("💨️ category sources", () => {
     expect(starts.size).toBe(6);
     expect(Math.min(...[...starts].map(Number))).toBeCloseTo(-1.5, 9);
     expect(Math.max(...[...starts].map(Number))).toBeCloseTo(1.5, 9);
-    const track = createTrack(s.asset, { kind: "pose", pose: "summer" }, env, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE }, s.options.evaluate, s.options.thermal);
+    const track = createTrack(s.asset, { kind: "pose", pose: "summer" }, env, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE, periodSteps: 0 }, s.options.evaluate, s.options.thermal);
     const wa = track.world.ambientAt(1).wv;
     let vapour = 0;
     for (let k = 0; k < 20; k++) for (const e of emissionsAt(track.world, 0, k)) vapour += e.md * (e.wt - wa);
@@ -278,10 +285,10 @@ describe("💨️ streamlines are not pathlines", () => {
     const field = solveTransport(bare, rest(0.8), calm, { ...s.options, pathlines: false });
     expect(field.respiration!.phase).toBe("inhale");
     const nose = field.emitters.find((e) => e.emitter === "nose")!;
-    const near = field.streamlines.filter((l) => Math.hypot(l.seed.x - nose.at.x, l.seed.y - nose.at.y) < 0.05);
-    expect(near.length).toBe(4);
+    const near = field.streamlines.filter((l) => Math.hypot(l.seed.x - nose.at.x, l.seed.y - nose.at.y, l.seed.z - nose.at.z) < 0.05);
+    expect(near.length).toBe(6);
     for (const line of near) {
-      const distance = (p: { x: number; y: number }) => Math.hypot(p.x - nose.at.x, p.y - nose.at.y);
+      const distance = (p: { x: number; y: number; z: number }) => Math.hypot(p.x - nose.at.x, p.y - nose.at.y, p.z - nose.at.z);
       expect(distance(line.points[line.points.length - 1]!)).toBeLessThan(distance(line.seed) + 1e-12);
       expect(distance(line.points[0]!)).toBeGreaterThan(distance(line.seed));
     }
@@ -310,9 +317,54 @@ describe("💨️ passengers", () => {
     const own = new Set(field.parcels.map((p) => p.emitter));
     expect(own.has("toddler-nose")).toBe(true);
     expect(own.has("nose")).toBe(true);
-    const track = createTrack(s.asset, rest(0), calm, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE }, s.options.evaluate, s.options.thermal);
+    const track = createTrack(s.asset, rest(0), calm, { maxAgeS: 30, seed: 1, layer: null, turbulence: DEFAULT_TURBULENCE, periodSteps: 0 }, s.options.evaluate, s.options.thermal);
     let v = 0;
     for (let k = 0; k < 450; k++) for (const e of emissionsAt(track.world, 3, k)) v += e.md * volumePerDryKg(moistFrom(e.h, e.wt, 101325).tC, e.wt, 101325);
     expect(v * 1000).toBeCloseTo(0.12 * 6, 9);
+  });
+});
+
+describe("🌬️ looping breath", () => {
+  const load = async () => {
+    const catalog = await loadCatalogFromFiles(join(STAFFAGE_ROOT, "🗂️catalog"));
+    const environment = (await loadEnvironments(join(STAFFAGE_ROOT, "🗂️catalog")))!.presets.find((preset) => preset.id === "office-still")!.environment;
+    return { asset: catalog.assets.find((asset) => asset.id === "standing-adult")!, environment };
+  };
+  const idle = (t: number): EvaluationQuery => ({ kind: "clip", clip: "idle-breathing", timeS: t });
+
+  it("repeats the whole field exactly one loop later when the period is the clip length", async () => {
+    const { asset, environment } = await load();
+    const options = { maxAgeS: 3.5, periodS: 5 };
+    const first = solveTransport(asset, idle(3.5), environment, options);
+    expect(first.parcels.length).toBeGreaterThan(40);
+    for (const later of [8.5, 13.5]) {
+      const again = solveTransport(asset, idle(later), environment, options);
+      expect(again.parcels).toHaveLength(first.parcels.length);
+      first.parcels.forEach((p, i) => {
+        expect(again.parcels[i]!.at.x).toBeCloseTo(p.at.x, 6);
+        expect(again.parcels[i]!.at.y).toBeCloseTo(p.at.y, 6);
+      });
+      const flat = (field: TransportField) => field.pathlines.flatMap((l) => l.points.flatMap((q) => [q.x, q.y]));
+      expect(flat(again)).toHaveLength(flat(first).length);
+      flat(first).forEach((value, i) => expect(flat(again)[i]).toBeCloseTo(value, 6));
+    }
+  });
+
+  it("differs from loop to loop without a period", async () => {
+    const { asset, environment } = await load();
+    const first = solveTransport(asset, idle(3.5), environment, { maxAgeS: 3.5 });
+    const later = solveTransport(asset, idle(8.5), environment, { maxAgeS: 3.5 });
+    expect(later.parcels.map((p) => p.at.x)).not.toEqual(first.parcels.map((p) => p.at.x));
+  });
+
+  it("fans the exhaled air out about the nozzle axis by the jet half-angle instead of piling it onto one ray", async () => {
+    const { asset, environment } = await load();
+    const field = solveTransport(asset, idle(3.5), environment, { maxAgeS: 3.5, periodS: 5 });
+    const angles = field.pathlines.filter((line) => line.emitter === "nose-breath" && line.points.length > 1 && Math.hypot(line.points[1]!.x - line.points[0]!.x, line.points[1]!.y - line.points[0]!.y) > 0.05).map((line) => angleOf(line.points[0]!, line.points[1]!));
+    expect(angles.length).toBeGreaterThan(20);
+    const mean = angles.reduce((a, b) => a + b, 0) / angles.length;
+    const deviation = Math.sqrt(angles.reduce((a, b) => a + (b - mean) ** 2, 0) / angles.length);
+    expect(deviation).toBeGreaterThan(2);
+    expect(deviation).toBeLessThan(((2 * BREATH_SPREAD_RAD) / Math.PI) * 180);
   });
 });

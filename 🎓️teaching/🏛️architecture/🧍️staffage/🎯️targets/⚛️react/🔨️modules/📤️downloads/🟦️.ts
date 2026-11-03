@@ -5,16 +5,16 @@
  *
  * @see ../🧮️pipeline/🟦️.ts — the evaluator every export shares
  * @see ./🖼️raster/🟦️.ts — canvas rasterisation and `MediaRecorder`
- * @see ./🗜️zip/🟦️.ts — ZIP and PNG text chunks
+ * @see ../../../../🔨️modules/📤️export/🗜️zip/🟦️.ts — ZIP and PNG text chunks
  */
 import * as library from "@teaching/staffage";
-import { modelScene, writeDxf, writePdf, writeSvg } from "@teaching/staffage";
+import { modelScene, withPngText, writeDxf, writePdf, writeSvg, writeZip } from "@teaching/staffage";
 import type { Asset, DrawingScene, EvaluationQuery, JobControl, ModelScene, Text } from "@teaching/staffage";
+import { VIEWPOINT_PHRASES } from "../🔭️viewpoints/🟦️.ts";
 import { allViews, depictionOptions, evaluateState, queryAt, sceneOf, structureOf, thermalOf } from "../🧮️pipeline/🟦️.ts";
 import type { DepictionRequest } from "../🧮️pipeline/🟦️.ts";
 import { browserRasteriser, browserRecorder, canRasterise, recorderMimes } from "./🖼️raster/🟦️.ts";
 import type { Rasteriser, Recorder } from "./🖼️raster/🟦️.ts";
-import { withPngText, writeZip } from "./🗜️zip/🟦️.ts";
 
 /** 📤️ The formats the archive exports. */
 export type ExportFormat = "svg" | "pdf" | "dxf" | "dwg" | "png-sequence" | "mp4" | "webm";
@@ -98,11 +98,11 @@ function timeTag(seconds: number): string {
   return `t${seconds.toFixed(2).replace(".", "p")}`;
 }
 
-/** 🏷️ The export file name: `<asset>_<pose | clip-t…>_<view>_1-<denominator>.<ext>`. */
+/** 🏷️ The export file name: `<asset>_<pose | clip-t…>_<viewpoint>_<representation>_1-<denominator>.<ext>`, so the outputs of the three viewpoints never collide. */
 export function exportFilename(asset: Asset, query: EvaluationQuery, request: DepictionRequest, format: ExportFormat, sheet: "single" | "all-views" = "single"): string {
   const what = query.kind === "pose" ? query.pose : query.kind === "clip" ? (format === "png-sequence" || format === "mp4" || format === "webm" ? query.clip : `${query.clip}-${timeTag(query.timeS)}`) : `${query.from}-to-${query.to}`;
   const view = sheet === "all-views" && format === "pdf" ? "all-views" : request.view;
-  return `${slug(asset.id)}_${slug(what)}_${view}_1-${request.scale.denominator}.${EXTENSION[format]}`;
+  return `${slug(asset.id)}_${slug(what)}_${request.viewpoint}_${view}_1-${request.scale.denominator}.${EXTENSION[format]}`;
 }
 
 function metadataText(scene: DrawingScene): Record<string, string> {
@@ -110,7 +110,7 @@ function metadataText(scene: DrawingScene): Record<string, string> {
   return {
     Title: `${metadata.title.en} / ${metadata.title.de}`,
     Software: "semio staffage archive",
-    Description: `asset ${metadata.asset}, view ${metadata.view}, viewpoint ${metadata.viewpoint}, scale 1:${metadata.scale.denominator}, t ${metadata.timeS} s, paper ${scene.widthMm} x ${scene.heightMm} mm`,
+    Description: `asset ${metadata.asset}, representation ${metadata.view}, viewpoint ${VIEWPOINT_PHRASES[metadata.viewpoint].en} (${metadata.viewpoint}), scale 1:${metadata.scale.denominator}, t ${metadata.timeS} s, paper ${scene.widthMm} x ${scene.heightMm} mm`,
     Comment: JSON.stringify({ asset: metadata.asset, query: metadata.query, timeS: metadata.timeS, view: metadata.view, viewpoint: metadata.viewpoint, scale: metadata.scale.denominator, mmPerMetre: metadata.mmPerMetre }),
   };
 }

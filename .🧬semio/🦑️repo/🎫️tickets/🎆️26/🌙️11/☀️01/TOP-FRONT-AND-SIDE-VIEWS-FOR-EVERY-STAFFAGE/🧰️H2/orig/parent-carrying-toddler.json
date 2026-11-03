@@ -1,0 +1,70 @@
+{
+ "50": {
+  "silhouette": {
+   "en": "Parent with face profile, ear and eye under the beanie, coat, separate scarf and skirt, sleeves and forearm-with-glove forms, jeans and boots; toddler with padded body, face profile, hat, near leg with rubber boot and near arm with mitten.",
+   "de": "Elternteil mit Gesichtsprofil, Ohr und Auge unter der Mütze, Mantel, getrenntem Schal und Schoß, Ärmeln und Unterarm-mit-Handschuh-Formen, Jeans und Stiefeln; Kleinkind mit gepolstertem Körper, Gesichtsprofil, Mütze, nahem Bein mit Gummistiefel und nahem Arm mit Fäustling."
+  },
+  "retained": {
+   "en": "The scarf as its own form and the eye and ear lines; real parent height 1.73 m.",
+   "de": "Der Schal als eigene Form sowie Augen- und Ohrlinie; reale Elternhöhe 1,73 m."
+  },
+  "merged": {
+   "en": "Glove into the forearm form, mitten into the toddler's arm form; pelvis into coat skirt and thighs; the toddler's far limbs are hidden behind the near ones.",
+   "de": "Handschuh in der Unterarmform, Fäustling in der Armform des Kleinkinds; Becken in Mantelschoß und Oberschenkeln; die fernen Gliedmaßen des Kleinkinds sind hinter den nahen verdeckt."
+  },
+  "omitted": {
+   "en": "Eyelashes, mouth, stitching, fabric folds, laces (below 0.1 mm paper).",
+   "de": "Wimpern, Mund, Nähte, Stofffalten, Schnürung (unter 0,1 mm Papier)."
+  },
+  "thinElements": {
+   "en": "No feature is thickened; the eye is 0.012 m wide (0.24 mm).",
+   "de": "Nichts wird verdickt; das Auge ist 0,012 m breit (0,24 mm)."
+  },
+  "hatching": {
+   "en": "None.",
+   "de": "Keine."
+  },
+  "styles": {
+   "en": "0.25 mm silhouettes, 0.18 mm detail lines.",
+   "de": "0,25-mm-Silhouetten, 0,18-mm-Detaillinien."
+  },
+  "overlays": {
+   "en": "Every region is its own form or part of a named merged form.",
+   "de": "Jede Region ist eine eigene Form oder Teil einer benannten zusammengefassten Form."
+  }
+ },
+ "100": {
+  "silhouette": {
+   "en": "Parent as head with beanie and face profile, coat with a separate skirt (the scarf is part of the coat form), sleeve and a forearm-with-glove form per arm, jeans legs in thigh and shank and boots; the toddler as padded trunk, head with hat, near leg with boot and near arm with mitten reaching to the parent's neck.",
+   "de": "Elternteil aus Kopf mit Mütze und Gesichtsprofil, Mantel mit getrenntem Schoß (der Schal gehört zur Mantelform), Ärmel und einer Unterarm-mit-Handschuh-Form je Arm, Jeansbeinen aus Ober- und Unterschenkel und Stiefeln; das Kleinkind als gepolsterter Rumpf, Kopf mit Mütze, nahes Bein mit Stiefel und naher Arm mit Fäustling bis zum Hals der Eltern."
+  },
+  "retained": {
+   "en": "The carried second body with its three contacts (seat on the forearm, arm round the neck, legs in front of the parent); coat skirt, both boots; real parent height 1.73 m.",
+   "de": "Der getragene zweite Körper mit seinen drei Kontakten (Sitz auf dem Unterarm, Arm um den Hals, Beine vor den Eltern); Mantelschoß, beide Stiefel; reale Elternhöhe 1,73 m."
+  },
+  "merged": {
+   "en": "Scarf into the coat form; glove into the forearm form; mitten into the toddler's arm form; pelvis into coat skirt and thighs. The toddler's far leg and far arm are hidden behind the near ones and are not drawn.",
+   "de": "Schal in der Mantelform; Handschuh in der Unterarmform; Fäustling in der Armform des Kleinkinds; Becken in Mantelschoß und Oberschenkeln. Das ferne Bein und der ferne Arm des Kleinkinds sind hinter den nahen verdeckt und werden nicht gezeichnet."
+  },
+  "omitted": {
+   "en": "Eyes, ear, mouth, seams, laces, buttons, hat pompom, thumbs.",
+   "de": "Augen, Ohr, Mund, Nähte, Schnürung, Knöpfe, Mützenbommel, Daumen."
+  },
+  "thinElements": {
+   "en": "The toddler's arm is 0.07 m (0.7 mm); the glove end tapers like the real hand; nothing is thickened.",
+   "de": "Der Arm des Kleinkinds ist 0,07 m (0,7 mm) breit; das Handschuhende läuft wie die echte Hand spitz zu; nichts wird verdickt."
+  },
+  "hatching": {
+   "en": "None; tones carry the materials.",
+   "de": "Keine; Töne tragen die Materialien."
+  },
+  "styles": {
+   "en": "0.20 mm outlines; tones separate the parent's coat, jeans, boots and skin from the toddler's overall.",
+   "de": "0,20-mm-Konturen; Töne trennen Mantel, Jeans, Stiefel und Haut der Eltern vom Overall des Kleinkinds."
+  },
+  "overlays": {
+   "en": "Merged forms list their regions: coat (coat, scarf), forearm forms (sleeve, glove), toddler arm (overall, mitten); every other region is its own form and the toddler's regions sit on the toddler's forms.",
+   "de": "Zusammengefasste Formen nennen ihre Regionen: Mantel (Mantel, Schal), Unterarmformen (Ärmel, Handschuh), Arm des Kleinkinds (Overall, Fäustling); jede andere Region ist eine eigene Form, die Regionen des Kleinkinds liegen auf dessen Formen."
+  }
+ }
+}

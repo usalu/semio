@@ -69,7 +69,7 @@ export function buildRebuildSlotsV1(environment:Readonly<Record<string,string|un
 /** ⏳️ Whether an invocation asks for its capacity later, from the work that needs it: `dependencies ensure` answers from the dependency receipt and requests a grant only for the real synchronisation, so a fresh receipt never queues. */
 export function buildCapacityDeferredV1(args:readonly string[]):boolean{return args[0]==="dependencies"&&args[1]==="ensure";}
 
-/** 🖥️ Whether an invocation only hands the terminal to the installed dashboard (`run`, `daemon`, `preferences`): it builds nothing, so it asks for no capacity and a busy host never delays the control plane; a stale or missing installation rebuilds through nested invocations that ask for their own grant. */
+/** 🖥️ Whether an invocation only hands the terminal to the installed dashboard (`run`, `daemon`, `preferences`): it builds nothing, so it asks for no capacity and a busy host never delays the control plane; a stale or missing installation compiles the dashboard crate in this process. */
 export async function nativeDashboardLaunchV1(args:readonly string[]):Promise<boolean>{
  if(args[0]!=="run"||!args[1]?.startsWith(dashboardInstallation.definitions.PackageOwner.const.project+":"))return false;
  return (await import("../../⚡️caching/🚀️bootstrap/🎛️dashboard/📦️installation/🟦️.ts")).dashboardInvocation(args)!==undefined;

@@ -1,0 +1,1 @@
+MAP = {"Wärmekapazität": "Heat capacity"}

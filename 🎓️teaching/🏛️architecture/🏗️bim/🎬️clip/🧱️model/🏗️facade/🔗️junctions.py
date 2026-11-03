@@ -92,7 +92,7 @@ def _scope(api,part,bounds,progress=None,cancel=None):
     if _analytic(part):
         boundary={'outline':[[x0,y0],[x1,y0],[x1,y1],[x0,y1]],'holes':[],'z0':box[2][0],'z1':box[2][1]}
         return backend.reference_material_parts(part,[],bounds=[boundary],progress=progress,cancel=cancel)
-    finish=api._surface_finishes();planes=[{'normal':[-1,0,0],'point':[x0,0,0],'offset':-x0},{'normal':[1,0,0],'point':[x1,0,0],'offset':x1},{'normal':[0,-1,0],'point':[0,y0,0],'offset':-y0},{'normal':[0,1,0],'point':[0,y1,0],'offset':y1}];result=[]
+    finish=api.surface_finishes();planes=[{'normal':[-1,0,0],'point':[x0,0,0],'offset':-x0},{'normal':[1,0,0],'point':[x1,0,0],'offset':x1},{'normal':[0,-1,0],'point':[0,y0,0],'offset':-y0},{'normal':[0,1,0],'point':[0,y1,0],'offset':y1}];result=[]
     for cell in api._native_material_cells(part):
         stock=finish.clip_stock({**cell,'role':cell.get('role','body')},planes,exact=True)
         if stock is not None:result.append(finish.publish_stock(stock))

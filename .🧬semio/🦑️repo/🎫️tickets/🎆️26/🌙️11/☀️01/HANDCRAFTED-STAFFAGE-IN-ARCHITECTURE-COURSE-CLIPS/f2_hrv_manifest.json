@@ -1,0 +1,5 @@
+{ "version": 1, "casts": {
+  "hv-cycle": { "asset": "decentralised-hrv-fan", "clip": "pendulum-cycle", "view": "thermal", "environment": "winter-overcast", "fps": 15, "theme": "dark", "viewpoint": "elevation", "scale": 50 },
+  "hv-office": { "asset": "decentralised-hrv-fan", "clip": "pendulum-cycle", "view": "thermal", "environment": "office-neutral", "fps": 15, "theme": "dark", "viewpoint": "elevation", "scale": 50 },
+  "hv-line": { "asset": "decentralised-hrv-fan", "pose": "extract", "view": "dark-solid", "theme": "dark", "viewpoint": "elevation", "scale": 50 }
+} }
